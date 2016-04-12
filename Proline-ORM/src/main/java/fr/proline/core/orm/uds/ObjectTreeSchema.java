@@ -18,9 +18,12 @@ public class ObjectTreeSchema implements Serializable {
 	  
 	private static final long serialVersionUID = 1L;
 	
-    public enum SchemaName {    	
+    public enum SchemaName {
+    	ATOM_LABELING_QUANT_CONFIG("quantitation.atom_labeling_config"),
+    	ISOBARIC_TAGGING_QUANT_CONFIG("quantitation.isobaric_tagging_config"),
     	LABEL_FREE_QUANT_CONFIG("quantitation.label_free_config"),
     	POST_QUANT_PROCESSING_CONFIG("quantitation.post_quant_processing_config"),
+    	RESIDUE_LABELING_QUANT_CONFIG("quantitation.residue_labeling_config"),
     	SPECTRAL_COUNTING_QUANT_CONFIG("quantitation.spectral_counting_config");
     	
     	private final String name;

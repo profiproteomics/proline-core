@@ -13,7 +13,7 @@ import fr.proline.core.om.model.msq.BiologicalGroup
 import fr.proline.core.om.model.msq.BiologicalSample
 import fr.proline.core.om.model.msq.QuantChannel
 import fr.proline.core.om.model.msq.MasterQuantChannel
-import fr.proline.core.om.model.msq.ExperimentalDesign2
+import fr.proline.core.om.model.msq.SimplifiedExperimentalDesign
 import fr.proline.core.orm.uds.Project
 import fr.proline.core.orm.uds.UserAccount
 
@@ -119,7 +119,8 @@ class CreateSCQuantitationTest extends StrictLogging {
     val mqCh1 = new MasterQuantChannel(number = 1, name = Some("CreateQttDSTest"), quantChannels = qChsBuilder.result)
     masterQChsBuilder += mqCh1
 
-    val expDesi = new ExperimentalDesign2(
+    // TODO: replace me by usual ExperimentalDesign
+    val expDesi = SimplifiedExperimentalDesign(
       biologicalSamples = bioSplsBuilder.result,
       biologicalGroups = bioGrpBuilder.result,
       masterQuantChannels = masterQChsBuilder.result
@@ -130,7 +131,7 @@ class CreateSCQuantitationTest extends StrictLogging {
       name = "CreateQttDS Test",
       description = "  TEST ",
       projectId = udsProject.getId,
-      experimentalDesign = expDesi
+      experimentalDesign = expDesi.toExperimentalDesign()
     )
     service.runService()
     val udsDS = service.getUdsQuantitation

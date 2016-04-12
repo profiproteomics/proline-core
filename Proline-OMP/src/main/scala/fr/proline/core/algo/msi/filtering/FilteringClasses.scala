@@ -3,14 +3,11 @@ package fr.proline.core.algo.msi.filtering
 import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.HashMap
 import fr.proline.core.algo.msi.validation.BuildPeptideMatchFilter
-import fr.proline.core.om.model.msi.FilterDescriptor
-import fr.proline.core.om.model.msi.PeptideInstance
-import fr.proline.core.om.model.msi.PeptideMatch
-import fr.proline.core.om.model.msi.ProteinSet
-import fr.proline.core.om.model.msi.ResultSummary
+import fr.proline.core.om.model.msi._
 import fr.profi.util.StringUtils
 import fr.profi.util.primitives.toDouble
 import fr.proline.core.om.model.msi.ResultSet
+import fr.proline.core.om.model.msi.ResultSummaryProperties
 
 object FilterPropertyKeys {
   final val THRESHOLD_VALUE = "threshold_value"
@@ -169,7 +166,7 @@ trait IPeptideMatchFilter extends IFilter  {
  */
 trait IFilterNeedingResultSet {
   
-  def setTargetRS(targetRS: ResultSet) : Unit
+  def setTargetRS(targetRS: IResultSetLike) : Unit
   
 } 
 
@@ -286,70 +283,63 @@ trait IOptimizableProteinSetFilter extends IProteinSetFilter with IOptimizableFi
   def getProteinSetValueForFiltering(protSet: ProteinSet): AnyVal
 }
 
-
 object ResultSummaryFilterBuilder {
 
-  def buildPeptideMatchFilters(rsm: ResultSummary): Array[IPeptideMatchFilter] = {
-    require(rsm != null, "Rsm is null")
+  def buildPeptideMatchFilters(rsm: IResultSummaryLike): Array[IPeptideMatchFilter] = {
+    require(rsm != null, "rsm is null")
+    if (rsm.properties.isEmpty) return Array()
+
+    val rsmProperties = rsm.properties.get
 
     val result = new ArrayBuffer[IPeptideMatchFilter]()
 
-    val optionalProperties = rsm.properties
-    if ((optionalProperties != null) && optionalProperties.isDefined) {
-      val rsmProperties = optionalProperties.get
+    val validationPropsOpt = rsmProperties.getValidationProperties
+    if (validationPropsOpt.isDefined) {
+      val validationProperties = validationPropsOpt.get
 
-      val optionalValidProperties = rsmProperties.getValidationProperties
-      if ((optionalValidProperties != null) && optionalValidProperties.isDefined) {
-        val validationProperties = optionalValidProperties.get
+      val params = validationProperties.getParams
 
-        val params = validationProperties.getParams
-        if (params != null) {
+      val optionalPepFilters = params.getPeptideFilters
+      if (optionalPepFilters.isDefined) {
+        val peptideFilters = optionalPepFilters.get
 
-          val optionalPepFilters = params.getPeptideFilters
-          if ((optionalPepFilters != null) && optionalPepFilters.isDefined) {
-            val peptideFilters = optionalPepFilters.get
+        for (filterDescr <- peptideFilters) {
+          val filterParameterStr = filterDescr.getParameter
 
-            for (filterDescr <- peptideFilters) {
-              val filterParameterStr = filterDescr.getParameter
+          if (!StringUtils.isEmpty(filterParameterStr)) {
+            var optionalThresholdValue: Option[AnyVal] = None
 
-              if (!StringUtils.isEmpty(filterParameterStr)) {
-                var optionalThresholdValue: Option[AnyVal] = None
+            val optionalFiltProperties = filterDescr.getProperties
+            if ((optionalFiltProperties != null) && optionalFiltProperties.isDefined) {
+              val filterProperties = optionalFiltProperties.get
 
-                val optionalFiltProperties = filterDescr.getProperties
-                if ((optionalFiltProperties != null) && optionalFiltProperties.isDefined) {
-                  val filterProperties = optionalFiltProperties.get
+              val optionalRawValue = filterProperties.get(FilterPropertyKeys.THRESHOLD_VALUE)
+              if (optionalRawValue.isDefined) {
+                val threshold = optionalRawValue.get.asInstanceOf[AnyVal] // Force a cast to Scala Primitive wrapper
+                optionalThresholdValue = Some(threshold)
+              }
 
-                  val optionalRawValue = filterProperties.get(FilterPropertyKeys.THRESHOLD_VALUE)
-                  if (optionalRawValue.isDefined) {
-                    val threshold = optionalRawValue.get.asInstanceOf[AnyVal] // Force a cast to Scala Primitive wrapper
-                    optionalThresholdValue = Some(threshold)
-                  }
+            } // End if (filterProperties is defined)
 
-                } // End if (filterProperties is defined)
+            if (optionalThresholdValue.isDefined) {
+              val nextFilter = BuildPeptideMatchFilter(filterParameterStr, optionalThresholdValue.get)
+              if (nextFilter.isInstanceOf[IFilterNeedingResultSet])
+                nextFilter.asInstanceOf[IFilterNeedingResultSet].setTargetRS(rsm.getResultSet().get)
+              result += nextFilter
+            } else {
+              val nextFilter = BuildPeptideMatchFilter(filterParameterStr)
+              if (nextFilter.isInstanceOf[IFilterNeedingResultSet])
+                nextFilter.asInstanceOf[IFilterNeedingResultSet].setTargetRS(rsm.getResultSet().get)
+              result += nextFilter
+            }
 
-                if (optionalThresholdValue.isDefined) {
-                  val nextFilter =  BuildPeptideMatchFilter(filterParameterStr, optionalThresholdValue.get)
-                  if(nextFilter.isInstanceOf[IFilterNeedingResultSet])
-                	  nextFilter.asInstanceOf[IFilterNeedingResultSet].setTargetRS(rsm.resultSet.get)
-                  result += nextFilter
-                } else {
-                  val nextFilter =  BuildPeptideMatchFilter(filterParameterStr)
-                  if(nextFilter.isInstanceOf[IFilterNeedingResultSet])
-                	  nextFilter.asInstanceOf[IFilterNeedingResultSet].setTargetRS(rsm.resultSet.get)
-                  result += nextFilter
-                }
+          } // End (if filterParameterStr is not empty)
 
-              } // End (if filterParameterStr is not empty)
+        } // End loop for each peptideFilter
 
-            } // End loop for each peptideFilter
+      } // En if (peptideFilters is define)
 
-          } // En if (peptideFilters is define)
-
-        } // End if (params is not null)
-
-      } // End if (validationProperties is defined)
-
-    } // End if (rsmProperties is defined)
+    } // End if (validationProperties is defined)
 
     result.toArray
   }

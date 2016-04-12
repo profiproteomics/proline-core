@@ -20,6 +20,24 @@ import javax.persistence.Table;
 public class QuantitationMethod implements Serializable {
 
     private static final long serialVersionUID = 1L;
+    
+    public enum Type {
+      ATOM_LABELING("atom_labeling"),
+      ISOBARIC_TAGGING("isobaric_tagging"),
+      LABEL_FREE("label_free"),
+      RESIDUE_LABELING("residue_labeling");
+      
+      private final String type;
+      
+      private Type(final String type) {
+          this.type = type;
+      }
+      
+      @Override
+      public String toString() {
+          return type;
+      }
+    };
 
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)

@@ -16,18 +16,21 @@ object ResultSet extends InMemoryIdGen {
     pepMatchesByPepId: LongMap[Array[PeptideMatch]],
     proteinMatches: Array[ProteinMatch]
   ): Map[ProteinMatch, ArrayBuffer[PeptideMatch]] = {
+    
     val resultBuilder = Map.newBuilder[ProteinMatch, ArrayBuffer[PeptideMatch]]
     resultBuilder.sizeHint(proteinMatches.length)
     
     for( protMatch <- proteinMatches ) {
-      val protMatchPeptMatches = new ArrayBuffer[PeptideMatch]()
+      val protMatchPepMatches = new ArrayBuffer[PeptideMatch]()
+      
       if (protMatch.sequenceMatches != null) {
-        protMatch.sequenceMatches.foreach { seqMatch => 
-          val pepMatchesForCurrent = pepMatchesByPepId.getOrElse(seqMatch.getPeptideId, Array.empty[PeptideMatch])
-          protMatchPeptMatches ++= pepMatchesForCurrent
-        } //end go through protMatch SeqMatches 
+        for(seqMatch <- protMatch.sequenceMatches) {
+          val seqMatchPepMatches = pepMatchesByPepId.getOrElse(seqMatch.getPeptideId, Array.empty[PeptideMatch])
+          protMatchPepMatches ++= seqMatchPepMatches
+        }
       }
-      resultBuilder += protMatch -> protMatchPeptMatches.distinct
+      
+      resultBuilder += protMatch -> protMatchPepMatches.distinct
     } //End go through ProtMatches
     
     resultBuilder.result()
@@ -46,6 +49,53 @@ object ResultSet extends InMemoryIdGen {
     
     longMap
   }
+  
+  /*def getPeptideMatchesByProteinMatchId(rs: IResultSetLike): LongMap[Array[PeptideMatch]] = {
+    val pepMatchesByPepId = rs match {
+      case lazyRs: LazyResultSet => lazyRs.peptideMatchesByPeptideId
+      case _ => rs.peptideMatches.groupByLong(_.peptideId)
+    }
+      
+    ResultSet.getPeptideMatchesByProteinMatchId(pepMatchesByPepId, rs.proteinMatches)
+  }*/
+  
+  def getProteinMatchesByPeptideMatchId(rsLike: IResultSetLike): LongMap[Array[ProteinMatch]] = {
+    
+    val pepMatchesByPepId = rsLike match {
+      case lazyRs: LazyResultSet => lazyRs.peptideMatchesByPeptideId
+      case _ => rsLike.peptideMatches.groupByLong(_.peptideId)    
+    }
+    val protMatchesByPepMatchId = new LongMap[ArrayBuffer[ProteinMatch]](rsLike.peptideMatches.length)
+    
+    for( protMatch <- rsLike.proteinMatches ) {
+      
+      if (protMatch.sequenceMatches != null) {
+        val peptideIds = protMatch.sequenceMatches.map(_.getPeptideId).distinct
+        for(peptideId <- peptideIds) {
+          val pepMatches = pepMatchesByPepId.getOrElse(peptideId, Array.empty[PeptideMatch])
+          for( pepMatch <- pepMatches ) {
+            protMatchesByPepMatchId.getOrElse(pepMatch.id, new ArrayBuffer[ProteinMatch]) += protMatch
+          }
+        }
+      }
+      
+    } //End go through ProtMatches
+    
+    protMatchesByPepMatchId.map { case (k,v) => (k, v.toArray) }
+  }
+}
+
+trait IResultSetLike {
+  def id: Long
+  def isValidatedContent: Boolean
+  def peptides: Array[Peptide]
+  def peptideMatches: Array[PeptideMatch]
+  def proteinMatches: Array[ProteinMatch]
+  def msiSearch: Option[MSISearch]
+  def childMsiSearches: Array[MSISearch]
+  def properties: Option[ResultSetProperties]
+  
+  def getDecoyResultSet(): Option[IResultSetLike]
 }
 
 case class ResultSet(
@@ -77,7 +127,7 @@ case class ResultSet(
   @transient var decoyResultSet: Option[ResultSet] = None,
 
   var properties: Option[ResultSetProperties] = None
-) extends Cloneable {
+) extends IResultSetLike with Cloneable {
 
   // Requirements
   require(peptides != null && peptideMatches != null & proteinMatches != null)
@@ -94,6 +144,38 @@ case class ResultSet(
       decoyResultSet = this.decoyResultSet.map(_.clone()),
       properties = this.properties.map( _.copy() )
     )
+  }
+  
+  /** Convert a RS into a lazy RS (for compatibility between APIs) **/
+  def toLazyResultSet(): LazyResultSet = {
+    new LazyResultSet(
+      descriptor = ResultSetDescriptor(
+        id = id,
+        name = name,
+        description = description,
+        contentType = getContentType,
+        decoyResultSetId = decoyResultSetId,
+        msiSearchId = msiSearchId,
+        mergedResultSummaryId = mergedResultSummaryId,
+        properties = properties
+      ),
+      isValidatedContent = isValidatedContent,
+      loadPeptideMatches = { rsd => this.peptideMatches },
+      loadProteinMatches = { rsd => this.proteinMatches },
+      loadMsiSearch = msiSearch.map { msi => { rsd => msi } },
+      loadLazyDecoyResultSet = decoyResultSet.map { decoyRs => { rsd => decoyRs.toLazyResultSet() } },
+      loadChildMsiSearches = if(childMsiSearches.isEmpty) None else Some( { rsd => childMsiSearches } )
+    )
+  }
+  
+  def getDecoyResultSet(): Option[IResultSetLike] = decoyResultSet
+  
+  def getContentType(): ResultSetType.Value = {
+    if(isSearchResult) {
+      if(isDecoy) ResultSetType.DECOY_SEARCH
+      else ResultSetType.SEARCH
+    } else if (isQuantified) ResultSetType.QUANTITATION
+    else ResultSetType.USER
   }
 
   def getMSISearchId: Long = { if (msiSearch.isDefined) msiSearch.get.id else msiSearchId }
@@ -124,7 +206,7 @@ case class ResultSet(
     tmpPeptideMatchById
 
   }
-
+  
   def getProteinMatchById(): Map[Long, ProteinMatch] = {
 
     val tmpProtMatchById = Map() ++ proteinMatches.map( protMatch => (protMatch.id -> protMatch) )
@@ -159,6 +241,7 @@ case class ResultSet(
     val tmpPeptideMatchByPeptideId = peptideMatches.groupByLong(_.peptideId)    
     ResultSet.getPeptideMatchesByProteinMatch(tmpPeptideMatchByPeptideId, proteinMatches)
   }
+  
 }
 
 case class ResultSetProperties(
@@ -301,6 +384,19 @@ object ResultSummary extends InMemoryIdGen {
   
 }
 
+trait IResultSummaryLike {
+  def id: Long
+  def peptideInstances: Array[PeptideInstance]
+  def peptideSets: Array[PeptideSet]
+  def proteinSets: Array[ProteinSet]
+  def peptideValidationRocCurve: Option[MsiRocCurve]
+  def proteinValidationRocCurve: Option[MsiRocCurve]
+  def properties: Option[ResultSummaryProperties]
+  
+  def getResultSet(): Option[IResultSetLike]
+  def getResultSetId(): Long
+}
+
 case class ResultSummary(
   // Required fields
   val peptideInstances: Array[PeptideInstance],
@@ -320,17 +416,120 @@ case class ResultSummary(
   @transient var resultSet: Option[ResultSet] = None,
 
   protected var decoyResultSummaryId: Long = 0,
-  @transient var decoyResultSummary: Option[ResultSummary] = null,
+  @transient var decoyResultSummary: Option[ResultSummary] = None,
 
   var properties: Option[ResultSummaryProperties] = None,
   
   var peptideValidationRocCurve: Option[MsiRocCurve] = None,
   var proteinValidationRocCurve: Option[MsiRocCurve] = None
   
-) extends LazyLogging  {
+) extends IResultSummaryLike with LazyLogging  {
 
   // Requirements
   require(peptideInstances != null && proteinSets != null)
+  
+  /**
+   * Reset ids of RSM entities recursively.
+   * Only RSM entities will have fresh generated ids (RS entities are not updated).
+   * Note that masterQuantComponentId is reset to zero for both PeptideInstance and ProteinSet entities.
+   */
+  def resetIds() {
+    val newRsmId = ResultSummary.generateNewId()
+    this.id = newRsmId
+    
+    // Reset ids of peptide instances
+    for (pepInstance <- peptideInstances) {
+      
+      def resetPepInstEntitiesIds(aPepInst: PeptideInstance): Long = {
+        val newPepInstId = PeptideInstance.generateNewId()
+        pepInstance.id = newPepInstId
+        pepInstance.resultSummaryId = newRsmId
+        pepInstance.masterQuantComponentId = 0L
+        newPepInstId
+      }
+
+      resetPepInstEntitiesIds(pepInstance)
+      
+      if(pepInstance.children != null) {
+        pepInstance.children.foreach(resetPepInstEntitiesIds(_))
+      }
+    }
+    
+    // Reset ids of protein sets
+    val proteinSetByOldId = proteinSets.mapByLong(_.id)
+    for (proteinSet <- proteinSets) {
+      proteinSet.id = ProteinSet.generateNewId()
+      proteinSet.resultSummaryId = newRsmId
+      proteinSet.masterQuantComponentId = 0L
+    }
+    
+    // Reset ids of peptide sets
+    val pepSetByOldId = peptideSets.mapByLong(_.id)
+    for (peptideSet <- peptideSets) {
+      
+      val newPepSetId = PeptideSet.generateNewId()
+      peptideSet.id = newPepSetId
+      peptideSet.resultSummaryId = newRsmId
+      
+      for(pepSetItem <- peptideSet.items) {
+        pepSetItem.peptideSetId = newPepSetId
+        pepSetItem.resultSummaryId = newRsmId
+      }
+      
+      // Update reference to proteinSet if this entity is not attached
+      if(peptideSet.proteinSet == null || peptideSet.proteinSet.isEmpty) {
+        val oldProtSetId = peptideSet.getProteinSetId()
+        peptideSet.proteinSet = proteinSetByOldId.get(oldProtSetId)
+      }
+      
+      // Update reference to strict subsets
+      if(peptideSet.strictSubsets == null || peptideSet.strictSubsets.isEmpty) {
+        val oldStrictSubsetIds = peptideSet.getStrictSubsetIds()
+        peptideSet.strictSubsets = Some( oldStrictSubsetIds.map(pepSetByOldId(_)) )
+      }
+      
+      // Update reference to subsumable subsets
+      if(peptideSet.subsumableSubsets == null || peptideSet.subsumableSubsets.isEmpty) {
+        val oldSubsumableSubsetIds = peptideSet.getSubsumableSubsetIds()
+        peptideSet.subsumableSubsets = Some( oldSubsumableSubsetIds.map(pepSetByOldId(_)) )
+      }
+    }
+    
+    if( decoyResultSummary != null && decoyResultSummary.nonEmpty ) {
+      val decoyRsm = decoyResultSummary.get
+      decoyRsm.resetIds()
+      decoyResultSummaryId = decoyRsm.id
+    }
+  }
+  
+  /** Convert a RSM into a lazy RSM (for compatibility between APIs) **/
+  def toLazyResultSummary(linkResultSetEntities: Boolean, linkPeptideSets: Boolean): LazyResultSummary = {
+    
+    val lazyDecoyRsmOpt = decoyResultSummary.map { decoyRsm => 
+      decoyRsm.toLazyResultSummary(linkResultSetEntities, linkPeptideSets)
+    }
+    
+    new LazyResultSummary(
+      descriptor = ResultSummaryDescriptor(
+        id = id,
+        description = description,
+        modificationTimestamp = modificationTimestamp,
+        isQuantified = isQuantified,
+        decoyResultSummaryId = decoyResultSummaryId,
+        resultSetId = resultSetId,
+        properties = properties
+      ),
+      lazyResultSet = resultSet.get.toLazyResultSet(),
+      linkResultSetEntities = linkResultSetEntities,
+      linkPeptideSets = linkPeptideSets,
+      loadPeptideInstances = { rsmd => this.peptideInstances },
+      loadPeptideSets = { rsmd => this.peptideSets },
+      loadProteinSets = { rsmd => this.proteinSets },
+      loadLazyDecoyResultSummary = lazyDecoyRsmOpt.map { decoyRsm => { rsd => decoyRsm } },
+      loadPeptideValidationRocCurve = peptideValidationRocCurve.map { curve => { rsmd => curve } },
+      loadProteinValidationRocCurve =  proteinValidationRocCurve.map { curve => { rsmd => curve } }
+    )
+  }
   
   def getValidatedResultSet(): Option[ResultSet] = {
     resultSet.map { rs =>
@@ -340,6 +539,8 @@ case class ResultSummary(
       }
     }
   }
+  
+  def getResultSet(): Option[IResultSetLike] = resultSet
 
   def getResultSetId: Long = { if (resultSet.isDefined) resultSet.get.id else resultSetId }
 
@@ -564,10 +765,12 @@ class LazyResultSet(
   protected val loadMsiSearch: Option[(ResultSetDescriptor) => MSISearch],
   protected val loadLazyDecoyResultSet: Option[(ResultSetDescriptor) => LazyResultSet] = None,
   protected val loadChildMsiSearches: Option[(ResultSetDescriptor) => Array[MSISearch]] = None
-) {
+) extends IResultSetLike {
   
-  // Shortcut to RS ID
+  // Some proxies
   def id = descriptor.id
+  def properties = descriptor.properties  
+  def getDecoyResultSet(): Option[IResultSetLike] = lazyDecoyResultSet
   
   // Required fields
   lazy val uniquePeptideSequences = peptides.map(_.sequence).distinct
@@ -595,6 +798,31 @@ class LazyResultSet(
   lazy val peptideMatchesByProteinMatchId: LongMap[Array[PeptideMatch]] = {
     ResultSet.getPeptideMatchesByProteinMatchId(peptideMatchesByPeptideId, proteinMatches)
   }
+  
+  /** Convert a lazy RS into a RS (for compatibility between APIs) **/
+  def toResultSet(loadDecoyData: Boolean): ResultSet = {
+    val rsType = descriptor.contentType
+    
+    ResultSet(
+      id = descriptor.id,
+      name = descriptor.name,
+      description = descriptor.description,
+      isDecoy = (rsType == ResultSetType.DECOY_SEARCH),
+      isSearchResult = (rsType == ResultSetType.SEARCH || rsType == ResultSetType.DECOY_SEARCH),
+      isQuantified = (rsType == ResultSetType.QUANTITATION),
+      isValidatedContent = isValidatedContent,
+      peptides = peptides,
+      peptideMatches = peptideMatches,
+      proteinMatches = proteinMatches,
+      decoyResultSetId = descriptor.decoyResultSetId,
+      decoyResultSet = if(loadDecoyData) lazyDecoyResultSet.map(_.toResultSet(false)) else None,
+      msiSearchId = descriptor.msiSearchId,
+      msiSearch = msiSearch,
+      childMsiSearches = childMsiSearches,
+      mergedResultSummaryId = descriptor.mergedResultSummaryId,
+      properties = descriptor.properties
+    )
+  }
 
 }
 
@@ -619,10 +847,14 @@ class LazyResultSummary(
   protected val loadLazyDecoyResultSummary: Option[(ResultSummaryDescriptor) => LazyResultSummary] = None,
   protected val loadPeptideValidationRocCurve: Option[(ResultSummaryDescriptor) => MsiRocCurve] = None,
   protected val loadProteinValidationRocCurve: Option[(ResultSummaryDescriptor) => MsiRocCurve] = None
-) extends LazyLogging {
+) extends IResultSummaryLike with LazyLogging {
   
-  // Shortcut to RSM ID
+  // Some proxies
   def id = descriptor.id
+  def resultSetId = lazyResultSet.id
+  def properties = descriptor.properties
+  def getResultSet(): Option[IResultSetLike] = Some(lazyResultSet)
+  def getResultSetId(): Long = resultSetId
   
   lazy val peptideInstances: Array[PeptideInstance] = {
     val pepInstances = loadPeptideInstances(descriptor)
@@ -683,6 +915,7 @@ class LazyResultSummary(
     ResultSummary.getPeptideMatchesByPeptideSetId(this.lazyResultSet.peptideMatchById, peptideSets)
   }
   
+  lazy val lazyDecoyResultSummary: Option[LazyResultSummary] = loadLazyDecoyResultSummary.map( _(descriptor) )
   lazy val peptideValidationRocCurve: Option[MsiRocCurve] = loadPeptideValidationRocCurve.map( _(descriptor) )
   lazy val proteinValidationRocCurve: Option[MsiRocCurve] = loadProteinValidationRocCurve.map( _(descriptor) )
 
@@ -737,5 +970,25 @@ class LazyResultSummary(
     pepSets.foreach { pepSet =>
     }
   }*/
+  
+  /** Convert a lazy RSM into a RSM (for compatibility between APIs) **/
+  def toResultSummary(attachResultSet: Boolean, attachDecoyData: Boolean): ResultSummary = {
+    ResultSummary(
+      id = descriptor.id,
+      description = descriptor.description,
+      isQuantified = descriptor.isQuantified,
+      modificationTimestamp = descriptor.modificationTimestamp,
+      peptideInstances = peptideInstances,
+      peptideSets = peptideSets,
+      proteinSets = proteinSets,
+      resultSetId = descriptor.resultSetId,
+      resultSet = if(attachResultSet) Some(lazyResultSet.toResultSet(attachDecoyData)) else None,
+      decoyResultSummaryId = descriptor.decoyResultSummaryId,
+      decoyResultSummary = if(attachDecoyData) lazyDecoyResultSummary.map(_.toResultSummary(attachResultSet,false)) else None,
+      properties = descriptor.properties,
+      peptideValidationRocCurve = peptideValidationRocCurve,
+      proteinValidationRocCurve = proteinValidationRocCurve
+    )
+  }
   
 }

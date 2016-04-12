@@ -1,13 +1,16 @@
 package fr.proline.core.service.msq
 
+
 import fr.proline.api.service.IService
 import fr.proline.context.IExecutionContext
 import fr.proline.core.dal.BuildLazyExecutionContext
-import fr.proline.core.om.model.msq.ExperimentalDesign
+import fr.proline.core.om.model.msq._
 import fr.proline.core.orm.uds.MasterQuantitationChannel
 import fr.proline.core.service.msq.quantify._
 import fr.proline.repository.IDataStoreConnectorFactory
-import fr.proline.core.algo.msq.SpectralCountConfig
+import fr.proline.core.algo.msq.config._
+import fr.proline.core.om.model.msq.QuantMethodType._
+
 
 class QuantifyMasterQuantChannel(
   executionContext: IExecutionContext,
@@ -25,7 +28,7 @@ class QuantifyMasterQuantChannel(
     projectId: Long,
     experimentalDesign: ExperimentalDesign,
     masterQuantChannelId: Long,
-    quantConfig: AnyRef
+    quantConfig: IQuantConfig
   ) {
     this(
       BuildLazyExecutionContext(dsFactory, projectId, true), // Force JPA context
@@ -42,11 +45,17 @@ class QuantifyMasterQuantChannel(
     // Get entity manager
     val udsEM = executionContext.getUDSDbConnectionContext().getEntityManager()
     
-    // Retrieve the quantitation fraction
-    val udsMasterQuantChannel = udsEM.find(classOf[MasterQuantitationChannel], masterQuantChannelId)    
+    // Retrieve the master quant channel
+    val udsMasterQuantChannel = udsEM.find(classOf[MasterQuantitationChannel], masterQuantChannelId)
     require( udsMasterQuantChannel != null, "undefined master quant channel with id=" + masterQuantChannelId )
     
-   _usedMasterQuantChannelQuantifier=  MasterQuantChannelQuantifier( executionContext, experimentalDesign, udsMasterQuantChannel, quantConfig )
+      
+   _usedMasterQuantChannelQuantifier = MasterQuantChannelQuantifier(
+     executionContext,
+     experimentalDesign,
+     udsMasterQuantChannel,
+     quantConfig
+   )
    _usedMasterQuantChannelQuantifier.quantify()
     
     // Close execution context if initiated locally
@@ -61,7 +70,6 @@ class QuantifyMasterQuantChannel(
   } 
 
 }
-
 
 object AbundanceUnit extends Enumeration {
   val FEATURE_INTENSITY = Value("feature_intensity")
@@ -79,7 +87,7 @@ object QuantMethodType extends Enumeration {
 object MasterQuantChannelQuantifier {
   
   import javax.persistence.EntityManager
-  import fr.proline.core.algo.lcms.LabelFreeQuantConfig
+  import fr.proline.core.algo.msq.config.LabelFreeQuantConfig
   
   def apply(    
     executionContext: IExecutionContext,
@@ -88,40 +96,22 @@ object MasterQuantChannelQuantifier {
     quantConfig: AnyRef
   ): AbstractMasterQuantChannelQuantifier = {
     
+        
     val udsQuantMethod = udsMasterQuantChannel.getDataset.getMethod
     val quantMethodType = udsQuantMethod.getType
     val abundanceUnit = udsQuantMethod.getAbundanceUnit
-    
+     
     var masterQuantChannelQuantifier: AbstractMasterQuantChannelQuantifier = null
-    
-    // TODO: create some enumerations
-    if( abundanceUnit == AbundanceUnit.REPORTER_ION_INTENSITY.toString() ) {
-    
-    /*require Pairs::Msq::Module::Quantifier::ReporterIons
-    fractionQuantifier = new Pairs::Msq::Module::Quantifier::ReporterIons(
-                                  rdb_quantitation_fraction = rdbQuantFraction
-                                  )*/
-    
-    } 
-    else if( quantMethodType == QuantMethodType.LABEL_FREE.toString() ) {
-      if( abundanceUnit == AbundanceUnit.FEATURE_INTENSITY.toString() ) {
-        masterQuantChannelQuantifier = new Ms2DrivenLabelFreeFeatureQuantifier(
-          executionContext = executionContext,
-          experimentalDesign = experimentalDesign,
-          udsMasterQuantChannel = udsMasterQuantChannel,
-          quantConfig.asInstanceOf[LabelFreeQuantConfig]
-        )
-      }
-      else if( abundanceUnit == AbundanceUnit.SPECTRAL_COUNTS.toString() ) {
-        masterQuantChannelQuantifier = new WeightedSpectralCountQuantifier(
+ 
+    if( quantMethodType == QuantMethodType.LABEL_FREE.toString() && ( abundanceUnit == AbundanceUnit.SPECTRAL_COUNTS.toString())) {
+       masterQuantChannelQuantifier = new WeightedSpectralCountQuantifier(
           executionContext = executionContext,
           udsMasterQuantChannel = udsMasterQuantChannel,
-          scConfig = quantConfig.asInstanceOf[SpectralCountConfig]
+          quantConfig = quantConfig.asInstanceOf[SpectralCountConfig]
         )
-      }
     }
     
-    assert( masterQuantChannelQuantifier != null, "The needed quantifier is not yet implemented" )
+    assert( masterQuantChannelQuantifier != null, "QuantifyMasterQuantChannel should be used for WeightedSpectralCountQuantifier Only !" )
     
     masterQuantChannelQuantifier
 

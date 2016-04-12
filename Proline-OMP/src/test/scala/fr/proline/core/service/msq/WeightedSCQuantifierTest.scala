@@ -5,7 +5,7 @@ import org.junit.Assert._
 import org.junit.Test
 import com.typesafe.scalalogging.StrictLogging
 import fr.proline.core.algo.msi.AbstractResultSummaryTestCase
-import fr.proline.core.algo.msq.SpectralCountConfig
+import fr.proline.core.algo.msq.config._
 import fr.proline.core.dbunit.STR_F063442_F122817_MergedRSMs
 import fr.proline.core.orm.uds.BiologicalSample
 import fr.proline.core.orm.uds.Dataset
@@ -194,7 +194,7 @@ class WeightedSCQuantifierTest extends StrictLogging {
 
     udsEm.getTransaction().commit()
 
-    var wsCalculator = new WeightedSpectralCountQuantifier(executionContext = executionContext, udsMasterQuantChannel = mqCh, scConfig = spCountCfg)
+    var wsCalculator = new WeightedSpectralCountQuantifier(executionContext = executionContext, udsMasterQuantChannel = mqCh, quantConfig = spCountCfg)
     wsCalculator.quantify
     assertNotNull(mqCh.getQuantResultSummaryId())
     //    logger.debug("  wsCalculator RESULT  "+wsCalculator.getResultAsJSON)

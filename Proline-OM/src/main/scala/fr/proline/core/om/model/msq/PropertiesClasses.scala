@@ -17,11 +17,11 @@ case class ComputedRatio(
   @transient lazy val ratioValue = if( numerator > 0 && denominator > 0 ) numerator/denominator else Float.NaN
 }
 
-case class MasterQuantReporterIonProperties (
+case class MasterQuantReporterIonProperties(
   //@BeanProperty var quantReporterIons: Array[QuantReporterIonProperties]
 )
 
-case class MasterQuantPeptideIonProperties (
+case class MasterQuantPeptideIonProperties(
   @JsonDeserialize(contentAs = classOf[java.lang.Long] )
   @BeanProperty var bestQuantChannelId: Option[Long] = None,
   
@@ -32,14 +32,14 @@ case class MasterQuantPeptideIonProperties (
   if( bestPeptideMatchIdMap == null ) bestPeptideMatchIdMap = scala.collection.immutable.HashMap()
 }
 
-case class MasterQuantPeptideProfile (
+case class MasterQuantPeptideProfile(
   @BeanProperty var ratios: List[Option[ComputedRatio]] = List()
   //@BeanProperty var mqProtSetProfileIds: Option[Array[Long]] = None
 ) {
   if( ratios == null ) ratios = List()
 }
 
-case class MasterQuantPeptideProperties (
+case class MasterQuantPeptideProperties(
   @BeanProperty var discardingReason: Option[String] = None,
   
   @JsonDeserialize(contentAs = classOf[Array[Long]])
@@ -76,7 +76,7 @@ case class MasterQuantProteinSetProfile(
 }
 
  
-case class MasterQuantProteinSetProperties (
+case class MasterQuantProteinSetProperties(
   
   @JsonDeserialize( keyAs = classOf[java.lang.Integer], contentAs = classOf[Array[MasterQuantProteinSetProfile]] )
   var mqProtSetProfilesByGroupSetupNumber: HashMap[Int, Array[MasterQuantProteinSetProfile]] = null,
@@ -102,17 +102,23 @@ case class MasterQuantProteinSetProperties (
 }
 
 
-case class MasterQuantChannelProperties (
+case class MasterQuantChannelProperties(
+  // TODO: add to table
   @JsonDeserialize(contentAs = classOf[java.lang.Long])
-  @BeanProperty var identResultSummaryId: Option[Long],
+  @BeanProperty var identDatasetId: Option[Long] = None,
+  
+  // TODO: add to table
   @JsonDeserialize(contentAs = classOf[java.lang.Long])
-  @BeanProperty var identDatasetId: Option[Long],
+  @BeanProperty var identResultSummaryId: Option[Long] = None,
+
+  // TODO: remove me => it should be stored in dedicated object tree
   @JsonDeserialize(contentAs = classOf[SpectralCountProperties])
   @BeanProperty var spectralCountProperties: Option[SpectralCountProperties] = None
 )
 
 case class SpectralCountProperties (
   //@JsonDeserialize(contentAs = classOf[java.lang.Long] )
+  // TODO: rename into weightsRefRsmIds => this is the correct CamelCase syntax
   @BeanProperty var weightsRefRSMIds: Array[Long] = Array()
 ) {
   if(weightsRefRSMIds == null) weightsRefRSMIds = Array()

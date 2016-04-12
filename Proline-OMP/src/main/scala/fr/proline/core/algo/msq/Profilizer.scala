@@ -913,7 +913,7 @@ class Profilizer( expDesign: ExperimentalDesign, groupSetupNumber: Int = 1, mast
     }*/
     
     val allSampleNumbers = expDesign.biologicalSamples.map(_.number)
-    println(allSampleNumbers.toList)
+    //println(allSampleNumbers.toList)
     
     // Map quant channel indices by the sample number
     val qcIndicesBySampleNum = ( allSampleNumbers ).map { sampleNum =>

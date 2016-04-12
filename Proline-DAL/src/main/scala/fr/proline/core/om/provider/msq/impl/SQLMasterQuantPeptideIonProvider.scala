@@ -86,7 +86,6 @@ class SQLMasterQuantPeptideIonProvider(val msiDbCtx: DatabaseConnectionContext) 
       //" AND "~ t2.RESULT_SUMMARY_ID ~" IN("~ quantRsmIdsAsStr ~")" ~
       " AND "~ t1.MASTER_QUANT_COMPONENT_ID ~" = "~ t2.ID ~
       " AND "~ t2.OBJECT_TREE_ID ~" = "~ t3.ID
-      //" AND "~ t3.SCHEMA_NAME ~" = '"~ LabelFreeQuantPeptideIonsSchema ~"'"
     )
       
     this.loadMasterQuantPeptideIons(mqPepIonQuery)

@@ -26,7 +26,7 @@ import fr.proline.core.om.provider.lcms.impl.SQLMapSetProvider
 import fr.proline.core.algo.lcms.FeatureSummarizer
 import fr.proline.core.algo.lcms.FeatureSummarizingMethod
 import fr.proline.core.algo.lcms.summarizing._
-import fr.proline.core.algo.msq.BuildMasterQuantPeptide
+import fr.proline.core.algo.msq.summarizing.BuildMasterQuantPeptide
 
 // Factory for Proline-Cortex
 object QuantProfilesComputer {

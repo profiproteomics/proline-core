@@ -353,12 +353,12 @@ Note: it could store the driver name and other connection properties needed by t
     <column id="COL107" populated="true" UUID="3d86d3eb-0c8f-4647-9546-13d2358b3052" autoIncrement="false" autoIncrementSequenceName="quant_method_type_seq" defaultValue="" name="type" nullable="0" physicalName="type" precision="20" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="12" userDefinedTypeUUID="831ac2d4-0e65-47ec-a0b7-62b7f6b8760a" >
      <remarks>Indicates the type of the molecular labeling which may have been used for quantitation.
 Valid values for this field are:
-isobaric_labeling, residue_labeling, atom_labeling, label_free.</remarks>
+isobaric_tagging, residue_labeling, atom_labeling, label_free.</remarks>
     </column>
     <column id="COL108" populated="true" UUID="0bc6c3a4-71ef-4b18-b306-d0173265184a" autoIncrement="false" autoIncrementSequenceName="quant_method_abundance_unit_seq" defaultValue="" name="abundance_unit" nullable="0" physicalName="abundance_unit" precision="30" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="12" userDefinedTypeUUID="831ac2d4-0e65-47ec-a0b7-62b7f6b8760a" >
      <remarks>The unit corresponding to the measured abundance.
 Valid values for this field are:
-spectral_counting, reporter_ion, feature, xic (mrm), mixed.</remarks>
+spectral_count, reporter_ion_intensity, feature_intensity, mixed.</remarks>
     </column>
     <column id="COL109" populated="true" UUID="7a0c3d78-72a2-47ba-877a-db29871bcf89" autoIncrement="false" autoIncrementSequenceName="quant_method_serialized_properties_seq" defaultValue="" name="serialized_properties" nullable="1" physicalName="serialized_properties" precision="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="2005" userDefinedTypeUUID="9c22ed40-2868-4d9e-96ca-789234a53c8f" >
      <remarks>A JSON string which stores optional properties (see corresponding JSON schema for more details).</remarks>

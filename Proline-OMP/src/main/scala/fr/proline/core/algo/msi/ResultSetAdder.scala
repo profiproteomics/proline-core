@@ -34,7 +34,7 @@ class ResultSetAdder(
   }
 
   // Note: if you want to work with a filtered ResultSet, perform the filtering before this step
-  def addResultSet(rs: ResultSet): ResultSetAdder = {
+  def addResultSet(rs: IResultSetLike): ResultSetAdder = {
 
     logger.info("Start adding ResultSet #" + rs.id)
     val start = System.currentTimeMillis()

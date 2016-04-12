@@ -6,8 +6,7 @@ import com.typesafe.scalalogging.LazyLogging
 import fr.profi.util.serialization.ProfiJson
 import fr.proline.context.DatabaseConnectionContext
 import fr.proline.context.IExecutionContext
-import fr.proline.core.algo.msq.Ms2CountQuantifier
-import fr.proline.core.algo.msq.SpectralCountConfig
+import fr.proline.core.algo.msq.config._
 import fr.proline.core.om.model.msi.ResultSummary
 import fr.proline.core.om.model.msq._
 import fr.proline.core.om.provider.msi.impl.SQLResultSummaryProvider
@@ -53,12 +52,27 @@ import fr.proline.repository.util.JDBCWork
 import java.sql.Connection
 import fr.proline.core.dal.tables.SelectQueryBuilder.any2ClauseAdd
 import fr.proline.core.orm.msi.repository.ObjectTreeSchemaRepository
-import fr.proline.core.algo.msq.PeptidesSCDescription
-import fr.proline.core.algo.msq.ProteinSetSCDescription
 import fr.proline.core.dal.DoJDBCReturningWork
 import fr.proline.core.dal.tables.SelectQueryBuilder1
 import fr.proline.core.dal.tables.msi.MsiDbResultSummaryRelationTable
 import fr.proline.core.orm.msi.PeptideMatchRelationPK
+import fr.proline.core.om.storer.msi.impl.ReadBackRsmDuplicator
+import fr.proline.core.om.model.msq.MasterQuantChannelProperties
+import fr.proline.core.orm.uds.MasterQuantitationChannel
+import fr.proline.core.om.model.msq.MasterQuantPeptide
+import fr.proline.context.DatabaseConnectionContext
+import fr.proline.core.om.provider.msi.impl.SQLResultSummaryProvider
+import fr.proline.core.om.model.msq.MasterQuantProteinSet
+import fr.proline.core.om.storer.msi.impl.ReadBackRsmDuplicator
+import fr.proline.context.IExecutionContext
+import fr.proline.core.om.model.msi.LazyResultSummary
+import fr.proline.core.om.model.msq.SpectralCountProperties
+import fr.proline.core.om.provider.msi.impl.SQLLazyResultSummaryProvider
+import fr.proline.core.dal.DoJDBCReturningWork
+import fr.proline.core.om.model.msq.QuantProteinSet
+import fr.proline.core.om.model.msq.QuantPeptide
+import fr.proline.core.dal.tables.SelectQueryBuilder1
+
 
 /**
  * @author VDS
@@ -74,8 +88,11 @@ import fr.proline.core.orm.msi.PeptideMatchRelationPK
 class WeightedSpectralCountQuantifier(
   val executionContext: IExecutionContext,
   val udsMasterQuantChannel: MasterQuantitationChannel,
-  val scConfig: SpectralCountConfig) extends AbstractMasterQuantChannelQuantifier with LazyLogging {
-
+  val quantConfig: SpectralCountConfig
+) extends AbstractMasterQuantChannelQuantifier with LazyLogging {
+  
+  
+  protected val identRSMIds = entityCache.identRsmIds
 
   /**
    * "{"spectral_count_result":{[
@@ -96,7 +113,7 @@ class WeightedSpectralCountQuantifier(
     udsDbCtx.beginTransaction()
 
     // Store the master quant result set
-    val msiQuantResultSet = this.storeMsiQuantResultSet(msiIdentResultSets)
+    val msiQuantResultSet = this.storeMsiQuantResultSet(entityCache.msiIdentResultSets)
     val quantRsId = msiQuantResultSet.getId()
 
     // Create corresponding master quant result summary
@@ -112,12 +129,17 @@ class WeightedSpectralCountQuantifier(
     var start = System.currentTimeMillis()
 
     // Store master quant result summary
-    this.cloneAndStoreMasterQuantRSM2(this.mergedResultSummary, msiQuantRSM, msiQuantResultSet)
+//    this.cloneAndStoreMasterQuantRSM2(this.mergedResultSummary, msiQuantRSM, msiQuantResultSet)
+    val rsmProvider = new SQLResultSummaryProvider(msiDbCtx, psDbCtx, udsDbCtx)
+    val rsmDuplicator = new ReadBackRsmDuplicator(rsmProvider)
+     val qttRSM = rsmDuplicator.cloneAndStoreRSM(this.mergedResultSummary, msiQuantRSM, msiQuantResultSet, msiEm) 
+
+ 
 
     var end = System.currentTimeMillis()
     logger.debug("-- Clone IDF RSM to Quant RSM : " + (end - start) + " ms")
     
-    val weightRefRSMDefined = (scConfig.weightRefRSMIds != null && !scConfig.weightRefRSMIds.isEmpty)
+    val weightRefRSMDefined = (quantConfig.weightRefRSMIds != null && !quantConfig.weightRefRSMIds.isEmpty)
 
     //Create Map between peptide ref RSM and identification RSM where SC is to be calculated   
 	val identRSMsIdByWeightRefRSMId : HashMap[Long, ArrayBuffer[Long]] = if(!weightRefRSMDefined) {
@@ -152,7 +174,7 @@ class WeightedSpectralCountQuantifier(
     val (mqPeptides, mqProtSets) = computeMasterQuantValues(
       udsMasterQuantChannel,
       this.mergedResultSummary,
-      this.identResultSummaries,
+      entityCache.identResultSummaries,
       identRSMsIdByWeightRefRSMId, 
       proteinSetSCStructsByProtSetId
     )
@@ -164,7 +186,8 @@ class WeightedSpectralCountQuantifier(
 
     // Iterate over master quant peptides to store corresponding spectral counts
     for (mqPeptide <- mqPeptides) {
-      this.storeMasterQuantPeptide(mqPeptide, msiQuantRSM, Some(msiMasterPepInstByMergedPepInstId(mqPeptide.peptideInstance.get.id)))
+//      this.storeMasterQuantPeptide(mqPeptide, msiQuantRSM, Some(msiMasterPepInstByMergedPepInstId(mqPeptide.peptideInstance.get.id)))
+      this.storeMasterQuantPeptide(mqPeptide, msiQuantRSM, Some(mqPeptide.peptideInstance.get.id))
     }
 
     end2 = System.currentTimeMillis()
@@ -174,12 +197,12 @@ class WeightedSpectralCountQuantifier(
 
     // Iterate over master quant protein sets to store corresponding spectral counts
     for (mqProtSet <- mqProtSets) {
-
-      val msiProtSet = msiMasterProtSetByMergedProtSetId.getOrElse(mqProtSet.proteinSet.id, null)
-      if (msiProtSet != null)
-        this.storeMasterQuantProteinSet(mqProtSet, msiMasterProtSetByMergedProtSetId(mqProtSet.proteinSet.id), msiQuantRSM)
-      else
-        logger.warn(" !! No Master Quant data found for protein set id " + mqProtSet.proteinSet.id + " !! ")
+        this.storeMasterQuantProteinSet(mqProtSet, mqProtSet.proteinSet.id, msiQuantRSM)
+//      val msiProtSet = msiMasterProtSetByMergedProtSetId.getOrElse(mqProtSet.proteinSet.id, null)
+//      if (msiProtSet != null)
+//        this.storeMasterQuantProteinSet(mqProtSet, msiMasterProtSetByMergedProtSetId(mqProtSet.proteinSet.id), msiQuantRSM)
+//      else
+//        logger.warn(" !! No Master Quant data found for protein set id " + mqProtSet.proteinSet.id + " !! ")
     }
 
     end = System.currentTimeMillis()
@@ -205,7 +228,7 @@ class WeightedSpectralCountQuantifier(
 		//test if childsIds are peptide Ref RSM or mergedResultSummary => Don't search in hierarchy !
 		// Should only occur on first call of createRSMHierarchyMap... 
 	    childsIds.foreach(	childId =>{
-	    	if(scConfig.weightRefRSMIds.contains(childId) || mergedResultSummary.id.equals(childId)){ //child is a peptide Ref RSM or mergedResultSummary !
+	    	if(quantConfig.weightRefRSMIds.contains(childId) || mergedResultSummary.id.equals(childId)){ //child is a peptide Ref RSM or mergedResultSummary !
 	    		val childList = resultMap.getOrElseUpdate(childId, new ArrayBuffer[Long]()) // Get Child already associated to this parent
 				childList += (childId) //add child from temporary Map to final Map !
 				resultMap.put(childId,childList )				
@@ -236,7 +259,7 @@ class WeightedSpectralCountQuantifier(
 		childsPerParent.foreach(entry =>{
 		  val parentID = entry._1
 		  val childIDs = entry._2
-		  if(scConfig.weightRefRSMIds.contains(parentID) || mergedResultSummary.id.equals(parentID)){ //Parent is a peptide Ref RSM or mergedResultSummary !
+		  if(quantConfig.weightRefRSMIds.contains(parentID) || mergedResultSummary.id.equals(parentID)){ //Parent is a peptide Ref RSM or mergedResultSummary !
 		    childIDs.foreach(childId =>{
 		    	if(tmpChildPerParentMap.contains(childId)){ // Current child was identified as a parent of original identification RSM
 		    		val childList = resultMap.getOrElseUpdate(parentID, new ArrayBuffer[Long]()) // Get Child already associated to this parent
@@ -275,84 +298,84 @@ class WeightedSpectralCountQuantifier(
 		resultMap
   }
   
-  override protected def storeMasterQuantPeptide(
-    mqPep: MasterQuantPeptide,
-    msiRSM: MsiResultSummary,
-    msiMasterPepInstAsOpt: Option[MsiPeptideInstance]): MsiMasterQuantComponent = {
-
-    val msiMasterPepInst = msiMasterPepInstAsOpt.get
-    val msiMQCObjectTree = this.buildMasterQuantPeptideObjectTree(mqPep)
-    this.msiEm.persist(msiMQCObjectTree)
-
-    // Store master quant component for this master quant peptide
-    val msiMQC = new MsiMasterQuantComponent()
-    msiMQC.setSelectionLevel(mqPep.selectionLevel)
-    if (mqPep.properties.isDefined) msiMQC.setSerializedProperties(ProfiJson.serialize(mqPep.properties))
-    msiMQC.setObjectTreeId(msiMQCObjectTree.getId)
-    msiMQC.setSchemaName(msiMQCObjectTree.getSchema.getName)
-    msiMQC.setResultSummary(msiRSM)
-
-    this.msiEm.persist(msiMQC)
-
-    // Update master quant peptide id
-    mqPep.id = msiMQC.getId
-
-    // Link master peptide instance to the corresponding master quant component
-    msiMasterPepInst.setMasterQuantComponentId(msiMQC.getId)
-    this.msiEm.persist(msiMasterPepInst)
-
-    for (mqPepIon <- mqPep.masterQuantPeptideIons) {
-      this.storeMasterQuantPeptideIon(mqPepIon, mqPep, msiMasterPepInst, msiRSM)
-    }
-
-    msiMQC
-  }
-
-  protected def storeMasterQuantPeptideIon(
-    mqPepIon: MasterQuantPeptideIon,
-    mqPep: MasterQuantPeptide,
-    msiMasterPepInst: MsiPeptideInstance,
-    msiRSM: MsiResultSummary): MsiMasterQuantPepIon = {
-
-    val msiMQCObjectTree = this.buildMasterQuantPeptideIonObjectTree(mqPepIon)
-    this.msiEm.persist(msiMQCObjectTree)
-
-    // Store master quant component
-    val msiMQC = new MsiMasterQuantComponent()
-    msiMQC.setSelectionLevel(mqPepIon.selectionLevel)
-    // TODO: decide what to store in the master quant component properties
-    //if( mqPepIon.properties.isDefined ) msiMQC.setSerializedProperties( ProfiJson.serialize(mqPepIon.properties) )
-    msiMQC.setObjectTreeId(msiMQCObjectTree.getId)
-    msiMQC.setSchemaName(msiMQCObjectTree.getSchema.getName)
-    msiMQC.setResultSummary(msiRSM)
-
-    this.msiEm.persist(msiMQC)
-
-    // Store master quant peptide ion
-    val msiMQPepIon = new MsiMasterQuantPepIon()
-    msiMQPepIon.setCharge(mqPepIon.charge)
-    msiMQPepIon.setMoz(mqPepIon.unlabeledMoz)
-    msiMQPepIon.setElutionTime(mqPepIon.elutionTime)
-    msiMQPepIon.setPeptideMatchCount(mqPepIon.peptideMatchesCount)
-    msiMQPepIon.setMasterQuantComponent(msiMQC)
-    msiMQPepIon.setMasterQuantPeptideId(mqPep.id)
-    msiMQPepIon.setResultSummary(msiRSM)
-    msiMQPepIon.setPeptideInstance(msiMasterPepInst)
-    msiMQPepIon.setPeptideId(msiMasterPepInst.getPeptide().getId())
-
-    if (mqPepIon.properties.isDefined) msiMQPepIon.setSerializedProperties(ProfiJson.serialize(mqPepIon.properties))
-
-    if (mqPepIon.lcmsMasterFeatureId.isDefined) msiMQPepIon.setLcmsMasterFeatureId(mqPepIon.lcmsMasterFeatureId.get)
-    if (mqPepIon.bestPeptideMatchId.isDefined) msiMQPepIon.setBestPeptideMatchId(mqPepIon.bestPeptideMatchId.get)
-    if (mqPepIon.unmodifiedPeptideIonId.isDefined) msiMQPepIon.setUnmodifiedPeptideIonId(mqPepIon.unmodifiedPeptideIonId.get)
-
-    this.msiEm.persist(msiMQPepIon)
-
-    // Update master quant peptide ion id
-    mqPepIon.id = msiMQPepIon.getId
-
-    msiMQPepIon
-  }
+//  override protected def storeMasterQuantPeptide(
+//    mqPep: MasterQuantPeptide,
+//    msiRSM: MsiResultSummary,
+//    msiMasterPepInstAsOpt: Option[MsiPeptideInstance]): MsiMasterQuantComponent = {
+//
+//    val msiMasterPepInst = msiMasterPepInstAsOpt.get
+//    val msiMQCObjectTree = this.buildMasterQuantPeptideObjectTree(mqPep)
+//    this.msiEm.persist(msiMQCObjectTree)
+//
+//    // Store master quant component for this master quant peptide
+//    val msiMQC = new MsiMasterQuantComponent()
+//    msiMQC.setSelectionLevel(mqPep.selectionLevel)
+//    if (mqPep.properties.isDefined) msiMQC.setSerializedProperties(ProfiJson.serialize(mqPep.properties))
+//    msiMQC.setObjectTreeId(msiMQCObjectTree.getId)
+//    msiMQC.setSchemaName(msiMQCObjectTree.getSchema.getName)
+//    msiMQC.setResultSummary(msiRSM)
+//
+//    this.msiEm.persist(msiMQC)
+//
+//    // Update master quant peptide id
+//    mqPep.id = msiMQC.getId
+//
+//    // Link master peptide instance to the corresponding master quant component
+//    msiMasterPepInst.setMasterQuantComponentId(msiMQC.getId)
+//    this.msiEm.persist(msiMasterPepInst)
+//
+//    for (mqPepIon <- mqPep.masterQuantPeptideIons) {
+//      this.storeMasterQuantPeptideIon(mqPepIon, mqPep, msiMasterPepInst, msiRSM)
+//    }
+//
+//    msiMQC
+//  }
+//
+//  protected def storeMasterQuantPeptideIon(
+//    mqPepIon: MasterQuantPeptideIon,
+//    mqPep: MasterQuantPeptide,
+//    msiMasterPepInst: MsiPeptideInstance,
+//    msiRSM: MsiResultSummary): MsiMasterQuantPepIon = {
+//
+//    val msiMQCObjectTree = this.buildMasterQuantPeptideIonObjectTree(mqPepIon)
+//    this.msiEm.persist(msiMQCObjectTree)
+//
+//    // Store master quant component
+//    val msiMQC = new MsiMasterQuantComponent()
+//    msiMQC.setSelectionLevel(mqPepIon.selectionLevel)
+//    // TODO: decide what to store in the master quant component properties
+//    //if( mqPepIon.properties.isDefined ) msiMQC.setSerializedProperties( ProfiJson.serialize(mqPepIon.properties) )
+//    msiMQC.setObjectTreeId(msiMQCObjectTree.getId)
+//    msiMQC.setSchemaName(msiMQCObjectTree.getSchema.getName)
+//    msiMQC.setResultSummary(msiRSM)
+//
+//    this.msiEm.persist(msiMQC)
+//
+//    // Store master quant peptide ion
+//    val msiMQPepIon = new MsiMasterQuantPepIon()
+//    msiMQPepIon.setCharge(mqPepIon.charge)
+//    msiMQPepIon.setMoz(mqPepIon.unlabeledMoz)
+//    msiMQPepIon.setElutionTime(mqPepIon.elutionTime)
+//    msiMQPepIon.setPeptideMatchCount(mqPepIon.peptideMatchesCount)
+//    msiMQPepIon.setMasterQuantComponent(msiMQC)
+//    msiMQPepIon.setMasterQuantPeptideId(mqPep.id)
+//    msiMQPepIon.setResultSummary(msiRSM)
+//    msiMQPepIon.setPeptideInstance(msiMasterPepInst)
+//    msiMQPepIon.setPeptideId(msiMasterPepInst.getPeptide().getId())
+//
+//    if (mqPepIon.properties.isDefined) msiMQPepIon.setSerializedProperties(ProfiJson.serialize(mqPepIon.properties))
+//
+//    if (mqPepIon.lcmsMasterFeatureId.isDefined) msiMQPepIon.setLcmsMasterFeatureId(mqPepIon.lcmsMasterFeatureId.get)
+//    if (mqPepIon.bestPeptideMatchId.isDefined) msiMQPepIon.setBestPeptideMatchId(mqPepIon.bestPeptideMatchId.get)
+//    if (mqPepIon.unmodifiedPeptideIonId.isDefined) msiMQPepIon.setUnmodifiedPeptideIonId(mqPepIon.unmodifiedPeptideIonId.get)
+//
+//    this.msiEm.persist(msiMQPepIon)
+//
+//    // Update master quant peptide ion id
+//    mqPepIon.id = msiMQPepIon.getId
+//
+//    msiMQPepIon
+//  }
 
   private def createJSonOutputResult(msiQuantRSM: MsiResultSummary, mqProtSetsVal: Array[MasterQuantProteinSet], proteinSetWeightStructsById: Map[Long, ProteinSetSCDescription]): String = {
 
@@ -364,8 +387,8 @@ class WeightedSpectralCountQuantifier(
     var firstQChOcc = true
     qChannels.foreach(nextQCh => {
       val rsmId = nextQCh.getIdentResultSummaryId()
-      val currentIdRSM = this.identResultSummaries.filter(_.id.equals(rsmId))(0)
-      val rsmProtSetById = currentIdRSM.getProteinSetById
+      val currentIdRSM = entityCache.identResultSummaries.filter(_.id.equals(rsmId))(0)
+      val rsmProtSetById = currentIdRSM.getProteinSetById()
 
       if (!firstQChOcc) { jsonBuilder.append(",") } else { firstQChOcc = false }
       jsonBuilder.append("{").append(SpectralCountsJSONProperties.rsmIDPropName).append(":").append(rsmId).append(",") //save current RSM Id
@@ -453,8 +476,10 @@ class WeightedSpectralCountQuantifier(
    *  - Map for each peptide ref RSM : RefRSM -> PeptidesSCInfo : list of specific peptides, nbr of specific PSM, map of SC weight by PeptideId
    */
 
-  private def createProteinSetSCDescription(identRSMsByPepRefRSM : HashMap[Long, ArrayBuffer[Long]], refRSMsByID : Map[Long, ResultSummary]): Map[Long, ProteinSetSCDescription] = {
-
+  private def createProteinSetSCDescription(
+    identRSMsByPepRefRSM: HashMap[Long, ArrayBuffer[Long]],
+    refRSMsByID: Map[Long, ResultSummary]
+  ): Map[Long, ProteinSetSCDescription] = {
 
 	 //ProteinSetSCDescription for each Merged RSM ProteinSet referenced by ProteinSet id  
     val proteinSetSCDescriptionByProtSetIdBuilder = Map.newBuilder[Long, ProteinSetSCDescription]
@@ -497,9 +522,9 @@ class WeightedSpectralCountQuantifier(
       }
         
       //** Peptide Weight Ref RSMs :Get PeptideInfo for SC
-      if (scConfig.weightRefRSMIds != null) {
+      if (quantConfig.weightRefRSMIds != null) {
         // create peptide specific count for next RefRSM
-        scConfig.weightRefRSMIds.foreach(rsmId => {
+        quantConfig.weightRefRSMIds.foreach(rsmId => {
           if (!rsmId.equals(mergedResultSummary.id)) { //Already done      
             val currentRSMpepSpecif = Seq.newBuilder[Long]
             var currentNbrPSMSpecif: Int = 0
@@ -543,82 +568,79 @@ class WeightedSpectralCountQuantifier(
    * Load specified RSMs if necessary and update totalLeaveMatchCount (Basic SC) for all if needed  
    * Return all loaded RSMs 
    */
-  private def loadAndUpdateRSMs(identRSMsIdByWeightRefRSMId : HashMap[Long, ArrayBuffer[Long]]): Array[fr.proline.core.om.model.msi.ResultSummary] = {
-    
-    val weigtRefRsmIds = identRSMsIdByWeightRefRSMId.keySet
+  private def loadAndUpdateRSMs(identRSMsIdByWeightRefRSMId : HashMap[Long, ArrayBuffer[Long]]): Array[ResultSummary] = {
     
     val loadedRSMIds = identRSMIds :+ mergedResultSummary.id
-    val updatedRSMs = Seq.newBuilder[ResultSummary]
-    val rsmsForSCUpdateBuilder = Seq.newBuilder[ResultSummary]
+    val loadedRSMIdSet = loadedRSMIds.toSet
+    val rsmsForSCUpdate = new ArrayBuffer[ResultSummary](loadedRSMIds.length)
+    val upToDateRSMs = new ArrayBuffer[ResultSummary](loadedRSMIds.length)
     
-
-    val unloadedRSMIds =  weigtRefRsmIds.filterNot(loadedRSMIds.contains(_))
+    val weightRefRsmIds = identRSMsIdByWeightRefRSMId.keys
+    val notLoadedRSMIds = weightRefRsmIds.filterNot(loadedRSMIdSet.contains(_)).toList
 
     //Test loaded RSM SC 
-    loadedRSMIds.foreach(rsmId => {
-      val newPepRefRSM = if (rsmId.equals(mergedResultSummary.id)) {
+    for (rsmId <- loadedRSMIds) {
+      
+      val newPepRefRSM = if (rsmId == mergedResultSummary.id) {
         mergedResultSummary
       } else {
-        identResultSummaries.filter(_.id.equals(rsmId))(0)
+        entityCache.identResultSummaries.find(_.id == rsmId).get
       }
       
        // TODO FIXME Assume first peptideInstance.totalLeavesMatchCount give global information !
   	  //SC Update needed
       if (newPepRefRSM.peptideInstances(0).totalLeavesMatchCount < 0) { 
-    	  rsmsForSCUpdateBuilder += newPepRefRSM
+    	  rsmsForSCUpdate += newPepRefRSM
       }
     
-      updatedRSMs += newPepRefRSM
-
-    })
-    
+      upToDateRSMs += newPepRefRSM
+    }
    
     // Load result summaries 
 	  this.logger.info("loading result summaries...")
 
     // Instantiate a RSM provider
     val rsmProvider = new SQLResultSummaryProvider(msiDbCtx, psDbCtx)
-    val newlyLoadedRSMs = rsmProvider.getResultSummaries(unloadedRSMIds.toSeq, true)
-    newlyLoadedRSMs.foreach( rsm => {      
+    val newlyLoadedRSMs = rsmProvider.getResultSummaries(notLoadedRSMIds, true)
+    
+    for (rsm <- newlyLoadedRSMs) {
     	// TODO FIXME Assume first peptideInstance.totalLeavesMatchCount give global information !
     	//SC Update needed
     	if (rsm.peptideInstances(0).totalLeavesMatchCount < 0) { 
-    		rsmsForSCUpdateBuilder += rsm
+    		rsmsForSCUpdate += rsm
     	}    
-    })
+    }
     
-    
+	  if( rsmsForSCUpdate.nonEmpty ) {
       // Load result summaries 
-    this.logger.info("updatePepInstanceSC for result summaries as needed...")
-    val rsmsForSCUpdate = rsmsForSCUpdateBuilder.result
+      this.logger.info("updatePepInstanceSC for result summaries as needed...")
+      
+      val pepInstanceFilteringLeafSCUpdater= new PepInstanceFilteringLeafSCUpdater()
+      pepInstanceFilteringLeafSCUpdater.updatePepInstanceSC(rsmsForSCUpdate, executionContext)
+      
+      for( rsmToSave <- rsmsForSCUpdate; pepI <- rsmToSave.peptideInstances) {
+        val ormPepInst = this.msiEm.find(classOf[fr.proline.core.orm.msi.PeptideInstance], pepI.id)
+  			ormPepInst.setTotalLeavesMatchCount(pepI.totalLeavesMatchCount)
+      }
+	  }
+	      
+    upToDateRSMs ++= newlyLoadedRSMs
     
-    val pepInstanceFilteringLeafSCUpdater= new PepInstanceFilteringLeafSCUpdater()
-    pepInstanceFilteringLeafSCUpdater.updatePepInstanceSC(rsmsForSCUpdate, executionContext)
-    rsmsForSCUpdate.foreach(rsmToSave =>{
-    	rsmToSave.peptideInstances.foreach(pepI => {
-    		val ormPepInst = this.msiEm.find(classOf[fr.proline.core.orm.msi.PeptideInstance], pepI.id)
-			ormPepInst.setTotalLeavesMatchCount(pepI.totalLeavesMatchCount)
-    	})
-    })
-	      
-	      
-    updatedRSMs ++= newlyLoadedRSMs
-    updatedRSMs.result.toArray
-        
+    upToDateRSMs.toArray
   }
   
   private def getPeptideSet(rsm : ResultSummary, typicalProteinAcc : String ) : PeptideSet = {
     
       //--- Get RSM Peptide Match/Protein Match information 	     
       // map : list of ProtMatch Id,accession by PeptideSet     
-      val protMatchesAccListByPepSet: Map[PeptideSet, Seq[Pair[Long, String]]] = createProtMatchesAccByPeptideSet(rsm)
+      val protMatchesAccListByPepSet: Map[PeptideSet, Seq[(Long, String)]] = createProtMatchesAccByPeptideSet(rsm)
 
 	  var peptideSetForPM: PeptideSet = null
-	  var foundPMIDandAcc: Pair[Long, String] = null
+	  var foundPMIDandAcc: (Long, String) = null
 
 	  val pepSetByPMIt = protMatchesAccListByPepSet.iterator
 	  while (pepSetByPMIt.hasNext) { // && peptideSetForPM == null) {
-          val nextEntry: (PeptideSet, Seq[Pair[Long, String]]) = pepSetByPMIt.next
+          val nextEntry: (PeptideSet, Seq[(Long, String)]) = pepSetByPMIt.next
           nextEntry._2.foreach(pmIdAndAcc => {
             if (pmIdAndAcc._2.equals(typicalProteinAcc)) {
               if (peptideSetForPM != null)
@@ -673,52 +695,27 @@ class WeightedSpectralCountQuantifier(
     }) //	 End go through  ProteinSet (ProteinPepsWeightStruct)
   }
 
-  protected lazy val spectralCountingQuantPeptidesSchema = {
+  protected lazy val quantPeptidesObjectTreeSchema = {
     ObjectTreeSchemaRepository.loadOrCreateObjectTreeSchema(msiEm, SchemaName.SPECTRAL_COUNTING_QUANT_PEPTIDES.toString())
   }
 
-  protected def buildMasterQuantPeptideObjectTree(mqPep: MasterQuantPeptide): MsiObjectTree = {
-
-    val quantPeptideMap = mqPep.quantPeptideMap
-    val quantPeptides = this.quantChannelIds.map { quantPeptideMap.getOrElse(_, null) }
-
-    // Store the object tree
-    val msiMQPepObjectTree = new MsiObjectTree()
-    msiMQPepObjectTree.setSchema(spectralCountingQuantPeptidesSchema)
-    msiMQPepObjectTree.setClobData(ProfiJson.serialize(quantPeptides))
-
-    msiMQPepObjectTree
-  }
-
-  protected lazy val spectralCountingQuantPepIonsSchema = {
+  protected lazy val quantPeptideIonsObjectTreeSchema = {
     ObjectTreeSchemaRepository.loadOrCreateObjectTreeSchema(msiEm, SchemaName.SPECTRAL_COUNTING_QUANT_PEPTIDE_IONS.toString())
   }
 
-  protected def buildMasterQuantPeptideIonObjectTree(mqPepIon: MasterQuantPeptideIon): MsiObjectTree = {
-
-    val quantPeptideIonMap = mqPepIon.quantPeptideIonMap
-    val quantPeptideIons = this.quantChannelIds.map { quantPeptideIonMap.getOrElse(_, null) }
-
-    // Store the object tree
-    val msiMQPepIonObjectTree = new MsiObjectTree()
-    msiMQPepIonObjectTree.setSchema(spectralCountingQuantPepIonsSchema)
-    msiMQPepIonObjectTree.setClobData(ProfiJson.serialize(quantPeptideIons))
-
-    msiMQPepIonObjectTree
-  }
-
   protected def getMergedResultSummary(msiDbCtx: DatabaseConnectionContext): ResultSummary = {
-    if (scConfig.parentRSMId.isEmpty)
+    if (quantConfig.parentRSMId.isEmpty)
       createMergedResultSummary(msiDbCtx)
     else {
-      this.logger.debug("Read Merged RSM with ID " + scConfig.parentRSMId.get)
+      this.logger.debug("Read Merged RSM with ID " + quantConfig.parentRSMId.get)
 
       // Instantiate a RSM provider
       val rsmProvider = new SQLResultSummaryProvider(msiDbCtx = msiDbCtx, psDbCtx = psDbCtx, udsDbCtx = null)
-      val idfRSM = rsmProvider.getResultSummary(scConfig.parentRSMId.get, true).get
+      val idfRSM = rsmProvider.getResultSummary(quantConfig.parentRSMId.get, true).get
 
-        val spectralCountProperties = if(scConfig.weightRefRSMIds != null && !scConfig.weightRefRSMIds.isEmpty) { 
-        	Some( new SpectralCountProperties(weightsRefRSMIds = scConfig.weightRefRSMIds.toArray) )
+      // FIXME: it should not be stored here but rather in the dedicated object tree
+        val spectralCountProperties = if(quantConfig.weightRefRSMIds != null && !quantConfig.weightRefRSMIds.isEmpty) { 
+        	Some( new SpectralCountProperties(weightsRefRSMIds = quantConfig.weightRefRSMIds.toArray) )    	     	 
         } else None
             
         if(spectralCountProperties.isDefined){
@@ -728,7 +725,7 @@ class WeightedSpectralCountQuantifier(
         	})
 		}
         
-      val mqchProperties =  new MasterQuantChannelProperties(identResultSummaryId=scConfig.parentRSMId,identDatasetId= scConfig.parentDSId, spectralCountProperties=spectralCountProperties)
+      val mqchProperties =  new MasterQuantChannelProperties(identResultSummaryId=quantConfig.parentRSMId,identDatasetId= quantConfig.parentDSId, spectralCountProperties=spectralCountProperties)
       udsMasterQuantChannel.setSerializedProperties(ProfiJson.serialize(mqchProperties))
       idfRSM
     }
@@ -743,11 +740,13 @@ class WeightedSpectralCountQuantifier(
    *
    * @param mergedRSM : RSM de départ et pas celui de quanti ? TODO
    */
-  def computeMasterQuantValues(udsMasterQuantChannel: MasterQuantitationChannel,
-                               mergedRSM: ResultSummary,
-                               resultSummaries: Seq[ResultSummary],
-                               identRSMsByPepRefRSM: HashMap[Long, ArrayBuffer[Long]],
-                               protSetWeightStructsByProtSetId: Map[Long, ProteinSetSCDescription]): (Array[MasterQuantPeptide], Array[MasterQuantProteinSet]) = {
+  def computeMasterQuantValues(
+    udsMasterQuantChannel: MasterQuantitationChannel,
+    mergedRSM: ResultSummary,
+    resultSummaries: Seq[ResultSummary],
+    identRSMsByPepRefRSM: HashMap[Long, ArrayBuffer[Long]],
+    protSetWeightStructsByProtSetId: Map[Long, ProteinSetSCDescription]
+  ): (Array[MasterQuantPeptide], Array[MasterQuantProteinSet]) = {
 
     // Map quant channel id by resultSummary id    
     val qcIdByRsmId = udsMasterQuantChannel.getQuantitationChannels().map(qc => qc.getIdentResultSummaryId() -> qc.getId).toMap
@@ -785,7 +784,7 @@ class WeightedSpectralCountQuantifier(
       //--- Get RSM Peptide Match/Protein Match information 	     
       // map   list of ProtMatch accession by PeptideSet
       //      logger.trace("  --- map   list of ProtMatch accession by PeptideSet for rsm "+rsm.id)      
-      val protMatchesAccListByPepSet: Map[PeptideSet, Seq[Pair[Long, String]]] = createProtMatchesAccByPeptideSet(rsm)
+      val protMatchesAccListByPepSet: Map[PeptideSet, Seq[(Long, String)]] = createProtMatchesAccByPeptideSet(rsm)
 
       var unidentifiedProteinsInRSM: Int = 0
 
@@ -795,11 +794,11 @@ class WeightedSpectralCountQuantifier(
         
         //Get PeptideSet containing protein in current RSM if exist
         var peptideSetForPM: PeptideSet = null
-        var foundPMIDandAcc: Pair[Long, String] = null
+        var foundPMIDandAcc: (Long, String) = null
 
         val pepSetByPMIt = protMatchesAccListByPepSet.iterator
         while (pepSetByPMIt.hasNext) { // && peptideSetForPM == null) {
-          val nextEntry: (PeptideSet, Seq[Pair[Long, String]]) = pepSetByPMIt.next
+          val nextEntry: (PeptideSet, Seq[(Long, String)]) = pepSetByPMIt.next
           nextEntry._2.foreach(pmIdAndAcc => {
             if (pmIdAndAcc._2.equals(currentProteinSetWeightStruct.typicalPMAcc)) {
               if (peptideSetForPM != null)
@@ -861,7 +860,7 @@ class WeightedSpectralCountQuantifier(
 
           var protSetId = peptideSetForPM.getProteinSetId
           if (protSetId == 0) { //Subset. Not defined
-            val currentIdRSM = this.identResultSummaries.filter(_.id.equals(rsm.id))(0)
+            val currentIdRSM = entityCache.identResultSummaries.filter(_.id.equals(rsm.id))(0)
             protSetId = foundProtSetOf(currentIdRSM, peptideSetForPM.id)
           }
 
@@ -931,29 +930,29 @@ class WeightedSpectralCountQuantifier(
     0l
   } // End foundProtSetOf method definition
 
-  private def createProtMatchesAccByPeptideSet(rsm: ResultSummary): Map[PeptideSet, Seq[Pair[Long, String]]] = {
-    val rs = rsm.resultSet.get
+  private def createProtMatchesAccByPeptideSet(rsm: ResultSummary): Map[PeptideSet, Seq[(Long, String)]] = {
+     val rs = rsm.resultSet.get
     val protMById = rs.getProteinMatchById
-    val result = scala.collection.mutable.Map[PeptideSet, Seq[Pair[Long, String]]]()
+    val result = scala.collection.mutable.Map[PeptideSet, Seq[(Long, String)]]()
     val pepSetById = rsm.peptideSets.map(pepSet => pepSet.id -> pepSet).toMap
 
-    rsm.proteinSets.filter(_.isValidated).foreach(protSet => {
+    rsm.proteinSets.withFilter(_.isValidated).foreach(protSet => {
 
       //Do SameSet PeptideSet
-      val seqBuilder = Seq.newBuilder[Pair[Long, String]]
+      val seqBuilder = Seq.newBuilder[(Long, String)]
       protSet.peptideSet.proteinMatchIds.foreach(pmId => {
         val acc = protMById(pmId).accession
-        seqBuilder += new Pair(pmId, acc)
+        seqBuilder += Tuple2(pmId, acc)
       })
       result.put(protSet.peptideSet, seqBuilder.result)
 
       //Do Subset PeptideSet
       protSet.peptideSet.getStrictSubsetIds.foreach(psId => {
         val subPepSet = pepSetById(psId)
-        val subSeqBuilder = Seq.newBuilder[Pair[Long, String]]
+        val subSeqBuilder = Seq.newBuilder[(Long, String)]
         subPepSet.proteinMatchIds.foreach(pmId => {
           val acc = protMById(pmId).accession
-          subSeqBuilder += new Pair(pmId, acc)
+          subSeqBuilder += Tuple2(pmId, acc)
         })
         result.put(subPepSet, subSeqBuilder.result)
       })
@@ -965,356 +964,358 @@ class WeightedSpectralCountQuantifier(
   }
 
   // Clone Identification merged RSM and store this new Quantitation RSM 
-  protected def cloneAndStoreMasterQuantRSM2(mergedRSM: ResultSummary,
-                                            msiQuantRSM: MsiResultSummary,
-                                            msiQuantRS: MsiResultSet) {
-
-    // Retrieve result summary and result set ids
-    val quantRsmId = msiQuantRSM.getId
-    val quantRsId = msiQuantRS.getId
-
-    // Retrieve peptide instances of the merged result summary
-    val mergedPepInstances = mergedRSM.peptideInstances
-    val mergedPepMatchById = mergedRSM.resultSet.get.getPeptideMatchById
-
-    // TODO: load scoring from MSIdb
-    val msiScoring = new MsiScoring()
-    msiScoring.setId(4)
-
-    // Iterate over merged peptide instances to create quant peptide instances
-    this.logger.info("cloning master quant peptide instances...")
-
-    // Define some vars
-    val masterQuantPepMatchIdByMergedPepMatchId = new HashMap[Long, Long]
-
-    for (mergedPepInstance <- mergedPepInstances) {
-
-      val peptideId = mergedPepInstance.peptide.id
-      val mergedPepInstPepMatchIds = mergedPepInstance.getPeptideMatchIds
-      assert(mergedPepInstPepMatchIds.length == 1, "peptide matches have not been correctly merged")
-
-      // TODO: Retrieve the best peptide match
-      //val identParentPepMatches = masterPepInstPepMatchIds.map { masterPepMatchById(_) }
-      //val bestParentPepMatch = identParentPepMatches.reduce { (a,b) => if( a.score > b.score ) a else b } 
-      val mergedPepMatch = mergedPepMatchById(mergedPepInstPepMatchIds(0))
-
-      // Create a quant peptide match which correspond to the best peptide match of this peptide instance
-      val msiMasterPepMatch = new MsiPeptideMatch()
-      msiMasterPepMatch.setCharge(mergedPepMatch.msQuery.charge)
-      msiMasterPepMatch.setExperimentalMoz(mergedPepMatch.msQuery.moz)
-      msiMasterPepMatch.setScore(mergedPepMatch.score)
-      msiMasterPepMatch.setRank(mergedPepMatch.rank)
-      msiMasterPepMatch.setCDPrettyRank(mergedPepMatch.cdPrettyRank)
-      msiMasterPepMatch.setSDPrettyRank(mergedPepMatch.sdPrettyRank)
-      msiMasterPepMatch.setDeltaMoz(mergedPepMatch.deltaMoz)
-      msiMasterPepMatch.setMissedCleavage(mergedPepMatch.missedCleavage)
-      msiMasterPepMatch.setFragmentMatchCount(mergedPepMatch.fragmentMatchesCount)
-      msiMasterPepMatch.setIsDecoy(false)
-      msiMasterPepMatch.setPeptideId(mergedPepMatch.peptide.id)
-
-      // FIXME: retrieve the right scoring_id
-      msiMasterPepMatch.setScoringId(1)
-      
-      
-      // FIXME: change the ORM to allow these mappings
-      //msiMasterPepMatch.setBestPeptideMatchId(bestPepMatch.id) 
-      //msiMasterPepMatch.setMsQueryId(bestPepMatch.msQueryId)
-
-      // FIXME: remove this mapping when the ORM is updated
-      val msiMSQFake = new fr.proline.core.orm.msi.MsQuery
-      msiMSQFake.setId(mergedPepMatch.msQuery.id)
-      msiMasterPepMatch.setMsQuery(msiMSQFake)
-
-      msiMasterPepMatch.setResultSet(msiQuantRS)
-      mergedPepMatch.properties.map(props => msiMasterPepMatch.setSerializedProperties(ProfiJson.serialize(props)))
-
-      // Save master peptide match
-      msiEm.persist(msiMasterPepMatch)
-
-      val msiMasterPepMatchId = msiMasterPepMatch.getId
-
-      // Map master peptide match id by in memory merged peptide match id
-      masterQuantPepMatchIdByMergedPepMatchId(mergedPepMatch.id) = msiMasterPepMatchId
-
-      //Retrieve ORM Peptide 
-      val ormPep = this.msiEm.find(classOf[fr.proline.core.orm.msi.Peptide], peptideId)
-
-      val msiMasterPepInstance = new MsiPeptideInstance()
-      msiMasterPepInstance.setPeptideMatchCount(mergedPepInstPepMatchIds.length) // TODO: check that
-      msiMasterPepInstance.setProteinMatchCount(mergedPepInstance.proteinMatchesCount)
-      msiMasterPepInstance.setProteinSetCount(mergedPepInstance.proteinSetsCount)
-      msiMasterPepInstance.setTotalLeavesMatchCount(mergedPepInstance.totalLeavesMatchCount)
-      msiMasterPepInstance.setValidatedProteinSetCount(mergedPepInstance.validatedProteinSetsCount)
-      msiMasterPepInstance.setSelectionLevel(2)
-      msiMasterPepInstance.setPeptide(ormPep)
-      msiMasterPepInstance.setBestPeptideMatchId(msiMasterPepMatchId)
-      msiMasterPepInstance.setResultSummary(msiQuantRSM)
-      msiEm.persist(msiMasterPepInstance)
-
-      val msiMasterPepInstanceId = msiMasterPepInstance.getId
-
-      // Map the peptide instance by the peptide id
-      msiMasterPepInstByMergedPepInstId(mergedPepInstance.id) = msiMasterPepInstance
-
-      // Link the best master peptide match to the quant peptide instance
-      val msiPepInstMatchPK = new MsiPepInstPepMatchMapPK()
-      msiPepInstMatchPK.setPeptideInstanceId(msiMasterPepInstanceId)
-      msiPepInstMatchPK.setPeptideMatchId(msiMasterPepMatchId)
-
-      val msiPepInstMatch = new MsiPepInstPepMatchMap()
-      msiPepInstMatch.setId(msiPepInstMatchPK)
-      msiPepInstMatch.setPeptideInstance(msiMasterPepInstance)
-      msiPepInstMatch.setPeptideMatch(msiMasterPepMatch)
-      msiPepInstMatch.setResultSummary(msiQuantRSM)
-
-      //msiMasterPepInstance.setPeptidesMatches(Set(msiMasterPepMatch))
-      msiEm.persist(msiPepInstMatch)
-      
-      // PeptideReadablePTMString
-      if (mergedPepInstance.peptide.readablePtmString != null && !mergedPepInstance.peptide.readablePtmString.isEmpty()){
-        val msiPeptideReadablePtmStringPK = new MsiPeptideReadablePtmStringPK()
-        msiPeptideReadablePtmStringPK.setPeptideId(mergedPepMatch.peptide.id)
-        msiPeptideReadablePtmStringPK.setResultSetId(msiQuantRS.getId())
-
-        val msiPeptideReadablePtmString = new MsiPeptideReadablePtmString()
-        msiPeptideReadablePtmString.setId(msiPeptideReadablePtmStringPK)
-        msiPeptideReadablePtmString.setResultSet(msiQuantRS)
-        msiPeptideReadablePtmString.setPeptide(ormPep)
-        msiPeptideReadablePtmString.setReadablePtmString(mergedPepInstance.peptide.readablePtmString)
-
-        // Save PeptideReadablePTMString
-        msiEm.persist(msiPeptideReadablePtmString)
-      }
-      
-
-
-      // Map this quant peptide match to identified child peptide matches
-      // VDS TODO ? IF IDF hierarcghy <> from Quanti ??
-      if (mergedPepMatch.getChildrenIds != null) {
-        for (childPepMatchId <- mergedPepMatch.getChildrenIds) {
-
-          val msiPepMatchRelationPK = new PeptideMatchRelationPK()
-          msiPepMatchRelationPK.setChildPeptideMatchId(childPepMatchId)
-          msiPepMatchRelationPK.setParentPeptideMatchId(msiMasterPepMatchId)
-             
-          val msiPepMatchRelation = new MsiPeptideMatchRelation()
-          msiPepMatchRelation.setId(msiPepMatchRelationPK)
-          msiPepMatchRelation.setParentPeptideMatch(msiMasterPepMatch)
-
-          val childPM: fr.proline.core.orm.msi.PeptideMatch = msiEm.find(classOf[fr.proline.core.orm.msi.PeptideMatch], childPepMatchId)
-          msiPepMatchRelation.setChildPeptideMatch(childPM)
-
-          // FIXME: rename to setParentResultSet
-          msiPepMatchRelation.setParentResultSetId(msiQuantRS)
-                   
-    	  msiEm.persist(msiPepMatchRelation)
-          
-        }
-      }
-    }
-
-    // Retrieve some vars
-    val mergedPeptideSets = mergedRSM.peptideSets
-    this.logger.debug("number of grouped peptide sets: " + mergedPeptideSets.length + " sameset " + mergedPeptideSets.filter(!_.isSubset).length)
-    val mergedProteinSets = mergedRSM.proteinSets
-    this.logger.debug("number of grouped protein sets: " + mergedProteinSets.length)
-    val mergedProtSetById = mergedRSM.getProteinSetById
-    val mergedProtMatchById = mergedRSM.resultSet.get.getProteinMatchById
-
-    // Iterate over identified peptide sets to create quantified peptide sets
-    this.logger.info("storing quantified peptide sets and protein sets...")
-    for (mergedPeptideSet <- mergedPeptideSets) {
-
-      val msiMasterProtMatchIdByMergedId = new HashMap[Long, Long]
-      val mergedProtMatchIdByMasterId = new HashMap[Long, Long]
-
-      // Store master protein matches
-      val msiMasterProtMatches = mergedPeptideSet.proteinMatchIds.map { protMatchId =>
-
-        val mergedProtMatch = mergedProtMatchById(protMatchId)
-
-        val msiMasterProtMatch = new MsiProteinMatch()
-        msiMasterProtMatch.setAccession(mergedProtMatch.accession)
-        msiMasterProtMatch.setDescription(mergedProtMatch.description)
-        msiMasterProtMatch.setGeneName(mergedProtMatch.geneName)
-        msiMasterProtMatch.setScore(mergedProtMatch.score)
-        msiMasterProtMatch.setCoverage(mergedProtMatch.coverage)
-        msiMasterProtMatch.setPeptideCount(mergedProtMatch.sequenceMatches.length)
-        msiMasterProtMatch.setPeptideMatchCount(mergedProtMatch.peptideMatchesCount)
-        msiMasterProtMatch.setIsDecoy(mergedProtMatch.isDecoy)
-        msiMasterProtMatch.setIsLastBioSequence(mergedProtMatch.isLastBioSequence)
-        msiMasterProtMatch.setTaxonId(mergedProtMatch.taxonId)
-        if (mergedProtMatch.getProteinId > 0) msiMasterProtMatch.setBioSequenceId(mergedProtMatch.getProteinId)
-        // FIXME: retrieve the right scoring id from OM scoring type 
-        msiMasterProtMatch.setScoringId(3)
-        msiMasterProtMatch.setResultSet(msiQuantRS)
-        msiEm.persist(msiMasterProtMatch)
-
-        val msiMasterProtMatchId = msiMasterProtMatch.getId
-
-        // Map new protein match id by Merged protein Match id
-        msiMasterProtMatchIdByMergedId += mergedProtMatch.id -> msiMasterProtMatchId
-        // Map protein match TMP id by the new id
-        mergedProtMatchIdByMasterId += msiMasterProtMatchId -> mergedProtMatch.id
-
-        // TODO: map protein_match to seq_databases
-
-        msiMasterProtMatch
-      }
-
-      // TODO: find what to do with subsets
-      if (mergedPeptideSet.isSubset == false) {
-
-        val masterProteinSetOpt = mergedProtSetById.get(mergedPeptideSet.getProteinSetId)
-        assert(masterProteinSetOpt.isDefined, "missing protein set with id=" + mergedPeptideSet.getProteinSetId)
-
-        //////// Check if the protein set has at least a peptide instance with a relevant quantitation
-        //val isProteinSetQuantitationRelevant = 0
-        //for( tmpPepInstance <- samesetPeptideInstances ) {
-        //  val rdbQuantPepInstance = quantPepByIdentPepId( tmpPepInstance.id )
-        //  if( rdbQuantPepInstance.isQuantitationRelevant ) {
-        //    isProteinSetQuantitationRelevant = 1
-        //    last
-        //  }
-        //}
-
-        // Determine the typical protein match id using the sequence coverage
-        val mergedProteinSet = masterProteinSetOpt.get
-        var mergedTypicalProtMatchId = mergedProteinSet.getRepresentativeProteinMatchId
-
-        if (mergedTypicalProtMatchId <= 0) {
-          val typicalProtMatchTmpId = mergedProteinSet.samesetProteinMatchIds.reduce { (a, b) =>
-            if (mergedProtMatchById(a).coverage > mergedProtMatchById(b).coverage) a else b
-          }         
-        }
-        val typicalProtMatchId = msiMasterProtMatchIdByMergedId(mergedTypicalProtMatchId)
-
-        // Store master protein set
-        val msiMasterProteinSet = new MsiProteinSet()
-        msiMasterProteinSet.setIsValidated(mergedProteinSet.isValidated)
-        msiMasterProteinSet.setIsDecoy(mergedProteinSet.isDecoy)
-        msiMasterProteinSet.setSelectionLevel(2)
-        msiMasterProteinSet.setProteinMatchId(typicalProtMatchId)
-        msiMasterProteinSet.setResultSummary(msiQuantRSM)
-        msiEm.persist(msiMasterProteinSet)
-
-        val msiMasterProteinSetId = msiMasterProteinSet.getId
-        msiMasterProtSetById(msiMasterProteinSetId) = msiMasterProteinSet
-        msiMasterProtSetByMergedProtSetId(mergedProteinSet.id) = msiMasterProteinSet
-
-        // Retrieve peptide set items
-        val samesetItems = mergedPeptideSet.items
-
-        // Store master peptide set
-        val msiMasterPeptideSet = new MsiPeptideSet()
-        msiMasterPeptideSet.setIsSubset(false)
-        msiMasterPeptideSet.setPeptideCount(samesetItems.length)
-        msiMasterPeptideSet.setPeptideMatchCount(mergedPeptideSet.peptideMatchesCount)
-        msiMasterPeptideSet.setSequenceCount(mergedPeptideSet.sequencesCount)
-        msiMasterPeptideSet.setProteinSet(msiMasterProteinSet)
-        // FIXME: retrieve the right scoring id
-        msiMasterPeptideSet.setScore(mergedPeptideSet.score)
-        msiMasterPeptideSet.setScoring(msiScoring)
-        msiMasterPeptideSet.setResultSummaryId(quantRsmId)
-        msiEm.persist(msiMasterPeptideSet)
-
-        val msiMasterPeptideSetId = msiMasterPeptideSet.getId
-
-        // Link master peptide set to master peptide instances
-        for (samesetItem <- samesetItems) {
-          val mergedSameSetPepInst = samesetItem.peptideInstance
-          val msiMasterPepInst = msiMasterPepInstByMergedPepInstId(mergedSameSetPepInst.id)
-
-          val msiPepSetItemPK = new MsiPeptideSetItemPK()
-          msiPepSetItemPK.setPeptideSetId(msiMasterPeptideSet.getId)
-          msiPepSetItemPK.setPeptideInstanceId(msiMasterPepInst.getId)
-
-          // TODO: change JPA definition to skip this double mapping
-          val msiPepSetItem = new MsiPeptideSetItem()
-          msiPepSetItem.setId(msiPepSetItemPK)
-          msiPepSetItem.setPeptideSet(msiMasterPeptideSet)
-          msiPepSetItem.setPeptideInstance(msiMasterPepInst)
-          msiPepSetItem.setSelectionLevel(2)
-          msiPepSetItem.setResultSummary(msiQuantRSM)
-
-          msiEm.persist(msiPepSetItem)
-        }
-
-        for (msiMasterProtMatch <- msiMasterProtMatches) {
-
-          val msiMasterProtMatchId = msiMasterProtMatch.getId
-
-          // TODO: Map master protein match to master peptide set => ORM has to be fixed
-          /*val msiPepSetProtMatchMap = new MsiPepSetProtMatchMap()
-          new Pairs::Msi::RDBO::PeptideSetProteinMatchMap(
-                                  peptide_set_id = quantPeptideSetId,
-                                  protein_match_id = quantProtMatchId,
-                                  result_summary_id = quantRsmId,
-                                  db = msiRdb
-                                ).save*/
-
-          // Link master protein match to master protein set
-          val msiProtSetProtMatchItemPK = new MsiProtSetProtMatchItemPK()
-          msiProtSetProtMatchItemPK.setProteinSetId(msiMasterProteinSet.getId)
-          msiProtSetProtMatchItemPK.setProteinMatchId(msiMasterProtMatch.getId)
-
-          // TODO: change JPA definition
-          val msiProtSetProtMatchItem = new MsiProtSetProtMatchItem()
-          msiProtSetProtMatchItem.setId(msiProtSetProtMatchItemPK)
-          msiProtSetProtMatchItem.setProteinSet(msiMasterProteinSet)
-          msiProtSetProtMatchItem.setProteinMatch(msiMasterProtMatch)
-          msiProtSetProtMatchItem.setResultSummary(msiQuantRSM)
-          msiEm.persist(msiProtSetProtMatchItem)
-
-          // Link master protein match to master peptide set
-          val msiPepSetProtMatchMapPK = new MsiPepSetProtMatchMapPK()
-          msiPepSetProtMatchMapPK.setPeptideSetId(msiMasterPeptideSet.getId)
-          msiPepSetProtMatchMapPK.setProteinMatchId(msiMasterProtMatchId)
-
-          val msiPepSetProtMatchMap = new MsiPepSetProtMatchMap()
-          msiPepSetProtMatchMap.setId(msiPepSetProtMatchMapPK)
-          msiPepSetProtMatchMap.setPeptideSet(msiMasterPeptideSet)
-          msiPepSetProtMatchMap.setProteinMatch(msiMasterProtMatch)
-          msiPepSetProtMatchMap.setResultSummary(msiQuantRSM)
-          msiEm.persist(msiPepSetProtMatchMap)
-
-          // Link master protein match to master peptide matches using master sequence matches
-          val mergedProtMatch = mergedProtMatchById(mergedProtMatchIdByMasterId(msiMasterProtMatchId))
-          val mergedSeqMatches = mergedProtMatch.sequenceMatches
-          val mappedMasterPepMatchesIdSet = new HashSet[Long]
-
-          for (mergedSeqMatch <- mergedSeqMatches) {
-
-            val bestPepMatchId = mergedSeqMatch.getBestPeptideMatchId
-            if (masterQuantPepMatchIdByMergedPepMatchId.contains(bestPepMatchId)) {
-              val masterPepMatchId = masterQuantPepMatchIdByMergedPepMatchId(bestPepMatchId)
-
-              if (mappedMasterPepMatchesIdSet.contains(masterPepMatchId) == false) {
-                mappedMasterPepMatchesIdSet(masterPepMatchId) = true
-
-                val msiMasterSeqMatchPK = new fr.proline.core.orm.msi.SequenceMatchPK()
-                msiMasterSeqMatchPK.setProteinMatchId(msiMasterProtMatchId)
-                msiMasterSeqMatchPK.setPeptideId(mergedSeqMatch.getPeptideId)
-                msiMasterSeqMatchPK.setStart(mergedSeqMatch.start)
-                msiMasterSeqMatchPK.setStop(mergedSeqMatch.end)
-
-                val msiMasterSeqMatch = new MsiSequenceMatch()
-                msiMasterSeqMatch.setId(msiMasterSeqMatchPK)
-                msiMasterSeqMatch.setResidueBefore(scalaCharToCharacter(mergedSeqMatch.residueBefore))
-                msiMasterSeqMatch.setResidueAfter(scalaCharToCharacter(mergedSeqMatch.residueAfter))
-                msiMasterSeqMatch.setIsDecoy(false)
-                msiMasterSeqMatch.setBestPeptideMatchId(masterPepMatchId)
-                msiMasterSeqMatch.setResultSetId(quantRsId)
-                msiEm.persist(msiMasterSeqMatch)
-
-              }
-            }
-          }
-        }
-      }
-    }
-
-  }
+//  protected def cloneAndStoreMasterQuantRSM2(
+//    mergedRSM: ResultSummary,
+//    msiQuantRSM: MsiResultSummary,
+//    msiQuantRS: MsiResultSet
+//  ) {
+//
+//    // Retrieve result summary and result set ids
+//    val quantRsmId = msiQuantRSM.getId
+//    val quantRsId = msiQuantRS.getId
+//
+//    // Retrieve peptide instances of the merged result summary
+//    val mergedPepInstances = mergedRSM.peptideInstances
+//    val mergedPepMatchById = mergedRSM.lazyResultSet.peptideMatchById
+//
+//    // TODO: load scoring from MSIdb
+//    val msiScoring = new MsiScoring()
+//    msiScoring.setId(4)
+//
+//    // Iterate over merged peptide instances to create quant peptide instances
+//    this.logger.info("cloning master quant peptide instances...")
+//
+//    // Define some vars
+//    val masterQuantPepMatchIdByMergedPepMatchId = new HashMap[Long, Long]
+//
+//    for (mergedPepInstance <- mergedPepInstances) {
+//
+//      val peptideId = mergedPepInstance.peptide.id
+//      val mergedPepInstPepMatchIds = mergedPepInstance.getPeptideMatchIds
+//      assert(mergedPepInstPepMatchIds.length == 1, "peptide matches have not been correctly merged")
+//
+//      // TODO: Retrieve the best peptide match
+//      //val identParentPepMatches = masterPepInstPepMatchIds.map { masterPepMatchById(_) }
+//      //val bestParentPepMatch = identParentPepMatches.reduce { (a,b) => if( a.score > b.score ) a else b } 
+//      val mergedPepMatch = mergedPepMatchById(mergedPepInstPepMatchIds(0))
+//
+//      // Create a quant peptide match which correspond to the best peptide match of this peptide instance
+//      val msiMasterPepMatch = new MsiPeptideMatch()
+//      msiMasterPepMatch.setCharge(mergedPepMatch.msQuery.charge)
+//      msiMasterPepMatch.setExperimentalMoz(mergedPepMatch.msQuery.moz)
+//      msiMasterPepMatch.setScore(mergedPepMatch.score)
+//      msiMasterPepMatch.setRank(mergedPepMatch.rank)
+//      msiMasterPepMatch.setCDPrettyRank(mergedPepMatch.cdPrettyRank)
+//      msiMasterPepMatch.setSDPrettyRank(mergedPepMatch.sdPrettyRank)
+//      msiMasterPepMatch.setDeltaMoz(mergedPepMatch.deltaMoz)
+//      msiMasterPepMatch.setMissedCleavage(mergedPepMatch.missedCleavage)
+//      msiMasterPepMatch.setFragmentMatchCount(mergedPepMatch.fragmentMatchesCount)
+//      msiMasterPepMatch.setIsDecoy(false)
+//      msiMasterPepMatch.setPeptideId(mergedPepMatch.peptide.id)
+//
+//      // FIXME: retrieve the right scoring_id
+//      msiMasterPepMatch.setScoringId(1)
+//      
+//      
+//      // FIXME: change the ORM to allow these mappings
+//      //msiMasterPepMatch.setBestPeptideMatchId(bestPepMatch.id) 
+//      //msiMasterPepMatch.setMsQueryId(bestPepMatch.msQueryId)
+//
+//      // FIXME: remove this mapping when the ORM is updated
+//      val msiMSQFake = new fr.proline.core.orm.msi.MsQuery
+//      msiMSQFake.setId(mergedPepMatch.msQuery.id)
+//      msiMasterPepMatch.setMsQuery(msiMSQFake)
+//
+//      msiMasterPepMatch.setResultSet(msiQuantRS)
+//      mergedPepMatch.properties.map(props => msiMasterPepMatch.setSerializedProperties(ProfiJson.serialize(props)))
+//
+//      // Save master peptide match
+//      msiEm.persist(msiMasterPepMatch)
+//
+//      val msiMasterPepMatchId = msiMasterPepMatch.getId
+//
+//      // Map master peptide match id by in memory merged peptide match id
+//      masterQuantPepMatchIdByMergedPepMatchId(mergedPepMatch.id) = msiMasterPepMatchId
+//
+//      //Retrieve ORM Peptide 
+//      val ormPep = this.msiEm.find(classOf[fr.proline.core.orm.msi.Peptide], peptideId)
+//
+//      val msiMasterPepInstance = new MsiPeptideInstance()
+//      msiMasterPepInstance.setPeptideMatchCount(mergedPepInstPepMatchIds.length) // TODO: check that
+//      msiMasterPepInstance.setProteinMatchCount(mergedPepInstance.proteinMatchesCount)
+//      msiMasterPepInstance.setProteinSetCount(mergedPepInstance.proteinSetsCount)
+//      msiMasterPepInstance.setTotalLeavesMatchCount(mergedPepInstance.totalLeavesMatchCount)
+//      msiMasterPepInstance.setValidatedProteinSetCount(mergedPepInstance.validatedProteinSetsCount)
+//      msiMasterPepInstance.setSelectionLevel(2)
+//      msiMasterPepInstance.setPeptide(ormPep)
+//      msiMasterPepInstance.setBestPeptideMatchId(msiMasterPepMatchId)
+//      msiMasterPepInstance.setResultSummary(msiQuantRSM)
+//      msiEm.persist(msiMasterPepInstance)
+//
+//      val msiMasterPepInstanceId = msiMasterPepInstance.getId
+//
+//      // Map the peptide instance by the peptide id
+//      msiMasterPepInstByMergedPepInstId(mergedPepInstance.id) = msiMasterPepInstance
+//
+//      // Link the best master peptide match to the quant peptide instance
+//      val msiPepInstMatchPK = new MsiPepInstPepMatchMapPK()
+//      msiPepInstMatchPK.setPeptideInstanceId(msiMasterPepInstanceId)
+//      msiPepInstMatchPK.setPeptideMatchId(msiMasterPepMatchId)
+//
+//      val msiPepInstMatch = new MsiPepInstPepMatchMap()
+//      msiPepInstMatch.setId(msiPepInstMatchPK)
+//      msiPepInstMatch.setPeptideInstance(msiMasterPepInstance)
+//      msiPepInstMatch.setPeptideMatch(msiMasterPepMatch)
+//      msiPepInstMatch.setResultSummary(msiQuantRSM)
+//
+//      //msiMasterPepInstance.setPeptidesMatches(Set(msiMasterPepMatch))
+//      msiEm.persist(msiPepInstMatch)
+//      
+//      // PeptideReadablePTMString
+//      if (mergedPepInstance.peptide.readablePtmString != null && !mergedPepInstance.peptide.readablePtmString.isEmpty()){
+//        val msiPeptideReadablePtmStringPK = new MsiPeptideReadablePtmStringPK()
+//        msiPeptideReadablePtmStringPK.setPeptideId(mergedPepMatch.peptide.id)
+//        msiPeptideReadablePtmStringPK.setResultSetId(msiQuantRS.getId())
+//
+//        val msiPeptideReadablePtmString = new MsiPeptideReadablePtmString()
+//        msiPeptideReadablePtmString.setId(msiPeptideReadablePtmStringPK)
+//        msiPeptideReadablePtmString.setResultSet(msiQuantRS)
+//        msiPeptideReadablePtmString.setPeptide(ormPep)
+//        msiPeptideReadablePtmString.setReadablePtmString(mergedPepInstance.peptide.readablePtmString)
+//
+//        // Save PeptideReadablePTMString
+//        msiEm.persist(msiPeptideReadablePtmString)
+//      }
+//      
+//
+//
+//      // Map this quant peptide match to identified child peptide matches
+//      // VDS TODO ? IF IDF hierarcghy <> from Quanti ??
+//      if (mergedPepMatch.getChildrenIds != null) {
+//        for (childPepMatchId <- mergedPepMatch.getChildrenIds) {
+//
+//          val msiPepMatchRelationPK = new PeptideMatchRelationPK()
+//          msiPepMatchRelationPK.setChildPeptideMatchId(childPepMatchId)
+//          msiPepMatchRelationPK.setParentPeptideMatchId(msiMasterPepMatchId)
+//             
+//          val msiPepMatchRelation = new MsiPeptideMatchRelation()
+//          msiPepMatchRelation.setId(msiPepMatchRelationPK)
+//          msiPepMatchRelation.setParentPeptideMatch(msiMasterPepMatch)
+//
+//          val childPM: fr.proline.core.orm.msi.PeptideMatch = msiEm.find(classOf[fr.proline.core.orm.msi.PeptideMatch], childPepMatchId)
+//          msiPepMatchRelation.setChildPeptideMatch(childPM)
+//
+//          // FIXME: rename to setParentResultSet
+//          msiPepMatchRelation.setParentResultSetId(msiQuantRS)
+//                   
+//    	  msiEm.persist(msiPepMatchRelation)
+//          
+//        }
+//      }
+//    }
+//
+//    // Retrieve some vars
+//    val mergedPeptideSets = mergedRSM.peptideSets
+//    this.logger.debug("number of grouped peptide sets: " + mergedPeptideSets.length + " sameset " + mergedPeptideSets.count(!_.isSubset))
+//    val mergedProteinSets = mergedRSM.proteinSets
+//    this.logger.debug("number of grouped protein sets: " + mergedProteinSets.length)
+//    val mergedProtSetById = mergedRSM.proteinSetById
+//    val mergedProtMatchById = mergedRSM.lazyResultSet.proteinMatchById
+//
+//    // Iterate over identified peptide sets to create quantified peptide sets
+//    this.logger.info("storing quantified peptide sets and protein sets...")
+//    for (mergedPeptideSet <- mergedPeptideSets) {
+//
+//      val msiMasterProtMatchIdByMergedId = new HashMap[Long, Long]
+//      val mergedProtMatchIdByMasterId = new HashMap[Long, Long]
+//
+//      // Store master protein matches
+//      val msiMasterProtMatches = mergedPeptideSet.proteinMatchIds.map { protMatchId =>
+//
+//        val mergedProtMatch = mergedProtMatchById(protMatchId)
+//
+//        val msiMasterProtMatch = new MsiProteinMatch()
+//        msiMasterProtMatch.setAccession(mergedProtMatch.accession)
+//        msiMasterProtMatch.setDescription(mergedProtMatch.description)
+//        msiMasterProtMatch.setGeneName(mergedProtMatch.geneName)
+//        msiMasterProtMatch.setScore(mergedProtMatch.score)
+//        msiMasterProtMatch.setCoverage(mergedProtMatch.coverage)
+//        msiMasterProtMatch.setPeptideCount(mergedProtMatch.sequenceMatches.length)
+//        msiMasterProtMatch.setPeptideMatchCount(mergedProtMatch.peptideMatchesCount)
+//        msiMasterProtMatch.setIsDecoy(mergedProtMatch.isDecoy)
+//        msiMasterProtMatch.setIsLastBioSequence(mergedProtMatch.isLastBioSequence)
+//        msiMasterProtMatch.setTaxonId(mergedProtMatch.taxonId)
+//        if (mergedProtMatch.getProteinId > 0) msiMasterProtMatch.setBioSequenceId(mergedProtMatch.getProteinId)
+//        // FIXME: retrieve the right scoring id from OM scoring type 
+//        msiMasterProtMatch.setScoringId(3)
+//        msiMasterProtMatch.setResultSet(msiQuantRS)
+//        msiEm.persist(msiMasterProtMatch)
+//
+//        val msiMasterProtMatchId = msiMasterProtMatch.getId
+//
+//        // Map new protein match id by Merged protein Match id
+//        msiMasterProtMatchIdByMergedId += mergedProtMatch.id -> msiMasterProtMatchId
+//        // Map protein match TMP id by the new id
+//        mergedProtMatchIdByMasterId += msiMasterProtMatchId -> mergedProtMatch.id
+//
+//        // TODO: map protein_match to seq_databases
+//
+//        msiMasterProtMatch
+//      }
+//
+//      // TODO: find what to do with subsets
+//      if (mergedPeptideSet.isSubset == false) {
+//
+//        val masterProteinSetOpt = mergedProtSetById.get(mergedPeptideSet.getProteinSetId)
+//        assert(masterProteinSetOpt.isDefined, "missing protein set with id=" + mergedPeptideSet.getProteinSetId)
+//
+//        //////// Check if the protein set has at least a peptide instance with a relevant quantitation
+//        //val isProteinSetQuantitationRelevant = 0
+//        //for( tmpPepInstance <- samesetPeptideInstances ) {
+//        //  val rdbQuantPepInstance = quantPepByIdentPepId( tmpPepInstance.id )
+//        //  if( rdbQuantPepInstance.isQuantitationRelevant ) {
+//        //    isProteinSetQuantitationRelevant = 1
+//        //    last
+//        //  }
+//        //}
+//
+//        // Determine the typical protein match id using the sequence coverage
+//        val mergedProteinSet = masterProteinSetOpt.get
+//        var mergedTypicalProtMatchId = mergedProteinSet.getRepresentativeProteinMatchId
+//
+//        if (mergedTypicalProtMatchId <= 0) {
+//          val typicalProtMatchTmpId = mergedProteinSet.samesetProteinMatchIds.reduce { (a, b) =>
+//            if (mergedProtMatchById(a).coverage > mergedProtMatchById(b).coverage) a else b
+//          }         
+//        }
+//        val typicalProtMatchId = msiMasterProtMatchIdByMergedId(mergedTypicalProtMatchId)
+//
+//        // Store master protein set
+//        val msiMasterProteinSet = new MsiProteinSet()
+//        msiMasterProteinSet.setIsValidated(mergedProteinSet.isValidated)
+//        msiMasterProteinSet.setIsDecoy(mergedProteinSet.isDecoy)
+//        msiMasterProteinSet.setSelectionLevel(2)
+//        msiMasterProteinSet.setProteinMatchId(typicalProtMatchId)
+//        msiMasterProteinSet.setResultSummary(msiQuantRSM)
+//        msiEm.persist(msiMasterProteinSet)
+//
+//        val msiMasterProteinSetId = msiMasterProteinSet.getId
+//        msiMasterProtSetById(msiMasterProteinSetId) = msiMasterProteinSet
+//        msiMasterProtSetByMergedProtSetId(mergedProteinSet.id) = msiMasterProteinSet
+//
+//        // Retrieve peptide set items
+//        val samesetItems = mergedPeptideSet.items
+//
+//        // Store master peptide set
+//        val msiMasterPeptideSet = new MsiPeptideSet()
+//        msiMasterPeptideSet.setIsSubset(false)
+//        msiMasterPeptideSet.setPeptideCount(samesetItems.length)
+//        msiMasterPeptideSet.setPeptideMatchCount(mergedPeptideSet.peptideMatchesCount)
+//        msiMasterPeptideSet.setSequenceCount(mergedPeptideSet.sequencesCount)
+//        msiMasterPeptideSet.setProteinSet(msiMasterProteinSet)
+//        // FIXME: retrieve the right scoring id
+//        msiMasterPeptideSet.setScore(mergedPeptideSet.score)
+//        msiMasterPeptideSet.setScoring(msiScoring)
+//        msiMasterPeptideSet.setResultSummaryId(quantRsmId)
+//        msiEm.persist(msiMasterPeptideSet)
+//
+//        val msiMasterPeptideSetId = msiMasterPeptideSet.getId
+//
+//        // Link master peptide set to master peptide instances
+//        for (samesetItem <- samesetItems) {
+//          val mergedSameSetPepInst = samesetItem.peptideInstance
+//          val msiMasterPepInst = msiMasterPepInstByMergedPepInstId(mergedSameSetPepInst.id)
+//
+//          val msiPepSetItemPK = new MsiPeptideSetItemPK()
+//          msiPepSetItemPK.setPeptideSetId(msiMasterPeptideSet.getId)
+//          msiPepSetItemPK.setPeptideInstanceId(msiMasterPepInst.getId)
+//
+//          // TODO: change JPA definition to skip this double mapping
+//          val msiPepSetItem = new MsiPeptideSetItem()
+//          msiPepSetItem.setId(msiPepSetItemPK)
+//          msiPepSetItem.setPeptideSet(msiMasterPeptideSet)
+//          msiPepSetItem.setPeptideInstance(msiMasterPepInst)
+//          msiPepSetItem.setSelectionLevel(2)
+//          msiPepSetItem.setResultSummary(msiQuantRSM)
+//
+//          msiEm.persist(msiPepSetItem)
+//        }
+//
+//        for (msiMasterProtMatch <- msiMasterProtMatches) {
+//
+//          val msiMasterProtMatchId = msiMasterProtMatch.getId
+//
+//          // TODO: Map master protein match to master peptide set => ORM has to be fixed
+//          /*val msiPepSetProtMatchMap = new MsiPepSetProtMatchMap()
+//          new Pairs::Msi::RDBO::PeptideSetProteinMatchMap(
+//                                  peptide_set_id = quantPeptideSetId,
+//                                  protein_match_id = quantProtMatchId,
+//                                  result_summary_id = quantRsmId,
+//                                  db = msiRdb
+//                                ).save*/
+//
+//          // Link master protein match to master protein set
+//          val msiProtSetProtMatchItemPK = new MsiProtSetProtMatchItemPK()
+//          msiProtSetProtMatchItemPK.setProteinSetId(msiMasterProteinSet.getId)
+//          msiProtSetProtMatchItemPK.setProteinMatchId(msiMasterProtMatch.getId)
+//
+//          // TODO: change JPA definition
+//          val msiProtSetProtMatchItem = new MsiProtSetProtMatchItem()
+//          msiProtSetProtMatchItem.setId(msiProtSetProtMatchItemPK)
+//          msiProtSetProtMatchItem.setProteinSet(msiMasterProteinSet)
+//          msiProtSetProtMatchItem.setProteinMatch(msiMasterProtMatch)
+//          msiProtSetProtMatchItem.setResultSummary(msiQuantRSM)
+//          msiEm.persist(msiProtSetProtMatchItem)
+//
+//          // Link master protein match to master peptide set
+//          val msiPepSetProtMatchMapPK = new MsiPepSetProtMatchMapPK()
+//          msiPepSetProtMatchMapPK.setPeptideSetId(msiMasterPeptideSet.getId)
+//          msiPepSetProtMatchMapPK.setProteinMatchId(msiMasterProtMatchId)
+//
+//          val msiPepSetProtMatchMap = new MsiPepSetProtMatchMap()
+//          msiPepSetProtMatchMap.setId(msiPepSetProtMatchMapPK)
+//          msiPepSetProtMatchMap.setPeptideSet(msiMasterPeptideSet)
+//          msiPepSetProtMatchMap.setProteinMatch(msiMasterProtMatch)
+//          msiPepSetProtMatchMap.setResultSummary(msiQuantRSM)
+//          msiEm.persist(msiPepSetProtMatchMap)
+//
+//          // Link master protein match to master peptide matches using master sequence matches
+//          val mergedProtMatch = mergedProtMatchById(mergedProtMatchIdByMasterId(msiMasterProtMatchId))
+//          val mergedSeqMatches = mergedProtMatch.sequenceMatches
+//          val mappedMasterPepMatchesIdSet = new HashSet[Long]
+//
+//          for (mergedSeqMatch <- mergedSeqMatches) {
+//
+//            val bestPepMatchId = mergedSeqMatch.getBestPeptideMatchId
+//            if (masterQuantPepMatchIdByMergedPepMatchId.contains(bestPepMatchId)) {
+//              val masterPepMatchId = masterQuantPepMatchIdByMergedPepMatchId(bestPepMatchId)
+//
+//              if (mappedMasterPepMatchesIdSet.contains(masterPepMatchId) == false) {
+//                mappedMasterPepMatchesIdSet(masterPepMatchId) = true
+//
+//                val msiMasterSeqMatchPK = new fr.proline.core.orm.msi.SequenceMatchPK()
+//                msiMasterSeqMatchPK.setProteinMatchId(msiMasterProtMatchId)
+//                msiMasterSeqMatchPK.setPeptideId(mergedSeqMatch.getPeptideId)
+//                msiMasterSeqMatchPK.setStart(mergedSeqMatch.start)
+//                msiMasterSeqMatchPK.setStop(mergedSeqMatch.end)
+//
+//                val msiMasterSeqMatch = new MsiSequenceMatch()
+//                msiMasterSeqMatch.setId(msiMasterSeqMatchPK)
+//                msiMasterSeqMatch.setResidueBefore(scalaCharToCharacter(mergedSeqMatch.residueBefore))
+//                msiMasterSeqMatch.setResidueAfter(scalaCharToCharacter(mergedSeqMatch.residueAfter))
+//                msiMasterSeqMatch.setIsDecoy(false)
+//                msiMasterSeqMatch.setBestPeptideMatchId(masterPepMatchId)
+//                msiMasterSeqMatch.setResultSetId(quantRsId)
+//                msiEm.persist(msiMasterSeqMatch)
+//
+//              }
+//            }
+//          }
+//        }
+//      }
+//    }
+//
+//  }
 
 }
 

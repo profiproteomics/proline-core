@@ -3,7 +3,7 @@ package fr.proline.core.service.uds
 import scala.collection.mutable.HashMap
 import fr.proline.api.service.IService
 import fr.proline.context.IExecutionContext
-import fr.proline.core.om.model.msq.ExperimentalDesign2
+import fr.proline.core.om.model.msq.ExperimentalDesign
 import fr.proline.core.orm.uds.{
   BiologicalGroup => UdsBiologicalGroup,
   BiologicalSample => UdsBiologicalSample,
@@ -30,7 +30,7 @@ class CreateSCQuantitation(
   description: String,
   projectId: Long,
   // methodId: Long, => SC id = 2
-  experimentalDesign: ExperimentalDesign2
+  experimentalDesign: ExperimentalDesign
 ) extends IService {
 
   private var _udsQuantitation: UdsDataset = null
@@ -41,10 +41,9 @@ class CreateSCQuantitation(
     // Create entity manager
     val udsEM = executionContext.getUDSDbConnectionContext().getEntityManager()
 
-
     // Retrieve some vars
     val biologicalSamples = experimentalDesign.biologicalSamples
-    val biologicalGroups = experimentalDesign.biologicalGroups
+    val biologicalGroups = experimentalDesign.groupSetups(0).biologicalGroups
     val masterQuantChannels = experimentalDesign.masterQuantChannels
 
     val udsProject = udsEM.find(classOf[UdsProject], projectId)

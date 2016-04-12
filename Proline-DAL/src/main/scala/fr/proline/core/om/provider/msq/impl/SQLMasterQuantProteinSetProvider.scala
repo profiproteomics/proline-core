@@ -170,7 +170,6 @@ class SQLMasterQuantProteinSetProvider(
       " WHERE "~ t1.ID ~" IN ("~ mqProtSetIds.mkString(",") ~")" ~
       " AND "~ t1.MASTER_QUANT_COMPONENT_ID ~" = "~ t2.ID ~
       " AND "~ t2.OBJECT_TREE_ID ~" = "~ t3.ID
-      //" AND "~ t3.SCHEMA_NAME ~" = '"~ quantProteinSetSchema ~"'"
     )
        
     msiEzDBC.select(mqProtSetCompQuery)
@@ -187,7 +186,6 @@ class SQLMasterQuantProteinSetProvider(
       " WHERE "~ t2.RESULT_SUMMARY_ID ~" IN ("~ quantRsmIds.mkString(",") ~")" ~
       " AND "~ t1.MASTER_QUANT_COMPONENT_ID ~" = "~ t2.ID ~
       " AND "~ t2.OBJECT_TREE_ID ~" = "~ t3.ID
-      //" AND "~ t3.SCHEMA_NAME ~" = '"~ quantProteinSetSchema ~"'"
     )
     
     msiEzDBC.select(mqProtSetCompQuery)

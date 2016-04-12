@@ -13,7 +13,6 @@ import fr.proline.core.om.model.msi.PeptideInstance
 import fr.proline.core.om.model.msq._
 import fr.proline.core.om.provider.msi.impl.SQLPeptideInstanceProvider
 import fr.proline.core.om.provider.msi.impl.SQLPeptideProvider
-import fr.proline.core.orm.msi.ObjectTreeSchema.SchemaName
 import fr.proline.repository.ProlineDatabaseType
 
 class SQLMasterQuantPeptideProvider(
@@ -32,10 +31,6 @@ class SQLMasterQuantPeptideProvider(
   val ObjectTreeTable = MsiDbObjectTreeTable
   val ObjectTreeCols = ObjectTreeTable.columns
   
-  final val labelFreeQuantPeptidesSchema = SchemaName.LABEL_FREE_QUANT_PEPTIDES.toString
-  final val spectralCountQuantPeptidesSchema = SchemaName.SPECTRAL_COUNTING_QUANT_PEPTIDES.toString
-  //final val quantProteinSetSchema = SchemaName.QUANT_PROTEIN_SETS.toString
-
   def getMasterQuantPeptides(
     mqPepIds: Seq[Long]
   ): Array[MasterQuantPeptide] = {
@@ -131,12 +126,10 @@ class SQLMasterQuantPeptideProvider(
     quantRsmIds: Seq[Long]
   ): (IValueContainer => MasterQuantPeptide) => Seq[MasterQuantPeptide] = {
     
-    // TODO: index master_quant_component table and/or object_tree table on schema name
     val mqPepCompQueryBuilder = new SelectQueryBuilder2(MQComponentTable,ObjectTreeTable)
     val mqPepCompQuery = mqPepCompQueryBuilder.mkSelectQuery(
       (t1,c1,t2,c2) => List(t1.ID,t1.SELECTION_LEVEL,t1.RESULT_SUMMARY_ID,t1.SERIALIZED_PROPERTIES,t2.CLOB_DATA) -> 
       " WHERE "~ t1.RESULT_SUMMARY_ID ~" IN ("~ quantRsmIds.mkString(",") ~")" ~
-      " AND ( "~ t1.SCHEMA_NAME ~" = '"~ labelFreeQuantPeptidesSchema ~"' OR "~ t1.SCHEMA_NAME ~" = '"~ spectralCountQuantPeptidesSchema ~"') " ~
       " AND "~ t1.OBJECT_TREE_ID ~" = "~ t2.ID
     )
      

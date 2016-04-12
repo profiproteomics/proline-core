@@ -90,6 +90,9 @@ class SQLRunProvider(
   def getRuns( runIds: Seq[Long], loadScanSequence: Boolean = false ): Array[LcMsRun] = {
     if( runIds.isEmpty ) return Array()
     
+    // Remove duplicated run ids
+    val distinctRunIds = runIds.distinct
+    
     val scanSeqByIdAsOpt = if( loadScanSequence == false ) None
     else {
       require( scanSeqProvider.isDefined, "a scan sequence provider must be defined")
@@ -97,14 +100,14 @@ class SQLRunProvider(
       Some( Map() ++ scanSeqs.map( scanSeq => scanSeq.runId -> scanSeq ) )
     }
     
-    val runs = new Array[LcMsRun](runIds.length)
+    val runs = new Array[LcMsRun](distinctRunIds.length)
     var runIdx = 0
     
     // Load runs
     DoJDBCReturningWork.withEzDBC(udsDbCtx, { ezDBC =>
       
       val runQuery = new SelectQueryBuilder1(UdsDbRunTable).mkSelectQuery( (t1,c1) =>
-        List(t1.*) -> "WHERE "~ t1.ID ~" IN ("~ runIds.mkString(",") ~") "
+        List(t1.*) -> "WHERE "~ t1.ID ~" IN ("~ distinctRunIds.mkString(",") ~") "
       )
       
       val runRecords = ezDBC.selectAllRecords(runQuery)

@@ -3,7 +3,7 @@ package fr.proline.core.service.msq.quantify
 import java.io.File
 import javax.persistence.EntityManager
 import fr.proline.context.IExecutionContext
-import fr.proline.core.algo.lcms._
+import fr.proline.core.algo.msq.config._
 import fr.proline.core.om.model.msi.Instrument
 import fr.proline.core.om.model.msq.ExperimentalDesign
 import fr.proline.core.orm.uds.MasterQuantitationChannel

@@ -1,5 +1,6 @@
 package fr.proline.core.om.provider.msi.impl
 
+import fr.profi.util.collection._
 import fr.proline.core.om.provider.msi.IPeptideInstanceProvider
 import fr.proline.core.om.model.msi.PeptideInstance
 import fr.proline.context.DatabaseConnectionContext
@@ -7,8 +8,8 @@ import fr.proline.context.DatabaseConnectionContext
 // TODO: create a generic implementation ???
 class InMemoryPeptideInstanceProvider( peptideInstances: Array[PeptideInstance] ) extends IPeptideInstanceProvider {
   
-  protected lazy val peptideInstanceById = peptideInstances.view.map( p => p.id -> p ).toMap
-  protected lazy val peptideInstancesByRsmId = peptideInstances.groupBy( _.resultSummaryId )
+  protected lazy val peptideInstanceById = peptideInstances.mapByLong( _.id )
+  protected lazy val peptideInstancesByRsmId = peptideInstances.groupByLong( _.resultSummaryId )
 
   def getPeptideInstancesAsOptions( pepSetIds: Seq[Long] ): Array[Option[PeptideInstance]] = {
     pepSetIds.map { this.peptideInstanceById.get(_) } toArray

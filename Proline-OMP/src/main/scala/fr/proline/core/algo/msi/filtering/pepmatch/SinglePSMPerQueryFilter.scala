@@ -3,28 +3,26 @@ package fr.proline.core.algo.msi.filtering.pepmatch
 import scala.collection.Seq
 import fr.proline.core.algo.msi.filtering.IPeptideMatchFilter
 import scala.collection.immutable.Map
-import fr.proline.core.om.model.msi.PeptideMatch
+import fr.proline.core.om.model.msi._
 import fr.proline.core.algo.msi.filtering.PepMatchFilterParams
 import fr.proline.core.algo.msi.filtering.PeptideMatchFiltering
-import fr.proline.core.om.model.msi.ResultSet
 import scala.collection.mutable.ArrayBuffer
-import fr.proline.core.om.model.msi.ProteinMatch
 import scala.collection.mutable.HashMap
 import fr.proline.core.algo.msi.filtering.IFilterNeedingResultSet
 import com.typesafe.scalalogging.LazyLogging
 import fr.profi.util.MathUtils
 
-class SinglePSMPerQueryFilter(var targetRSSet: ResultSet = null) extends IPeptideMatchFilter with LazyLogging with IFilterNeedingResultSet {
+class SinglePSMPerQueryFilter(var targetRs: IResultSetLike = null) extends IPeptideMatchFilter with LazyLogging with IFilterNeedingResultSet {
 
   val filterParameter = PepMatchFilterParams.SINGLE_PSM_PER_QUERY.toString
   val filterDescription = "single peptide match per query filter using score and peptide matches count per protein values"
 
-  def setTargetRS(targetRS: ResultSet)  {
-    targetRSSet = targetRS
+  def setTargetRS(targetRS: IResultSetLike)  {
+    targetRs = targetRS
   }
 
   def filterPeptideMatches(pepMatches: Seq[PeptideMatch], incrementalValidation: Boolean, traceability: Boolean): Unit = {
-    require(targetRSSet != null, " Target Search Result Should be specified before running this filter.")
+    require(targetRs != null, " Target Search Result Should be specified before running this filter.")
 
     // Reset validation status if validation is not incremental
     if (!incrementalValidation) PeptideMatchFiltering.resetPepMatchValidationStatus(pepMatches)
@@ -33,17 +31,11 @@ class SinglePSMPerQueryFilter(var targetRSSet: ResultSet = null) extends IPeptid
     //For each query find a unique PSM. Used ruels:
     // - PSM with best score
     // - if equality : PSM which identify ProtMatches with higher number of valid PSMs
-    val pepMatchesPerProtMatch: Map[ProteinMatch, ArrayBuffer[PeptideMatch]] =if(targetRSSet.decoyResultSet.isDefined) {targetRSSet.getPeptideMatchesByProteinMatch ++ targetRSSet.decoyResultSet.get.getPeptideMatchesByProteinMatch} else targetRSSet.getPeptideMatchesByProteinMatch
-
-    //Create reverse map 
-    val protMatchesPerPepMatchIdBuillder = new HashMap[Long, ArrayBuffer[ProteinMatch]]()
-    pepMatchesPerProtMatch.foreach(entry => {
-      val pepMatches = entry._2
-      pepMatches.foreach(pepMatch => {
-        val protArrays = protMatchesPerPepMatchIdBuillder.getOrElseUpdate(pepMatch.id, new ArrayBuffer[ProteinMatch]())
-        protArrays += entry._1
-      })
-    })
+    var protMatchesByPepMatchId = ResultSet.getProteinMatchesByPeptideMatchId(targetRs)
+    val decoyRsOpt = targetRs.getDecoyResultSet()
+    if( decoyRsOpt.isDefined ) {
+      protMatchesByPepMatchId ++= ResultSet.getProteinMatchesByPeptideMatchId(decoyRsOpt.get)
+    }
     
     // Filter query per query
     psmPerQuery.foreach(entry => {
@@ -61,10 +53,11 @@ class SinglePSMPerQueryFilter(var targetRSSet: ResultSet = null) extends IPeptid
           if (bestQueryPsm == null) {
             bestQueryPsm = currentPsm
           } else {
-            // filter using ProteinMatch nbrPeptideCount.
-            if (protMatchesPerPepMatchIdBuillder.get(currentPsm.id).isDefined &&
-              (protMatchesPerPepMatchIdBuillder.get(bestQueryPsm.id).isEmpty
-                || (getMaxNbrPepForProtMatches(protMatchesPerPepMatchIdBuillder.get(currentPsm.id).get) >getMaxNbrPepForProtMatches(protMatchesPerPepMatchIdBuillder.get(bestQueryPsm.id).get) )))
+            val protMatchesOpt = protMatchesByPepMatchId.get(currentPsm.id)
+            val bestPsmProtMatchesOpt = protMatchesByPepMatchId.get(bestQueryPsm.id)
+            // filter using ProteinMatch nbrPeptideCount
+            if (protMatchesOpt.isDefined && bestPsmProtMatchesOpt.isEmpty
+                || getMaxNbrPepForProtMatches(protMatchesOpt.get) > getMaxNbrPepForProtMatches(bestPsmProtMatchesOpt.get) )
               bestQueryPsm = currentPsm
           }
         }) //end go throughall equals psms
@@ -86,7 +79,7 @@ class SinglePSMPerQueryFilter(var targetRSSet: ResultSet = null) extends IPeptid
 
   }
   
-  protected  def getMaxNbrPepForProtMatches(protMatches : ArrayBuffer[ProteinMatch]) : Int = {
+  protected  def getMaxNbrPepForProtMatches(protMatches: Array[ProteinMatch]) : Int = {
     var maxNbrPep:Int = 0
   	protMatches.foreach(pm => {  	  
   	    maxNbrPep =maxNbrPep.max(pm.peptideMatchesCount)

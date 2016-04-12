@@ -3,18 +3,19 @@ package fr.proline.core.algo.lcms
 import org.junit.runner.RunWith
 import org.scalatest.junit.JUnitRunner
 
+import fr.profi.util.ms.MassTolUnit
 import fr.profi.util.serialization.ProfiJson
-import fr.proline.core.algo.lcms.filtering._
+import fr.proline.core.algo.lcms.filtering.Filter
+import fr.proline.core.algo.lcms.filtering.FilterOperator
+import fr.proline.core.algo.msq.config.ExtractionParams
+import fr.proline.core.algo.msq.config.LabelFreeQuantConfig
 import fr.proline.core.om.msi.AbstractSerializationSpec
 import fr.proline.core.om.msi.SerializationSpecif
-import fr.profi.util.ms.MassTolUnit
 
 @RunWith(classOf[JUnitRunner])
 class SerializationSpec extends AbstractSerializationSpec {
   
   val quantConfig = LabelFreeQuantConfig(
-    mapSetName = "map set test",
-    lcMsRuns = null,
     extractionParams = ExtractionParams(  // for extraction and MS2 mapping
       mozTol = 5.0,
       mozTolUnit = MassTolUnit.PPM.toString

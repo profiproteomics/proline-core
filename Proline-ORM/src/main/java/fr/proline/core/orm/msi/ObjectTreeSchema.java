@@ -20,9 +20,12 @@ public class ObjectTreeSchema implements Serializable {
 	
     public enum SchemaName {
     	SPECTRUM_MATCH("peptide_match.spectrum_match"),
+    	ISOBARIC_TAGGING_QUANT_PEPTIDES("object_tree.isobaric_tagging_quant_peptides"),
+    	ISOBARIC_TAGGING_QUANT_PEPTIDE_IONS("object_tree.isobaric_tagging_quant_peptide_ions"),
     	LABEL_FREE_QUANT_PEPTIDES("object_tree.label_free_quant_peptides"),
     	LABEL_FREE_QUANT_PEPTIDE_IONS("object_tree.label_free_quant_peptide_ions"),
     	QUANT_PROTEIN_SETS("object_tree.quant_protein_sets"),
+    	QUANT_REPORTER_IONS("object_tree.quant_reporter_ions"),
     	SPECTRAL_COUNTING_QUANT_PEPTIDES("object_tree.spectral_counting_quant_peptides"),
     	SPECTRAL_COUNTING_QUANT_PEPTIDE_IONS("object_tree.spectral_counting_quant_peptide_ions"),
     	PEPTIDE_VALIDATION_ROC_CURVE("result_summary.peptide_validation_roc_curve"),

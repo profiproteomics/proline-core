@@ -26,6 +26,7 @@ import fr.profi.util.metrics.Metric
 import fr.profi.util.serialization.ProfiMsgPack
 import fr.proline.context.DatabaseConnectionContext
 import fr.proline.core.algo.lcms._
+import fr.proline.core.algo.msq.config._
 import fr.proline.core.dal.helper.LcmsDbHelper
 import fr.proline.core.dal.{ DoJDBCWork, DoJDBCReturningWork }
 import fr.proline.core.om.model.lcms.{ Feature => LcMsFeature, IsotopicPattern => LcMsIsotopicPattern }
@@ -48,6 +49,8 @@ import fr.proline.core.algo.lcms.alignment.AlignmentResult
  */
 class ExtractMapSet(
   val lcmsDbCtx: DatabaseConnectionContext,
+  val mapSetName: String,
+  val lcMsRuns: Seq[LcMsRun],
   val quantConfig: ILcMsQuantConfig,
   val peptideByRunIdAndScanNumber: Option[Map[Long, HashMap[Int, Peptide]]] = None, // sequence data may or may not be provided
   val peptideMatchByRunIdAndScanNumber: Option[Map[Long, HashMap[Int, ArrayBuffer[PeptideMatch]]]] = None
@@ -57,8 +60,6 @@ class ExtractMapSet(
   require(quantConfig.extractionParams.mozTolUnit matches "(?i)PPM")
 
   // Define some vars
-  protected val mapSetName = quantConfig.mapSetName
-  protected val lcMsRuns = quantConfig.lcMsRuns
   protected val mozTolPPM = quantConfig.extractionParams.mozTol.toFloat
   protected val clusteringParams = quantConfig.clusteringParams
   protected val alnMethodName = quantConfig.alnMethodName
@@ -79,7 +80,7 @@ class ExtractMapSet(
   protected val pps = new PeakPickingSoftware(
     id = 1,
     name = "Proline",
-    version = "0.1.1",
+    version = "0.6.0",
     algorithm = "ExtractMapSet"
   )
 
@@ -543,7 +544,8 @@ class ExtractMapSet(
 
             (peakels, mzdbFtDetector.ms1SpectrumHeaderById, mzdbFtDetector.ms2SpectrumHeadersByCycle)
           } else {
-            this.logger.info("read peakels from existing file " + existingPeakelFiles(0) + " for " + mzDbFile.getName());
+            this.logger.info("Loading peakels from existing file " + existingPeakelFiles(0) + " for mzDB file " + mzDbFile.getName())
+            
             // Peakel file already exists : reuse it ! 
             // Create a mapping between the TMP file and the LC-MS run
             peakelFileByRun += lcMsRun -> existingPeakelFiles(0)

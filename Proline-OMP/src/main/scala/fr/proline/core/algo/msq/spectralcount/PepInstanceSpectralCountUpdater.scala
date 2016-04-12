@@ -3,10 +3,12 @@ package fr.proline.core.algo.msq.spectralcount
 import fr.proline.context.IExecutionContext
 import fr.proline.core.algo.msi.filtering.IPeptideMatchFilter
 import fr.proline.core.om.model.msi.ResultSet
+import fr.proline.core.om.model.msi.LazyResultSet
 import scala.collection.mutable.HashMap
 import fr.proline.core.om.model.msi.PeptideMatch
 import com.typesafe.scalalogging.LazyLogging
 import fr.proline.core.om.model.msi.ResultSummary
+import fr.proline.core.om.model.msi.LazyResultSummary
 import fr.proline.core.algo.msi.filtering.ResultSummaryFilterBuilder
 import fr.proline.repository.util.JDBCWork
 import java.sql.Connection
@@ -19,6 +21,9 @@ import fr.proline.core.om.provider.msi.impl.SQLResultSummaryProvider
 import fr.proline.core.om.provider.msi.IResultSummaryProvider
 import fr.proline.core.om.model.msi.PeptideInstance
 import scala.collection.mutable.ArrayBuffer
+import fr.proline.core.om.provider.msi.impl.SQLLazyResultSummaryProvider
+import fr.proline.core.om.model.msi.IResultSummaryLike
+import fr.proline.core.om.model.msi.LazyResultSummary
 //import scala.collection.JavaConverters.asJavaCollectionConverter
 
 trait IPepInstanceSpectralCountUpdater {
@@ -39,15 +44,19 @@ trait IPepInstanceSpectralCountUpdater {
    *  
    *  NO persistence is DONE !!
    */
-  def updatePepInstanceSC(rsm: ResultSummary, execContext: IExecutionContext): Unit
+  def updatePepInstanceSC(rsm: LazyResultSummary, execContext: IExecutionContext): Unit
+  
+  def updatePepInstanceSC(rsm: ResultSummary, execContext: IExecutionContext): Unit = {
+    this.updatePepInstanceSC(rsm.toLazyResultSummary(false, false), execContext)
+  }
 
 }
 
 class PepInstanceFilteringLeafSCUpdater extends IPepInstanceSpectralCountUpdater with LazyLogging {
 
-  val loadedRSMByID = new HashMap[Long, ResultSummary]()
+  val loadedRSMByID = new HashMap[Long, LazyResultSummary]()
   val isChildByRSMID = new HashMap[Long, Boolean]()
-  val loadedRSByID = new HashMap[Long, ResultSet]()
+  val loadedRSByID = new HashMap[Long, LazyResultSet]()
   
   
   def getIsLeaveRSM(rsmID: Long, execContext: IExecutionContext): Boolean = {
@@ -55,7 +64,7 @@ class PepInstanceFilteringLeafSCUpdater extends IPepInstanceSpectralCountUpdater
     if(! isChildByRSMID.contains(rsmID)) {   
 	   
 	    val rsId = getRSIdForRsmID(rsmID, execContext)
-      val isSearchRS =  if (loadedRSByID.contains(rsId)) loadedRSByID(rsId).isSearchResult 
+      val isSearchRS =  if (loadedRSByID.contains(rsId)) loadedRSByID(rsId).descriptor.isSearchResult 
          else {
            
             var rsType: String = null       
@@ -89,7 +98,7 @@ class PepInstanceFilteringLeafSCUpdater extends IPepInstanceSpectralCountUpdater
 
   def getRSIdForRsmID(rsmID: Long, execContext: IExecutionContext): Long = {
     if(loadedRSMByID.contains(rsmID))
-      return loadedRSMByID(rsmID).getResultSetId
+      return loadedRSMByID(rsmID).resultSetId
 
    var rsID: Long = -1
 
@@ -127,7 +136,7 @@ class PepInstanceFilteringLeafSCUpdater extends IPepInstanceSpectralCountUpdater
    *  
    *  
    */
-    def updatePepInstanceSC(rsm: ResultSummary, execContext: IExecutionContext): Unit = {
+    def updatePepInstanceSC(rsm: LazyResultSummary, execContext: IExecutionContext): Unit = {
       updatePepInstanceSC(Seq(rsm), execContext)      
   	}	
     
@@ -145,18 +154,21 @@ class PepInstanceFilteringLeafSCUpdater extends IPepInstanceSpectralCountUpdater
    *  
    *  
    */
-  def updatePepInstanceSC(rsms: Seq[ResultSummary], execContext: IExecutionContext): Unit = {
+  def updatePepInstanceSC(rsms: Seq[IResultSummaryLike], execContext: IExecutionContext): Unit = {
     
-    rsms.foreach(rsm =>{
-        loadedRSMByID += (rsm.id -> rsm)
-        val rsOpt = rsm.resultSet
-        if(rsOpt.isDefined){
-          val rs = rsOpt.get
-          loadedRSByID +=(rs.id -> rs)
-        }
-    })
+    val lazyRsms = rsms.map { rsmLike =>
+      val lazyRsm = rsmLike match {
+        case lazyRsm: LazyResultSummary => lazyRsm
+        case rsm: ResultSummary => rsm.toLazyResultSummary(false, false)
+      }
+      
+      loadedRSMByID += (lazyRsm.id -> lazyRsm)
+      loadedRSByID += (lazyRsm.resultSetId -> lazyRsm.lazyResultSet)
+      
+      lazyRsm
+    }
     
-    rsms.foreach(rsm =>{
+    for( rsm <- lazyRsms) {
 	    val startTime = System.currentTimeMillis()
 		
 	    val spectralCountByPepId :HashMap[Long, Int] = getRSMSpectralCountByPepId(rsm, rsm.id, rsm.peptideInstances.map(_.peptideId),  execContext)
@@ -177,7 +189,7 @@ class PepInstanceFilteringLeafSCUpdater extends IPepInstanceSpectralCountUpdater
 	        throw new Exception("PeptideInstance associated to validated PeptideMatch not found for peptide id=" + pepSc._1)
 	      }
 	    })
-    })
+    }
     
     //Clear Cache Map
     loadedRSByID.clear
@@ -186,36 +198,34 @@ class PepInstanceFilteringLeafSCUpdater extends IPepInstanceSpectralCountUpdater
     
   }
   
- 
-  def getRSMSpectralCountByPepId(rootRSM: ResultSummary, rsmID: Long, pepID: Seq[Long], execContext: IExecutionContext): HashMap[Long, Int] = {
+  def getRSMSpectralCountByPepId(rootRSM: IResultSummaryLike, rsmID: Long, pepID: Seq[Long], execContext: IExecutionContext): HashMap[Long, Int] = {
     val scByPepID = new HashMap[Long, Int]()
 
     //***** RSM is leave : COUNT Valid PSM
     if (getIsLeaveRSM(rsmID, execContext)) {
       logger.trace(" RSM "+rsmID+" is leave RSM ")
-      var rsm: ResultSummary = null
-      if (loadedRSMByID.contains(rsmID))
-       rsm = loadedRSMByID(rsmID)
+
+      val rsm = if (loadedRSMByID.contains(rsmID))
+       loadedRSMByID(rsmID)
       else {
         logger.trace("Need to read RSM "+rsmID)
-        val rsmOp = getResultSummaryProvider(execContext).getResultSummary(rsmID, true)
-        if (rsmOp.isEmpty)
-          throw new IllegalArgumentException("Unable to read resultaSummay with specified ID " + rsmID)
-        rsm = rsmOp.get
-        loadedRSMByID += rsmID -> rsm
+        val rsmOpt = getResultSummaryProvider(execContext).getLazyResultSummary(rsmID, loadFullResultSet = true)
+        require(rsmOpt.isDefined,"Unable to read resultaSummay with specified ID " + rsmID)
+        loadedRSMByID += rsmID -> rsmOpt.get
+        
+        rsmOpt.get
       }
       
       logger.trace(" Calculate SC for RSM "+rsmID)
       
       //VDS comment :Could get info from PeptideInstance.peptideMatches.filter on isValidated... but should be sure
       // PeptideInstance.peptideMatches != null ...
-      val validePepMatchesSet = rsm.getAllPeptideMatchesByPeptideSetId.flatMap(_._2).toSet
+      val validPepMatchesSet = rsm.peptideMatchesByPeptideSetId.flatMap(_._2).toSet
 
       // Peptide Instance SC = PepMatch Count
-      for (psm <- validePepMatchesSet) {
+      for (psm <- validPepMatchesSet) {
         if (pepID.contains(psm.peptideId)) {
-          var pepSC = scByPepID.getOrElse(psm.peptideId, 0)
-          pepSC += 1
+          val pepSC = scByPepID.getOrElse(psm.peptideId, 0) + 1
           scByPepID.put(psm.peptideId, pepSC)
         }
       }
@@ -233,18 +243,16 @@ class PepInstanceFilteringLeafSCUpdater extends IPepInstanceSpectralCountUpdater
         val leavesRSs = getLeavesRS(rsmID, execContext)
 
         //Get RSM root of RS Merge : May not be the "final" Root RSM !!!   if RSMs have then be merged ...
-        var rsm: ResultSummary = null
-        if (loadedRSMByID.contains(rsmID))
-        	rsm = loadedRSMByID(rsmID)
+        val rsm = if (loadedRSMByID.contains(rsmID)) loadedRSMByID(rsmID)
       	else {
       		logger.trace("Need to read RSM "+rsmID)
-      		val rsmOp = getResultSummaryProvider(execContext).getResultSummary(rsmID, true)
-      		if (rsmOp.isEmpty)
-      			throw new IllegalArgumentException("Unable to read resultaSummay with specified ID " + rsmID)
-      		rsm = rsmOp.get
-      		loadedRSMByID += rsmID -> rsm
+      		val rsmOpt = getResultSummaryProvider(execContext).getLazyResultSummary(rsmID, true)
+      		require(rsmOpt.isDefined,"Unable to read resultaSummay with specified ID " + rsmID)
+
+      		loadedRSMByID += rsmID -> rsmOpt.get
+      		
+      		rsmOpt.get
       	}
-	  	
 
         //Get filters used for RSM root of RS Merge
         val appliedPSMFilters = ResultSummaryFilterBuilder.buildPeptideMatchFilters(rsm)
@@ -283,11 +291,11 @@ class PepInstanceFilteringLeafSCUpdater extends IPepInstanceSpectralCountUpdater
   }
 
   //A Optimiser: Prendre en entre la Map globale et l'incrementer...  
-  def countValidPSMInResultSet(rs: ResultSet, appliedPSMFilters: Array[IPeptideMatchFilter]): HashMap[Long, Int] = {
+  def countValidPSMInResultSet(rs: LazyResultSet, appliedPSMFilters: Array[IPeptideMatchFilter]): HashMap[Long, Int] = {
     appliedPSMFilters.foreach(psmFilter => {
       var allPSMs = rs.peptideMatches.toSeq
-      if (rs.decoyResultSet.isDefined) {
-        allPSMs ++= rs.decoyResultSet.get.peptideMatches
+      if (rs.lazyDecoyResultSet.isDefined) {
+        allPSMs ++= rs.lazyDecoyResultSet.get.peptideMatches
       }
       psmFilter.filterPeptideMatches(allPSMs, true, false)
     })
@@ -305,12 +313,13 @@ class PepInstanceFilteringLeafSCUpdater extends IPepInstanceSpectralCountUpdater
     resultMap
   }
 
-  def getResultSummaryProvider(execContext: IExecutionContext): IResultSummaryProvider = {
+  def getResultSummaryProvider(execContext: IExecutionContext): SQLLazyResultSummaryProvider = {
 
-    new SQLResultSummaryProvider(msiDbCtx = execContext.getMSIDbConnectionContext,
+    new SQLLazyResultSummaryProvider(
+      msiDbCtx = execContext.getMSIDbConnectionContext,
       psDbCtx = execContext.getPSDbConnectionContext,
-      udsDbCtx = execContext.getUDSDbConnectionContext)
-
+      udsDbCtx = execContext.getUDSDbConnectionContext
+    )
   }
 
   def getRSMChildsID(rsmID: Long, execContext: IExecutionContext): Option[Seq[Long]] = {
@@ -341,12 +350,12 @@ class PepInstanceFilteringLeafSCUpdater extends IPepInstanceSpectralCountUpdater
     return childRSMIdsOp
   }
 
-  def getLeavesRS(rsmID: Long, execContext: IExecutionContext): Seq[ResultSet] = {
+  def getLeavesRS(rsmID: Long, execContext: IExecutionContext): Seq[LazyResultSet] = {
     val providerContext = ProviderDecoratedExecutionContext(execContext) // Use Object factory
 
     val rsId = getRSIdForRsmID(rsmID, execContext)
     var leavesRsIds: Seq[Long] = getRSLeafChildsID(rsId, providerContext)
-    var leavesRsBuilder = Seq.newBuilder[ResultSet]
+    var leavesRsBuilder = Seq.newBuilder[LazyResultSet]
 
     val provider: IResultSetProvider = providerContext.getProvider(classOf[IResultSetProvider])
 
@@ -354,12 +363,12 @@ class PepInstanceFilteringLeafSCUpdater extends IPepInstanceSpectralCountUpdater
       if (!loadedRSByID.contains(rsID)) {
         val resultRS = provider.getResultSet(rsID)
         if (resultRS.isDefined) {
-          loadedRSByID += rsID -> resultRS.get
+          loadedRSByID += rsID -> resultRS.get.toLazyResultSet()
           if(resultRS.get.decoyResultSet.isEmpty && resultRS.get.getDecoyResultSetId > 0){
              val decoyRS = provider.getResultSet(resultRS.get.getDecoyResultSetId)
              resultRS.get.decoyResultSet = decoyRS
               if (decoyRS.isDefined) 
-                loadedRSByID += decoyRS.get.id -> decoyRS.get
+                loadedRSByID += decoyRS.get.id -> decoyRS.get.toLazyResultSet()
           }
         } else {
           val msg = " !!! Unable to get leave search result with id " + rsID
@@ -375,7 +384,7 @@ class PepInstanceFilteringLeafSCUpdater extends IPepInstanceSpectralCountUpdater
 
   def getRSLeafChildsID(rsId: Long, execContext: IExecutionContext): Seq[Long] = {
     var allRSIds = Seq.newBuilder[Long]
-    if(loadedRSByID.contains(rsId) && (loadedRSByID(rsId).isSearchResult)){
+    if(loadedRSByID.contains(rsId) && (loadedRSByID(rsId).descriptor.isSearchResult)){
        allRSIds += rsId
     } else {
      

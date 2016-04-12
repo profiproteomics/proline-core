@@ -1,19 +1,19 @@
-package fr.proline.core.algo.msq
+package fr.proline.core.algo.msq.summarizing
 
 import collection.mutable.ArrayBuffer
 import collection.JavaConversions.iterableAsScalaIterable
 import com.typesafe.scalalogging.LazyLogging
-import fr.proline.core.om.model.msi.{MsQuery,PeptideMatch,ResultSummary}
+import fr.proline.core.om.model.msi._
 import fr.proline.core.om.model.msq._
-import fr.proline.core.orm.uds.MasterQuantitationChannel 
 import scala.collection.mutable.HashMap
 
-object Ms2CountQuantifier extends IQuantifierAlgo with LazyLogging {
+object Ms2CountEntitiesSummarizer extends IMqPepAndProtEntitiesSummarizer with LazyLogging {
 
-  def computeMasterQuantPeptides( udsMasterQuantChannel: MasterQuantitationChannel,
-                                  mergedRSM: ResultSummary,
-                                  resultSummaries: Seq[ResultSummary]
-                                  ): Array[MasterQuantPeptide] = {
+  def computeMasterQuantPeptides(
+    masterQuantChannel: MasterQuantChannel,
+    quantMergedRSM: ResultSummary,
+    resultSummaries: Seq[ResultSummary]
+  ): Array[MasterQuantPeptide] = {
     
     // Map some values
     val rsIdByRsmId = new HashMap[Long,Long]
@@ -30,23 +30,21 @@ object Ms2CountQuantifier extends IQuantifierAlgo with LazyLogging {
       }
     }
     
-    // Map quant channel id by result set id    
-    val qcIdByRsId = udsMasterQuantChannel.getQuantitationChannels().map {
-                       qc => rsIdByRsmId(qc.getIdentResultSummaryId()) -> qc.getId
-                     } toMap
+    // Map quant channel id by result set id
+    val qcIdByRsId = masterQuantChannel.quantChannels.map {
+      qc => rsIdByRsmId(qc.identResultSummaryId) -> qc.id
+    } toMap
     
     // Retrieve all peptide matches
     val peptideMatchById = new HashMap[Long,PeptideMatch]()
     for( resultSummary <- resultSummaries ) {
       
-      val resultSetAsOpt = resultSummary.resultSet
-      require( resultSetAsOpt.isDefined, "the result summary must contain a result set" )
-      
-      val resultSet = resultSetAsOpt.get
+      val resultSetOpt = resultSummary.resultSet
       
       // Map peptide matches by their id
-      for( p <- resultSet.peptideMatches ) peptideMatchById(p.id) = p
-
+      if(resultSetOpt.isDefined){
+        for( p <- resultSetOpt.get.peptideMatches ) peptideMatchById(p.id) = p
+      }
     }
     
     // Merge result summaries
@@ -55,8 +53,8 @@ object Ms2CountQuantifier extends IQuantifierAlgo with LazyLogging {
     val mergedRSM = resultSummaryMerger.mergeResultSummaries( resultSummaries, seqLengthByProtId )*/
     
     // Retrieve peptide instances of the merged result summary
-    val mergedPepInstances = mergedRSM.peptideInstances
-    val mergedPepMatchById = mergedRSM.resultSet.get.getPeptideMatchById
+    val mergedPepInstances = quantMergedRSM.peptideInstances
+    val mergedPepMatchById = if(quantMergedRSM.resultSet.isDefined) quantMergedRSM.resultSet.get.getPeptideMatchById() else Map.empty[Long, PeptideMatch] 
     
     // Iterate over merged peptide instances to create quant peptide instances
     this.logger.info( "create quant peptide instances..." )
@@ -150,7 +148,7 @@ object Ms2CountQuantifier extends IQuantifierAlgo with LazyLogging {
           peptideMatchesCount = childPepMatchGroup.length,
           masterQuantPeptideId = masterQuantPeptideId,
           bestPeptideMatchId = Some(bestPepMatch.id),
-          resultSummaryId = 0,
+          resultSummaryId = quantMergedRSM.id,
           selectionLevel = 2,
           quantPeptideIonMap = quantPepIonByQcId.toMap
         )
@@ -199,15 +197,15 @@ object Ms2CountQuantifier extends IQuantifierAlgo with LazyLogging {
         // TODO: decide if attach or not
         masterQuantPeptideIons = mqPepIons.toArray,
         selectionLevel = 2,
-        resultSummaryId = 0
+        resultSummaryId = quantMergedRSM.id
       )
     }
     
     mqPeptides.toArray
   }
   
-  def computeMasterQuantProteinSets(
-    udsMasterQuantChannel: MasterQuantitationChannel,
+  override def computeMasterQuantProteinSets(
+    masterQuantChannel: MasterQuantChannel,
     masterQuantPeptides: Seq[MasterQuantPeptide],
     mergedRSM: ResultSummary,
     resultSummaries: Seq[ResultSummary]
