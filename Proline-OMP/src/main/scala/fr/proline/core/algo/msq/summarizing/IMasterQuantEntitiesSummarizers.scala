@@ -100,7 +100,7 @@ trait IMQProteinSetSummarizer {
       
       val mqProteinSet = new MasterQuantProteinSet(
         proteinSet = mergedProtSet,
-        quantProteinSetMap = quantProteinSetByQcId.toMap,
+        quantProteinSetMap = quantProteinSetByQcId,
         masterQuantPeptides = mqPeps.toArray,
         selectionLevel = 2,
         properties = Some(mqProtSetProps)

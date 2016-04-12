@@ -72,6 +72,7 @@ import fr.proline.core.dal.DoJDBCReturningWork
 import fr.proline.core.om.model.msq.QuantProteinSet
 import fr.proline.core.om.model.msq.QuantPeptide
 import fr.proline.core.dal.tables.SelectQueryBuilder1
+import scala.collection.mutable.LongMap
 
 
 /**
@@ -754,8 +755,8 @@ class WeightedSpectralCountQuantifier(
     val refPepInstanceByPepId = mergedRSM.peptideInstances.map(pi => pi.peptideId -> pi).toMap
 
     //     val qPepIonsMapsByrsmId = new HashMap[Long,Map[Long, Array[QuantPeptideIon]]]
-    val forMasterQPepByPepId = new HashMap[Long, scala.collection.mutable.Map[Long, QuantPeptide]]
-    val forMasterQProtSetByProtSet = new HashMap[ProteinSet, scala.collection.mutable.Map[Long, QuantProteinSet]]
+    val forMasterQPepByPepId = new HashMap[Long, scala.collection.mutable.LongMap[QuantPeptide]]
+    val forMasterQProtSetByProtSet = new HashMap[ProteinSet, scala.collection.mutable.LongMap[QuantProteinSet]]
 
     // returnesValues
     val mqPeptides = new ArrayBuffer[MasterQuantPeptide]
@@ -846,7 +847,7 @@ class WeightedSpectralCountQuantifier(
                 quantPepByPepID.put(pepInst.peptideId, qp)
 
                 //Update complete Map to be used for MasterQuantPeptide creation
-                forMasterQPepByPepId.getOrElseUpdate(pepInst.peptideId, new HashMap[Long, QuantPeptide]()).put(qcId, qp)
+                forMasterQPepByPepId.getOrElseUpdate(pepInst.peptideId, new LongMap[QuantPeptide]()).put(qcId, qp)
 
                 qp
               }
@@ -875,7 +876,7 @@ class WeightedSpectralCountQuantifier(
           )
 
           //Update complete Map to be used for MasterQuantProtei	nSet creation
-          forMasterQProtSetByProtSet.getOrElseUpdate(currentProteinSetWeightStruct.proteinSet, new HashMap[Long, QuantProteinSet]()).put(qcId, quantProteinSet)
+          forMasterQProtSetByProtSet.getOrElseUpdate(currentProteinSetWeightStruct.proteinSet, new LongMap[QuantProteinSet]()).put(qcId, quantProteinSet)
 
         } //End Protein identified in current RSM
         else {
@@ -895,7 +896,7 @@ class WeightedSpectralCountQuantifier(
       mqPeptides += new MasterQuantPeptide(
         id = MasterQuantPeptide.generateNewId,
         peptideInstance = Some(refPepInstanceByPepId(entry._1)),
-        quantPeptideMap = entry._2.toMap,
+        quantPeptideMap = entry._2,
         masterQuantPeptideIons = Array.empty[MasterQuantPeptideIon],
         selectionLevel = 2,
         resultSummaryId = udsMasterQuantChannel.getQuantResultSummaryId()
@@ -906,7 +907,7 @@ class WeightedSpectralCountQuantifier(
     forMasterQProtSetByProtSet.foreach(entry => {
       mqProtSets += new MasterQuantProteinSet(
         proteinSet = entry._1,
-        quantProteinSetMap = entry._2.toMap,
+        quantProteinSetMap = entry._2,
         selectionLevel = 2
       )
     })

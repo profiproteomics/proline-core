@@ -226,7 +226,7 @@ class LabelFreeEntitiesSummarizer(
       require( masterFt.isMaster, "can't create a master quant peptide ion wihtout a master feature" )
       
       // Map quant peptide ions by feature id or feature id
-      val qPepIonByQcId = Map() ++ qPepIons.map( qpi => qpi.quantChannelId -> qpi )
+      val qPepIonByQcId = qPepIons.toLongMapWith( qpi => qpi.quantChannelId -> qpi )
       require( qPepIonByQcId.size == qPepIons.length, "duplicated feature detected in quant peptide ions" )
       
       // Compute the total number of peptide matches

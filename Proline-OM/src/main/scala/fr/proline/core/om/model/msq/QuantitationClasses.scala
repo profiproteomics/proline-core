@@ -1,7 +1,9 @@
 package fr.proline.core.om.model.msq
 
+import scala.collection.mutable.LongMap
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize
 
+import fr.profi.util.collection._
 import fr.profi.util.misc.InMemoryIdGen
 import fr.profi.util.primitives.isZeroOrNaN
 import fr.proline.core.om.model.msi._
@@ -28,10 +30,13 @@ trait LcmsQuantComponent extends QuantComponent {
 }
 
 trait MasterQuantComponent[A <: QuantComponent] extends Item {
+  
   def id: Long
   
-  protected def getQuantComponentMap(): Map[Long,A]
-  protected def setQuantComponentMap(quantComponentMap: Map[Long,A]): Unit
+  protected def getQuantComponentMap(): LongMap[A]
+  
+  @deprecated("0.6.0","this method should not be called since the quant component is now mutable")
+  protected def setQuantComponentMap(quantComponentMap: LongMap[A]): Unit
   
   protected def getMostAbundantQuantComponent(): A = {
     this.getQuantComponentMap.values.maxBy(_.abundance)
@@ -80,9 +85,8 @@ trait MasterQuantComponent[A <: QuantComponent] extends Item {
       if( quantCompMap.contains(qcId) ) {
         quantCompMap(qcId).abundance = ab
       } else {
-        val newQuantComp = buildQuantComponent(ab,qcId)
-        val newQuantCompMap = quantCompMap + (qcId -> newQuantComp)
-        this.setQuantComponentMap(newQuantCompMap)
+        quantCompMap.put(qcId, buildQuantComponent(ab,qcId))
+        //this.setQuantComponentMap(quantCompMap)
       }
     }
     
@@ -133,7 +137,7 @@ case class MasterQuantReporterIon(
   val msQueryId: Long,
   val spectrumId: Long,
   val scanNumber: Int,
-  var quantReporterIonMap: Map[Long,QuantReporterIon],
+  var quantReporterIonMap: LongMap[QuantReporterIon],
   var selectionLevel: Int,
   var masterQuantPeptideIonId: Option[Long] = None,
   var properties: Option[MasterQuantReporterIonProperties] = None
@@ -141,7 +145,7 @@ case class MasterQuantReporterIon(
 ) extends MasterQuantComponent[QuantReporterIon] {
   
   def getQuantComponentMap() = quantReporterIonMap
-  def setQuantComponentMap(quantComponentMap: Map[Long,QuantReporterIon]) = {
+  def setQuantComponentMap(quantComponentMap: LongMap[QuantReporterIon]) = {
     this.quantReporterIonMap = quantComponentMap
   }
   
@@ -227,14 +231,14 @@ case class MasterQuantPeptideIon(
   var lcmsMasterFeatureId: Option[Long] = None,
   var unmodifiedPeptideIonId: Option[Long] = None,
    
-  var quantPeptideIonMap: Map[Long, QuantPeptideIon], // Key = QuantChannel ID ; Value = QuantPeptideIon
+  var quantPeptideIonMap: LongMap[QuantPeptideIon], // Key = QuantChannel ID ; Value = QuantPeptideIon
   var properties: Option[MasterQuantPeptideIonProperties] = None,
   var masterQuantReporterIons: Array[MasterQuantReporterIon] = Array()
    
  ) extends MasterLcmsQuantComponent[QuantPeptideIon] {
   
   def getQuantComponentMap() = quantPeptideIonMap
-  def setQuantComponentMap(quantComponentMap: Map[Long,QuantPeptideIon]) = {
+  def setQuantComponentMap(quantComponentMap: LongMap[QuantPeptideIon]) = {
     this.quantPeptideIonMap = quantComponentMap
   }
   
@@ -291,7 +295,7 @@ object MasterQuantPeptide extends InMemoryIdGen
 case class MasterQuantPeptide(
   var id: Long, // important: master quant component id
   val peptideInstance: Option[PeptideInstance], // without label in the context of isotopic labeling
-  var quantPeptideMap: Map[Long,QuantPeptide], // QuantPeptide by quant channel id
+  var quantPeptideMap: LongMap[QuantPeptide], // QuantPeptide by quant channel id
   var masterQuantPeptideIons: Array[MasterQuantPeptideIon],
   
   var selectionLevel: Int,
@@ -301,7 +305,7 @@ case class MasterQuantPeptide(
 ) extends MasterQuantComponent[QuantPeptide] {
   
   def getQuantComponentMap() = quantPeptideMap
-  def setQuantComponentMap(quantComponentMap: Map[Long,QuantPeptide]) = {
+  def setQuantComponentMap(quantComponentMap: LongMap[QuantPeptide]) = {
     this.quantPeptideMap = quantComponentMap
   }
   
@@ -471,7 +475,7 @@ case class QuantProteinSet(
 
 case class MasterQuantProteinSet(
   val proteinSet: ProteinSet,
-  var quantProteinSetMap: Map[Long,QuantProteinSet], // QuantProteinSet by quant channel id
+  var quantProteinSetMap: LongMap[QuantProteinSet], // QuantProteinSet by quant channel id
   var masterQuantPeptides: Array[MasterQuantPeptide] = null,
      
   var selectionLevel: Int,
@@ -481,8 +485,8 @@ case class MasterQuantProteinSet(
   
   def id() = this.proteinSet.id
   
-  def getQuantComponentMap() = quantProteinSetMap
-  def setQuantComponentMap(quantComponentMap: Map[Long,QuantProteinSet]) = {
+  def getQuantComponentMap(): LongMap[QuantProteinSet] = quantProteinSetMap
+  def setQuantComponentMap(quantComponentMap: LongMap[QuantProteinSet]) = {
     this.quantProteinSetMap = quantComponentMap
   }
   

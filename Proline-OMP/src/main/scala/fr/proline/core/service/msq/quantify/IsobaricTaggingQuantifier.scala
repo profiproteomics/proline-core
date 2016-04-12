@@ -262,7 +262,7 @@ class IsobaricTaggingQuantifier(
           msQueryId = identifiedMs2Query.id,
           spectrumId = spectrum.id,
           scanNumber = spectrum.firstScan,
-          quantReporterIonMap = quantReporterIonMap.toMap,
+          quantReporterIonMap = quantReporterIonMap,
           selectionLevel = 2
         )
       }

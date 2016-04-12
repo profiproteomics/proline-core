@@ -1,5 +1,6 @@
 package fr.proline.core.om.provider.msq.impl
 
+import scala.collection.mutable.LongMap
 import fr.profi.jdbc.easy.EasyDBC
 import fr.profi.util.primitives._
 import fr.profi.util.serialization.ProfiJson
@@ -147,7 +148,8 @@ class SQLMasterQuantPeptideProvider(
       val pepInst = pepInstByMQPepId.get(mqPepId)
       val mqPepIons = if(mqPepIonsByMQPepId.get(mqPepId).isDefined) mqPepIonsByMQPepId(mqPepId) else Array.empty[MasterQuantPeptideIon]
       val quantPeptides = ProfiJson.deserialize[Array[QuantPeptide]]( r.getString(ObjectTreeTable.columns.CLOB_DATA) )
-      val quantPeptideMap = Map() ++ (for( qp <- quantPeptides if qp != null ) yield qp.quantChannelId -> qp)
+      val quantPeptideMap = new LongMap[QuantPeptide](quantPeptides.length)
+      for( qp <- quantPeptides if qp != null ) quantPeptideMap.put(qp.quantChannelId, qp)
       
       // Build the master quant peptide ion
       new MasterQuantPeptide(

@@ -1,11 +1,12 @@
 package fr.proline.core.algo.msq.summarizing
 
 import collection.mutable.ArrayBuffer
+import scala.collection.mutable.LongMap
+import scala.collection.mutable.HashMap
 import collection.JavaConversions.iterableAsScalaIterable
 import com.typesafe.scalalogging.LazyLogging
 import fr.proline.core.om.model.msi._
 import fr.proline.core.om.model.msq._
-import scala.collection.mutable.HashMap
 
 object Ms2CountEntitiesSummarizer extends IMqPepAndProtEntitiesSummarizer with LazyLogging {
 
@@ -16,8 +17,8 @@ object Ms2CountEntitiesSummarizer extends IMqPepAndProtEntitiesSummarizer with L
   ): Array[MasterQuantPeptide] = {
     
     // Map some values
-    val rsIdByRsmId = new HashMap[Long,Long]
-    val rsmById = new HashMap[Long,ResultSummary]
+    val rsIdByRsmId = new LongMap[Long]
+    val rsmById = new LongMap[ResultSummary]
     val pepInstIdByRsIdAndPepId = new HashMap[(Long,Long),Long]
     
     for( rsm <- resultSummaries ) {
@@ -76,12 +77,12 @@ object Ms2CountEntitiesSummarizer extends IMqPepAndProtEntitiesSummarizer with L
       val childPepMatchesByCharge = childPeptideMatches.groupBy { _.msQuery.charge }
       
       val mqPepIons = new ArrayBuffer[MasterQuantPeptideIon]
-      val quantPepIonsByQcId = new HashMap[Long,ArrayBuffer[QuantPeptideIon]]
+      val quantPepIonsByQcId = new LongMap[ArrayBuffer[QuantPeptideIon]]
       
       for( (charge,childPepMatchGroup) <- childPepMatchesByCharge ) {
         
         val childPepMatchesByRsId = childPepMatchGroup.groupBy { _.resultSetId }        
-        val quantPepIonByQcId = new HashMap[Long,QuantPeptideIon]
+        val quantPepIonByQcId = new LongMap[QuantPeptideIon]
         var bestPepMatchScore = 0f
         var bestPepMatch: PeptideMatch = null
         var bestQCAbundance = 0.0
@@ -150,7 +151,7 @@ object Ms2CountEntitiesSummarizer extends IMqPepAndProtEntitiesSummarizer with L
           bestPeptideMatchId = Some(bestPepMatch.id),
           resultSummaryId = quantMergedRSM.id,
           selectionLevel = 2,
-          quantPeptideIonMap = quantPepIonByQcId.toMap
+          quantPeptideIonMap = quantPepIonByQcId
         )
         
         if( bestQCId != 0 ) {
@@ -163,7 +164,7 @@ object Ms2CountEntitiesSummarizer extends IMqPepAndProtEntitiesSummarizer with L
       
       }
       
-      val quantPepByQcId = new HashMap[Long,QuantPeptide]
+      val quantPepByQcId = new LongMap[QuantPeptide]
       for( (qcId,quantPepIons) <- quantPepIonsByQcId ) {
         
         // Sum the number of MS2
@@ -193,7 +194,7 @@ object Ms2CountEntitiesSummarizer extends IMqPepAndProtEntitiesSummarizer with L
       mqPeptides += new MasterQuantPeptide(
         id = masterQuantPeptideId,
         peptideInstance = Some(mergedPepInst),
-        quantPeptideMap = quantPepByQcId.toMap,
+        quantPeptideMap = quantPepByQcId,
         // TODO: decide if attach or not
         masterQuantPeptideIons = mqPepIons.toArray,
         selectionLevel = 2,
@@ -219,7 +220,7 @@ object Ms2CountEntitiesSummarizer extends IMqPepAndProtEntitiesSummarizer with L
       
       val selectedMQPepIds = new ArrayBuffer[Long]
 
-      val ms2CountSumByQcId = new HashMap[Long,Int]
+      val ms2CountSumByQcId = new LongMap[Int]
       for( mergedPepInst <- mergedPepSet.getPeptideInstances ) {
         val mqp = mqPepByPepInstId( mergedPepInst.id )
         if( mqp.selectionLevel >= 2 ) selectedMQPepIds += mqp.id
@@ -230,7 +231,7 @@ object Ms2CountEntitiesSummarizer extends IMqPepAndProtEntitiesSummarizer with L
         }
       }
       
-      val quantProteinSetByQcId = new HashMap[Long,QuantProteinSet]
+      val quantProteinSetByQcId = new LongMap[QuantProteinSet]
       for( (qcId,ms2CountSum) <- ms2CountSumByQcId ) {
         quantProteinSetByQcId(qcId) = new QuantProteinSet(
           rawAbundance = ms2CountSum,
@@ -246,7 +247,7 @@ object Ms2CountEntitiesSummarizer extends IMqPepAndProtEntitiesSummarizer with L
       
       val mqProteinSet = new MasterQuantProteinSet(
         proteinSet = mergedProtSet,
-        quantProteinSetMap = quantProteinSetByQcId.toMap,
+        quantProteinSetMap = quantProteinSetByQcId,
         selectionLevel = 2,
         properties = Some(mqProtSetProps)
       )

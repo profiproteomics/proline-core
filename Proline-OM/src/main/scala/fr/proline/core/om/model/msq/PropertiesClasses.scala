@@ -1,8 +1,10 @@
 package fr.proline.core.om.model.msq
 
 import scala.collection.mutable.HashMap
+import scala.collection.mutable.LongMap
 import scala.beans.BeanProperty
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize
+import fr.profi.util.collection._
 
 case class ComputedRatio(
   @BeanProperty var numerator: Float,
@@ -60,6 +62,15 @@ case class MasterQuantPeptideProperties(
   }
 }
 
+case class QuantProteinSetProfileObs(
+  val quantChannelId: Long,
+  val rawAbundance: Float,
+  var abundance: Float
+) extends QuantComponent {
+  var selectionLevel = 2
+  var peptideMatchesCount = 0
+}
+
 case class MasterQuantProteinSetProfile(
   //@BeanProperty var id: Long,
   @BeanProperty var name: String = "",
@@ -73,6 +84,23 @@ case class MasterQuantProteinSetProfile(
   if( abundances == null ) abundances = Array()
   if( ratios == null ) ratios = List()
   if( mqPeptideIds == null ) mqPeptideIds = Array()
+  
+  def getQuantComponentMap(qcIds: Seq[Long]): LongMap[QuantComponent] = {
+    val rawAbundanceByQcId = qcIds.zip(rawAbundances).toLongMap
+    val abundanceByQcId = qcIds.zip(abundances).toLongMap
+    
+    val quantCompMap = new LongMap[QuantComponent](qcIds.length)
+    for( qcId <- qcIds ) {
+      val quantCompObs = new QuantProteinSetProfileObs(
+        quantChannelId = qcId,
+        rawAbundance = rawAbundanceByQcId(qcId),
+        abundance = abundanceByQcId(qcId)
+      )
+      rawAbundanceByQcId(qcId)
+    }
+    
+    quantCompMap
+  }
 }
 
  

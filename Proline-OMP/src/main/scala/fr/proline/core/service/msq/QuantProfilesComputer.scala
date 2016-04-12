@@ -4,6 +4,7 @@ import javax.persistence.EntityManager
 import scala.collection.mutable.ArrayBuffer
 import com.typesafe.scalalogging.LazyLogging
 import fr.profi.jdbc.easy._
+import fr.profi.util.collection._
 import fr.profi.util.serialization.ProfiJson
 import fr.proline.api.service.IService
 import fr.proline.context.IExecutionContext
@@ -180,7 +181,7 @@ class QuantProfilesComputer(
             qcId -> qPepIon
           }
           
-          mqPepIon.quantPeptideIonMap = newQPepIonMap.toMap
+          mqPepIon.quantPeptideIonMap = newQPepIonMap.toLongMap
         }
         
         // Re-build the master quant peptides

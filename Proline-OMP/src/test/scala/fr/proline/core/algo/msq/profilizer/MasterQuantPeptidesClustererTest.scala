@@ -2,6 +2,7 @@ package fr.proline.core.algo.msq.profilizer
 
 import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.HashMap
+import scala.collection.mutable.LongMap
 import org.junit.Assert._
 import org.junit.Test
 import org.scalatest.Assertions._
@@ -110,7 +111,7 @@ class MasterQuantPeptidesClustererTest {
   val mqPep = MasterQuantPeptide(
     id = 0,
     peptideInstance = Option.empty[PeptideInstance],
-    quantPeptideMap = Map.empty[Long, QuantPeptide],
+    quantPeptideMap = LongMap.empty[QuantPeptide],
     masterQuantPeptideIons = Array.empty[MasterQuantPeptideIon],
 
     selectionLevel = 2,
@@ -156,7 +157,7 @@ class MasterQuantPeptidesClustererTest {
       hasPeptideSubset = false,
       isDecoy = false
     ),
-    quantProteinSetMap = Map.empty[Long,QuantProteinSet], // QuantProteinSet by quant channel id
+    quantProteinSetMap = LongMap.empty[QuantProteinSet], // QuantProteinSet by quant channel id
     masterQuantPeptides = masterQuantPeptides,
     
     selectionLevel = 2,

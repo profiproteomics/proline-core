@@ -1,5 +1,6 @@
 package fr.proline.core.algo.msq.summarizing
 
+import scala.collection.mutable.LongMap
 import fr.proline.core.om.model.msi._
 import fr.proline.core.om.model.msq._
 
@@ -53,7 +54,7 @@ object BuildMasterQuantPeptide {
       }
     }
     
-    val quantPepByQcId = Map.newBuilder[Long,QuantPeptide]
+    val quantPepByQcId = new LongMap[QuantPeptide](bestMQPepIon.quantPeptideIonMap.size)
     val peptideIonMap = filteredMQPepIons.flatMap(_.quantPeptideIonMap.map(_._2)).groupBy(_.quantChannelId)
     
     // Procedure to use if we want to sum the filteredMQPepIons
@@ -90,7 +91,7 @@ object BuildMasterQuantPeptide {
     new MasterQuantPeptide(
       id = mqPeptideId,
       peptideInstance = masterPepInstAsOpt,
-      quantPeptideMap = quantPepByQcId.result,
+      quantPeptideMap = quantPepByQcId,
       masterQuantPeptideIons = mqPepIons.toArray,
       selectionLevel = bestMQPepIon.selectionLevel,
       resultSummaryId = quantRsmId

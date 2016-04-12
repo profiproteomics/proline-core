@@ -137,7 +137,7 @@ class IsobaricTaggingEntitiesSummarizer(
             lcmsMasterFeatureId = None,
             unmodifiedPeptideIonId = None,
             selectionLevel = 2,
-            quantPeptideIonMap = qPepIonByQcId.toMap,
+            quantPeptideIonMap = qPepIonByQcId,
             properties = None,
             masterQuantReporterIons = mqReporterIons
           )
@@ -348,7 +348,7 @@ class IsobaricTaggingWithLabelFreeEntitiesSummarizer(
         
         lfMqPepIon.copy(
           id = MasterQuantPeptideIon.generateNewId(),
-          quantPeptideIonMap = combinedQPepIons.mapByLong(_.quantChannelId).toMap,
+          quantPeptideIonMap = combinedQPepIons.mapByLong(_.quantChannelId),
           masterQuantReporterIons = isoMqPepIons.flatMap(_.masterQuantReporterIons).toArray
         )
       }

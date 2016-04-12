@@ -1,6 +1,7 @@
 package fr.proline.core.om.provider.msq.impl
 
 import scala.collection.mutable.ArrayBuffer
+import scala.collection.mutable.LongMap
 
 import fr.profi.jdbc.easy.EasyDBC
 import fr.profi.util.primitives._
@@ -201,7 +202,8 @@ class SQLMasterQuantProteinSetProvider(
       val mqProtSetId = r.getLong(MQCompCols.ID)
       val protSet = protSetById(mqProtSetId)
       val quantProtSets = ProfiJson.deserialize[Array[QuantProteinSet]](r.getString(ObjectTreeCols.CLOB_DATA))
-      val quantProtSetMap = Map() ++ (for( qps <- quantProtSets if qps != null ) yield qps.quantChannelId -> qps)
+      val quantProtSetMap = new LongMap[QuantProteinSet](quantProtSets.length)
+      for( qps <- quantProtSets if qps != null ) quantProtSetMap.put(qps.quantChannelId, qps)
 
       val mqPeptides = if( mqPepByPepInstId.isEmpty ) Array.empty[MasterQuantPeptide]
       else { // Retrieve master quant peptides corresponding to this protein set

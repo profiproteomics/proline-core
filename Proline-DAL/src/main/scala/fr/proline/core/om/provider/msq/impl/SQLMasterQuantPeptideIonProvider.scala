@@ -1,6 +1,7 @@
 package fr.proline.core.om.provider.msq.impl
 
 import scala.collection.mutable.ArrayBuffer
+import scala.collection.mutable.LongMap
 
 import fr.profi.util.serialization.ProfiJson
 import fr.profi.util.primitives._
@@ -110,7 +111,8 @@ class SQLMasterQuantPeptideIonProvider(val msiDbCtx: DatabaseConnectionContext) 
     val r = record
     
     val quantPepIons = ProfiJson.deserialize[Array[QuantPeptideIon]]( r.getString(ObjectTreeTable.columns.CLOB_DATA) )
-    val quantPepIonMap = Map() ++ (for( qpi <- quantPepIons if qpi != null ) yield qpi.quantChannelId -> qpi)
+    val quantPepIonMap = new LongMap[QuantPeptideIon](quantPepIons.length)
+    for( qpi <- quantPepIons if qpi != null ) quantPepIonMap.put(qpi.quantChannelId, qpi)
     
     // Build the master quant peptide ion
     new MasterQuantPeptideIon(
