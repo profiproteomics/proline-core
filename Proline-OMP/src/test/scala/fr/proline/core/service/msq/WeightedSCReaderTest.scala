@@ -1,13 +1,13 @@
 package fr.proline.core.service.msq
 
 import java.util.ArrayList
+import java.util.HashSet
 import org.junit.After
 import org.junit.Assert._
 import org.junit.Before
 import org.junit.Test
 import com.typesafe.scalalogging.StrictLogging
 import fr.proline.context.IExecutionContext
-import fr.proline.core.algo.msq.SpectralCountConfig
 import fr.proline.core.dal._
 import fr.proline.core.om.provider.msi.IResultSetProvider
 import fr.proline.core.om.provider.msi.impl.SQLResultSetProvider
@@ -22,7 +22,7 @@ import fr.proline.core.orm.uds.BiologicalSample
 import fr.proline.core.service.msq.export.WeightedSCResultReader
 import fr.proline.core.orm.uds.BiologicalSplSplAnalysisMap
 import fr.proline.core.orm.uds.BiologicalSplSplAnalysisMapPK
-import java.util.HashSet
+import fr.proline.core.algo.msq.config.SpectralCountConfig
 
 @Test
 class WeightedSCReaderTest extends AbstractMultipleDBTestCase with StrictLogging {
@@ -179,7 +179,11 @@ class WeightedSCReaderTest extends AbstractMultipleDBTestCase with StrictLogging
 
     udsEm.getTransaction().commit()
     val spCountCfg = new SpectralCountConfig(parentRSMId = Some(targetRSMId), parentDSId = Some(qtDS.getId()))
-    var wsCalculator = new WeightedSpectralCountQuantifier(executionContext = executionContext, udsMasterQuantChannel = mqCh, scConfig = spCountCfg)
+    var wsCalculator = new WeightedSpectralCountQuantifier(
+      executionContext = executionContext,
+      udsMasterQuantChannel = mqCh,
+      quantConfig = spCountCfg
+    )
     wsCalculator.quantify
     assertNotNull(mqCh.getQuantResultSummaryId())
     qtDS.getId()
