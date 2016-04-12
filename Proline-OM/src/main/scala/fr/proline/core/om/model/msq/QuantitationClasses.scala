@@ -473,6 +473,15 @@ case class QuantProteinSet(
   var selectionLevel: Int
 ) extends QuantComponent
 
+case class QuantProteinSetProfileObs(
+  val quantChannelId: Long,
+  val rawAbundance: Float,
+  var abundance: Float,
+  var peptideMatchesCount: Int
+) extends QuantComponent {
+  var selectionLevel = 2
+}
+
 case class MasterQuantProteinSet(
   val proteinSet: ProteinSet,
   var quantProteinSetMap: LongMap[QuantProteinSet], // QuantProteinSet by quant channel id
@@ -552,6 +561,29 @@ case class MasterQuantProteinSet(
     }
 
     Some(bestProfile)
+  }
+  
+  // TODO: move to the MasterQuantProteinSetProfile class when peptideMatchesCount has been updated in the database
+  def getProfileQuantComponentMap(profile: MasterQuantProteinSetProfile, qcIds: Seq[Long]): LongMap[QuantComponent] = {
+    val rawAbundanceByQcId = qcIds.zip(profile.rawAbundances).toLongMap
+    val abundanceByQcId = qcIds.zip(profile.abundances).toLongMap
+    
+    val quantCompMap = new LongMap[QuantComponent](qcIds.length)
+    for( qcId <- qcIds ) {
+      val pepMatchesCountOpt = quantProteinSetMap.get(qcId).map(_.peptideMatchesCount)
+      
+      val quantCompObs = new QuantProteinSetProfileObs(
+        quantChannelId = qcId,
+        rawAbundance = rawAbundanceByQcId(qcId),
+        abundance = abundanceByQcId(qcId),
+        // FIXME: tmp workaround because peptideMatchesCount is not filled
+        peptideMatchesCount = pepMatchesCountOpt.getOrElse(0)
+      )
+      
+      quantCompMap.put(qcId, quantCompObs)
+    }
+    
+    quantCompMap
   }
   
   def setAbundancesForQuantChannels( abundances: Seq[Float], quantChannelIds: Seq[Long] ) {
