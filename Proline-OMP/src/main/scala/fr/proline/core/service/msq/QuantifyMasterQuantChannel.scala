@@ -1,16 +1,13 @@
 package fr.proline.core.service.msq
 
-
 import fr.proline.api.service.IService
 import fr.proline.context.IExecutionContext
+import fr.proline.core.algo.msq.config._
 import fr.proline.core.dal.BuildLazyExecutionContext
 import fr.proline.core.om.model.msq._
 import fr.proline.core.orm.uds.MasterQuantitationChannel
 import fr.proline.core.service.msq.quantify._
 import fr.proline.repository.IDataStoreConnectorFactory
-import fr.proline.core.algo.msq.config._
-import fr.proline.core.om.model.msq.QuantMethodType._
-
 
 class QuantifyMasterQuantChannel(
   executionContext: IExecutionContext,
