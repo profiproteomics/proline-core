@@ -61,7 +61,7 @@ class SerializationSpec extends AbstractSerializationSpec {
       "A LabelFree Quant Config",
       profiDeserializer = Some( jsonData => ProfiJson.deserialize[LabelFreeQuantConfig](jsonData) ),
       quantConfig,
-      """{"map_set_name":"map set test","extraction_params":{"moz_tol":5.0,"moz_tol_unit":"PPM"},"clustering_params":"""+
+      """{"extraction_params":{"moz_tol":5.0,"moz_tol_unit":"PPM"},"clustering_params":"""+
       """{"moz_tol":5.0,"moz_tol_unit":"PPM","time_tol":15.0,"intensity_computation":"MOST_INTENSE","""+
       """"time_computation":"MOST_INTENSE"},"aln_method_name":"ITERATIVE","aln_params":{"mass_interval":20000,"""+
       """"smoothing_method_name":"TIME_WINDOW","smoothing_params":{"window_size":60,"window_overlap":20,"""+
