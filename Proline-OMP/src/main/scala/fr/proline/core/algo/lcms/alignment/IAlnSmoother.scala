@@ -26,6 +26,7 @@ trait IAlnSmoother {
   protected def computeMedianLandmark( landmarkGroup: Seq[Landmark] ): Landmark = {
     
     val lmSortedByDeltaTime = landmarkGroup.sortBy( _.deltaTime )
+    val lmSortedByTime = landmarkGroup.sortBy( _.time )
     val nbLandmarks = landmarkGroup.length
     
     // Compute median landmark considering the delta time
@@ -37,10 +38,14 @@ trait IAlnSmoother {
       val firstLm = lmSortedByDeltaTime(firstIndex)
       val secondLm = lmSortedByDeltaTime(secondIndex)
       
-      medianLm = Landmark( time = ( firstLm.time + secondLm.time )/2,
+      medianLm = Landmark( time = ( lmSortedByTime.head.time + lmSortedByTime.last.time )/2,
                            deltaTime = ( firstLm.deltaTime + secondLm.deltaTime )/2 )
     } // odd number of landmarks
-    else { medianLm = lmSortedByDeltaTime( (nbLandmarks-1)/2 ) }
+    else { 
+      medianLm = lmSortedByDeltaTime( (nbLandmarks-1)/2 ) 
+      medianLm = Landmark( time =  ( lmSortedByTime.head.time + lmSortedByTime.last.time )/2,
+                           deltaTime = medianLm.deltaTime)
+    }
     
     medianLm
   }
