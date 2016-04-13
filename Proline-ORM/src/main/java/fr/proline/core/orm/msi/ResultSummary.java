@@ -61,7 +61,7 @@ public class ResultSummary implements Serializable {
     // uni-directional many-to-one association to ResultSummary
     @ManyToOne
     @JoinColumn(name = "decoy_result_summary_id")
-    private ResultSummary decotResultSummary;
+    private ResultSummary decoyResultSummary;
 
     // uni-directional many-to-many association to ResultSummary
     @OneToMany
@@ -150,12 +150,12 @@ public class ResultSummary implements Serializable {
 	this.serializedProperties = serializedProperties;
     }
 
-    public ResultSummary getDecotResultSummary() {
-	return this.decotResultSummary;
+    public ResultSummary getDecoyResultSummary() {
+	return this.decoyResultSummary;
     }
 
-    public void setDecotResultSummary(ResultSummary decotResultSummary) {
-	this.decotResultSummary = decotResultSummary;
+    public void setDecoyResultSummary(ResultSummary decoyResultSummary) {
+	this.decoyResultSummary = decoyResultSummary;
     }
 
     public Set<ResultSummary> getChildren() {
@@ -229,10 +229,10 @@ public class ResultSummary implements Serializable {
      * @author JM235353
      */
     public static class TransientData implements Serializable {
+    	
 	private static final long serialVersionUID = 1L;
 
 	private PeptideInstance[] peptideInstanceArray = null;
-
 	private long[] peptideMatchesId;
 	private DPeptideMatch[] peptideMatches;
 	private DProteinSet[] proteinSetArray = null;
@@ -241,6 +241,9 @@ public class ResultSummary implements Serializable {
 	private DDataset dDataset = null;
 	
 	private Integer numberOfProteinSets = null;
+	private Integer numberOfPeptides = null;
+	private Integer numberOfPeptideMatches = null;
+	private Integer numberOfProteins = null;
 
 	protected TransientData() {
 	}
@@ -305,7 +308,38 @@ public class ResultSummary implements Serializable {
 	public void setPeptideMatchesId(long[] peptideMatchesId) {
 		this.peptideMatchesId = peptideMatchesId;
 	}
-	
+
+	public Integer getNumberOfProteinSets() {
+		return numberOfProteinSets;
+	}
+
+	public void setNumberOfProteinSets(Integer numberOfProteinSets) {
+		this.numberOfProteinSets = numberOfProteinSets;
+	}
+
+	public Integer getNumberOfPeptides() {
+		return numberOfPeptides;
+	}
+
+	public void setNumberOfPeptides(Integer numberOfPeptides) {
+		this.numberOfPeptides = numberOfPeptides;
+	}
+
+	public Integer getNumberOfPeptideMatches() {
+		return numberOfPeptideMatches;
+	}
+
+	public void setNumberOfPeptideMatches(Integer numberOfPeptideMatches) {
+		this.numberOfPeptideMatches = numberOfPeptideMatches;
+	}
+
+	public Integer getNumberOfProteins() {
+		return numberOfProteins;
+	}
+
+	public void setNumberOfProteins(Integer numberOfProteins) {
+		this.numberOfProteins = numberOfProteins;
+	}
 	
     }
 
