@@ -1,4 +1,4 @@
-package fr.proline.core.service.msq
+/*package fr.proline.core.service.msq
 
 import java.util.ArrayList
 import java.util.HashSet
@@ -192,3 +192,4 @@ class WeightedSCReaderTest extends AbstractMultipleDBTestCase with StrictLogging
 
 }
 
+*/
