@@ -10,6 +10,7 @@ import scala.collection.JavaConverters.asJavaCollectionConverter
 
 import com.typesafe.scalalogging.LazyLogging
 
+import fr.profi.util.collection._
 import fr.profi.util.serialization.ProfiJson
 import fr.proline.context.DatabaseConnectionContext
 import fr.proline.context.IExecutionContext
@@ -147,15 +148,52 @@ abstract class AbstractMasterQuantChannelQuantifier extends LazyLogging {
   ) {
     
     this.logger.info("storing master quant peptides...")
+    
+    val mqPepIdByTmpId = new LongMap[Long](mqPeptides.length)
+    val mqPepIonIdByTmpId = new LongMap[Long](mqPeptides.length * 2)
 
     // Iterate over master quant peptides to store them
-    val msiMqPepById = mqPeptides.map { mqPeptide =>      
-      val msiMasterPepInstId = mqPeptide.peptideInstance.map( pi => pi.id ) 
+    val msiMqPepById = mqPeptides.toLongMapWith { mqPeptide =>
+      val msiMasterPepInstId = mqPeptide.peptideInstance.map( _.id ) 
+      
+      // Retrieve TMP ids
+      val tmpMqPepId = mqPeptide.id
+      val tmpMqPepIonIdByCharge = new LongMap[Long](mqPeptide.masterQuantPeptideIons.length)
+      for (mqPepIon <- mqPeptide.masterQuantPeptideIons) {
+        tmpMqPepIonIdByCharge.put(mqPepIon.charge,mqPepIon.id)
+      }
       
       val msiMqPep = this.storeMasterQuantPeptide(mqPeptide, msiQuantRSM, msiMasterPepInstId)
       
+      // Map entities by TMP ids
+      mqPepIdByTmpId.put(tmpMqPepId, mqPeptide.id)
+      for (mqPepIon <- mqPeptide.masterQuantPeptideIons) {
+        val tmpId = tmpMqPepIonIdByCharge(mqPepIon.charge)
+        mqPepIonIdByTmpId.put(tmpId,mqPepIon.id)
+      }
+      
       mqPeptide.id -> msiMqPep
-    } toMap
+    }
+    
+    // Update the master quant protein set properties
+    for (mqProtSet <- mqProtSets) {
+      
+      val mqProtSetProps = mqProtSet.properties.getOrElse( MasterQuantProteinSetProperties() )
+      
+      // Update the selectedMasterQuantPeptideIds properties
+      val selectedMQPepTmpIdsOpt = mqProtSetProps.getSelectedMasterQuantPeptideIds()
+      if (selectedMQPepTmpIdsOpt.isDefined) {
+        val selectedMQPepIds = selectedMQPepTmpIdsOpt.get.map(mqPepIdByTmpId(_))
+        mqProtSetProps.setSelectedMasterQuantPeptideIds(Some(selectedMQPepIds))
+      }
+      
+      // Update the selectedMasterQuantPeptideIonIds properties
+      val selectedMQPepIonTmpIdsOpt = mqProtSetProps.getSelectedMasterQuantPeptideIonIds()
+      if (selectedMQPepIonTmpIdsOpt.isDefined) {
+        val selectedMQPepIonIds = selectedMQPepIonTmpIdsOpt.get.map(mqPepIonIdByTmpId(_))
+        mqProtSetProps.setSelectedMasterQuantPeptideIonIds(Some(selectedMQPepIonIds))
+      }
+    }
 
     this.logger.info("storing master quant protein sets...")
 
