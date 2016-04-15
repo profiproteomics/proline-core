@@ -93,11 +93,12 @@ class Quantifier(
       val methodType = QuantMethodType.withName(udsQuantMethod.getType)
       val abundanceUnit = AbundanceUnit.withName(udsQuantMethod.getAbundanceUnit)
 
-      if(abundanceUnit == AbundanceUnit.FEATURE_INTENSITY) {
+      // TODO: remove me (these values have been removed from the quant config)
+      /*if(abundanceUnit == AbundanceUnit.FEATURE_INTENSITY) {
         // Fake missing fields
         quantConfigAsMap.put("map_set_name", null)
         quantConfigAsMap.put("lc_ms_runs", null)
-      }
+      }*/
 
       // Parse the quant configuration
       val quantConfigAsStr = serialize(quantConfigAsMap)

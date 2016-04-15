@@ -117,16 +117,21 @@ class MasterQuantChannelEntityCache(
   
   lazy val peaklistIdByIdentRsId = msiIdentResultSets.toLongMapWith { rs => rs.getId -> rs.getMsiSearch.getPeaklist.getId }
 
-  lazy val ms2SpectrumDescriptors = {
-    
-    val runById = this.getLcMsRuns.mapByLong(_.id)
-    
-    val rawFileByPeaklistId = udsQuantChannels.toList.toLongMapWith { udsQuantChannel =>
-      val identRsId = identRsIdByRsmId(udsQuantChannel.getIdentResultSummaryId)
-      peaklistIdByIdentRsId(identRsId) -> runById(udsQuantChannel.getRun.getId).rawFile
-      //peaklistIdByIdentRsId(identRsId) -> udsQuantChannel.getRun().getRawFile()
+  lazy val runIdByRsmId = {
+    Map() ++ udsQuantChannels.map { udsQC =>
+      udsQC.getIdentResultSummaryId() -> udsQC.getRun().getId()
     }
-    
+  }
+  
+  lazy val runById: LongMap[LcMsRun] = this.getLcMsRuns.mapByLong(_.id)
+  
+  lazy val rawFileByPeaklistId: LongMap[RawFile] = udsQuantChannels.toList.toLongMapWith { udsQuantChannel =>
+    val identRsId = identRsIdByRsmId(udsQuantChannel.getIdentResultSummaryId)
+    peaklistIdByIdentRsId(identRsId) -> runById(udsQuantChannel.getRun.getId).rawFile
+    //peaklistIdByIdentRsId(identRsId) -> udsQuantChannel.getRun().getRawFile()
+  }
+  
+  lazy val ms2SpectrumDescriptors = {
     new Ms2SpectrumDescriptorProvider(executionContext).loadMs2SpectrumDescriptors(rawFileByPeaklistId)
   }
   
@@ -167,13 +172,6 @@ class MasterQuantChannelEntityCache(
 
     scanNumberBySpectrumId.result
   }
-  
-  lazy val runIdByRsmId = {
-    Map() ++ udsQuantChannels.map { udsQC =>
-      udsQC.getIdentResultSummaryId() -> udsQC.getRun().getId()
-    }
-  }
-  
   
   private var peptideByRunIdAndScanNumber : Map[Long, HashMap[Int, Peptide]] = null
   private var psmByRunIdAndScanNumber : Map[Long, HashMap[Int, ArrayBuffer[PeptideMatch]]] = null
@@ -367,7 +365,7 @@ class Ms2SpectrumDescriptorProvider(
           val incompleteShBySpecId = incompleteShBySpecIdOpt.get
           
           val mzDbFilePathOpt = rawFile.getMzdbFilePath()
-          assert( mzDbFilePathOpt.isDefined, "mzDB file is not linked to the raw file in the UDSdb")
+          assert( mzDbFilePathOpt.isDefined, s"mzDB file is not linked to the raw file '${rawFile.name}' in the UDSdb")
           
           val mzDbFilePath = mzDbFilePathOpt.get
           val mzDbReader = new MzDbReader(mzDbFilePath, true)

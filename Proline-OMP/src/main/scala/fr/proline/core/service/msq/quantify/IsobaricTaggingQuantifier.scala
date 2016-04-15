@@ -15,6 +15,7 @@ import fr.proline.core.algo.msq.summarizing._
 import fr.proline.core.om.model.msi.LazyResultSummary
 import fr.proline.core.om.model.msi.Ms2Query
 import fr.proline.core.om.model.msi.ResultSummary
+import fr.proline.core.om.model.msi.Spectrum
 import fr.proline.core.om.model.msq._
 import fr.proline.core.om.provider.msi.impl.SQLResultSummaryProvider
 import fr.proline.core.om.provider.msi.impl.SQLSpectrumProvider
@@ -26,8 +27,6 @@ import fr.proline.core.orm.msi.ObjectTreeSchema.SchemaName
 import fr.proline.core.orm.msi.repository.ObjectTreeSchemaRepository
 import fr.proline.core.orm.uds.MasterQuantitationChannel
 import fr.proline.core.service.lcms.io.ExtractMapSet
-import fr.proline.core.om.storer.msi.impl.ReadBackRsmDuplicator
-import fr.proline.core.om.storer.msi.impl.ResetIdsRsmDuplicator
 
 class IsobaricTaggingQuantifier(
   val executionContext: IExecutionContext,
@@ -49,8 +48,6 @@ class IsobaricTaggingQuantifier(
   }
   private val maxMassToUse = quantMethod.quantLabels.map(_.reporterMz).max + 1
   
-  private val spectrumProvider = new SQLSpectrumProvider(msiDbCtx)
-  
   protected def quantifyMasterChannel(): Unit = {
 
     // --- TODO: merge following code with AbstractLabelFreeFeatureQuantifier ---
@@ -71,16 +68,14 @@ class IsobaricTaggingQuantifier(
     udsMasterQuantChannel.setQuantResultSummaryId(quantRsmId)
     udsEm.persist(udsMasterQuantChannel)
 
-    // Store master quant result summary   
-     val quantRsm = if(!isMergedRsmProvided) {
-        
-        ResetIdsRsmDuplicator.cloneAndStoreRSM(this.mergedResultSummary, msiQuantRsm, msiQuantResultSet, msiEm) 
-      } else {
-        val rsmProvider = new SQLResultSummaryProvider(msiDbCtx, psDbCtx, udsDbCtx)
-        val rsmDuplicator = new ReadBackRsmDuplicator(rsmProvider)
-        rsmDuplicator.cloneAndStoreRSM(this.mergedResultSummary, msiQuantRsm, msiQuantResultSet, msiEm) 
+    // Store master quant result summary
+    val quantRsm = if (!isMergedRsmProvided) {
+      ResetIdsRsmDuplicator.cloneAndStoreRSM(this.mergedResultSummary, msiQuantRsm, msiQuantResultSet, msiEm)
+    } else {
+      val rsmProvider = new SQLResultSummaryProvider(msiDbCtx, psDbCtx, udsDbCtx)
+      val rsmDuplicator = new ReadBackRsmDuplicator(rsmProvider)
+      rsmDuplicator.cloneAndStoreRSM(this.mergedResultSummary, msiQuantRsm, msiQuantResultSet, msiEm)
     }
-    
     
     // Compute and store quant entities (MQ Peptides, MQ ProteinSets)
     this.computeAndStoreQuantEntities(msiQuantRsm, quantRsm)
@@ -205,7 +200,7 @@ class IsobaricTaggingQuantifier(
     val identRsmQuantChannels = quantChannelsByIdentRsmId(identRsm.id)
     val identRsmQuantChannelsCount = identRsmQuantChannels.length
     
-    val identifiedMs2QueryBySpectrumId = identRsm.resultSet.get.peptideMatches.toLongMapWith { pepMatch =>
+    val identMs2QueryBySpecId = identRsm.resultSet.get.peptideMatches.toLongMapWith { pepMatch =>
       val ms2Query = pepMatch.msQuery.asInstanceOf[Ms2Query]
       (ms2Query.spectrumId,ms2Query)
     }
@@ -216,59 +211,138 @@ class IsobaricTaggingQuantifier(
     }
     //println("tagInfoTuples " + tagInfoTuples.toList)
     
-    val masterQuantReporterIons = new ArrayBuffer[MasterQuantReporterIon](identifiedMs2QueryBySpectrumId.size)
-    
-    spectrumProvider.foreachPeaklistSpectrum(peaklistId) { spectrum =>
+    val masterQuantReporterIons = new ArrayBuffer[MasterQuantReporterIon](identMs2QueryBySpecId.size)
+
+    _foreachIdentifiedSpectrum(peaklistId, identMs2QueryBySpecId) { case (specId, spectrum, identMs2Query) =>
       
-      val identifiedMs2QueryOpt = identifiedMs2QueryBySpectrumId.get(spectrum.id)
+      // Keep only peaks having a low m/z value
+      val mozListToUse = spectrum.getMozList.takeWhile( _ <= maxMassToUse )
       
-      // Quantify only identified PSMs
-      if( identifiedMs2QueryOpt.isDefined ) {
+      // Compute [moz,intensity] pairs
+      val mzIntPairs = mozListToUse.zip(spectrum.getIntensityList.take(mozListToUse.length) )
+      
+      val quantReporterIonMap = new LongMap[QuantReporterIon](identRsmQuantChannelsCount)
+      
+      for( (qcId,tag,mozTolInDa) <- tagInfoTuples ) {
+        val reporterMz = tag.reporterMz
         
-        // Keep only peaks having a low m/z value
-        val mozListToUse = spectrum.mozList.get.takeWhile( _ <= maxMassToUse )
+        val peaksInRange = mzIntPairs.filter(p => (p._1 > reporterMz - mozTolInDa) && (p._1 < reporterMz + mozTolInDa) )
         
-        // Compute [moz,intensity] pairs
-        val mzIntPairs = mozListToUse.zip(spectrum.intensityList.get.take(mozListToUse.length) )
-        
-        val quantReporterIonMap = new LongMap[QuantReporterIon](identRsmQuantChannelsCount)
-        
-        for( (qcId,tag,mozTolInDa) <- tagInfoTuples ) {
-          val reporterMz = tag.reporterMz
+        if( peaksInRange.nonEmpty ) {
+          val nearestPeak = peaksInRange.minBy(p => math.abs(reporterMz - p._1))
           
-          val peaksInRange = mzIntPairs.filter(p => (p._1 > reporterMz - mozTolInDa) && (p._1 < reporterMz + mozTolInDa) )
+          val quantReporterIon = QuantReporterIon(
+            quantChannelId = qcId,
+            moz = nearestPeak._1,
+            rawAbundance = nearestPeak._2,
+            abundance = nearestPeak._2,
+            selectionLevel = 2
+          )
           
-          if( peaksInRange.nonEmpty ) {
-            val nearestPeak = peaksInRange.minBy(p => math.abs(reporterMz - p._1))
-            
-            val quantReporterIon = QuantReporterIon(
-              quantChannelId = qcId,
-              moz = nearestPeak._1,
-              rawAbundance = nearestPeak._2,
-              abundance = nearestPeak._2,
-              selectionLevel = 2
-            )
-            
-            quantReporterIonMap += Tuple2(qcId, quantReporterIon)
-          }
+          quantReporterIonMap += Tuple2(qcId, quantReporterIon)
         }
-        
-        val identifiedMs2Query = identifiedMs2QueryOpt.get
-        
-        masterQuantReporterIons += MasterQuantReporterIon(
-          id = MasterQuantReporterIon.generateNewId(),
-          charge = identifiedMs2Query.charge,
-          elutionTime = spectrum.firstTime,
-          msQueryId = identifiedMs2Query.id,
-          spectrumId = spectrum.id,
-          scanNumber = spectrum.firstScan,
-          quantReporterIonMap = quantReporterIonMap,
-          selectionLevel = 2
-        )
       }
+      
+      masterQuantReporterIons += MasterQuantReporterIon(
+        id = MasterQuantReporterIon.generateNewId(),
+        charge = identMs2Query.charge,
+        elutionTime = spectrum.getElutionTime,
+        msQueryId = identMs2Query.id,
+        spectrumId = specId,
+        scanNumber = spectrum.getScanNumber,
+        quantReporterIonMap = quantReporterIonMap,
+        selectionLevel = 2
+      )
     }
     
     masterQuantReporterIons
   }
   
+  private def _foreachIdentifiedSpectrum(
+    peaklistId: Long,
+    identifiedMs2QueryBySpectrumId: LongMap[Ms2Query]
+  )( onEachSpectrum: (Long, IsobaricTaggingQuantifier.ISpectrum, Ms2Query) => Unit ): Unit = {
+    
+    val reporterIonDataSource = quantConfig.reporterIonDataSource
+    val isProlineDataSource = (reporterIonDataSource == ReporterIonDataSource.PROLINE_SPECTRUM)
+    
+    val mzDbReaderOpt = if(isProlineDataSource) None
+    else {
+      val rawFileOpt = entityCache.rawFileByPeaklistId.get(peaklistId)
+      assert( rawFileOpt.isDefined, s"can't find a raw file corresponding to peaklist #$peaklistId" )
+      
+      val mzDbFilePathOpt = rawFileOpt.get.getMzdbFilePath()
+      assert( mzDbFilePathOpt.isDefined, s"mzDB file is not linked to the raw file '${rawFileOpt.get.name}' in the UDSdb")
+      
+      Some(new fr.profi.mzdb.MzDbReader(mzDbFilePathOpt.get, true) )
+    }
+    
+    lazy val ms3SpectraHeadersByCycle = if(mzDbReaderOpt.isEmpty) LongMap.empty[Array[fr.profi.mzdb.model.SpectrumHeader]]
+    else {
+      mzDbReaderOpt.get.getSpectrumHeaders.filter(_.getMsLevel == 3).groupByLong( _.getCycle )
+    }
+    
+    try {
+      val spectrumProvider = new SQLSpectrumProvider(msiDbCtx)
+      spectrumProvider.foreachPeaklistSpectrum(peaklistId, loadPeaks = isProlineDataSource) { spectrum =>
+        
+        val identifiedMs2QueryOpt = identifiedMs2QueryBySpectrumId.get(spectrum.id)
+        
+        // Quantify only identified PSMs
+        if( identifiedMs2QueryOpt.isDefined ) {
+          val specId = spectrum.id
+          val identifiedMs2Query = identifiedMs2QueryOpt.get
+          
+          reporterIonDataSource match {
+            case ReporterIonDataSource.PROLINE_SPECTRUM => onEachSpectrum(specId, spectrum, identifiedMs2Query)
+            case ReporterIonDataSource.MZDB_MS2_SPECTRUM => {
+              val mzDbSpectrum = mzDbReaderOpt.get.getSpectrum(spectrum.firstScan)
+              onEachSpectrum(specId, mzDbSpectrum, identifiedMs2Query)
+            }
+            case ReporterIonDataSource.MZDB_MS3_SPECTRUM => {
+              val mzDbReader = mzDbReaderOpt.get
+              val sh = mzDbReader.getSpectrumHeader(spectrum.firstScan)
+              val ms3ShsOpt = ms3SpectraHeadersByCycle.get(sh.getCycle)
+              assert( ms3ShsOpt.isDefined, s"can't find MS3 spectra in mzDB file for Proline spectrum #$specId" )
+              
+              for( ms3Sh <- ms3ShsOpt.get ) {
+                onEachSpectrum(specId, mzDbReader.getSpectrum(ms3Sh.getId), identifiedMs2Query)
+              }
+            }
+          }
+        }
+      }
+    } finally {
+      if (mzDbReaderOpt.isDefined) {
+        mzDbReaderOpt.get.close()
+      }
+    }
+    
+    ()
+  }
+  
+}
+
+object IsobaricTaggingQuantifier {
+  
+  sealed trait ISpectrum extends Any {
+    def getScanNumber(): Int
+    def getElutionTime(): Float
+    def getMozList(): Array[Double]
+    def getIntensityList(): Array[Float]
+  }
+  
+  implicit class ProlineSpectrumWrapper(val spectrum: Spectrum) extends AnyVal with ISpectrum {
+    def getScanNumber(): Int = spectrum.firstScan
+    def getElutionTime(): Float = spectrum.firstTime
+    def getMozList(): Array[Double] = spectrum.mozList.get
+    def getIntensityList(): Array[Float] = spectrum.intensityList.get
+  }
+  
+  implicit class MzDbSpectrumWrapper(val spectrum: fr.profi.mzdb.model.Spectrum) extends AnyVal with ISpectrum {
+    def getScanNumber(): Int = spectrum.getHeader.getInitialId
+    def getElutionTime(): Float = spectrum.getHeader.getElutionTime
+    def getMozList(): Array[Double] = spectrum.getData.getMzList
+    def getIntensityList(): Array[Float] = spectrum.getData.getIntensityList
+  }
 }
