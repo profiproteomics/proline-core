@@ -58,9 +58,13 @@ class Ms2DrivenLabelFreeFeatureQuantifier(
     
     // Update the LC-MS map id of each master quant channel
     val udsQuantChannels = udsMasterQuantChannel.getQuantitationChannels
-    for( udsQuantChannel <- udsQuantChannels) {
-      udsQuantChannel.setLcmsMapId( lcMsMapIdByRunId( udsQuantChannel.getRun().getId ) )
-      udsEm.merge(udsQuantChannel)
+    for( (udsQc,qc) <- udsQuantChannels.zip(this.masterQc.quantChannels) ) {
+      val lcMsMapIdOpt = lcMsMapIdByRunId.get( qc.runId.get )
+      require( lcMsMapIdOpt.isDefined, "Can't retrieve the LC-MS map id for the run #"+ qc.runId.get)
+      qc.lcmsMapId = lcMsMapIdOpt
+      
+      udsQc.setLcmsMapId( lcMsMapIdOpt.get )
+      udsEm.merge(udsQc)
     }
     
     // Update the map set id of the master quant channel
