@@ -128,7 +128,7 @@ case class QuantChannel(
   val sampleNumber: Int,
   val identResultSummaryId: Long,
   @JsonDeserialize(contentAs = classOf[java.lang.Long] )
-  val lcmsMapId: Option[Long] = None,
+  var lcmsMapId: Option[Long] = None,
   @JsonDeserialize(contentAs = classOf[java.lang.Long] )
   val runId: Option[Long] = None,
   @JsonDeserialize(contentAs = classOf[java.lang.Long] )
