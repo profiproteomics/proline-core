@@ -81,8 +81,10 @@ case class GroupSetup(
   val number: Int,
   val name: String,
   val biologicalGroups: Array[BiologicalGroup],
-  val ratioDefinitions: Array[RatioDefinition] = Array()
-)
+  var ratioDefinitions: Array[RatioDefinition] = Array()
+) {
+  if(ratioDefinitions == null) ratioDefinitions = Array()
+}
 
 /**
  * @param id
