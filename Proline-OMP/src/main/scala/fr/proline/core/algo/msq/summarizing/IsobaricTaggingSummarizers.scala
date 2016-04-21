@@ -116,7 +116,7 @@ class IsobaricTaggingEntitiesSummarizer(
               peptideId = peptideIdOpt,
               peptideInstanceId = pepInstIdOpt,
               msQueryIds = Some(msQueryIds),
-              lcmsFeatureId = 0,
+              lcmsFeatureId = None,
               lcmsMasterFeatureId = None,
               unmodifiedPeptideIonId = None, // TODO: set this value ???
               selectionLevel = 2

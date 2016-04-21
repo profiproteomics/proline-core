@@ -130,7 +130,7 @@ object Ms2CountEntitiesSummarizer extends IMqPepAndProtEntitiesSummarizer with L
             peptideId = Some(bestRsPepMatch.peptideId),
             peptideInstanceId = Some(pepInstIdByRsIdAndPepId(rsId,peptideId)),
             msQueryIds = Some(msQueryIds.toArray),
-            lcmsFeatureId = 0
+            lcmsFeatureId = None
           )
           if( pepMatchesCount > bestQCAbundance ) {
             bestQCAbundance = pepMatchesCount
