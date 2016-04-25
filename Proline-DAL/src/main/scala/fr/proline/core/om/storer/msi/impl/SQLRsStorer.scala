@@ -361,8 +361,8 @@ class SQLRsStorer(
     // Iterate over protein matches
     val unmappedAccessions = new ArrayBuffer[String](0)
     for (proteinMatch <- proteinMatches) {
-
-      proteinMatch.seqDatabaseIds = proteinMatch.seqDatabaseIds.map(seqDbIdByTmpId.get(_).getOrElse(0L)).filter { _ != 0 }
+      if(proteinMatch.seqDatabaseIds !=null)
+        proteinMatch.seqDatabaseIds = proteinMatch.seqDatabaseIds.map(seqDbIdByTmpId.get(_).getOrElse(0L)).filter { _ != 0 }
       proteinMatch.resultSetId = rsId
 
       // TODO: fix this when JPA is ok
