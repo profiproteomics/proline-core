@@ -357,8 +357,12 @@ abstract class AbstractSQLRsWriter() extends IRsWriter {
     // Link protein matches to sequence databases
     msiEzDBC.executeInBatch(MsiDbProteinMatchSeqDatabaseMapTable.mkInsertQuery()) { stmt =>
       for (proteinMatch <- proteinMatches)
-        for (seqDbId <- proteinMatch.seqDatabaseIds)
-          stmt.executeWith(proteinMatch.id, seqDbId, rsId)
+        if(proteinMatch.seqDatabaseIds == null)
+          logger.trace("No seq databases for Protein Match "+proteinMatch.accession)
+        else {
+          for (seqDbId <- proteinMatch.seqDatabaseIds)
+            stmt.executeWith(proteinMatch.id, seqDbId, rsId)
+        }
     }
     
   }
