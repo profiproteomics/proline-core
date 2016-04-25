@@ -191,6 +191,7 @@ case class QuantPeptideIon(
   @JsonDeserialize(contentAs = classOf[ Array[Long] ] )
   val msQueryIds: Option[Array[Long]] = None,
   
+  @JsonDeserialize(contentAs = classOf[java.lang.Long] )
   val lcmsFeatureId: Option[Long] = None,
   
   @JsonDeserialize(contentAs = classOf[java.lang.Long] )
