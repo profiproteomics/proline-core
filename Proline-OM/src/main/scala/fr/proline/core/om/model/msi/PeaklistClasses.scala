@@ -116,17 +116,20 @@ case class SpectrumTitleParsingRule (
     
     for( (fieldName, fieldRegex) <- this.regexByFieldName ) {
       
+      val fieldNameAsStr = fieldName.toString
+      var fieldFound = false
+      
       fieldRegex.split("""\|\|""").foreach { atomicFieldRegex =>
         
-        if( specTitleFieldMap.contains(fieldName) == false ) {
-          val fieldNameAsStr = fieldName.toString
+        if (atomicFieldRegex.nonEmpty && fieldFound == false) {
           
           // Try to capture the corresponding regex group
           try {
             val matcherOpt = title =# (atomicFieldRegex,fieldNameAsStr)
             
             if( matcherOpt.isDefined && matcherOpt.get.groupNames.contains(fieldNameAsStr) ) {
-              specTitleFieldMap += fieldName -> matcherOpt.get.group(fieldNameAsStr)
+              specTitleFieldMap.put( fieldName, matcherOpt.get.group(fieldNameAsStr) )
+              fieldFound = true
             }
           } catch {
             

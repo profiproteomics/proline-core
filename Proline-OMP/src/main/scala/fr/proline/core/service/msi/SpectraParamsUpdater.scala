@@ -6,6 +6,8 @@ import fr.proline.context.IExecutionContext
 import fr.proline.core.dal.DoJDBCWork
 import fr.proline.core.dal.context._
 import fr.proline.core.dal.tables.msi.MsiDbSpectrumTable
+import fr.proline.core.om.model.msi.SpectrumTitleFields.RAW_FILE_IDENTIFIER
+import fr.proline.core.om.model.msi.SpectrumTitleParsingRule
 import fr.proline.core.orm.uds.{ SpectrumTitleParsingRule => UdsSpectrumTitleParsingRule }
 import fr.profi.util.regex.RegexUtils._
 import fr.profi.util.primitives._
@@ -60,63 +62,45 @@ class SpectraParamsUpdater(
     val udsSpecTitleParsingRule = udsEM.find(classOf[UdsSpectrumTitleParsingRule], specTitleRuleId) 
     require(udsSpecTitleParsingRule != null, "no spectrum title parsing rule in UDSdb with id=" + specTitleRuleId)
     
-    // Retrieve spectrum attributes
-    val specCols = MsiDbSpectrumTable.columns
-    val spectrumAttributes = MsiDbSpectrumTable.filterColsAsStrList( t =>
-      List(t.FIRST_SCAN,t.LAST_SCAN, t.FIRST_CYCLE, t.LAST_CYCLE, t.FIRST_TIME, t.LAST_TIME )
+    val parsingRule = new SpectrumTitleParsingRule(
+      id = specTitleRuleId,
+      rawFileIdentifierRegex = Option(udsSpecTitleParsingRule.getRawFileIdentifier),
+      firstCycleRegex = Option(udsSpecTitleParsingRule.getFirstCycle),
+      lastCycleRegex = Option(udsSpecTitleParsingRule.getLastCycle),
+      firstScanRegex = Option(udsSpecTitleParsingRule.getFirstScan),
+      lastScanRegex = Option(udsSpecTitleParsingRule.getLastScan),
+      firstTimeRegex = Option(udsSpecTitleParsingRule.getFirstTime),
+      lastTimeRegex = Option(udsSpecTitleParsingRule.getLastTime)
     )
     
-    // Map parsing rule by spectrum attributes
-    val parsingRuleBySpecAttr: Map[String,String] = Some(udsSpecTitleParsingRule).map { stpr =>
-      Map(
-        specCols.FIRST_SCAN.toString -> stpr.getFirstScan,
-        specCols.LAST_SCAN.toString -> stpr.getLastScan,
-        specCols.FIRST_CYCLE.toString -> stpr.getFirstCycle,
-        specCols.LAST_CYCLE.toString -> stpr.getLastCycle,
-        specCols.FIRST_TIME.toString -> stpr.getFirstTime,
-        specCols.LAST_TIME.toString -> stpr.getLastTime
-      )
-    } get
+    this.logger.debug("Use parsing rule: " + parsingRule)
     
     // Do JDBC work in a managed transaction (rolled back if necessary)
-    DoJDBCWork.tryTransactionWithEzDBC(execCtx.getMSIDbConnectionContext(), { ezDBC =>
+    DoJDBCWork.tryTransactionWithEzDBC(execCtx.getMSIDbConnectionContext()) { ezDBC =>
       val sqlQuery = "SELECT id, title FROM spectrum WHERE peaklist_id = " + peaklistId
-      this.logger.debug("executing SQL query: \""+sqlQuery+"\"")
+      this.logger.debug("Executing SQL query: \""+sqlQuery+"\"")
       
       ezDBC.selectAndProcess( sqlQuery ) { r =>
         
-        val spectrumId = toLong(r.nextAny)
+        val spectrumId = r.nextLong
         val spectrumTitle = r.nextString
-        
-        // Extract attributes from spectrum title
-        val extractedAttrs = new collection.mutable.HashMap[String,String]
-        for( specAttr <- spectrumAttributes ) {
-          val parsingRule = parsingRuleBySpecAttr(specAttr)
-          if( parsingRule != null ) {
-            val atomixRules = parsingRule.split("""\|\|""")
-            var foundAtt = false
-            for(atomicFieldRegex <- atomixRules
-                if !foundAtt){             
-                  val parsingRuleMatch = spectrumTitle =# atomicFieldRegex
-                  if( parsingRuleMatch.isDefined && parsingRuleMatch.get.group(1) != null && !parsingRuleMatch.get.group(1).isEmpty()) {
-                    foundAtt = true
-                    extractedAttrs(specAttr) = parsingRuleMatch.get.group(1)
-                  }                     
-              }
-           }
-        }
+
+        val extractedAttrs = parsingRule.parseTitle(spectrumTitle)
         
         // Update spectrum if attributes have been extracted
         if( extractedAttrs.size > 0 ) {
-          val attrsToUpdate = extractedAttrs.map { case (k,v) => k + "=" + v }
+          val attrsToUpdate = extractedAttrs.withFilter(_._1 != RAW_FILE_IDENTIFIER).map { case (k,v) =>
+            k.toString().toLowerCase() + "=" + v
+          }
           ezDBC.execute( "UPDATE spectrum SET " + attrsToUpdate.mkString(",") + " WHERE id = " + spectrumId )
           updatedSpectraCount += 1
+        } else {
+          this.logger.trace(s"Can't use parsing rule #$specTitleRuleId to parse information from spectrum title: " + spectrumTitle)
         }
         
         ()
       }
-    
-    })
+    }
 
     true
   }
