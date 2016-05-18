@@ -173,15 +173,15 @@ class MasterQuantChannelEntityCache(
     scanNumberBySpectrumId.result
   }
   
-  private var peptideByRunIdAndScanNumber : Map[Long, HashMap[Int, Peptide]] = null
-  private var psmByRunIdAndScanNumber : Map[Long, HashMap[Int, ArrayBuffer[PeptideMatch]]] = null
+  private var peptideByRunIdAndScanNumber: LongMap[LongMap[Peptide]] = null
+  private var psmByRunIdAndScanNumber: LongMap[LongMap[ArrayBuffer[PeptideMatch]]] = null
   
-  def getPepAndPsmByRunIdAndScanNumber(mergedRsm: ResultSummary) : (Map[Long, HashMap[Int, Peptide]], Map[Long, HashMap[Int, ArrayBuffer[PeptideMatch]]]) = {
+  def getPepAndPsmByRunIdAndScanNumber(mergedRsm: ResultSummary) : (LongMap[LongMap[Peptide]], LongMap[LongMap[ArrayBuffer[PeptideMatch]]]) = {
     if(peptideByRunIdAndScanNumber == null) {
       val validPepIdSet = mergedRsm.peptideInstances.withFilter(_.validatedProteinSetsCount > 0).map(_.peptideId).toSet
       
-      val peptideMap = new collection.mutable.HashMap[Long, HashMap[Int, Peptide]]()
-      val psmMap = new collection.mutable.HashMap[Long, HashMap[Int, ArrayBuffer[PeptideMatch]]]()
+      val peptideMap = new collection.mutable.LongMap[LongMap[Peptide]]()
+      val psmMap = new collection.mutable.LongMap[LongMap[ArrayBuffer[PeptideMatch]]]()
       
       for( rsm <- this.identResultSummaries ) {
         val runId = runIdByRsmId(rsm.id)
@@ -193,14 +193,14 @@ class MasterQuantChannelEntityCache(
           if (validPepIdSet.contains(valPepMatch.peptideId)) {
             val spectrumId = valPepMatch.getMs2Query.spectrumId
             val scanNumber = this.scanNumberBySpectrumId(spectrumId)
-            psmMap.getOrElseUpdate(runId, new HashMap[Int, ArrayBuffer[PeptideMatch]]).getOrElseUpdate(scanNumber, ArrayBuffer[PeptideMatch]()) += valPepMatch
-            peptideMap.getOrElseUpdate(runId, new HashMap[Int, Peptide])(scanNumber) = valPepMatch.peptide
+            peptideMap.getOrElseUpdate(runId, new LongMap[Peptide])(scanNumber) = valPepMatch.peptide
+            psmMap.getOrElseUpdate(runId, new LongMap[ArrayBuffer[PeptideMatch]]).getOrElseUpdate(scanNumber, ArrayBuffer[PeptideMatch]()) += valPepMatch
           }
         }
       }
-      peptideByRunIdAndScanNumber = peptideMap.toMap
-      psmByRunIdAndScanNumber = psmMap.toMap      
-    } 
+      peptideByRunIdAndScanNumber = peptideMap
+      psmByRunIdAndScanNumber = psmMap
+    }
     
     (peptideByRunIdAndScanNumber, psmByRunIdAndScanNumber)
   }

@@ -108,6 +108,8 @@ case class LcMsScanSequence(
     scans.groupBy( scan => LcMsScanSequence.calcTimeIndex(scan.time) )
   }
   
+  private lazy val _scanByTime = Map() ++ scans.map { scan => ( scan.time -> scan ) }
+  
   def getScanByInitialId( initialId: Int ): Option[LcMsScan] = {
     for( scanId <- scanIdByInitialId.get(initialId) ) yield scanById(scanId)
   }
@@ -115,21 +117,40 @@ case class LcMsScanSequence(
   def getScanAtTime( time: Float, msLevel: Int = 1 ): LcMsScan = {
     //require( time >= 0, s"time must be a positive number ($time)" )
     
-    val safeTime = math.min( math.max(scans.head.time, time), scans.last.time )
-    val timeIndex = LcMsScanSequence.calcTimeIndex(safeTime)
-    val scansByIndex = scansByTimeIndex
+    // Try to retrieve scan by exact time matching
+    val scanOptForTime = _scanByTime.get(time)
+    if (scanOptForTime.isDefined && scanOptForTime.get.msLevel == msLevel) scanOptForTime.get
+    // Else fallback to lookup in the scansByTimeIndex HashMap
+    else {
+      val safeTime = math.min( math.max(scans.head.time, time), scans.last.time )
+      var timeIndex = LcMsScanSequence.calcTimeIndex(safeTime)
+      val maxTimeIndex = timeIndex + 1
+      if (timeIndex > 0) timeIndex -= 1
+      
+      val scansByIndex = scansByTimeIndex
+      
+      var nearestScan: LcMsScan = null
+      var lowestDeltaTime: Float = Float.MaxValue
+      while (timeIndex <= maxTimeIndex) {
+        val scansOpt = scansByIndex.get(timeIndex)
+        if (scansOpt.isDefined) {
+          val scans = scansOpt.get
+          for (scan <- scans; if scan.msLevel == msLevel) {
+            val time = scan.time
+            val deltaTime = Math.abs(time - safeTime)
+            if (deltaTime < lowestDeltaTime) {
+              lowestDeltaTime = deltaTime
+              nearestScan = scan
+            }
+            // TODO: optimize the search by breaking when delta increases after found minimum
+          }
+        }
+        timeIndex += 1
+      }
+      
+      nearestScan
+    }
     
-    // Determine all matching scans
-    val matchingScans = for(
-      index <- timeIndex-1 to timeIndex+1;
-      tmpScansOpt = scansByIndex.get(index);
-      if tmpScansOpt.isDefined && tmpScansOpt.get != null;
-      tmpScan <- tmpScansOpt.get;
-      if tmpScan.msLevel == msLevel
-    ) yield tmpScan
-
-    // Return nearest scan from provided time
-    matchingScans.minBy( s => math.abs(s.time - safeTime) )
   }
   
   def isEmpty() : Boolean = {

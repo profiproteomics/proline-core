@@ -75,22 +75,22 @@ class FeatureSummarizerTest {
     
     val dataMatrices = Array(
       new PeakelDataMatrix(
-        peakelDataMatrixTemplate.getSpectrumIds().toArray,
-        peakelDataMatrixTemplate.getElutionTimes().toArray,
-        peakelDataMatrixTemplate.getMzValues().toArray,
-        peakelDataMatrixTemplate.getIntensityValues().toArray.map( _ * intensityFactor )
+        peakelDataMatrixTemplate.getSpectrumIds(),
+        peakelDataMatrixTemplate.getElutionTimes(),
+        peakelDataMatrixTemplate.getMzValues(),
+        peakelDataMatrixTemplate.getIntensityValues().map( _ * intensityFactor )
       ),
       new PeakelDataMatrix(
-        peakelDataMatrixTemplate.getSpectrumIds().toArray,
-        peakelDataMatrixTemplate.getElutionTimes().toArray,
-        peakelDataMatrixTemplate.getMzValues().toArray.map( _ + 1 / charge ),
-        peakelDataMatrixTemplate.getIntensityValues().toArray.map( _ * isotopeRatios(0) * intensityFactor )
+        peakelDataMatrixTemplate.getSpectrumIds(),
+        peakelDataMatrixTemplate.getElutionTimes(),
+        peakelDataMatrixTemplate.getMzValues().map( _ + 1 / charge ),
+        peakelDataMatrixTemplate.getIntensityValues().map( _ * isotopeRatios(0) * intensityFactor )
       ),
       new PeakelDataMatrix(
-        peakelDataMatrixTemplate.getSpectrumIds().toArray,
-        peakelDataMatrixTemplate.getElutionTimes().toArray,
-        peakelDataMatrixTemplate.getMzValues().toArray.map( _ + 2 / charge ),
-        peakelDataMatrixTemplate.getIntensityValues().toArray.map( _ * isotopeRatios(1) * intensityFactor )
+        peakelDataMatrixTemplate.getSpectrumIds(),
+        peakelDataMatrixTemplate.getElutionTimes(),
+        peakelDataMatrixTemplate.getMzValues().map( _ + 2 / charge ),
+        peakelDataMatrixTemplate.getIntensityValues().map( _ * isotopeRatios(1) * intensityFactor )
       )
     )
     

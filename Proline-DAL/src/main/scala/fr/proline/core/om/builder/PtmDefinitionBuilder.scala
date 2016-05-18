@@ -1,6 +1,7 @@
 package fr.proline.core.om.builder
 
 import scala.collection.mutable.ArrayBuffer
+import scala.collection.mutable.LongMap
 import fr.profi.util.primitives._
 import fr.proline.core.dal.tables.ps._
 import fr.proline.core.om.model.msi._
@@ -66,11 +67,11 @@ object PtmDefinitionBuilder {
   }
   
   def buildLocatedPtmsGroupedByPepId(
-    pepPtmRecordsByPepId: Map[Long,Seq[IValueContainer]],
-    ptmDefinitionById: Map[Long,PtmDefinition]
-  ): Map[Long, Array[LocatedPtm]] = {
+    pepPtmRecordsByPepId: LongMap[_ <: Seq[IValueContainer]],
+    ptmDefinitionById: LongMap[PtmDefinition]
+  ): LongMap[Array[LocatedPtm]] = {
 
-    val locatedPtmMapBuilder = scala.collection.immutable.Map.newBuilder[Long, Array[LocatedPtm]]
+    val locatedPtmLongMap = new LongMap[Array[LocatedPtm]]()
 
     for ( (pepId, pepPtmRecords) <- pepPtmRecordsByPepId ) {
 
@@ -91,10 +92,10 @@ object PtmDefinitionBuilder {
 
       }
 
-      locatedPtmMapBuilder += (pepId -> locatedPtms.toArray)
+      locatedPtmLongMap.put(pepId, locatedPtms.toArray)
     }
 
-    locatedPtmMapBuilder.result()
+    locatedPtmLongMap
   }
   
 }

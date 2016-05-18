@@ -53,12 +53,13 @@ case class Peakel(
   
   var properties: Option[PeakelProperties] = None
   
-) extends fr.profi.mzdb.model.IPeakelData with IEntityReference[Peakel] {
+) extends fr.profi.mzdb.model.IPeakelDataContainer with IEntityReference[Peakel] {
   
-  def getSpectrumIds(): Seq[Long] = dataMatrix.spectrumIds
-  def getElutionTimes(): Seq[Float] = dataMatrix.elutionTimes
-  def getMzValues(): Seq[Double] = dataMatrix.mzValues
-  def getIntensityValues(): Seq[Float] = dataMatrix.intensityValues
+  def getSpectrumIds(): Array[Long] = dataMatrix.spectrumIds
+  def getElutionTimes(): Array[Float] = dataMatrix.elutionTimes
+  def getMzValues(): Array[Double] = dataMatrix.mzValues
+  def getIntensityValues(): Array[Float] = dataMatrix.intensityValues
+  def getPeaksCount() = dataMatrix.peaksCount
   override def getNewCursor(): PeakelDataMatrixCursor = new PeakelDataMatrixCursor(dataMatrix)
   
   // Make some requirements
@@ -74,12 +75,13 @@ case class Peakel(
   lazy val apexIndex = dataMatrix.intensityValues.zipWithIndex.maxBy(_._1)._2
   def apexIntensity: Float = dataMatrix.intensityValues(apexIndex)
   
-  def firstScanId = dataMatrix.spectrumIds.head
-  def lastScanId = dataMatrix.spectrumIds.last
+  def firstScanId = dataMatrix.spectrumIds(0)
+  def lastScanId = dataMatrix.spectrumIds( dataMatrix.peaksCount - 1 )
   def apexScanId = dataMatrix.spectrumIds(apexIndex)
   
-  def getElutionStartTime(): Float = dataMatrix.elutionTimes.head  
-  def getElutionStopTime(): Float = dataMatrix.elutionTimes.last
+  def getElutionStartTime(): Float = dataMatrix.elutionTimes(0)  
+  def getElutionStopTime(): Float = dataMatrix.elutionTimes( dataMatrix.peaksCount - 1 )
+  def getElutionTimeIntensityPairs() = dataMatrix.getElutionTimeIntensityPairs()
   
   /*def getElutionStartTime( scanSequence: LcMsScanSequence ): Float = {
     scanSequence.scanById(this.firstScanId).time

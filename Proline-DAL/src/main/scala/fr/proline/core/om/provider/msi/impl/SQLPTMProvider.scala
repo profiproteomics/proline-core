@@ -2,6 +2,7 @@ package fr.proline.core.om.provider.msi.impl
 
 import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.HashMap
+import scala.collection.mutable.LongMap
 
 import fr.profi.util.primitives._
 import fr.proline.context.DatabaseConnectionContext
@@ -17,23 +18,21 @@ class SQLPTMProvider(val psDbCtx: DatabaseConnectionContext) extends IPTMProvide
   require( psDbCtx.getProlineDatabaseType == ProlineDatabaseType.PS, "PsDb connection required")
   
   /** Returns a map */
-  lazy val ptmDefinitionById: Map[Long, PtmDefinition] = {
+  lazy val ptmDefinitionById: LongMap[PtmDefinition] = {
     
-    DoJDBCReturningWork.withEzDBC(psDbCtx, { psEzDBC =>
+    DoJDBCReturningWork.withEzDBC(psDbCtx) { psEzDBC =>
 
-      val ptmMapBuilder = scala.collection.immutable.Map.newBuilder[Long, AnyMapLike]
-  
+      val ptmRecordById = new LongMap[AnyMapLike]()
+      
       // Load PTM records
       psEzDBC.selectAndProcess("SELECT * FROM ptm") { row =>
   
         // Build the PTM record
         val ptmRecord = row.toAnyMap()
         
-        ptmMapBuilder += (ptmRecord.getLong("id") -> ptmRecord )
+        ptmRecordById.put(ptmRecord.getLong("id"), ptmRecord )
       }
   
-      val ptmRecordById = ptmMapBuilder.result()
-      
       // Execute SQL query to load PTM evidence records
       val ptmEvidRecords = psEzDBC.selectAllRecords("SELECT * FROM ptm_evidence") /*{ row =>
   
@@ -50,13 +49,13 @@ class SQLPTMProvider(val psDbCtx: DatabaseConnectionContext) extends IPTMProvide
       // Group PTM evidences by PTM id
       val ptmEvidRecordsByPtmId = ptmEvidRecords.groupBy(r => r.getLong("ptm_id") )
       
-      val ptmDefMapBuilder = scala.collection.immutable.Map.newBuilder[Long, PtmDefinition]
+      val ptmDefById = new scala.collection.mutable.LongMap[PtmDefinition]()
   
       // Load PTM specificity records
       psEzDBC.selectAndProcess("SELECT * FROM ptm_specificity") { row =>
         
         // Build the PTM specificity record
-        val ptmSpecifRecord = row.toAnyMap()
+        val ptmSpecifRecord = row
   
         // Retrieve corresponding PTM
         val ptmId = ptmSpecifRecord.getLong("ptm_id")
@@ -74,12 +73,12 @@ class SQLPTMProvider(val psDbCtx: DatabaseConnectionContext) extends IPTMProvide
           ptmClassification = ""
         )
   
-        ptmDefMapBuilder += (ptmDef.id -> ptmDef)
+        ptmDefById.put(ptmDef.id, ptmDef)
   
       }
   
-      ptmDefMapBuilder.result()
-    }, false)
+      ptmDefById
+    }
     
   }
 

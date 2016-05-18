@@ -4,6 +4,8 @@ import java.io.File
 import java.io.InputStream
 import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.HashMap
+import scala.collection.mutable.LongMap
+import fr.profi.util.collection._
 import fr.profi.util.dbunit._
 import fr.profi.util.primitives._
 import fr.profi.util.serialization.ProfiJson
@@ -200,7 +202,7 @@ class PsDbDatasetParser( datasetInputStream: InputStream ) extends IPTMProvider 
     val ptmSpecifRecords = psRecordByTableName( PsDbPtmSpecificityTable.name ).toArray
     
     // Build PTM definitions
-    val ptmDefMapBuilder = scala.collection.immutable.Map.newBuilder[Long, PtmDefinition]
+    val ptmDefLongMap = new LongMap[PtmDefinition]()
     
     for( ptmSpecifRecord <- ptmSpecifRecords ) {
 
@@ -220,20 +222,20 @@ class PsDbDatasetParser( datasetInputStream: InputStream ) extends IPTMProvider 
         ptmClassification = ""
       )
 
-      ptmDefMapBuilder += (ptmDef.id -> ptmDef)
+      ptmDefLongMap.put(ptmDef.id, ptmDef)
     }
 
-    ptmDefMapBuilder.result()
+    ptmDefLongMap
   }
   
-  private def getLocatedPtmsByPepId(): Map[Long, Array[LocatedPtm]] = {
+  private def getLocatedPtmsByPepId(): LongMap[Array[LocatedPtm]] = {
     
     /*val castedPepPtmRecords = DbUnitDatasetParser.castRecords(
       psRecordByTableName.getOrElse(PsDbPeptidePtmTable.name,new ArrayBuffer()).toArray,
       pepPtmColNames
     )*/
     val pepPtmRecords = psRecordByTableName.getOrElse(PsDbPeptidePtmTable.name,new ArrayBuffer()).toArray
-    val pepPtmRecordsByPepId = pepPtmRecords.toSeq.groupBy(_.getLong("peptide_id") )
+    val pepPtmRecordsByPepId = pepPtmRecords.toSeq.groupByLong(_.getLong("peptide_id") )
     
     PtmDefinitionBuilder.buildLocatedPtmsGroupedByPepId(pepPtmRecordsByPepId,ptmDefinitionById)
   }

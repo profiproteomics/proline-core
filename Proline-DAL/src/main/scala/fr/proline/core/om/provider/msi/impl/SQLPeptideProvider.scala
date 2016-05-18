@@ -2,10 +2,12 @@ package fr.proline.core.om.provider.msi.impl
 
 import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.HashMap
+import scala.collection.mutable.LongMap
 
 import com.typesafe.scalalogging.LazyLogging
 
 import fr.profi.jdbc.easy._
+import fr.profi.util.collection._
 import fr.profi.util.StringUtils
 import fr.profi.util.primitives._
 import fr.proline.context.DatabaseConnectionContext
@@ -94,22 +96,19 @@ class SQLPeptideProvider(psDbCtx: DatabaseConnectionContext) extends SQLPTMProvi
 
   require( psDbCtx.getProlineDatabaseType == ProlineDatabaseType.PS, "PsDb connection required")
   
-  import scala.collection.mutable.ArrayBuffer
-  import scala.collection.mutable.HashMap
   import SQLPeptideProvider._
 
   /** Returns a map of peptide PTMs grouped by the peptide id */
-  def getPeptidePtmRecordsByPepId(peptideIds: Seq[Long]): Map[Long, Seq[AnyMap]] = {
-    if( peptideIds.isEmpty ) return Map()
+  def getPeptidePtmRecordsByPepId(peptideIds: Seq[Long]): LongMap[Seq[AnyMap]] = {
+    if( peptideIds.isEmpty ) return LongMap()
 
-    DoJDBCReturningWork.withEzDBC(psDbCtx, { psEzDBC =>
+    DoJDBCReturningWork.withEzDBC(psDbCtx) { psEzDBC =>
 
-      val mapBuilder = scala.collection.immutable.Map.newBuilder[Long, AnyMap]
       val maxNbIters = psEzDBC.getInExpressionCountLimit
       val pepPtmRecords = new ArrayBuffer[AnyMap]()
 
       // Iterate over groups of peptide ids
-      peptideIds.grouped(maxNbIters).foreach(tmpPepIds => {
+      peptideIds.grouped(maxNbIters).foreach { tmpPepIds =>
 
         // Retrieve peptide PTMs for the current group of peptide ids
         val pepPtmQuery = new SelectQueryBuilder1(PsDbPeptidePtmTable).mkSelectQuery((t, c) =>
@@ -120,16 +119,18 @@ class SQLPeptideProvider(psDbCtx: DatabaseConnectionContext) extends SQLPTMProvi
           pepPtmRecords += row.toAnyMap()
         }
         
-      })
+      }
 
-      pepPtmRecords.groupBy(r => r.getLong(PsDbPeptidePtmColumns.PEPTIDE_ID) )
-
-    })
+      pepPtmRecords.toSeq.groupByLong(r => r.getLong(PsDbPeptidePtmColumns.PEPTIDE_ID) )
+    }
 
   }
 
-  def getLocatedPtmsByPepId(peptideIds: Seq[Long]): Map[Long, Array[LocatedPtm]] = {
-    PtmDefinitionBuilder.buildLocatedPtmsGroupedByPepId(getPeptidePtmRecordsByPepId(peptideIds),ptmDefinitionById)
+  def getLocatedPtmsByPepId(peptideIds: Seq[Long]): LongMap[Array[LocatedPtm]] = {
+    PtmDefinitionBuilder.buildLocatedPtmsGroupedByPepId(
+      getPeptidePtmRecordsByPepId(peptideIds),
+      ptmDefinitionById
+    )
   }
 
   def getPeptides(peptideIds: Seq[Long]): Array[Peptide] = {
@@ -244,7 +245,7 @@ class SQLPeptideProvider(psDbCtx: DatabaseConnectionContext) extends SQLPTMProvi
 
   private def _buildPeptides(
     pepRecords: Seq[IValueContainer],
-    locatedPtmsByPepId: Map[Long, Array[LocatedPtm]]
+    locatedPtmsByPepId: LongMap[Array[LocatedPtm]]
   ): Array[Peptide] = {
 
     // Iterate over peptide records to convert them into peptide objects
