@@ -1995,13 +1995,6 @@ class ExtractMapSet(
         )
     }
 
-    /*val ftProps = FeatureProperties(
-      // TODO: remove me
-      //peakelsCount = Some(lcmsFtPeakelItems.length),
-      //basePeakelIndex = Some(mzDbFt.getBasePeakelIndex)
-    )*/
-    val ftPropsOpt = Option.empty[FeatureProperties]
-
     new LcMsFeature(
       id = ftId,
       moz = mzDbFt.mz,
@@ -2016,7 +2009,7 @@ class ExtractMapSet(
       isOverlapping = false,
       isotopicPatterns = None,
       selectionLevel = 2,
-      properties = ftPropsOpt,
+      properties = Some(FeatureProperties()),
       relations = new FeatureRelations(
         ms2EventIds = ms2EventIds,
         peakelItems = lcmsFtPeakelItems,
