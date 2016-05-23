@@ -104,7 +104,11 @@
       <type>test-jar</type>
       <scope>test</scope>
     </dependency>
-
+    <dependency>
+            <groupId>com.github.davidmoten</groupId>
+            <artifactId>rtree</artifactId>
+            <version>0.8-RC7</version>
+     </dependency>
   </dependencies>
 
   <build>
