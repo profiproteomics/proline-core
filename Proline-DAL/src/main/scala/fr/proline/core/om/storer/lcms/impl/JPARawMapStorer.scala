@@ -3,9 +3,9 @@ package fr.proline.core.om.storer.lcms.impl
 import fr.proline.context.DatabaseConnectionContext
 import fr.proline.core.om.model.lcms.RawMap
 import fr.proline.core.om.model.lcms.ILcMsMap
-import fr.proline.core.om.storer.lcms.IRawMapStorer
+import fr.proline.core.om.storer.lcms._
 
-class JPARawMapStorer( lcmsDbCtx: DatabaseConnectionContext ) extends IRawMapStorer {
+class JPARawMapStorer( val lcmsDbCtx: DatabaseConnectionContext, val featureWriter: IFeatureWriter ) extends IRawMapStorer {
   
   def storeRawMap( rawMap: RawMap, storePeaks: Boolean = false ): Unit = {
     throw new Exception("not yet implemented")

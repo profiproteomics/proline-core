@@ -5,7 +5,7 @@ import java.io.File
 import scala.io.Source._
 
 import fr.proline.api.service.IService
-import fr.proline.context.DatabaseConnectionContext
+import fr.proline.context.LcMsDbConnectionContext
 import fr.proline.core.om.model.lcms.LcMsRun
 import fr.proline.core.om.model.lcms.LcMsScan
 import fr.proline.core.om.model.lcms.LcMsScanSequence
@@ -84,13 +84,13 @@ object ImportScanSequence { // extends String2FileConverter
   }
 }
 
-class ImportScanSequence(lcmsDbCtx: DatabaseConnectionContext, lcmsScanSeq: LcMsScanSequence) extends IService {
+class ImportScanSequence(lcmsDbCtx: LcMsDbConnectionContext, lcmsScanSeq: LcMsScanSequence) extends IService {
 
-  def this(lcmsDbCtx: DatabaseConnectionContext, scans: Seq[LcMsScan], pps: PeakPickingSoftware, rawfile: RawFile) {
+  def this(lcmsDbCtx: LcMsDbConnectionContext, scans: Seq[LcMsScan], pps: PeakPickingSoftware, rawfile: RawFile) {
     this(lcmsDbCtx, ImportScanSequence.buildScanSequence(scans, pps, rawfile))
   }
 
-  def this(lcmsDbCtx: DatabaseConnectionContext, file: File, pps: PeakPickingSoftware, rawfile: RawFile) {
+  def this(lcmsDbCtx: LcMsDbConnectionContext, file: File, pps: PeakPickingSoftware, rawfile: RawFile) {
     this(lcmsDbCtx, ImportScanSequence.buildScanSequence(file, pps, rawfile))
   }
 

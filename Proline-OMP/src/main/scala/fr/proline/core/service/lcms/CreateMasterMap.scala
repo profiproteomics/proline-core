@@ -4,7 +4,7 @@ import scala.collection.mutable.ArrayBuffer
 
 import fr.profi.jdbc.easy._
 import fr.proline.api.service.IService
-import fr.proline.context.DatabaseConnectionContext
+import fr.proline.context.LcMsDbConnectionContext
 import fr.proline.core.algo.lcms._
 import fr.proline.core.dal.{ DoJDBCWork, DoJDBCReturningWork }
 import fr.proline.core.om.model.lcms._
@@ -18,7 +18,7 @@ import fr.proline.repository.IDatabaseConnector
 object CreateMasterMap {
 
   def apply(
-    lcmsDbCtx: DatabaseConnectionContext,
+    lcmsDbCtx: LcMsDbConnectionContext,
     mapSet: MapSet,
     scanSeqs: Seq[LcMsScanSequence],
     alnMethodName: String,
@@ -49,7 +49,7 @@ object CreateMasterMap {
 }
 
 class CreateMasterMap(
-  val lcmsDbCtx: DatabaseConnectionContext,
+  val lcmsDbCtx: LcMsDbConnectionContext,
   mapSet: MapSet,
   scanSeqs: Seq[LcMsScanSequence],
   alnMethodName: String,
@@ -151,7 +151,7 @@ class CreateMasterMap(
     logger.info("saving the processed maps content...")
     //val mapIdByTmpMapId = new collection.mutable.HashMap[Long,Long]
     
-    DoJDBCWork.withEzDBC( lcmsDbCtx, { ezDBC =>
+    DoJDBCWork.withEzDBC( lcmsDbCtx ) { ezDBC =>
       
       // Instantiate a processed map storer
       val processedMapStorer = ProcessedMapStorer( lcmsDbCtx )
@@ -173,7 +173,7 @@ class CreateMasterMap(
         }
       }
       
-    })
+    }
 
     logger.info("saving the master map...")
     val masterMapStorer = MasterMapStorer(lcmsDbCtx)

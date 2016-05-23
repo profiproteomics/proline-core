@@ -1,6 +1,6 @@
 package fr.proline.core.om.storer.lcms
 
-import fr.proline.context.DatabaseConnectionContext
+import fr.proline.context.LcMsDbConnectionContext
 import fr.proline.core.om.storer.lcms.impl._
 import fr.proline.repository.DriverType
 
@@ -14,10 +14,11 @@ trait IMapAlnSetStorer {
 
 /** A factory object for implementations of the IMapAlnSetStorer trait */
 object MapAlnSetStorer {
-  def apply( lcmsDbCtx: DatabaseConnectionContext ): IMapAlnSetStorer = { lcmsDbCtx.getDriverType match {
-    //case DriverType.POSTGRESQL => new GenericMapAlnSetStorer(lcmsDb)
-    //case DriverType.SQLITE => new SQLiteMapAlnSetStorer(lcmsDb)
-    case _ => new SQLMapAlnSetStorer(lcmsDbCtx)
+  def apply( lcmsDbCtx: LcMsDbConnectionContext ): IMapAlnSetStorer = {
+    lcmsDbCtx.getDriverType match {
+      //case DriverType.POSTGRESQL => new GenericMapAlnSetStorer(lcmsDb)
+      //case DriverType.SQLITE => new SQLiteMapAlnSetStorer(lcmsDb)
+      case _ => new SQLMapAlnSetStorer(lcmsDbCtx)
     }
   }
 }

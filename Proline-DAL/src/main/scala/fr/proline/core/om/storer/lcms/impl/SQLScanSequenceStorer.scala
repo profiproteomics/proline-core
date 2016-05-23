@@ -2,7 +2,7 @@ package fr.proline.core.om.storer.lcms.impl
 
 import fr.profi.jdbc.easy._
 import fr.profi.util.serialization.ProfiJson
-import fr.proline.context.DatabaseConnectionContext
+import fr.proline.context.LcMsDbConnectionContext
 import fr.proline.core.dal.DoJDBCWork
 import fr.proline.core.dal.tables.lcms.{ LcmsDbInstrumentTable, LcmsDbScanTable, LcmsDbScanSequenceTable }
 import fr.proline.core.om.model.msi.Instrument
@@ -11,14 +11,14 @@ import fr.proline.core.om.provider.uds.impl.SQLInstrumentProvider
 import fr.proline.core.om.storer.lcms.IScanSequenceStorer
 import com.typesafe.scalalogging.LazyLogging
 
-class SQLScanSequenceStorer(lcmsDbCtx: DatabaseConnectionContext) extends IScanSequenceStorer with LazyLogging {
+class SQLScanSequenceStorer(lcmsDbCtx: LcMsDbConnectionContext) extends IScanSequenceStorer with LazyLogging {
   
   val instrumentProvider = new SQLInstrumentProvider(lcmsDbCtx)
 
   def storeScanSequence(scanSeq: LcMsScanSequence) = {    
     require(scanSeq.instrument.isDefined, "an instrument must be specified for this scan sequence")
 
-    DoJDBCWork.withEzDBC(lcmsDbCtx, { lcmsEzDBC =>
+    DoJDBCWork.withEzDBC(lcmsDbCtx) { lcmsEzDBC =>
       
       val instrument = scanSeq.instrument.get
       
@@ -74,7 +74,7 @@ class SQLScanSequenceStorer(lcmsDbCtx: DatabaseConnectionContext) extends IScanS
         }
       }
     
-    })
+    }
 
   }
 

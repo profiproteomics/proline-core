@@ -4,15 +4,18 @@ import scala.collection.mutable.ArrayBuffer
 
 import fr.profi.jdbc.easy._
 
-import fr.proline.context.DatabaseConnectionContext
+import fr.proline.context.LcMsDbConnectionContext
 import fr.proline.core.dal.DoJDBCWork
 import fr.proline.core.dal.tables.lcms.LcmsDbFeatureTable
 import fr.proline.core.dal.tables.lcms.LcmsDbMasterFeatureItemTable
 import fr.proline.core.om.model.lcms.Feature
 import fr.proline.core.om.model.lcms.ProcessedMap
-import fr.proline.core.om.storer.lcms.IMasterMapStorer
+import fr.proline.core.om.storer.lcms._
 
-class SQLMasterMapStorer(lcmsDbCtx: DatabaseConnectionContext) extends SQLProcessedMapStorer(lcmsDbCtx) with IMasterMapStorer {
+class SQLMasterMapStorer(
+  override val lcmsDbCtx: LcMsDbConnectionContext,
+  override val featureWriter: SQLFeatureWriter
+) extends SQLProcessedMapStorer(lcmsDbCtx, featureWriter) with IMasterMapStorer {
 
   def storeMasterMap( masterMap: ProcessedMap ): Unit = {
     
@@ -21,7 +24,7 @@ class SQLMasterMapStorer(lcmsDbCtx: DatabaseConnectionContext) extends SQLProces
       throw new Exception("invalid map set id for the current master map")
     }
     
-    DoJDBCWork.withEzDBC(lcmsDbCtx, { ezDBC =>
+    DoJDBCWork.withEzDBC(lcmsDbCtx) { ezDBC =>
       
       // Insert the master map in the processed_map and map tables
       val newMasterMapId = this._insertProcessedMap( ezDBC, masterMap )
@@ -38,7 +41,7 @@ class SQLMasterMapStorer(lcmsDbCtx: DatabaseConnectionContext) extends SQLProces
         // Update master feature map id and insert master features in the feature table
         for( mft <- masterMap.features ) {
           mft.relations.processedMapId = newMasterMapId
-          mft.id = this.insertFeatureUsingPreparedStatement( mft, featureInsertStmt )
+          mft.id = this.featureWriter.insertFeatureUsingPreparedStatement( mft, featureInsertStmt )
         }
         
       }
@@ -62,7 +65,7 @@ class SQLMasterMapStorer(lcmsDbCtx: DatabaseConnectionContext) extends SQLProces
       // Insert extra master map features data into to processed map feature items
       this.insertProcessedMapFeatureItems( ezDBC, masterMap )
     
-    })
+    }
   
   }
     

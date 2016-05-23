@@ -3,7 +3,7 @@ package fr.proline.core.service.lcms
 import fr.profi.jdbc.easy._
 
 import fr.proline.api.service.IService
-import fr.proline.context.DatabaseConnectionContext
+import fr.proline.context.LcMsDbConnectionContext
 import fr.proline.core.algo.lcms.ClusterizeFeatures
 import fr.proline.core.algo.lcms.ClusteringParams
 import fr.proline.core.dal.{ DoJDBCWork, DoJDBCReturningWork }
@@ -18,7 +18,7 @@ import fr.proline.repository.IDatabaseConnector
 
 object ClusterizeMapFeatures {
 
-  def apply(lcmsDbCtx: DatabaseConnectionContext, lcmsMap: ProcessedMap, params: ClusteringParams): Array[Feature] = {
+  def apply(lcmsDbCtx: LcMsDbConnectionContext, lcmsMap: ProcessedMap, params: ClusteringParams): Array[Feature] = {
 
     val mapCleaner = new ClusterizeMapFeatures(lcmsDbCtx, lcmsMap, params)
     mapCleaner.runService()
@@ -28,7 +28,7 @@ object ClusterizeMapFeatures {
 
 }
 
-class ClusterizeMapFeatures(val lcmsDbCtx: DatabaseConnectionContext, lcmsMap: ProcessedMap, params: ClusteringParams) extends ILcMsService {
+class ClusterizeMapFeatures(val lcmsDbCtx: LcMsDbConnectionContext, lcmsMap: ProcessedMap, params: ClusteringParams) extends ILcMsService {
   
   //val ezDBC = lcmsQueryHelper.ezDBC
   //val inExprLimit = ezDBC.getInExpressionCountLimit

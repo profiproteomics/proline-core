@@ -4,7 +4,7 @@ import scala.collection.mutable.ArrayBuffer
 
 import fr.profi.jdbc.easy._
 import fr.proline.api.service.IService
-import fr.proline.context.DatabaseConnectionContext
+import fr.proline.context.LcMsDbConnectionContext
 import fr.proline.core.algo.lcms.ClusteringParams
 import fr.proline.core.dal.{ DoJDBCWork, DoJDBCReturningWork }
 import fr.proline.core.dal.tables.lcms.LcmsDbMapSetTable
@@ -18,7 +18,7 @@ import fr.proline.repository.IDatabaseConnector
 object CreateMapSet {
 
   def apply(
-    lcmsDbCtx: DatabaseConnectionContext,
+    lcmsDbCtx: LcMsDbConnectionContext,
     mapSetName: String,
     processedMaps: Seq[ProcessedMap]
     //clusteringParams: ClusteringParams
@@ -34,7 +34,7 @@ object CreateMapSet {
 
 // TODO: rename into StoreMapSet
 class CreateMapSet(
-  val lcmsDbCtx: DatabaseConnectionContext,
+  val lcmsDbCtx: LcMsDbConnectionContext,
   mapSetName: String,
   processedMaps: Seq[ProcessedMap]
   //rawMaps: Seq[RawMap],
@@ -68,7 +68,7 @@ class CreateMapSet(
     var newMapSetId: Long = 0L
     //val processedMaps = new ArrayBuffer[ProcessedMap]
     
-    DoJDBCWork.withEzDBC( lcmsDbCtx, { ezDBC =>
+    DoJDBCWork.withEzDBC( lcmsDbCtx) { ezDBC =>
       
       // Insert a new map set
       val mapSetInsertQuery = LcmsDbMapSetTable.mkInsertQuery( (c,colsList) => 
@@ -117,7 +117,7 @@ class CreateMapSet(
         mapSummaryUpdater.runWithVars( rdbProcessedMap.map )
       }*/
       
-    })
+    }
     
     // Commit transaction if it was initiated locally
     if( !wasInTransaction ) lcmsDbCtx.commitTransaction()

@@ -2,7 +2,7 @@ package fr.proline.core.service.lcms
 
 import fr.profi.jdbc.easy._
 import fr.proline.api.service.IService
-import fr.proline.context.DatabaseConnectionContext
+import fr.proline.context.LcMsDbConnectionContext
 import fr.proline.core.dal.{ DoJDBCWork, DoJDBCReturningWork }
 import fr.proline.core.algo.lcms.AlignmentParams
 import fr.proline.core.algo.lcms.LcmsMapAligner
@@ -15,8 +15,11 @@ import com.typesafe.scalalogging.LazyLogging
 
 object AlignMapSet {
 
-  def apply( lcmsDbCtx: DatabaseConnectionContext, mapSet: MapSet, 
-             alnResult: AlignmentResult ): Unit = {
+  def apply(
+    lcmsDbCtx: LcMsDbConnectionContext,
+    mapSet: MapSet, 
+    alnResult: AlignmentResult
+  ): Unit = {
     
     val mapSetAligner = new AlignMapSet( lcmsDbCtx, mapSet,  alnResult  )
     mapSetAligner.runService()
@@ -27,7 +30,7 @@ object AlignMapSet {
 }
 
 class AlignMapSet(
-  val lcmsDbCtx: DatabaseConnectionContext,
+  val lcmsDbCtx: LcMsDbConnectionContext,
   mapSet: MapSet, 
   alnResult: AlignmentResult
 ) extends ILcMsService with LazyLogging {

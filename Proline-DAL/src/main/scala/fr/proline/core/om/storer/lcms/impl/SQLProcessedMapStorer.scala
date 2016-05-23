@@ -6,7 +6,7 @@ import com.typesafe.scalalogging.LazyLogging
 import fr.profi.jdbc.easy._
 import fr.profi.jdbc.StatementWrapper
 
-import fr.proline.context.DatabaseConnectionContext
+import fr.proline.context.LcMsDbConnectionContext
 import fr.proline.core.dal.{DoJDBCWork,DoJDBCReturningWork}
 import fr.proline.core.dal.tables.lcms.LcmsDbFeatureTable
 import fr.proline.core.dal.tables.lcms.LcmsDbFeatureClusterItemTable
@@ -16,13 +16,16 @@ import fr.proline.core.dal.tables.lcms.LcmsDbProcessedMapFeatureItemTable
 import fr.proline.core.dal.tables.lcms.LcmsDbProcessedMapRawMapMappingTable
 import fr.proline.core.om.model.lcms.Feature
 import fr.proline.core.om.model.lcms.ProcessedMap
-import fr.proline.core.om.storer.lcms.IProcessedMapStorer
+import fr.proline.core.om.storer.lcms._
 
-class SQLProcessedMapStorer(lcmsDbCtx: DatabaseConnectionContext) extends SQLRawMapStorer(lcmsDbCtx) with IProcessedMapStorer with LazyLogging {
+class SQLProcessedMapStorer(
+  override val lcmsDbCtx: LcMsDbConnectionContext,
+  override val featureWriter: SQLFeatureWriter
+) extends SQLRawMapStorer(lcmsDbCtx, featureWriter) with IProcessedMapStorer with LazyLogging {
   
   def storeProcessedMap( processedMap: ProcessedMap, storeClusters: Boolean = true ): Unit = {    
-      
-    DoJDBCWork.withEzDBC(lcmsDbCtx, { ezDBC =>
+    
+    DoJDBCWork.withEzDBC(lcmsDbCtx) { ezDBC =>
       
       if( processedMap.id < 0 ) {
         // Insert the processed map if not already done
@@ -35,17 +38,17 @@ class SQLProcessedMapStorer(lcmsDbCtx: DatabaseConnectionContext) extends SQLRaw
       // Insert processed map feature items
       this.insertProcessedMapFeatureItems( ezDBC, processedMap )
       
-    })
+    }
     
     // Store clusters
     this.storeFeatureClusters( processedMap.features )
   
   }
   
-  def insertProcessedMap( processedMap: ProcessedMap ): Long = {    
-    DoJDBCReturningWork.withEzDBC(lcmsDbCtx, { ezDBC =>
+  def insertProcessedMap( processedMap: ProcessedMap ): Long = {
+    DoJDBCReturningWork.withEzDBC(lcmsDbCtx) { ezDBC =>
       this._insertProcessedMap(ezDBC,processedMap)
-    })
+    }
   }
   
   protected def _insertProcessedMap( ezDBC: EasyDBC, processedMap: ProcessedMap ): Long = {
@@ -150,7 +153,7 @@ class SQLProcessedMapStorer(lcmsDbCtx: DatabaseConnectionContext) extends SQLRaw
   
   def storeFeatureClusters( features: Seq[Feature] ): Unit = {
     
-    DoJDBCWork.withEzDBC(lcmsDbCtx, { ezDBC =>
+    DoJDBCWork.withEzDBC(lcmsDbCtx) { ezDBC =>
     
       // Insert features
       ezDBC.executePrepared(LcmsDbFeatureTable.mkInsertQuery( (t,c) => c.filter(_ != t.ID)), true) { featureInsertStmt =>
@@ -159,7 +162,7 @@ class SQLProcessedMapStorer(lcmsDbCtx: DatabaseConnectionContext) extends SQLRaw
         features.withFilter( _.isCluster ).foreach { clusterFt =>
             
           // Store the feature cluster
-          val newFtId = this.insertFeatureUsingPreparedStatement( clusterFt, featureInsertStmt )
+          val newFtId = this.featureWriter.insertFeatureUsingPreparedStatement( clusterFt, featureInsertStmt )
           
           // Update feature cluster id
           clusterFt.id = newFtId
@@ -192,7 +195,7 @@ class SQLProcessedMapStorer(lcmsDbCtx: DatabaseConnectionContext) extends SQLRaw
         }
       }*/
     
-    })
+    }
     
   }
   
@@ -213,7 +216,6 @@ class SQLProcessedMapStorer(lcmsDbCtx: DatabaseConnectionContext) extends SQLRaw
       ft.selectionLevel,
       Option.empty[String]
     )
-                           
   }
   
 }
