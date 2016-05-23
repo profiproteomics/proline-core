@@ -7,6 +7,7 @@ import scala.collection.mutable.HashSet
 import scala.collection.mutable.LongMap
 import scala.util.control.Breaks._
 import com.almworks.sqlite4java.SQLiteConnection
+import com.github.davidmoten.rtree._
 import com.typesafe.scalalogging.LazyLogging
 import org.apache.commons.math3.stat.descriptive.rank.Percentile
 import org.apache.commons.math3.stat.descriptive.SummaryStatistics
@@ -26,7 +27,7 @@ import fr.profi.util.collection._
 import fr.profi.util.ms.massToMoz
 import fr.profi.util.metrics.Metric
 import fr.profi.util.serialization.ProfiMsgPack
-import fr.proline.context.DatabaseConnectionContext
+import fr.proline.context.LcMsDbConnectionContext
 import fr.proline.core.algo.lcms._
 import fr.proline.core.algo.msq.config._
 import fr.proline.core.dal.helper.LcmsDbHelper
@@ -50,7 +51,7 @@ import fr.proline.core.algo.lcms.alignment.AlignmentResult
  *
  */
 class ExtractMapSet(
-  val lcmsDbCtx: DatabaseConnectionContext,
+  val lcmsDbCtx: LcMsDbConnectionContext,
   val mapSetName: String,
   val lcMsRuns: Seq[LcMsRun],
   val quantConfig: ILcMsQuantConfig,
@@ -479,17 +480,19 @@ class ExtractMapSet(
       clusteringParams.timeComputation.toUpperCase()
     )
 
+    val runsCount = lcMsRuns.length
     val peakelFileByRun = new HashMap[LcMsRun, File]()
     val processedMapByRun = new HashMap[LcMsRun, ProcessedMap]()
-    val lcmsRunByProcMapId = new LongMap[LcMsRun](lcMsRuns.length)
-    val processedMaps = new ArrayBuffer[ProcessedMap](lcMsRuns.length)
+    val lcmsRunByProcMapId = new LongMap[LcMsRun](runsCount)
+    val processedMaps = new ArrayBuffer[ProcessedMap](runsCount)
     val featureTuples = new ArrayBuffer[(Feature, Peptide, LcMsRun)]()
 
     val tempDir = new File(System.getProperty("java.io.tmpdir"))
-    val peakelByMzDbPeakelIdByRunId = new LongMap[LongMap[Peakel]](lcMsRuns.length)   
-    val mzDbPeakelIdsByPeptideAndChargeByRunId = new LongMap[HashMap[(Peptide, Int), ArrayBuffer[Int]]](lcMsRuns.length)
+    val peakelByMzDbPeakelIdByRunId = new LongMap[LongMap[Peakel]](runsCount) // contains only assigned peakels  
+    val mzDbPeakelIdsByPeptideAndChargeByRunId = new LongMap[HashMap[(Peptide, Int), ArrayBuffer[Int]]](runsCount)
     val conflictingPeptidesMap = new HashMap[(Peptide, Int), ArrayBuffer[Peptide]]()
-    val metricsByRunId = new LongMap[Metric](lcMsRuns.length)
+    val metricsByRunId = new LongMap[Metric](runsCount)
+    val rTreeByRunId = new LongMap[RTree[java.lang.Long,geometry.Point]](runsCount)
     
     var mapNumber = 0
     for (lcMsRun <- lcMsRuns) {
@@ -595,7 +598,26 @@ class ExtractMapSet(
 
         runMetrics.setCounter("orphan peptides", orphanPeptides.size)
         runMetrics.setCounter("distinct peptides", peptides.size)
-
+        
+        this.logger.debug("building peakel in-memory R*Tree to provide quick searches...")
+        
+        val entriesView = detectedPeakels.view.map { peakel =>
+          val peakelId = new java.lang.Long(peakel.id)
+          val geom = geometry.Geometries.point(peakel.getMz,peakel.getElutionTime())
+          Entries.entry(peakelId, geom)
+        }
+        val entriesIterable = collection.JavaConversions.asJavaIterable(entriesView)
+        
+        val rTree = RTree
+          .star()
+          .maxChildren(4)
+          .create[java.lang.Long,geometry.Point]()
+          .add(entriesIterable)
+          
+        this.logger.debug(s"created R*Tree contains ${rTree.size} peakel indices")
+        
+        rTreeByRunId += lcMsRun.id -> rTree
+        
         // Iterate over peakels mapped with peptides to build features
         this.logger.debug("building features from peakels...")
 
@@ -610,6 +632,7 @@ class ExtractMapSet(
             // Possible implementation to use: https://github.com/davidmoten/rtree
             val mzDbFt = _createMzDbFeature(
               peakelFileConnection,
+              rTree,
               peakel,
               charge,
               false,
@@ -835,9 +858,12 @@ class ExtractMapSet(
         // TODO: possible optimization => perform the R*Tree search in-memory
         
         // Re-open peakel SQLite file
-        val peakelFile = peakelFileByRun(lcMsRun)
+        val peakelFile = peakelFileByRun(lcMsRun) // TODO: map by run id ?
         val peakelFileConn = new SQLiteConnection(peakelFile)
         peakelFileConn.open(false) // allowCreate = false
+        
+        // Retrieve corresponding R*Tree
+        val rTree = rTreeByRunId(lcMsRun.id)
 
         // Retrieve the map avoiding the creation of duplicated peakels
         val peakelByMzDbPeakelId = peakelByMzDbPeakelIdByRunId(lcMsRun.id)
@@ -853,6 +879,7 @@ class ExtractMapSet(
             val peakelOpt = _findPeakel(
               mzDb,
               peakelFileConn,
+              rTree,
               putativeFt.mz,
               charge,
               minTime = putativeFt.elutionTime - ftMappingParams.timeTol,
@@ -867,7 +894,14 @@ class ExtractMapSet(
             if (peakelOpt.isDefined) {
 
               val peakel = peakelOpt.get
-              val mzDbFt = _createMzDbFeature(peakelFileConn, peakel, charge, true, Array.empty[Long])
+              val mzDbFt = _createMzDbFeature(
+                peakelFileConn,
+                rTree,
+                peakel,
+                charge,
+                true,
+                Array.empty[Long]
+              )
                
               if (mzDbFt.getPeakelsCount == 1) runMetrics.incr("missing monoisotopic features")
               runMetrics.incr("missing feature found")
@@ -1128,11 +1162,18 @@ class ExtractMapSet(
     peakelMatches
   }
   
+  private def _createMzDbFeature(
+    peakelFileConnection: SQLiteConnection,
+    rTree: RTree[java.lang.Long,geometry.Point],
+    peakel: MzDbPeakel,
+    charge: Int,
+    isPredicted: Boolean,
+    ms2SpectrumIds: Array[Long]
+  ): MzDbFeature = {
 
-
-  private def _createMzDbFeature(peakelFileConnection: SQLiteConnection, peakel: MzDbPeakel, charge: Int, isPredicted: Boolean, ms2SpectrumIds: Array[Long]): MzDbFeature = {
-
-    val isotopes = this._findPeakelIsotopes(peakelFileConnection, peakel, charge)
+    val isotopes = this._findPeakelIsotopes(peakelFileConnection, rTree, peakel, charge)
+    
+    //println(s"found ${isotopes.length} isotopes")
 
     MzDbFeature(
       id = MzDbFeature.generateNewId,
@@ -1225,7 +1266,7 @@ class ExtractMapSet(
 
         val scanInitialIds = peakel.getSpectrumIds()
         val peakelMessage = peakel.toPeakelDataMatrix()
-        val peakelMessageAsBytes = ProfiMsgPack.serialize(peakelMessage)
+        val peakelMessageAsBytes = PeakelDataMatrix.pack(peakelMessage)
 
         val peakelMz = peakel.getMz
         val peakelTime = peakel.getApexElutionTime
@@ -1279,51 +1320,85 @@ class ExtractMapSet(
     sqliteConn.exec("COMMIT TRANSACTION;");
   }
   
-  private def _unpackPeakelDataMatrix(peakelMessageAsBytes: Array[Byte]): PeakelDataMatrix = {
-    
-    val unpacker = org.msgpack.core.MessagePack.newDefaultUnpacker(peakelMessageAsBytes)
-    unpacker.unpackArrayHeader()
-    
-    val len = unpacker.unpackArrayHeader()
-    val spectrumIds = new Array[Long](len)
-    val elutionTimes = new Array[Float](len)
-    val mzValues = new Array[Double](len)
-    val intensityValues = new Array[Float](len)
-    
-    var i = 0; while (i < len) { spectrumIds(i) = unpacker.unpackLong(); i += 1}
-    
-    unpacker.unpackArrayHeader()
-    i = 0; while (i < len) { elutionTimes(i) = unpacker.unpackFloat(); i += 1}
-    
-    unpacker.unpackArrayHeader()
-    i = 0; while (i < len) { mzValues(i) = unpacker.unpackDouble(); i += 1}
-    
-    unpacker.unpackArrayHeader()
-    i = 0; while (i < len) { intensityValues(i) = unpacker.unpackFloat(); i += 1}
-    
-    unpacker.close()
-    
-    PeakelDataMatrix(spectrumIds,elutionTimes,mzValues,intensityValues)
-  }
-
-  // TODO: move to MzDbReader when peakels are stored in the MzDbFile
+  // TODO: move to MzDbReader when peakels are stored in the PeakelDb file
   private def _findPeakelsInRange(
     sqliteConn: SQLiteConnection,
+    rTree: RTree[java.lang.Long,geometry.Point],
     minMz: Double,
     maxMz: Double,
     minTime: Float,
     maxTime: Float
   ): Array[MzDbPeakel] = {
+    
+    // Retrieve peakel ids using the R*Tree
+    val peakelIdIter = rTree.search(
+      geometry.Geometries.rectangle(
+        minMz, minTime, maxMz, maxTime
+      )
+    ).toBlocking().toIterable().iterator()
+    
+    val peakelIds = new ArrayBuffer[java.lang.Long]()
+    while( peakelIdIter.hasNext() ) {
+      peakelIds += peakelIdIter.next().value()
+    }
+    //println( peakelIds.toList )
 
-    val peakelSqlQuery = "SELECT id, peaks, left_hwhm_mean, left_hwhm_cv, " +
-      "right_hwhm_mean, right_hwhm_cv FROM peakel WHERE id IN " +
-      "(SELECT id FROM peakel_rtree WHERE min_mz >= ? AND max_mz <= ? AND min_time >= ? AND max_time <= ? );"
+    val peakelPkSqlQuery = "SELECT id, peaks, left_hwhm_mean, left_hwhm_cv, " +
+    s"right_hwhm_mean, right_hwhm_cv FROM peakel WHERE id IN (${peakelIds.mkString(",")});"
+    
+    val peakelStmt = sqliteConn.prepare(peakelPkSqlQuery, false)
+    //peakelStmt.bind(1, peakelIds.mkString(",") )
+    
+    val peakels = new ArrayBuffer[MzDbPeakel](peakelIds.length)
 
-    /*val peakelSqlQuery = "SELECT id, peaks FROM peakel " +
-    "WHERE id IN (SELECT id FROM peakel_rtree " +
-    "WHERE min_mz >= 0 AND max_mz <= 2000 AND min_time >= 0 AND max_time <= 2000 );"*/
+    try {
 
-    val peakelStmt = sqliteConn.prepare(peakelSqlQuery, false)
+      while (peakelStmt.step()) {
+        val peakelId = peakelStmt.columnInt(0)
+        val peakelMessageAsBytes = peakelStmt.columnBlob(1)
+        //println(peakelId)
+        
+        //val peakelMessage = ProfiMsgPack.deserialize[PeakelDataMatrix](peakelMessageAsBytes)
+        val peakelMessage = PeakelDataMatrix.unpack(peakelMessageAsBytes)
+        val (intensitySum, area) = peakelMessage.integratePeakel()
+
+        peakels += new MzDbPeakel(
+          peakelId,
+          peakelMessage,
+          intensitySum,
+          area,
+          leftHwhmMean = peakelStmt.columnDouble(2).toFloat,
+          leftHwhmCv = peakelStmt.columnDouble(3).toFloat,
+          rightHwhmMean = peakelStmt.columnDouble(4).toFloat,
+          rightHwhmCv = peakelStmt.columnDouble(5).toFloat
+        )
+      }
+      
+    } finally {
+      // Release resources
+      peakelStmt.dispose()
+    }
+    
+    assert( peakelIds.length == peakels.length, "invalid number of retrieved peakels from peakelDB file" )
+
+    peakels.toArray
+  }
+  
+  // TODO: remove me (an in-memory R*Tree is now used)
+  private def _findPeakelsInRangeV1(
+    sqliteConn: SQLiteConnection,
+    rTree: RTree[java.lang.Long,geometry.Point],
+    minMz: Double,
+    maxMz: Double,
+    minTime: Float,
+    maxTime: Float
+  ): Array[MzDbPeakel] = {
+    
+    val peakelRtreeSqlQuery = "SELECT id, peaks, left_hwhm_mean, left_hwhm_cv, " +
+    "right_hwhm_mean, right_hwhm_cv FROM peakel WHERE id IN " +
+    "(SELECT id FROM peakel_rtree WHERE min_mz >= ? AND max_mz <= ? AND min_time >= ? AND max_time <= ? );"
+
+    val peakelStmt = sqliteConn.prepare(peakelRtreeSqlQuery, false)
     val peakels = new ArrayBuffer[MzDbPeakel]()
 
     try {
@@ -1339,7 +1414,7 @@ class ExtractMapSet(
         //println(peakelId)
         
         //val peakelMessage = ProfiMsgPack.deserialize[PeakelDataMatrix](peakelMessageAsBytes)
-        val peakelMessage = this._unpackPeakelDataMatrix(peakelMessageAsBytes)
+        val peakelMessage = PeakelDataMatrix.unpack(peakelMessageAsBytes)
         val (intensitySum, area) = peakelMessage.integratePeakel()
 
         peakels += new MzDbPeakel(
@@ -1380,7 +1455,7 @@ class ExtractMapSet(
         val peakelMessageAsBytes = peakelStmt.columnBlob(1)
 
         //val peakelMessage = ProfiMsgPack.deserialize[fr.profi.mzdb.model.PeakelDataMatrix](peakelMessageAsBytes)
-        val peakelMessage = this._unpackPeakelDataMatrix(peakelMessageAsBytes)
+        val peakelMessage = PeakelDataMatrix.unpack(peakelMessageAsBytes)
         val (intensitySum, area) = peakelMessage.integratePeakel()
 
         peakels += new MzDbPeakel(
@@ -1406,6 +1481,7 @@ class ExtractMapSet(
   private def _findPeakel(
     reader: MzDbReader,
     sqliteConn: SQLiteConnection,
+    rTree: RTree[java.lang.Long,geometry.Point],
     peakelMz: Double,
     charge: Int,
     minTime: Float,
@@ -1417,10 +1493,11 @@ class ExtractMapSet(
     metric: Metric
   ): Option[MzDbPeakel] = {
     
-	  val mozTolInDa = MsUtils.ppmToDa(peakelMz, ftMappingParams.mozTol)
+    val mozTolInDa = MsUtils.ppmToDa(peakelMz, ftMappingParams.mozTol)
 
     val foundPeakels = _findPeakelsInRange(
       sqliteConn,
+      rTree,
       peakelMz - mozTolInDa,
       peakelMz + mozTolInDa,
       minTime,
@@ -1431,56 +1508,68 @@ class ExtractMapSet(
       metric.incr("missing : no peakel found in sqlite")
       return None
     }
-	  
-	  // Apply some filters to the found peakels
-	  val putativePeakelIdMap = putativePeakelIds.mapByLong(_.toLong)
+    
+    // Apply some filters to the found peakels
+    // FIXME: DBO => why only accept peakel ids from putativePeakelIdMap ???
+    val putativePeakelIdMap = putativePeakelIds.mapByLong(_.toLong)
     val matchingPeakels = foundPeakels.filter { foundPeakel =>
       val isPutativePeakel = putativePeakelIdMap.contains(foundPeakel.id)
       val isAlreadyAssigned = assignedPeakelById.contains(foundPeakel.id)
       isPutativePeakel || !isAlreadyAssigned
-	  }
-	  
+    }
+    
     val filteredPeakels = new ArrayBuffer[MzDbPeakel](matchingPeakels.length)
-    for (peakel <- matchingPeakels) {
-      
-      val apexMz = peakel.getApexMz
-      val apexRt = peakel.getApexElutionTime
-      
-      val slices = reader.getMsSpectrumSlices(
-        apexMz - 5,
-        apexMz + 5,
-        apexRt - 0.1f,
-        apexRt + 0.1f
-      )
-
-      val sliceOpt = slices.find(_.getHeader.getSpectrumId == peakel.getApexSpectrumId)
-      if (sliceOpt.isDefined) {
+    
+    // FIXME: DBO => I added this check to decrease the impact of the mzDB lookup, but it may not be appropriate
+    if (matchingPeakels.length == 1) {
+      filteredPeakels += matchingPeakels.head
+    } else {
+      for (peakel <- matchingPeakels) {
         
-        val ppm = if (peakel.getLeftHwhmMean == 0) mozTolPPM
-        else 1e6 * peakel.getLeftHwhmMean / apexMz
+        val apexMz = peakel.getApexMz
+        val apexRt = peakel.getApexElutionTime
         
-        val putativePatterns = IsotopicPatternScorer.calclIsotopicPatternHypotheses(sliceOpt.get.getData(), peakel.getMz, ppm)
-        val bestPattern = putativePatterns.head
-        if (bestPattern._2.charge == charge && (math.abs(bestPattern._2.monoMz - apexMz) <= mozTolInDa)) {
-          filteredPeakels += peakel
+        // TODO: DBO => this step is really time consuming, we should use the in-memory R*Tree instead
+        val slices = reader.getMsSpectrumSlices(
+          apexMz - 5,
+          apexMz + 5,
+          apexRt - 0.1f,
+          apexRt + 0.1f
+        )
+  
+        val sliceOpt = slices.find(_.getHeader.getSpectrumId == peakel.getApexSpectrumId)
+        if (sliceOpt.isDefined) {
+          
+          val ppm = if (peakel.getLeftHwhmMean == 0) mozTolPPM
+          else 1e6 * peakel.getLeftHwhmMean / apexMz
+          
+          val putativePatterns = IsotopicPatternScorer.calclIsotopicPatternHypotheses(sliceOpt.get.getData(), peakel.getMz, ppm)
+          val bestPattern = putativePatterns.head
+          if (bestPattern._2.charge == charge && (math.abs(bestPattern._2.monoMz - apexMz) <= mozTolInDa)) {
+            filteredPeakels += peakel
+          }
         }
       }
     }
     
     if (filteredPeakels.isEmpty) {
       metric.incr("missing: no peakel matching charge or monoisotopic")
-  	  None
-     } else {
-  	   val nearestPeakelInTime = matchingPeakels.minBy(peakel => math.abs(avgTime - peakel.calcWeightedAverageTime()))
-  	   // FIXME: this code was not commented but was not effective
-  	   // DBO: why the filteredPeakels is computed but not used ???
-  		 //val nearestPeakelInMz = filteredPeakels.minBy(peakel => math.abs(peakelMz - peakel.getMz))
-  	   Some(nearestPeakelInTime)
+      None
+    } else if(filteredPeakels.length == 1) {
+      Some(filteredPeakels.head)
+    }
+    else {
+      val nearestPeakelInTime = matchingPeakels.minBy(peakel => math.abs(avgTime - peakel.calcWeightedAverageTime()))
+      // FIXME: this code was not commented but was not effective
+      // DBO: why the filteredPeakels is computed but not used ???
+      //val nearestPeakelInMz = filteredPeakels.minBy(peakel => math.abs(peakelMz - peakel.getMz))
+      Some(nearestPeakelInTime)
     }
   }
 
   private def _findPeakelIsotopes(
     sqliteConn: SQLiteConnection,
+    rTree: RTree[java.lang.Long,geometry.Point],
     peakel: MzDbPeakel,
     charge: Int
   ): Array[MzDbPeakel] = {
@@ -1503,6 +1592,7 @@ class ExtractMapSet(
         // Search for peakels corresponding to second isotope
         val foundPeakels = _findPeakelsInRange(
           sqliteConn,
+          rTree,
           ipMoz - mozTolInDa,
           ipMoz + mozTolInDa,
           peakel.getApexElutionTime - peakel.calcDuration / 4,
