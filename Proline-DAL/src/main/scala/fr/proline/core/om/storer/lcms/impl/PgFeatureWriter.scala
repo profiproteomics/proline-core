@@ -340,7 +340,8 @@ class PgFeatureWriter(lcmsDbCtx: LcMsDbConnectionContext) extends IFeatureWriter
       peakel.isOverlapping,
       peakel.featuresCount,
       peakel.dataMatrix.peaksCount,
-      peakelAsBytes,
+      // TODO: handle this conversion in encodeRecordForPgCopy
+      """\\x""" + Utils.toHexString(peakelAsBytes),
       peakel.properties.map( ProfiJson.serialize(_) ),
       peakel.firstScanId,
       peakel.lastScanId,
