@@ -94,7 +94,8 @@ class WeightedSpectralCountQuantifier(
   
   
   protected val identRSMIds = entityCache.identRsmIds
-
+  protected var quantClonedMergedRSM : ResultSummary  = null
+  
   /**
    * "{"spectral_count_result":{[
    * { "rsm_id":Long, "proteins_spectral_counts":[ { "protein_accession"=Acc, "prot_match_id"=Long, "prot_set_id"=Long, "prot_status"=String,"pep_nbr"=Int,"bsc"=Float,"ssc"=Float,"wsc"=Float}, {...} ] },
@@ -133,7 +134,7 @@ class WeightedSpectralCountQuantifier(
 //    this.cloneAndStoreMasterQuantRSM2(this.mergedResultSummary, msiQuantRSM, msiQuantResultSet)
     val rsmProvider = new SQLResultSummaryProvider(msiDbCtx, psDbCtx, udsDbCtx)
     val rsmDuplicator = new ReadBackRsmDuplicator(rsmProvider)
-     val qttRSM = rsmDuplicator.cloneAndStoreRSM(this.mergedResultSummary, msiQuantRSM, msiQuantResultSet, msiEm) 
+    quantClonedMergedRSM = rsmDuplicator.cloneAndStoreRSM(this.mergedResultSummary, msiQuantRSM, msiQuantResultSet, msiEm) 
 
  
 
@@ -174,7 +175,6 @@ class WeightedSpectralCountQuantifier(
     // !! Warning : Returned values are linked to Identification RSM (OM Objects) and not to Quantitation RSM (ORM Objects)
     val (mqPeptides, mqProtSets) = computeMasterQuantValues(
       udsMasterQuantChannel,
-      this.mergedResultSummary,
       entityCache.identResultSummaries,
       identRSMsIdByWeightRefRSMId, 
       proteinSetSCStructsByProtSetId
@@ -187,7 +187,6 @@ class WeightedSpectralCountQuantifier(
 
     // Iterate over master quant peptides to store corresponding spectral counts
     for (mqPeptide <- mqPeptides) {
-//      this.storeMasterQuantPeptide(mqPeptide, msiQuantRSM, Some(msiMasterPepInstByMergedPepInstId(mqPeptide.peptideInstance.get.id)))
       this.storeMasterQuantPeptide(mqPeptide, msiQuantRSM, Some(mqPeptide.peptideInstance.get.id))
     }
 
@@ -199,11 +198,6 @@ class WeightedSpectralCountQuantifier(
     // Iterate over master quant protein sets to store corresponding spectral counts
     for (mqProtSet <- mqProtSets) {
         this.storeMasterQuantProteinSet(mqProtSet, mqProtSet.proteinSet.id, msiQuantRSM)
-//      val msiProtSet = msiMasterProtSetByMergedProtSetId.getOrElse(mqProtSet.proteinSet.id, null)
-//      if (msiProtSet != null)
-//        this.storeMasterQuantProteinSet(mqProtSet, msiMasterProtSetByMergedProtSetId(mqProtSet.proteinSet.id), msiQuantRSM)
-//      else
-//        logger.warn(" !! No Master Quant data found for protein set id " + mqProtSet.proteinSet.id + " !! ")
     }
 
     end = System.currentTimeMillis()
@@ -470,7 +464,7 @@ class WeightedSpectralCountQuantifier(
 
   /**
    * 
-   *  Create ProteinSetSCDescription for each ProteinSet of merged RSM.
+   *  Create ProteinSetSCDescription for each ProteinSet of quantified merged RSM.
    *  ProteinSetSCDescription contains following info :
    *  - ProteinSet in Ref RSM,
    *  - typical ProteinMatch Accession,
@@ -489,7 +483,7 @@ class WeightedSpectralCountQuantifier(
 
     
     //****  For each validated ProteinSet, initialize a ProteinSetSCDescription and create Maps
-    mergedResultSummary.proteinSets.filter(_.isValidated).foreach(protSet => {
+    quantClonedMergedRSM.proteinSets.filter(_.isValidated).foreach(protSet => {
 
       //-- Get Typical Protein Match Accession 
       val pmAccession: String = if (protSet.getRepresentativeProteinMatch != null && protSet.getRepresentativeProteinMatch.isDefined) {
@@ -742,8 +736,7 @@ class WeightedSpectralCountQuantifier(
    * @param mergedRSM : RSM de départ et pas celui de quanti ? TODO
    */
   def computeMasterQuantValues(
-    udsMasterQuantChannel: MasterQuantitationChannel,
-    mergedRSM: ResultSummary,
+    udsMasterQuantChannel: MasterQuantitationChannel,   
     resultSummaries: Seq[ResultSummary],
     identRSMsByPepRefRSM: HashMap[Long, ArrayBuffer[Long]],
     protSetWeightStructsByProtSetId: Map[Long, ProteinSetSCDescription]
@@ -752,7 +745,7 @@ class WeightedSpectralCountQuantifier(
     // Map quant channel id by resultSummary id    
     val qcIdByRsmId = udsMasterQuantChannel.getQuantitationChannels().map(qc => qc.getIdentResultSummaryId() -> qc.getId).toMap
 
-    val refPepInstanceByPepId = mergedRSM.peptideInstances.map(pi => pi.peptideId -> pi).toMap
+    val refPepInstanceByPepId = quantClonedMergedRSM.peptideInstances.map(pi => pi.peptideId -> pi).toMap
 
     //     val qPepIonsMapsByrsmId = new HashMap[Long,Map[Long, Array[QuantPeptideIon]]]
     val forMasterQPepByPepId = new HashMap[Long, scala.collection.mutable.LongMap[QuantPeptide]]

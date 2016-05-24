@@ -4,21 +4,15 @@ import java.util.HashMap;
 import java.util.Map;
 
 import javax.persistence.EntityManager;
-import javax.persistence.EntityManagerFactory;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import fr.profi.util.StringUtils;
+import fr.profi.util.ThreadLogger;
 import fr.proline.core.orm.uds.ExternalDb;
 import fr.proline.core.orm.uds.Project;
 import fr.proline.core.orm.uds.repository.ExternalDbRepository;
-import fr.proline.repository.DatabaseConnectorFactory;
-import fr.proline.repository.DriverType;
-import fr.proline.repository.IDataStoreConnectorFactory;
-import fr.proline.repository.IDatabaseConnector;
-import fr.proline.repository.ProlineDatabaseType;
-import fr.profi.util.StringUtils;
-import fr.profi.util.ThreadLogger;
 
 public class UncachedDataStoreConnectorFactory implements IDataStoreConnectorFactory {
 	

@@ -50,7 +50,7 @@ class OrphanDataDeleter (
       } // End of jdbcWork anonymous inner class    
       execCtx.getMSIDbConnectionContext().doWork(jdbcWorkDecoy, false)
       
-      allRsmIds = allRsmIds ++ resultSummaryIds
+      allRsmIds = allRsmIds ++ resultSummaryIds //VDS TODO : Peut y avoir des doublons ! Manque la recuperation des target si selection des decoy 
       
       // todo: remove orphan object_tree from protein_set_object_tree_map
       // todo: remove orphan object_tree from 
