@@ -1559,10 +1559,10 @@ class ExtractMapSet(
       Some(filteredPeakels.head)
     }
     else {
-      val nearestPeakelInTime = matchingPeakels.minBy(peakel => math.abs(avgTime - peakel.calcWeightedAverageTime()))
-      // FIXME: this code was not commented but was not effective
-      // DBO: why the filteredPeakels is computed but not used ???
+      val nearestPeakelInTime = filteredPeakels.minBy(peakel => math.abs(avgTime - peakel.calcWeightedAverageTime()))
+      // Old way to make the selection
       //val nearestPeakelInMz = filteredPeakels.minBy(peakel => math.abs(peakelMz - peakel.getMz))
+      
       Some(nearestPeakelInTime)
     }
   }
