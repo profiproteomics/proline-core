@@ -149,10 +149,10 @@ class QuantProfilesComputer(
             val qc = qcByLcMsMapId(ft.relations.processedMapId)
             val qcId = qc.id
             ftQcIds += qcId
-              
+            
             val qPepIon = qPepIonMap(qcId)
-            val qPepIonFtId = qPepIon.lcmsFeatureId
-  
+            val qPepIonFtId = qPepIon.lcmsFeatureId.getOrElse(0)
+            
             // Retrieve the feature to use as a reference for this cluster
             val mainClusterFt = if(ft.isCluster == false) ft
             else {
