@@ -74,7 +74,7 @@ class ResultSetsMergerTest extends StrictLogging {
     try {
       
       // TODO: allow to distinguish between the input data (ID VS RS) and the fact to store or not the RSM
-      val rsMerger = new ResultSetMerger(sqlExecutionContext, Some(Seq(rs1.id,rs1.id)), None, None)
+      val rsMerger = new ResultSetMerger(sqlExecutionContext, Some(Seq(rs1.id,rs1.id)), None, None, ResultSetsMergerTest.useJPA)
 
       val result = rsMerger.runService
       assertTrue("ResultSet merger result", result)
@@ -118,7 +118,7 @@ class ResultSetsMergerTest extends StrictLogging {
     var localJPAExecutionContext: IExecutionContext = null
 
     try {
-      val rsMerger = new ResultSetMerger(sqlExecutionContext, Some( Seq(rs1.id,rs2.id) ), None, None )
+      val rsMerger = new ResultSetMerger(sqlExecutionContext, Some( Seq(rs1.id,rs2.id) ), None, None, ResultSetsMergerTest.useJPA )
       // val rsMerger = new ResultSetMerger(sqlExecutionContext, None, Some(loadResultSetsWithDecoy(rzProvider, rsIds)))
 
       val result = rsMerger.runService
