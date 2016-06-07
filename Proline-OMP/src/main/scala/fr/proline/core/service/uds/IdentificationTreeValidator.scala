@@ -316,7 +316,8 @@ class IdentificationTreeValidator(
         execCtx = execContext,
         None,
         resultSummaries = Some(rsms),
-        aggregationMode = Some(AdditionMode.AGGREGATION)
+        aggregationMode = Some(AdditionMode.AGGREGATION),
+        useJPA = false
       )
       rsmMerger.runService()
 
