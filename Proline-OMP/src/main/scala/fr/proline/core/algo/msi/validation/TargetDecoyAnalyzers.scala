@@ -329,37 +329,39 @@ abstract class AbstractTargetDecoyAnalyzer extends ITargetDecoyAnalyzer with Laz
       logger.trace("New FDR = " + curRocPoint.fdr)
     }
     
+    val end = System.currentTimeMillis
+    logger.debug("performROCAnalysis => sortedPepMatches loop completed in " + (end - start) + "ms, starting restorePepMatchValidationStatus ...")
+    
+    // Restore peptide matches validation status
+    PeptideMatchFiltering.restorePepMatchValidationStatus(filteredPepMatches, pepMatchValStatusMap)
+    logger.debug("performROCAnalysis => restorePepMatchValidationStatus done")
+    
     // Remove ROC points having the same number of decoy matches and keep target ROC point preceding a deocy one
     val filteredRocPoints = new ArrayBuffer[ValidationResult](rocPoints.length)
     
-    var previousPmWasTarget = true
-    rocPoints.tail.sliding(2).foreach { rocPointsWindow =>
-      val firstRocPoint = rocPointsWindow(0)
-      val secondRocPoint = rocPointsWindow(1)
-      
-      if( firstRocPoint.decoyMatchesCount == secondRocPoint.decoyMatchesCount ) {
-        previousPmWasTarget = true
-      } else {
+    if (rocPoints.length < 2) filteredRocPoints ++= rocPoints
+    else {
+      var previousPmWasTarget = true
+      rocPoints.sliding(2).foreach { rocPointsWindow =>
+        val firstRocPoint = rocPointsWindow(0)
+        val secondRocPoint = rocPointsWindow(1)
         
-        // Include only target ROC points preceding a decoy one
-        if( previousPmWasTarget ) filteredRocPoints += firstRocPoint
-        
-        // Add new decoy ROC points
-        filteredRocPoints += secondRocPoint
-
-        previousPmWasTarget = false
+        if( firstRocPoint.decoyMatchesCount == secondRocPoint.decoyMatchesCount ) {
+          previousPmWasTarget = true
+        } else {
+          
+          // Include only target ROC points preceding a decoy one
+          if( previousPmWasTarget ) filteredRocPoints += firstRocPoint
+          
+          // Add new decoy ROC points
+          filteredRocPoints += secondRocPoint
+  
+          previousPmWasTarget = false
+        }
       }
     }
 
-    val end = System.currentTimeMillis
-    logger.debug("performROCAnalysis => sortedPepMatches loop completed in " + (end - start) + "ms, starting restorePepMatchValidationStatus ...")
-
-    // Restore peptide matches validation status
-    PeptideMatchFiltering.restorePepMatchValidationStatus(filteredPepMatches, pepMatchValStatusMap)
-
-    logger.debug("performROCAnalysis => restorePepMatchValidationStatus done")
-
-    rocPoints.toArray
+    filteredRocPoints.toArray
   }
 
 }
