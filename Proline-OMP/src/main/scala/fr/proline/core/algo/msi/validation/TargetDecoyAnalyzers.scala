@@ -253,9 +253,10 @@ abstract class AbstractTargetDecoyAnalyzer extends ITargetDecoyAnalyzer with Laz
     decoyPepMatches: Seq[PeptideMatch],
     validationFilter: IOptimizablePeptideMatchFilter
   ): Array[ValidationResult] = {
-    // Return simplified validation result if no decoy peptide match is provided
-    if( decoyPepMatches.isEmpty ) {
-      return Array(ValidationResult(targetMatchesCount = targetPepMatches.length, decoyMatchesCount = Some(0), fdr = Some(0)))
+    
+    // Return empty validation result if no target/decoy peptide match is provided
+    if( targetPepMatches.isEmpty || decoyPepMatches.isEmpty ) {
+      return Array.empty[ValidationResult]
     }
 
     // FIXME VDS: Use performROCAnalysisV1 algo for MascotPValuePSMFilter... If this FDR optimization on PValue seems to be interesting, implemet better fix ! 
@@ -274,6 +275,9 @@ abstract class AbstractTargetDecoyAnalyzer extends ITargetDecoyAnalyzer with Laz
     // Retrieve filtered peptide matches
     // TODO: use selection levels instead of isValidated boolean value
     val filteredPepMatches = allPepMatches.filter(_.isValidated)
+    if (filteredPepMatches.isEmpty) {
+      return Array.empty[ValidationResult]
+    }
     
     // Sort all filtered PSMs from the best to the worst according to the validation filter
     val sortedPepMatches = validationFilter.sortPeptideMatches(filteredPepMatches)
