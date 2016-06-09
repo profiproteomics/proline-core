@@ -200,7 +200,10 @@ case class QuantPeptideIon(
   @JsonDeserialize(contentAs = classOf[java.lang.Long] )
   val unmodifiedPeptideIonId: Option[Long] = None,
   
-  var selectionLevel: Int = 2
+  var selectionLevel: Int = 2,
+  
+  @JsonDeserialize(contentAs = classOf[java.lang.Boolean] )
+  var isReliable: Option[Boolean] = None
 
  ) extends LcmsQuantComponent {
   

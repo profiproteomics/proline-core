@@ -364,13 +364,16 @@ case class Feature (
 
 case class FeatureIdentifier( var id: Long ) extends IEntityReference[Feature]
 
-case class FeatureProperties (
+case class FeatureProperties(
   @JsonDeserialize(contentAs = classOf[java.lang.Float] )
   @BeanProperty var predictedElutionTime: Option[Float] = None,
 
   // TODO: fix the serialization issue (remove Option ???)
   //@JsonDeserialize(contentAs = classOf[Array[java.lang.Float]] )
   //@BeanProperty var peakelsRatios: Option[Array[Float]] = None,
+  
+  @JsonDeserialize(contentAs = classOf[java.lang.Boolean] )
+  @BeanProperty var isReliable: Option[Boolean] = None,
   
   @JsonDeserialize(contentAs = classOf[java.lang.Float] )
   @BeanProperty var overlapCorrelation: Option[Float] = None,
