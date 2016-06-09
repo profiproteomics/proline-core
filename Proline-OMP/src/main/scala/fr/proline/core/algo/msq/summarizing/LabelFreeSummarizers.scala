@@ -215,7 +215,8 @@ class LabelFreeEntitiesSummarizer(
         lcmsFeatureId = if( feature.id > 0 ) Some(feature.id) else None,
         lcmsMasterFeatureId = if( masterFt.id > 0) Some(masterFt.id) else None,
         unmodifiedPeptideIonId = None, // TODO: set this value ???
-        selectionLevel = feature.selectionLevel
+        selectionLevel = feature.selectionLevel,
+        isReliable = feature.properties.flatMap(_.getIsReliable())
       )
       
     }

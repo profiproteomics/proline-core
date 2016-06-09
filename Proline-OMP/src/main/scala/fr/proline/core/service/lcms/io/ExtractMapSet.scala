@@ -894,7 +894,7 @@ class ExtractMapSet(
 
             if (peakelOpt.isDefined) {
 
-              val peakel = peakelOpt.get
+              val( peakel, isReliable) = peakelOpt.get
               val mzDbFt = _createMzDbFeature(
                 peakelFileConn,
                 rTree,
@@ -925,9 +925,19 @@ class ExtractMapSet(
                 peakelByMzDbPeakelId
               )
 
+              val newFtProps = newLcmsFeature.properties.get
+              
               // Set predicted time property
-              newLcmsFeature.properties.get.setPredictedElutionTime(Some(putativeFt.elutionTime))
-                            
+              newFtProps.setPredictedElutionTime(Some(putativeFt.elutionTime))
+              
+              // Set isReliable property
+              newFtProps.setIsReliable(Some(isReliable))
+              
+              // Deselect the feature if it not reliable
+              if (isReliable == false) {
+                newLcmsFeature.selectionLevel = 0 // force manual deselection (for Profilizer compat)
+              }
+              
               // Set processed map id
               newLcmsFeature.relations.processedMapId = processedMap.id
 
@@ -993,6 +1003,13 @@ class ExtractMapSet(
     val masterFeatures = mftBuilderByPeptideAndCharge.values.map { mftBuilder =>
       val mft = mftBuilder.toMasterFeature()
       require(mft.children.length <= lcMsRuns.length, "master feature contains more child features than maps")
+      
+      // Deselect the master feature if one of its features is not reliable
+      val nonReliableFtsCount = mft.children.count(_.properties.flatMap(_.getIsReliable()).getOrElse(true) == false)
+      if (nonReliableFtsCount > 0) {
+        mft.selectionLevel = 1
+      }
+      
       mft
     } toArray
 
@@ -1492,7 +1509,7 @@ class ExtractMapSet(
     assignedPeakelById: LongMap[Peakel], 
     putativePeakelIds: ArrayBuffer[Int], 
     metric: Metric
-  ): Option[MzDbPeakel] = {
+  ): Option[(MzDbPeakel,Boolean)] = {
     
     val mozTolInDa = MsUtils.ppmToDa(peakelMz, ftMappingParams.mozTol)
 
@@ -1519,9 +1536,9 @@ class ExtractMapSet(
       isPutativePeakel || !isAlreadyAssigned
     }
     
-    val filteredPeakels = new ArrayBuffer[MzDbPeakel](matchingPeakels.length)
+    val filteredPeakels = new ArrayBuffer[(MzDbPeakel,Boolean)](matchingPeakels.length)
     
-    def filterThenAddMatchingPeakel(matchingPeakel: MzDbPeakel, spectrumData: SpectrumData, ppm: Float): Boolean = {
+    def isMatchingPeakelReliable(matchingPeakel: MzDbPeakel, spectrumData: SpectrumData, ppm: Float): Boolean = {
       
       val matchingPeakelMz = matchingPeakel.getApexMz
       
@@ -1529,15 +1546,14 @@ class ExtractMapSet(
       val putativePatterns = IsotopicPatternScorer.calcIsotopicPatternHypotheses(spectrumData, matchingPeakelMz, ppm)
       val bestPattern = putativePatterns.head
       
-      if (bestPattern._2.charge == charge && (math.abs(bestPattern._2.monoMz - matchingPeakelMz) <= mozTolInDa)) {
-        filteredPeakels += matchingPeakel
-        true
-      } else false
+      if (bestPattern._2.charge == charge && (math.abs(bestPattern._2.monoMz - matchingPeakelMz) <= mozTolInDa)) true
+      else false
     }
     
-    // DBO: was previously userd to decrease the impact of the mzDB lookup
+    // DBO: the if statement was previously used to decrease the impact of the mzDB lookup
     // Now the lookup is performed using the in-memory R*Tree
     //if (matchingPeakels.length == 1) {
+    // TODO: don't compute the scoring when multiple matchingPeakels are found (compute only on the nearest RT ?)
     for (matchingPeakel <- matchingPeakels) {
       
       //val matchingPeakel = matchingPeakels.head
@@ -1584,7 +1600,9 @@ class ExtractMapSet(
       // TODO: DBO => why computing a so high value ???
       else (1e6 * peakel.getLeftHwhmMean / apexMz).toFloat*/
       
-      val isOk = filterThenAddMatchingPeakel(matchingPeakel, spectrumData, mozTolPPM)
+      val isReliable = isMatchingPeakelReliable(matchingPeakel, spectrumData, mozTolPPM)
+      
+      filteredPeakels += Tuple2(matchingPeakel,isReliable)
       
     } /*else {
       for (peakel <- matchingPeakels) {
@@ -1621,7 +1639,10 @@ class ExtractMapSet(
       Some(filteredPeakels.head)
     }
     else {
-      val nearestPeakelInTime = filteredPeakels.minBy(peakel => math.abs(avgTime - peakel.calcWeightedAverageTime()))
+      val nearestPeakelInTime = filteredPeakels.minBy { case (peakel,isReliable) => 
+        math.abs(avgTime - peakel.calcWeightedAverageTime())
+      }
+      
       // Old way used to make the selection
       //val nearestPeakelInMz = filteredPeakels.minBy(peakel => math.abs(peakelMz - peakel.getMz))
       

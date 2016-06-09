@@ -82,7 +82,7 @@ object BuildMasterQuantPeptide {
         elutionTime = quantPepIon.elutionTime,
         peptideMatchesCount = quantPepIon.peptideMatchesCount,
         quantChannelId = qcId,
-        selectionLevel = 2
+        selectionLevel = quantPepIon.selectionLevel
       )
       
       quantPepByQcId += qcId -> qp
