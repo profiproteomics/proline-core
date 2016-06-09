@@ -1671,8 +1671,8 @@ class ExtractMapSet(
           val isotopePeakel = foundPeakels.minBy(peakel => math.abs(ipMoz - peakel.getMz))
           val expectedIntensity = pattern.mzAbundancePairs(isotopeIdx)._2 * intensityScalingFactor
           
-          // Gentle constraint on the observed intensity: no more than 2 times the expected intensity
-          if (isotopePeakel.getApexIntensity() < 2 * expectedIntensity) {
+          // Gentle constraint on the observed intensity: no more than 4 times the expected intensity
+          if (isotopePeakel.getApexIntensity() < 4 * expectedIntensity) {
             isotopes += isotopePeakel
           } else {
             // TODO: compute statistics of the observed ratios
