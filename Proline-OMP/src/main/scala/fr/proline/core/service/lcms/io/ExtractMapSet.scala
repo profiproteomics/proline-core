@@ -1550,28 +1550,30 @@ class ExtractMapSet(
       else false
     }
     
+    val coelutingPeakels = if (matchingPeakels.isEmpty) null
+    else {
+      
+      // TODO: compute minTime/maxTime using a combination of matchingPeakels durations ?
+      
+      // Look for co-eluting peakels
+      val halfTimeTol = ftMappingParams.timeTol / 2
+      this._findPeakelsInRange(
+        sqliteConn,
+        rTree,
+        peakelMz - 5,
+        peakelMz + 5,
+        minTime,
+        maxTime
+      ).sortBy(_.getMz)
+    }
+    
     // DBO: the if statement was previously used to decrease the impact of the mzDB lookup
     // Now the lookup is performed using the in-memory R*Tree
     //if (matchingPeakels.length == 1) {
     // TODO: don't compute the scoring when multiple matchingPeakels are found (compute only on the nearest RT ?)
     for (matchingPeakel <- matchingPeakels) {
       
-      //val matchingPeakel = matchingPeakels.head
-      val matchingPeakelMz = matchingPeakel.getMz()
-      val matchingPeakelTime = matchingPeakel.getApexElutionTime()
       val matchingSpectrumId = matchingPeakel.getApexSpectrumId()
-      
-      // Look for co-eluting peakels
-      val halfTimeTol = ftMappingParams.timeTol / 2
-      val coelutingPeakels = this._findPeakelsInRange(
-        sqliteConn,
-        rTree,
-        matchingPeakelMz - 5,
-        matchingPeakelMz + 5,
-        matchingPeakelTime - halfTimeTol,
-        matchingPeakelTime + halfTimeTol
-      )
-      
       val coelutingPeakelsCount = coelutingPeakels.length
       //logger.debug(s"Found $coelutingPeakelsCount co-eluting peakels")
       
@@ -1579,7 +1581,7 @@ class ExtractMapSet(
       val intensityList = new ArrayBuffer[Float](coelutingPeakelsCount)
       
       // Slice the obtained peakels to create a virtual spectrum
-      coelutingPeakels.sortBy(_.getMz).map { peakel =>
+      coelutingPeakels.map { peakel =>
         val peakelCursor = peakel.getNewCursor()
         var foundPeak = false
         
