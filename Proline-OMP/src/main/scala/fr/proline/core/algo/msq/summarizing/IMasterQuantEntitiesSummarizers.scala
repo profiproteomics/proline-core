@@ -67,26 +67,28 @@ trait IMQProteinSetSummarizer {
           val mqPep = mqPepOpt.get
           mqPeps += mqPep
           
-          if( mqPep.selectionLevel >= 2 ) selectedMQPepIds += mqPep.id
-          
-          for( (qcId,quantPep) <- mqPep.quantPeptideMap ) {
+          if( mqPep.selectionLevel >= 2 ) {
+            selectedMQPepIds += mqPep.id
             
-            if( quantPep.rawAbundance.isNaN == false ) {
-              rawAbundanceSumByQcId.getOrElseUpdate(qcId,0)
-              rawAbundanceSumByQcId(qcId) += quantPep.rawAbundance
+            for( (qcId,quantPep) <- mqPep.quantPeptideMap ) {
+              
+              if( quantPep.rawAbundance.isNaN == false ) {
+                rawAbundanceSumByQcId.getOrElseUpdate(qcId,0)
+                rawAbundanceSumByQcId(qcId) += quantPep.rawAbundance
+              }
+              
+              if( quantPep.abundance.isNaN == false ) {
+                abundanceSumByQcId.getOrElseUpdate(qcId,0)
+                abundanceSumByQcId(qcId) += quantPep.abundance
+              }
+  
+              pepMatchesCountByQcId.getOrElseUpdate(qcId,0)
+              pepMatchesCountByQcId(qcId) += quantPep.peptideMatchesCount
             }
             
-            if( quantPep.abundance.isNaN == false ) {
-              abundanceSumByQcId.getOrElseUpdate(qcId,0)
-              abundanceSumByQcId(qcId) += quantPep.abundance
+            for (mqPepIon <- mqPep.masterQuantPeptideIons) {
+              if (mqPepIon.selectionLevel >= 2) selectedMQPepIonIds += mqPepIon.id
             }
-
-            pepMatchesCountByQcId.getOrElseUpdate(qcId,0)
-            pepMatchesCountByQcId(qcId) += quantPep.peptideMatchesCount
-          }
-          
-          for (mqPepIon <- mqPep.masterQuantPeptideIons) {
-            if (mqPepIon.selectionLevel >= 2) selectedMQPepIonIds += mqPepIon.id
           }
         }
       }
