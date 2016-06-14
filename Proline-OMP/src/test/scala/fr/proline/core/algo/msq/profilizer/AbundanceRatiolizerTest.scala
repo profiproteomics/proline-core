@@ -99,15 +99,15 @@ class AbundanceRatiolizerTest {
     //import scala.runtime.ScalaRunTime.stringOf
     //println( stringOf(relativeVariationModel.noiseDistribution) )
     
-    val config = ProfilizerStatConfig()
+    val config = ProfilizerStatConfig(applyVarianceCorrection = false)
     AbundanceRatiolizer.updateRatioStates(normalizedRatios, relativeVariationModel, Some(absoluteNoiseModel), config)
     
     val ratiosSortedByTPValue = normalizedRatios.sortBy( _.tTestPValue.getOrElse(1.0) )
     
-    assertEquals( 181, ratiosSortedByTPValue.count( _.tTestPValue.getOrElse(1.0) <= 0.01 ) )
+    assertEquals( 443, ratiosSortedByTPValue.count( _.tTestPValue.getOrElse(1.0) <= 0.01 ) )
     assertEquals( 201, ratiosSortedByTPValue.count( _.zTestPValue.getOrElse(1.0) <= 0.01 ) )
-    assertEquals( 68, ratiosSortedByTPValue.count( _.state.get == AbundanceRatioState.OverAbundant ) )
-    assertEquals( 113, ratiosSortedByTPValue.count( _.state.get == AbundanceRatioState.UnderAbundant ) )
+    assertEquals( 184, ratiosSortedByTPValue.count( _.state.get == AbundanceRatioState.OverAbundant ) )
+    assertEquals( 256, ratiosSortedByTPValue.count( _.state.get == AbundanceRatioState.UnderAbundant ) )
     
     val overAbundantRatios = ratiosSortedByTPValue.filter(  _.state.get == AbundanceRatioState.OverAbundant ).sortBy( _.entityId )
     // The fist 10 rows should be over abundant
