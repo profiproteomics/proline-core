@@ -572,6 +572,7 @@ class ExtractMapSet(
 
             // Open TMP SQLite file
             peakelFileConnection = new SQLiteConnection(existingPeakelFiles(0))
+            peakelFileConnection.openReadonly()
             peakelFileConnection.open(false)
             val peakels = _loadPeakels(peakelFileConnection)
 
@@ -861,6 +862,7 @@ class ExtractMapSet(
         // Re-open peakel SQLite file
         val peakelFile = peakelFileByRun(lcMsRun) // TODO: map by run id ?
         val peakelFileConn = new SQLiteConnection(peakelFile)
+        peakelFileConn.openReadonly()
         peakelFileConn.open(false) // allowCreate = false
         
         // Retrieve corresponding R*Tree
@@ -1207,6 +1209,7 @@ class ExtractMapSet(
 
     // Open SQLite conenction
     val connection = new SQLiteConnection(fileLocation)
+    connection.openReadonly()
     connection.open(true) // allowCreate = true
 
     // SQLite optimization
