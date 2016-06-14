@@ -125,19 +125,19 @@ object RsStorer {
   import fr.proline.core.om.storer.msi.impl.SQLRsWriter
   import fr.proline.repository.DriverType
 
-  def apply( msiDbCtx: DatabaseConnectionContext ): IRsStorer = {
+  def apply( msiDbCtx: DatabaseConnectionContext, useJPA: Boolean = true ): IRsStorer = {
     val plWriter = Some( PeaklistWriter(msiDbCtx.getDriverType ) )
-    this.apply( msiDbCtx, plWriter )
+    this.apply( msiDbCtx, plWriter, useJPA )
   }
   
-  def apply( msiDbCtx: DatabaseConnectionContext, plWriter: Option[IPeaklistWriter] ): IRsStorer = {
+  def apply( msiDbCtx: DatabaseConnectionContext, plWriter: Option[IPeaklistWriter], useJPA: Boolean ): IRsStorer = {
     
     require(
       msiDbCtx.getProlineDatabaseType == ProlineDatabaseType.MSI,
       "Invalid DatabaseConnectionContext: a MSIb one must be provided"
     )
     
-    if( msiDbCtx.isJPA() ) {
+    if( msiDbCtx.isJPA() && useJPA ) {
       new JPARsStorer( plWriter )
     }
     else {

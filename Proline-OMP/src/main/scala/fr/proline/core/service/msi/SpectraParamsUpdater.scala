@@ -1,16 +1,19 @@
 package fr.proline.core.service.msi
 
+import javax.persistence.EntityManager
 import com.typesafe.scalalogging.LazyLogging
+import fr.profi.util.regex.RegexUtils._
+import fr.profi.util.primitives._
 import fr.proline.api.service.IService
 import fr.proline.context.IExecutionContext
-import fr.proline.core.dal.DoJDBCWork
+import fr.proline.context.MsiDbConnectionContext
+import fr.proline.core.dal._
 import fr.proline.core.dal.context._
 import fr.proline.core.dal.tables.msi.MsiDbSpectrumTable
 import fr.proline.core.om.model.msi.SpectrumTitleFields.RAW_FILE_IDENTIFIER
 import fr.proline.core.om.model.msi.SpectrumTitleParsingRule
+import fr.proline.core.orm.uds.{ PeaklistSoftware => UdsPeaklistSoftware }
 import fr.proline.core.orm.uds.{ SpectrumTitleParsingRule => UdsSpectrumTitleParsingRule }
-import fr.profi.util.regex.RegexUtils._
-import fr.profi.util.primitives._
 
 object SpectraParamsUpdater extends LazyLogging {
   
@@ -56,11 +59,18 @@ class SpectraParamsUpdater(
     updatedSpectraCount = 0
     
     // Retrieve udsEM and msiDbCtx
+    val msiDbCtx = execCtx.getMSIDbConnectionContext()
+    val udsDbCtx = execCtx.getUDSDbConnectionContext()
     val udsEM = execCtx.getUDSDbConnectionContext().getEntityManager()
+    
+    val peaklistSoftId = DoJDBCReturningWork.withEzDBC(udsDbCtx) { udsEzDBC =>
+      udsEzDBC.selectLong("SELECT id FROM peaklist_software WHERE spec_title_parsing_rule_id = " + specTitleRuleId)
+    }
+    this.logger.debug("Peaklist software ID = " + peaklistSoftId)
     
     // Retrieve the specTitleParsingRule
     val udsSpecTitleParsingRule = udsEM.find(classOf[UdsSpectrumTitleParsingRule], specTitleRuleId) 
-    require(udsSpecTitleParsingRule != null, "no spectrum title parsing rule in UDSdb with id=" + specTitleRuleId)
+    require(udsSpecTitleParsingRule != null, "no spectrum title parsing rule in UDSdb with ID=" + specTitleRuleId)
     
     val parsingRule = new SpectrumTitleParsingRule(
       id = specTitleRuleId,
@@ -75,10 +85,11 @@ class SpectraParamsUpdater(
     
     this.logger.debug("Use parsing rule: " + parsingRule)
     
-    // Do JDBC work in a managed transaction (rolled back if necessary)
-    DoJDBCWork.tryTransactionWithEzDBC(execCtx.getMSIDbConnectionContext()) { ezDBC =>
+    // Do JDBC work in a managed transaction (rolled back if necessary)*
+    DoJDBCWork.tryTransactionWithEzDBC(msiDbCtx) { ezDBC =>
+      
       val sqlQuery = "SELECT id, title FROM spectrum WHERE peaklist_id = " + peaklistId
-      this.logger.debug("Executing SQL query: \""+sqlQuery+"\"")
+      this.logger.debug(s"Executing SQL query: $sqlQuery")
       
       ezDBC.selectAndProcess( sqlQuery ) { r =>
         
@@ -100,9 +111,43 @@ class SpectraParamsUpdater(
         
         ()
       }
+      
+      this.logger.debug("Updating peaklist software information...")
+      this._updatePeaklistSoftware(udsEM, msiDbCtx, peaklistSoftId, peaklistId )
+      
     }
 
     true
+  }
+  
+  private def _updatePeaklistSoftware(
+    udsEM: EntityManager,
+    msiDbCtx: MsiDbConnectionContext,
+    softwareId: Long,
+    peaklistId: Long
+  ) {
+    
+    val msiEM = msiDbCtx.getEntityManager
+    val existingMsiPklSoft = msiEM.find(classOf[fr.proline.core.orm.msi.PeaklistSoftware], softwareId)
+    
+    if (existingMsiPklSoft == null) {
+      
+      // Retrieve the Peaklist Software from the UDSdb
+      val udsPklSoft = udsEM.find(classOf[UdsPeaklistSoftware], softwareId) 
+      require(udsPklSoft != null, "no peaklist software in UDSdb with ID=" + softwareId)
+    
+      val newMsiPklSoft = new fr.proline.core.orm.msi.PeaklistSoftware()
+      newMsiPklSoft.setId(softwareId)
+      newMsiPklSoft.setName(udsPklSoft.getName)
+      newMsiPklSoft.setVersion(udsPklSoft.getVersion)
+      newMsiPklSoft.setSerializedProperties(udsPklSoft.getSerializedProperties)
+
+      msiEM.persist(newMsiPklSoft)
+    }
+    
+    DoJDBCWork.withEzDBC(msiDbCtx) { msiEzDBC =>
+      msiEzDBC.execute( s"UPDATE peaklist SET peaklist_software_id = $softwareId WHERE id = $peaklistId" )
+    }
   }
   
 }

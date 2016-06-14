@@ -145,7 +145,7 @@ class LabelFreeEntitiesSummarizer(
       val specIdByScanNum = spectrumIdByRsIdAndScanNumber(identRsId)
       
       // Retrieve corresponding spectrum ids
-      val ftSpecIds = _getSpectrumIdsOfFeature(feature,specIdByScanNum).toSet
+      val ftSpecIdSet = _getSpectrumIdsOfFeature(feature,specIdByScanNum).toSet
       
       // Retrieve the master feature peptide id and the corresponding peptide instance for this quant channel
       val peptideId = masterFt.relations.peptideId
@@ -156,40 +156,43 @@ class LabelFreeEntitiesSummarizer(
       // Retrieve some vars related to identified peptide instance
       var (msQueryIdsOpt, bestPepMatchScoreOpt) = (Option.empty[Array[Long]], Option.empty[Float])
 
-      if( pepInstOpt.isDefined ) {
+      val pepMatchesCount = if( pepInstOpt.isEmpty ) 0
+      else {
         val pepInst = pepInstOpt.get
 
         // Retrieve the corresponding peptide matches and the best peptide match score
-        val pepMatches = pepInst.getPeptideMatchIds.map { identPepMatchById(_) }
+        val sameChargePepMatches = pepInst.getPeptideMatchIds.map( identPepMatchById(_) ).filter(_.charge == feature.charge)
         
         // Select MS queries which are co-eluting with the detected feature
-        val msQueryIds = pepMatches
+        val msQueryIdSet = sameChargePepMatches
           .map( _.getMs2Query )
-          .withFilter( query => ftSpecIds.contains(query.spectrumId) )
+          .withFilter( query => ftSpecIdSet.contains(query.spectrumId) )
           .map(_.id)
-          .distinct
+          .toSet
         
-        val filteredPepMatches = if( msQueryIds.isEmpty ) {
+        // Determine PSM that can be mapped with he current feature MS queries
+        val filteredPepMatches = if( msQueryIdSet.isEmpty ) {
           logger.trace("identified feature can't be mapped with corresponding MS queries")
-          pepMatches
+          sameChargePepMatches
         } else {
-          msQueryIdsOpt = Some(msQueryIds)
-          pepMatches.filter( pm => msQueryIds.contains(pm.msQuery.id) )
+          msQueryIdsOpt = Some(msQueryIdSet.toArray)
+          sameChargePepMatches.filter( pm => msQueryIdSet.contains(pm.msQuery.id) )
         }
         
-        val sameChargePepMatchesOpt = filteredPepMatches.groupBy(_.msQuery.charge).get(masterFt.charge)
-        if( sameChargePepMatchesOpt.isDefined ) {
-          bestPepMatchScoreOpt = Some(sameChargePepMatchesOpt.get.maxBy(_.score).score)
+        // Determine best score of the filtered PSMs
+        if( filteredPepMatches.nonEmpty ) {
+          bestPepMatchScoreOpt = Some(filteredPepMatches.maxBy(_.score).score)
         }
         
+        sameChargePepMatches.length
       }
       
       /*if( ftSpecIds.length != feature.ms2Count ) {
         println("nb specs="+ftSpecIds.length+" MS2 count="+feature.ms2Count)
       }*/
       
-      val pepMatchesCount = msQueryIdsOpt.map(_.length).getOrElse(0)
-      val ms2MatchingFrequency = if( ftSpecIds.size > 0 ) Some( pepMatchesCount.toFloat / ftSpecIds.size ) else None
+      val msQueriesCount = msQueryIdsOpt.map(_.length).getOrElse(0)
+      val ms2MatchingFrequency = if( ftSpecIdSet.nonEmpty ) Some( msQueriesCount.toFloat / ftSpecIdSet.size ) else None
       
       // Create a quant peptide ion corresponding the this LCMS feature
       new QuantPeptideIon(
@@ -212,7 +215,8 @@ class LabelFreeEntitiesSummarizer(
         lcmsFeatureId = if( feature.id > 0 ) Some(feature.id) else None,
         lcmsMasterFeatureId = if( masterFt.id > 0) Some(masterFt.id) else None,
         unmodifiedPeptideIonId = None, // TODO: set this value ???
-        selectionLevel = feature.selectionLevel
+        selectionLevel = feature.selectionLevel,
+        isReliable = feature.properties.flatMap(_.getIsReliable())
       )
       
     }

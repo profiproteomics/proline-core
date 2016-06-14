@@ -26,7 +26,7 @@ case class RelativeErrorBin( abundance: Float, ratioQuartiles: Tuple3[Float,Floa
 
 class AbsoluteErrorModel( val errorDistribution: Seq[AbsoluteErrorBin] ) extends IErrorModel {
   
-  val ERROR_FACTOR = 1.0f
+  val ERROR_FACTOR = 3.0f
   
   private val abundanceCVPairs = errorDistribution.map( bin => 
     bin.abundance.toFloat -> bin.stdDev/bin.abundance // compute the CV for each abundance
@@ -50,10 +50,14 @@ class AbsoluteErrorModel( val errorDistribution: Seq[AbsoluteErrorBin] ) extends
     if( applyVarianceCorrection == false ) tTestComputer.tTest( statSummary1, statSummary2 )
     else {
       val pValue = tTestComputer.tTest( statSummary1, statSummary2 )
+      val mean1 = statSummary1.getMean
+      val mean2 = statSummary2.getMean
+      val fc = if (mean1 > mean2) (mean1 / mean2).toFloat else (mean2 / mean1).toFloat
+        
       // Compute the T-Test using corrected variances from error model
       val correctedPValue = tTestComputer.tTest(
-        _applyErrorCorrectionToStatSummary(statSummary1),
-        _applyErrorCorrectionToStatSummary(statSummary2)
+        _applyErrorCorrectionToStatSummary(statSummary1, fc),
+        _applyErrorCorrectionToStatSummary(statSummary2, fc)
       )
       
       val twoTailedPValue = if( pValue.isNaN ||correctedPValue > pValue ) correctedPValue else pValue
@@ -64,35 +68,33 @@ class AbsoluteErrorModel( val errorDistribution: Seq[AbsoluteErrorBin] ) extends
     }
   }
   
-  private def _applyErrorCorrectionToStatSummary( statSum: StatisticalSummary ): StatisticalSummary = {
-    
-    // Estimate standard deviations using the error model
-    val errorStdDev = this.getStdevForAbundance(statSum.getMean.toFloat)
-    val errorVariance = errorStdDev * errorStdDev
+  private def _calcSigmoidCorrectionFactor(x: Double, sigma: Float): Double = {
+    sigma * 1 / (1+Math.exp(( x - (sigma/2) )))
+  }
+  // TODO: use ExtendedStatSummary ?
+  private def _applyErrorCorrectionToStatSummary( statSum: StatisticalSummary, fc: Float ): StatisticalSummary = {
     
     // Apply standard deviation correction
     require( statSum.getN() > 2, "not enough replicates for variance correction")
     
-    val correctedVariance = statSum.getVariance + errorVariance
-    
-    CommonsStatHelper.copyStatSummary(statSum, variance = correctedVariance)
-  }
-  
-  // TODO: remove me ?
-  private def _applyErrorCorrectionToStatSummaryV1( statSum: StatisticalSummary ): StatisticalSummary = {
+    val mean = statSum.getMean.toFloat
+    val cv = 100 * statSum.getStandardDeviation / mean
+    //println("cv : " + cv)
     
     // Estimate standard deviations using the error model
-    val errorStdDev = this.getStdevForAbundance(statSum.getMean.toFloat)
-    val errorVariance = errorStdDev * errorStdDev
+    val estimatedCv = 100 * this.getStdevForAbundance(mean) / mean
     
-    // Check if we need to apply correction
-    var N = statSum.getN()
-    val needCorrection = if( statSum.getN() < 3 ) { N = 2L; true }
-    else if( statSum.getVariance < errorVariance ) true else false
+    //println("estimatedCv : " + estimatedCv )
+    val corrFactor = _calcSigmoidCorrectionFactor(cv, estimatedCv) / fc
+    //println("corrFactor : " + corrFactor)
+    val correctedCv = cv + corrFactor
+    //println("correctedCv : " + correctedCv)
     
-    // Apply standard deviations corrections if needed
-    if( needCorrection == false ) statSum
-    else CommonsStatHelper.copyStatSummary(statSum, variance = errorVariance, n = N)
+    //println( List(cv,correctedCv).mkString("\t"))
+    
+    val correctedStDev = correctedCv * mean / 100
+    
+    CommonsStatHelper.copyStatSummary(statSum, variance = correctedStDev * correctedStDev)
   }
   
 }

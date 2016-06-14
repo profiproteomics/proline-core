@@ -21,7 +21,7 @@ class TDPepMatchValidatorWithFDROptimization(
     
     if( rocPoints.length == 0 ) {
       this.logger.warn("ROC analysis returned empty results, validation filter has not been applied")
-      ValidationResults(ValidationResult(0,None,None))
+      ValidationResults(ValidationResult(pepMatches.count(_.isValidated),Some(pepMatches.count(_.isValidated)),None))
     } else {
       
       val expectedFdrValue = expectedFdr.get
@@ -60,9 +60,9 @@ class TDPepMatchValidatorWithFDROptimization(
         validationFilter.setThresholdValue(threshToApply.asInstanceOf[AnyVal])
         validationFilter.filterPeptideMatches( (pepMatches ++ decoyPepMatches.get), true, true)
 
-        return ValidationResults(expectedRocPoint, Some(rocPoints))
+        ValidationResults(expectedRocPoint, Some(rocPoints))
       } else {
-        return ValidationResults(null, Some(rocPoints))
+        ValidationResults(null, Some(rocPoints))
       }
     }
     

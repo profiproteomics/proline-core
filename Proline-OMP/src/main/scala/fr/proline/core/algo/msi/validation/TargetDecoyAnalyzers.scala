@@ -253,9 +253,10 @@ abstract class AbstractTargetDecoyAnalyzer extends ITargetDecoyAnalyzer with Laz
     decoyPepMatches: Seq[PeptideMatch],
     validationFilter: IOptimizablePeptideMatchFilter
   ): Array[ValidationResult] = {
-    // Return simplified validation result if no decoy peptide match is provided
-    if( decoyPepMatches.isEmpty ) {
-      return Array(ValidationResult(targetMatchesCount = targetPepMatches.length, decoyMatchesCount = Some(0), fdr = Some(0)))
+    
+    // Return empty validation result if no target/decoy peptide match is provided
+    if( targetPepMatches.isEmpty || decoyPepMatches.isEmpty ) {
+      return Array.empty[ValidationResult]
     }
 
     // FIXME VDS: Use performROCAnalysisV1 algo for MascotPValuePSMFilter... If this FDR optimization on PValue seems to be interesting, implemet better fix ! 
@@ -274,6 +275,9 @@ abstract class AbstractTargetDecoyAnalyzer extends ITargetDecoyAnalyzer with Laz
     // Retrieve filtered peptide matches
     // TODO: use selection levels instead of isValidated boolean value
     val filteredPepMatches = allPepMatches.filter(_.isValidated)
+    if (filteredPepMatches.isEmpty) {
+      return Array.empty[ValidationResult]
+    }
     
     // Sort all filtered PSMs from the best to the worst according to the validation filter
     val sortedPepMatches = validationFilter.sortPeptideMatches(filteredPepMatches)
@@ -329,37 +333,39 @@ abstract class AbstractTargetDecoyAnalyzer extends ITargetDecoyAnalyzer with Laz
       logger.trace("New FDR = " + curRocPoint.fdr)
     }
     
+    val end = System.currentTimeMillis
+    logger.debug("performROCAnalysis => sortedPepMatches loop completed in " + (end - start) + "ms, starting restorePepMatchValidationStatus ...")
+    
+    // Restore peptide matches validation status
+    PeptideMatchFiltering.restorePepMatchValidationStatus(filteredPepMatches, pepMatchValStatusMap)
+    logger.debug("performROCAnalysis => restorePepMatchValidationStatus done")
+    
     // Remove ROC points having the same number of decoy matches and keep target ROC point preceding a deocy one
     val filteredRocPoints = new ArrayBuffer[ValidationResult](rocPoints.length)
     
-    var previousPmWasTarget = true
-    rocPoints.tail.sliding(2).foreach { rocPointsWindow =>
-      val firstRocPoint = rocPointsWindow(0)
-      val secondRocPoint = rocPointsWindow(1)
-      
-      if( firstRocPoint.decoyMatchesCount == secondRocPoint.decoyMatchesCount ) {
-        previousPmWasTarget = true
-      } else {
+    if (rocPoints.length < 2) filteredRocPoints ++= rocPoints
+    else {
+      var previousPmWasTarget = true
+      rocPoints.sliding(2).foreach { rocPointsWindow =>
+        val firstRocPoint = rocPointsWindow(0)
+        val secondRocPoint = rocPointsWindow(1)
         
-        // Include only target ROC points preceding a decoy one
-        if( previousPmWasTarget ) filteredRocPoints += firstRocPoint
-        
-        // Add new decoy ROC points
-        filteredRocPoints += secondRocPoint
-
-        previousPmWasTarget = false
+        if( firstRocPoint.decoyMatchesCount == secondRocPoint.decoyMatchesCount ) {
+          previousPmWasTarget = true
+        } else {
+          
+          // Include only target ROC points preceding a decoy one
+          if( previousPmWasTarget ) filteredRocPoints += firstRocPoint
+          
+          // Add new decoy ROC points
+          filteredRocPoints += secondRocPoint
+  
+          previousPmWasTarget = false
+        }
       }
     }
 
-    val end = System.currentTimeMillis
-    logger.debug("performROCAnalysis => sortedPepMatches loop completed in " + (end - start) + "ms, starting restorePepMatchValidationStatus ...")
-
-    // Restore peptide matches validation status
-    PeptideMatchFiltering.restorePepMatchValidationStatus(filteredPepMatches, pepMatchValStatusMap)
-
-    logger.debug("performROCAnalysis => restorePepMatchValidationStatus done")
-
-    rocPoints.toArray
+    filteredRocPoints.toArray
   }
 
 }

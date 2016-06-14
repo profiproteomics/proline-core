@@ -328,10 +328,12 @@ class Profilizer( expDesign: ExperimentalDesign, groupSetupNumber: Int = 1, mast
       }
     }*/
     
-    // Update the list of selectedMasterQuantPeptideIds
+    // Compute the intersection of filtered masterQuantPeptides and selectedMasterQuantPeptideIds
     for( mqProtSet <- masterQuantProtSets ) {
-      val selectedMqPepIds = mqProtSet.masterQuantPeptides.withFilter( _.selectionLevel >= 2 ).map(_.id)
-      mqProtSet.properties.get.selectedMasterQuantPeptideIds = Some(selectedMqPepIds)
+      val selectedMqPepIdSet = mqProtSet.masterQuantPeptides.withFilter( _.selectionLevel >= 2 ).map(_.id).toSet
+      val curSelectedMqPepIds = mqProtSet.properties.get.selectedMasterQuantPeptideIds.getOrElse(Array())
+      val newSelectedMqPepIds = curSelectedMqPepIds.filter( selectedMqPepIdSet.contains(_) )
+      mqProtSet.properties.get.selectedMasterQuantPeptideIds = Some(newSelectedMqPepIds)
     }
 
     // Clusterize MasterQuantPeptides according to the provided method
@@ -492,6 +494,7 @@ class Profilizer( expDesign: ExperimentalDesign, groupSetupNumber: Int = 1, mast
     
     // Update Master Quant protein sets properties
     for( (mqProtSet,mqProfiles) <- mqProfilesByProtSet ) {
+      //if (mqProfiles.isEmpty) println(mqProtSet.proteinSet.getRepresentativeProteinMatch().map(_.accession).getOrElse("no") )
       
       val mqProtSetProps = mqProtSet.properties.getOrElse( new MasterQuantProteinSetProperties() )      
       val mqProtSetProfileMap = mqProtSetProps.getMqProtSetProfilesByGroupSetupNumber.getOrElse( HashMap() )

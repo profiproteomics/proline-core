@@ -1100,7 +1100,50 @@ class ResultSetValidatorF027737Test extends StrictLogging {
     logger.debug("testSeparatedSearchValidation: End Run ResultSetValidator Service with FDR filter using Rank and Mascot Adjusted E-Value, in Test ")
 
     rsValidator
- }
+  }
+  
+  @Test
+  def testValidationWithoutPsms() {
+    
+    val tdAnalyzerOpt = BuildTDAnalyzer(targetRS.properties.get, useTdCompetition = true)
+    val fdrValidator = new TDPepMatchValidatorWithFDROptimization(
+      validationFilter = new MascotAdjustedEValuePSMFilter(),
+      expectedFdr = Some(5.0f),
+      tdAnalyzer = tdAnalyzerOpt
+    )
+
+    logger.info("testValidationWithoutPsms: Create ResultSetValidator service")
+    val rsValidator = new ResultSetValidator(
+      execContext = executionContext,
+      targetRs = targetRS,
+      tdAnalyzer = tdAnalyzerOpt,
+      pepMatchPreFilters = Some(Seq(new RankPSMFilter(0))),
+      pepMatchValidator = Some(fdrValidator),
+      protSetFilters = None,
+      protSetValidator = None,
+      storeResultSummary = false
+    )
+    
+    val result = rsValidator.runService
+    Assert.assertTrue(result)
+    
+    val tRSM = rsValidator.validatedTargetRsm
+    val dRSM = rsValidator.validatedDecoyRsm
+    
+    logger.debug("Verify Result IN RS")
+    val rsTarPepMatches = tRSM.resultSet.get.peptideMatches
+    val rsDecPepMatches = dRSM.get.resultSet.get.peptideMatches
+    Assert.assertEquals("RsTarPepMatches validated count", 0, rsTarPepMatches.count(_.isValidated))
+    Assert.assertEquals("RsDecPepMatches validated count", 0, rsDecPepMatches.count(_.isValidated))
+
+    logger.debug("Verify Result IN RSM")
+    val allTarPepMatch = tRSM.peptideInstances.flatMap(pi => pi.peptideMatches)
+    val allDecPepMatch = dRSM.get.peptideInstances.flatMap(pi => pi.peptideMatches)
+    Assert.assertEquals(0, allTarPepMatch.length)
+    Assert.assertEquals(0, allDecPepMatch.length)
+    Assert.assertEquals(0,tRSM.properties.get.getValidationProperties.get.getResults.getPeptideResults.get.getTargetMatchesCount)
+    Assert.assertEquals(0,dRSM.get.properties.get.getValidationProperties.get.getResults.getPeptideResults.get.getDecoyMatchesCount.get)
+  }
   
 
 }
