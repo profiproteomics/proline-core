@@ -62,10 +62,11 @@ class SQLPTMProvider(val psDbCtx: DatabaseConnectionContext) extends IPTMProvide
         val ptmRecord = ptmRecordById(ptmId)
         
         // Retrieve corresponding PTM evidences
-        val ptmEvidRecords = ptmEvidRecordsByPtmId(ptmId)
+        val ptmEvidRecords = ptmEvidRecordsByPtmId(ptmId).filter(ev => {
+          !ev.isDefined("specificity_id") || ev.getLong("specificity_id") == ptmSpecifRecord.getLongOrElse("id", 0)
+        })
         
         // TODO: load classification
-        // TODO: load PTM specif evidences
         val ptmDef = PtmDefinitionBuilder.buildPtmDefinition(
           ptmRecord = ptmRecord,
           ptmSpecifRecord = ptmSpecifRecord,

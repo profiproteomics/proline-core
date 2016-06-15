@@ -152,6 +152,25 @@ class SQLPeptideProviderTest extends DatabaseTestCase {
 
   }
 
+  @Test
+  def getPeptideWithMultiplePtmSpecificities() = {
+    val psDb = BuildDbConnectionContext(getConnector, false)
+
+    try {
+
+      val sqlPepProvider = new SQLPeptideProvider(psDb)
+
+      val pep: Option[Peptide] = sqlPepProvider.getPeptide(7)
+      assertThat(pep, CoreMatchers.notNullValue())
+      assertNotSame(pep, None)
+      assertThat(pep.get.ptms.head.definition.neutralLosses.size, CoreMatchers.equalTo(2))
+
+    } finally {
+      psDb.close
+    }
+
+  }
+
   @After
   override def tearDown() = {
 

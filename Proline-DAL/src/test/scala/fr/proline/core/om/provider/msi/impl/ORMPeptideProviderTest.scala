@@ -59,6 +59,23 @@ class ORMPeptideProviderTest extends DatabaseTestCase with StrictLogging {
         }
 
   }
+  
+  @Test
+  def getPeptideWithMultiplePtmSpecificities() = {
+    val psDb = new DatabaseConnectionContext(getConnector)
+
+    try {
+      val ormPepProvider = new ORMPeptideProvider(psDb)
+
+      val pep: Option[Peptide] = ormPepProvider.getPeptide(7);
+      assertThat(pep, CoreMatchers.notNullValue());
+      assertNotSame(pep, None);
+      assertThat(pep.get.ptms.head.definition.neutralLosses.size, CoreMatchers.equalTo(2))
+    } finally {     
+      psDb.close()
+    }
+
+  }
 
   @Test
   def getMultiplePeptides() = {
