@@ -573,7 +573,7 @@ class ExtractMapSet(
             // Open TMP SQLite file
             peakelFileConnection = new SQLiteConnection(existingPeakelFiles(0))
             peakelFileConnection.openReadonly()
-            peakelFileConnection.open(false)
+            //peakelFileConnection.open(false)
             val peakels = _loadPeakels(peakelFileConnection)
 
             (peakels, mzDb.getMs1SpectrumHeaders().toLongMapWith(sh => sh.getId -> sh), mzDb.getMs2SpectrumHeaders().groupByLong(_.getCycle.toInt))
@@ -863,7 +863,7 @@ class ExtractMapSet(
         val peakelFile = peakelFileByRun(lcMsRun) // TODO: map by run id ?
         val peakelFileConn = new SQLiteConnection(peakelFile)
         peakelFileConn.openReadonly()
-        peakelFileConn.open(false) // allowCreate = false
+        //peakelFileConn.open(false) // allowCreate = false
         
         // Retrieve corresponding R*Tree
         val rTree = rTreeByRunId(lcMsRun.id)
@@ -1209,7 +1209,6 @@ class ExtractMapSet(
 
     // Open SQLite conenction
     val connection = new SQLiteConnection(fileLocation)
-    connection.openReadonly()
     connection.open(true) // allowCreate = true
 
     // SQLite optimization
