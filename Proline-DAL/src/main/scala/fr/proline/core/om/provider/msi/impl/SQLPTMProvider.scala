@@ -47,7 +47,10 @@ class SQLPTMProvider(val psDbCtx: DatabaseConnectionContext) extends IPTMProvide
       }*/
   
       // Group PTM evidences by PTM id
-      val ptmEvidRecordsByPtmId = ptmEvidRecords.groupBy(r => r.getLong("ptm_id") )
+      val ptmEvidRecordsByPtmIdAndSpecifId = ptmEvidRecords.groupBy(r => (r.getLong("ptm_id"), r.getLongOrElse("specificity_id", 0)))
+      
+      val ptmClassificationRecords = psEzDBC.selectAllRecords("SELECT * FROM ptm_classification")
+      val ptmClassificationRecordsById = ptmClassificationRecords.map(r => { r.getLong("id") -> r.getString("name")}).toMap
       
       val ptmDefById = new scala.collection.mutable.LongMap[PtmDefinition]()
   
@@ -62,16 +65,15 @@ class SQLPTMProvider(val psDbCtx: DatabaseConnectionContext) extends IPTMProvide
         val ptmRecord = ptmRecordById(ptmId)
         
         // Retrieve corresponding PTM evidences
-        val ptmEvidRecords = ptmEvidRecordsByPtmId(ptmId).filter(ev => {
-          !ev.isDefined("specificity_id") || ev.getLong("specificity_id") == ptmSpecifRecord.getLongOrElse("id", 0)
-        })
+        val evidencesWithoutSpecificity = ptmEvidRecordsByPtmIdAndSpecifId.get(ptmId, 0)
+        val evidencesWithSpecificity = ptmEvidRecordsByPtmIdAndSpecifId.get(ptmId, ptmSpecifRecord.getLong("id"))
+        val ptmEvidRecords = evidencesWithoutSpecificity.getOrElse(Array.empty[AnyMap]) ++ evidencesWithSpecificity.getOrElse(Array.empty[AnyMap])
         
-        // TODO: load classification
         val ptmDef = PtmDefinitionBuilder.buildPtmDefinition(
           ptmRecord = ptmRecord,
           ptmSpecifRecord = ptmSpecifRecord,
           ptmEvidenceRecords = ptmEvidRecords,
-          ptmClassification = ""
+          ptmClassification = ptmClassificationRecordsById(ptmSpecifRecord.getLong("classification_id"))
         )
   
         ptmDefById.put(ptmDef.id, ptmDef)

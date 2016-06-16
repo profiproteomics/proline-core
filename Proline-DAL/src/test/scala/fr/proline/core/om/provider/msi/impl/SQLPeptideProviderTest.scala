@@ -164,6 +164,8 @@ class SQLPeptideProviderTest extends DatabaseTestCase {
       assertThat(pep, CoreMatchers.notNullValue())
       assertNotSame(pep, None)
       assertThat(pep.get.ptms.head.definition.neutralLosses.size, CoreMatchers.equalTo(2))
+      assertThat(pep.get.ptms.head.definition.ptmEvidences.size, CoreMatchers.equalTo(3))
+      assertThat(pep.get.ptms.head.definition.classification, CoreMatchers.equalTo("Post-translational"))
 
     } finally {
       psDb.close
