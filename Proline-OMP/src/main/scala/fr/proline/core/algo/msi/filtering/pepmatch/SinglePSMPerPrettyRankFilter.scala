@@ -73,9 +73,10 @@ class SinglePSMPerPrettyRankFilter(var targetRs: IResultSetLike = null) extends 
                 val protMatchesOpt = protMatchesByPepMatchId.get(currentPsm.id)
                 val bestPsmProtMatchesOpt = protMatchesByPepMatchId.get(bestRankPsm.id)
                 // filter using ProteinMatch nbrPeptideCount.
-                if (protMatchesOpt.isDefined && bestPsmProtMatchesOpt.isEmpty
-                    || getMaxNbrPepForProtMatches(protMatchesOpt.get) > getMaxNbrPepForProtMatches(bestPsmProtMatchesOpt.get) )
-                  bestRankPsm = currentPsm
+                  if ( protMatchesOpt.isDefined &&
+                		  (bestPsmProtMatchesOpt.isEmpty
+                			  || ( getMaxNbrPepForProtMatches(protMatchesOpt.get) > getMaxNbrPepForProtMatches(bestPsmProtMatchesOpt.get) ))) 
+                    bestRankPsm = currentPsm
 //                  logger.debug("**** more than One PSMs... Found new best "+bestRankPsm.peptide.sequence)
               }
             }) //end go throughall equals psms
