@@ -46,6 +46,7 @@ import fr.proline.core.service.lcms.AlignMapSet
 import fr.proline.core.service.lcms.CreateMapSet
 import fr.proline.core.service.lcms.CreateMasterMap
 import fr.proline.core.algo.lcms.alignment.AlignmentResult
+import fr.profi.ms.model.TheoreticalIsotopePattern
 
 /**
  * @author David Bouyssie
@@ -596,7 +597,7 @@ class ExtractMapSet(
         //val orphanPeakels = detectedPeakels.filter(pkl => psmTupleByPeakel.contains(pkl) == false)
         val peptides = psmByScanNumber.flatMap(_._2).map(_.peptide).toBuffer.distinct
         val assignedPeptideSet = peakelMatches.map(_.peptide).toSet
-        val orphanPeptides = peptides.filter(peptide => assignedPeptideSet.contains(peptide) == false).distinct
+        val orphanPeptides = peptides.filter(peptide => !assignedPeptideSet.contains(peptide)).distinct
 
         runMetrics.setCounter("orphan peptides", orphanPeptides.size)
         runMetrics.setCounter("distinct peptides", peptides.size)
@@ -656,6 +657,9 @@ class ExtractMapSet(
                 conflictingPeptidesMap.getOrElseUpdate((peptide, charge), ArrayBuffer[Peptide]()) ++=  peptides
               }
             }
+        
+            //_testIsotopicPatternPrediction(mzDb, peakelFileConnection, rTree, mzDbFt, runMetrics)
+            
           }
         } // ends for peakelMatchesByPeakelId
 
@@ -713,7 +717,7 @@ class ExtractMapSet(
     val putativeFtsByLcMsRun = new HashMap[LcMsRun, ArrayBuffer[PutativeFeature]]()
     val putativeFtsByPeptideAndRunId = new HashMap[(Peptide, Long), ArrayBuffer[PutativeFeature]]()
     val peptideByPutativeFtId = new LongMap[Peptide]()
-    val peakelIdsByPutativeFtId = new LongMap[ArrayBuffer[Int]]()
+    val multiMatchedPeakelIdsByPutativeFtId = new LongMap[ArrayBuffer[Int]]()
     
     this.logger.info("building the master map...")
 
@@ -809,7 +813,7 @@ class ExtractMapSet(
         )
         pf.isPredicted = true
         
-        val putativePeakelIds = ArrayBuffer.empty[Int]
+        val multiMatchedPeakelIds = ArrayBuffer.empty[Int]
         val conflictingPeptides = conflictingPeptidesMap.getOrElse((peptide, charge), null)
         val mzDbPeakelIdsByPeptideAndCharge = mzDbPeakelIdsByPeptideAndChargeByRunId.getOrNull(lcMsRun.id)
         
@@ -817,7 +821,7 @@ class ExtractMapSet(
           for (conflictingPeptide <- conflictingPeptides) {
           	val mzDbPeakelIds = mzDbPeakelIdsByPeptideAndCharge.getOrElse((conflictingPeptide, charge), null)
           	if (mzDbPeakelIds != null) {
-          	  putativePeakelIds ++= mzDbPeakelIds
+          	  multiMatchedPeakelIds ++= mzDbPeakelIds
           	}
           }
         }
@@ -825,7 +829,7 @@ class ExtractMapSet(
         putativeFtsByLcMsRun.getOrElseUpdate(lcMsRun, new ArrayBuffer[PutativeFeature]) += pf
         putativeFtsByPeptideAndRunId.getOrElseUpdate((peptide, lcMsRun.id), new ArrayBuffer[PutativeFeature]) += pf
         peptideByPutativeFtId(pf.id) = peptide
-        peakelIdsByPutativeFtId(pf.id) = putativePeakelIds
+        multiMatchedPeakelIdsByPutativeFtId(pf.id) = multiMatchedPeakelIds
       }
       
     } // end (peptide, charge) loop
@@ -870,7 +874,8 @@ class ExtractMapSet(
 
         // Retrieve the map avoiding the creation of duplicated peakels
         val peakelByMzDbPeakelId = peakelByMzDbPeakelIdByRunId(lcMsRun.id)
-
+        val assignedPeakelIds = new HashSet[Long] () ++= peakelByMzDbPeakelId.keySet
+        
         try {
           for (putativeFt <- putativeFts) {
 
@@ -889,8 +894,8 @@ class ExtractMapSet(
               avgTime = putativeFt.elutionTime,
               maxTime = putativeFt.elutionTime + ftMappingParams.timeTol,
               expectedDuration = bestFt.duration,
-              assignedPeakelById = peakelByMzDbPeakelId,
-              putativePeakelIds = peakelIdsByPutativeFtId(putativeFt.id),
+              assignedPeakelById = assignedPeakelIds,
+              multimatchedPeakelIds = multiMatchedPeakelIdsByPutativeFtId(putativeFt.id),
               runMetrics
             )
 
@@ -915,7 +920,7 @@ class ExtractMapSet(
                 for (conflictingPeptide <- conflictingPeptides) {
                   for (pft <- putativeFtsByPeptideAndRunId((peptide, lcMsRun.id))) {
                     runMetrics.incr("putative peakels list updated")
-                    peakelIdsByPutativeFtId(pft.id) += peakel.id
+                    multiMatchedPeakelIdsByPutativeFtId(pft.id) += peakel.id
                   }
                 }
               }
@@ -927,6 +932,12 @@ class ExtractMapSet(
                 peakelByMzDbPeakelId
               )
 
+              if (isReliable) {
+                for ( peakel <- mzDbFt.getPeakels() ) {
+                  assignedPeakelIds += peakel.id
+                }
+              }
+              
               val newFtProps = newLcmsFeature.properties.get
               
               // Set predicted time property
@@ -936,7 +947,7 @@ class ExtractMapSet(
               newFtProps.setIsReliable(Some(isReliable))
               
               // Deselect the feature if it not reliable
-              if (isReliable == false) {
+              if (!isReliable) {
                 newLcmsFeature.selectionLevel = 0 // force manual deselection (for Profilizer compat)
               }
               
@@ -1009,7 +1020,7 @@ class ExtractMapSet(
       // Deselect the master feature if one of its features is not reliable
       val nonReliableFtsCount = mft.children.count(_.properties.flatMap(_.getIsReliable()).getOrElse(true) == false)
       if (nonReliableFtsCount > 0) {
-        mft.selectionLevel = 1
+        mft.selectionLevel = 0
       }
       
       mft
@@ -1498,6 +1509,71 @@ class ExtractMapSet(
     peakels.toArray
   }
 
+  private def _testIsotopicPatternPrediction(
+    reader: MzDbReader,
+    sqliteConn: SQLiteConnection,
+    rTree: RTree[java.lang.Long,geometry.Point],
+    ft: MzDbFeature,
+    runMetrics: Metric
+    ) = {
+    
+    try {
+    val mozTolInDa = MsUtils.ppmToDa(ft.getMz(), ftMappingParams.mozTol)    
+   
+    def updateMetrics(bestPattern: TheoreticalIsotopePattern, prefix: String) = {
+      if (math.abs(bestPattern.monoMz - ft.getMz()) <= mozTolInDa) {
+        if (bestPattern.charge == ft.charge) {
+          runMetrics.incr(prefix+".correct")
+        } else {
+          runMetrics.incr(prefix+".wrong.charge")
+        }
+      } else {
+        runMetrics.incr(prefix+".wrong.monoisotope")
+      }
+    }
+    
+    var bestPattern = mzDbPatternPredictor.getBestExplanation(reader, sqliteConn, ft.getFirstPeakel(), ft.charge, mozTolInDa)
+    updateMetrics(bestPattern._2, "mzdb.prediction.firstIsotope")
+    
+    if (ft.getPeakelsCount() > 1) {
+      bestPattern = mzDbPatternPredictor.getBestExplanation(reader, sqliteConn, ft.getPeakel(1), ft.charge, mozTolInDa)
+      updateMetrics(bestPattern._2, "mzdb.prediction.secondIsotope")
+    }
+    if (ft.getPeakelsCount() > 2) {
+       bestPattern = mzDbPatternPredictor.getBestExplanation(reader, sqliteConn, ft.getPeakel(2), ft.charge, mozTolInDa)
+    	 updateMetrics(bestPattern._2, "mzdb.prediction.thirdIsotope")
+    }
+    
+    
+    val coelutingPeakels = {
+      val halfTimeTol = ftMappingParams.timeTol / 2
+      this._findPeakelsInRange(
+        sqliteConn,
+        rTree,
+        ft.getMz - 5,
+        ft.getMz + 5,
+        ft.getElutionTime - ftMappingParams.timeTol,
+        ft.getElutionTime + ftMappingParams.timeTol
+      ).sortBy(_.getMz)
+    }
+    
+
+    bestPattern = PeakelsPatternPredictor.getBestExplanation(rTree, mozTolPPM, coelutingPeakels, ft.getFirstPeakel(), ft.charge, mozTolInDa)
+    updateMetrics(bestPattern._2, "peakels.predictor.firstIsotope")
+    
+    if (ft.getPeakelsCount() > 1) {
+      bestPattern = PeakelsPatternPredictor.getBestExplanation(rTree, mozTolPPM, coelutingPeakels, ft.getPeakel(1), ft.charge, mozTolInDa)
+      updateMetrics(bestPattern._2, "peakels.predictor.secondIsotope")
+    }
+    if (ft.getPeakelsCount() > 2) {
+       bestPattern = PeakelsPatternPredictor.getBestExplanation(rTree, mozTolPPM, coelutingPeakels, ft.getPeakel(2), ft.charge, mozTolInDa)
+    	 updateMetrics(bestPattern._2, "peakels.predictor.thirdIsotope")
+    }
+    } catch {
+      case t: Throwable => logger.error("IP prediction fail", t)
+    }
+  }
+  
   private def _findPeakel(
     reader: MzDbReader,
     sqliteConn: SQLiteConnection,
@@ -1508,8 +1584,8 @@ class ExtractMapSet(
     avgTime: Float,
     maxTime: Float,
     expectedDuration: Float, 
-    assignedPeakelById: LongMap[Peakel], 
-    putativePeakelIds: ArrayBuffer[Int], 
+    assignedPeakelById: scala.collection.Set[Long], 
+    multimatchedPeakelIds: ArrayBuffer[Int], 
     metric: Metric
   ): Option[(MzDbPeakel,Boolean)] = {
     
@@ -1530,30 +1606,10 @@ class ExtractMapSet(
     }
     
     // Apply some filters to the found peakels
-    // FIXME: DBO => why only accept peakel ids from putativePeakelIdMap ???
-    val putativePeakelIdMap = putativePeakelIds.mapByLong(_.toLong)
-    val matchingPeakels = foundPeakels.filter { foundPeakel =>
-      val isPutativePeakel = putativePeakelIdMap.contains(foundPeakel.id)
-      val isAlreadyAssigned = assignedPeakelById.contains(foundPeakel.id)
-      isPutativePeakel || !isAlreadyAssigned
-    }
+    val multimatchedPeakelIdMap = multimatchedPeakelIds.mapByLong(_.toLong)
+    val matchingPeakels = foundPeakels.filter { foundPeakel => (multimatchedPeakelIdMap.contains(foundPeakel.id)|| ! assignedPeakelById.contains(foundPeakel.id))  }
     
-    val filteredPeakels = new ArrayBuffer[(MzDbPeakel,Boolean)](matchingPeakels.length)
-    
-    def isMatchingPeakelReliable(matchingPeakel: MzDbPeakel, spectrumData: SpectrumData, ppm: Float): Boolean = {
-      
-      val matchingPeakelMz = matchingPeakel.getApexMz
-      
-      // TODO: optimize the calcIsotopicPatternHypotheses
-      val putativePatterns = IsotopicPatternScorer.calcIsotopicPatternHypotheses(spectrumData, matchingPeakelMz, ppm)
-      val bestPattern = putativePatterns.head
-      
-      if (bestPattern._2.charge == charge && (math.abs(bestPattern._2.monoMz - matchingPeakelMz) <= mozTolInDa)) true
-      else false
-    }
-    
-    val coelutingPeakels = if (matchingPeakels.isEmpty) null
-    else {
+    val coelutingPeakels = if (matchingPeakels.isEmpty) { null } else {
       
       // TODO: compute minTime/maxTime using a combination of matchingPeakels durations ?
       
@@ -1569,72 +1625,12 @@ class ExtractMapSet(
       ).sortBy(_.getMz)
     }
     
-    // DBO: the if statement was previously used to decrease the impact of the mzDB lookup
-    // Now the lookup is performed using the in-memory R*Tree
-    //if (matchingPeakels.length == 1) {
-    // TODO: don't compute the scoring when multiple matchingPeakels are found (compute only on the nearest RT ?)
-    for (matchingPeakel <- matchingPeakels) {
-      
-      val matchingSpectrumId = matchingPeakel.getApexSpectrumId()
-      val coelutingPeakelsCount = coelutingPeakels.length
-      //logger.debug(s"Found $coelutingPeakelsCount co-eluting peakels")
-      
-      val mzList = new ArrayBuffer[Double](coelutingPeakelsCount)
-      val intensityList = new ArrayBuffer[Float](coelutingPeakelsCount)
-      
-      // Slice the obtained peakels to create a virtual spectrum
-      coelutingPeakels.map { peakel =>
-        val peakelCursor = peakel.getNewCursor()
-        var foundPeak = false
-        
-        // TODO: optimize this search (start from the apex or implement binary search)
-        while (peakelCursor.next() && foundPeak == false) {
-          if (peakelCursor.getSpectrumId() == matchingSpectrumId) {
-            mzList += peakelCursor.getMz()
-            intensityList += peakelCursor.getIntensity()
-            foundPeak = true
-          }
-        }
-      }
-      
-      val spectrumData = new SpectrumData(mzList.toArray,intensityList.toArray)
-      
-      // FIXME: should we really compute this tolerance like this ?
-      /*val ppm = if (peakel.getLeftHwhmMean == 0) mozTolPPM
-      // TODO: DBO => why computing a so high value ???
-      else (1e6 * peakel.getLeftHwhmMean / apexMz).toFloat*/
-      
-      val isReliable = isMatchingPeakelReliable(matchingPeakel, spectrumData, mozTolPPM)
-      
-      filteredPeakels += Tuple2(matchingPeakel,isReliable)
-      
-    } /*else {
-      for (peakel <- matchingPeakels) {
-        
-        val apexMz = peakel.getApexMz
-        val apexRt = peakel.getApexElutionTime
-        
-        // TODO: DBO => this step is really time consuming, we should use the in-memory R*Tree instead
-        val slices = reader.getMsSpectrumSlices(
-          apexMz - 5,
-          apexMz + 5,
-          apexRt - 0.1f,
-          apexRt + 0.1f
-        )
-  
-        val sliceOpt = slices.find(_.getHeader.getSpectrumId == peakel.getApexSpectrumId)
-        if (sliceOpt.isDefined) {
-          
-          val ppm = if (peakel.getLeftHwhmMean == 0) mozTolPPM
-          // TODO: DBO => why computing a so high value ???
-          else (1e6 * peakel.getLeftHwhmMean / apexMz).toFloat
-          
-          logger.debug("Calculating IP hypotheses using PPM tol = "+ ppm)
-          
-          val isOk = filterThenAddMatchingPeakel(peakel, sliceOpt.get.getData(), ppm)
-        }
-      }
-    }*/
+    val filteredPeakels = PeakelsPatternPredictor.assessReliability(rTree, mozTolPPM, coelutingPeakels, matchingPeakels, charge, mozTolInDa)
+
+    // Switch to mzdb based implementation by commenting previous line and uncommenting the next one
+    //
+    // val filteredPeakels = mzDbPatternPredictor.assessReliability(reader, sqliteConn, matchingPeakels, charge, mozTolInDa)
+    
     
     if (filteredPeakels.isEmpty) {
       metric.incr("missing peakel: no peakel matching charge or monoisotopic")
@@ -1643,12 +1639,18 @@ class ExtractMapSet(
       Some(filteredPeakels.head)
     }
     else {
-      val nearestPeakelInTime = filteredPeakels.minBy { case (peakel,isReliable) => 
+      
+      var reliablePeakels = filteredPeakels.filter(_._2)
+      if (reliablePeakels.isEmpty) { reliablePeakels = filteredPeakels }
+      val nearestPeakelInTime = reliablePeakels.minBy { case (peakel,isReliable) => 
         math.abs(avgTime - peakel.calcWeightedAverageTime())
       }
-      
-      // Old way used to make the selection
-      //val nearestPeakelInMz = filteredPeakels.minBy(peakel => math.abs(peakelMz - peakel.getMz))
+
+      val nearestFilteredPeakelInTime = filteredPeakels.minBy { case (peakel,isReliable) => 
+        math.abs(avgTime - peakel.calcWeightedAverageTime())
+      }
+
+      if (nearestFilteredPeakelInTime != nearestPeakelInTime) { metric.incr("nearestPeakelInTime.not.reliable") }
       
       Some(nearestPeakelInTime)
     }
