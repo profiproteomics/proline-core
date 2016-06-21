@@ -17,8 +17,10 @@ import javax.persistence.ManyToOne;
 import javax.persistence.MapKeyColumn;
 import javax.persistence.OneToMany;
 import javax.persistence.Table;
+import javax.persistence.Transient;
 
 import fr.profi.util.StringUtils;
+import fr.proline.core.orm.util.JsonSerializer;
 
 /**
  * The persistent class for the protein_set database table.
@@ -69,6 +71,9 @@ public class ProteinSet implements Serializable {
     @CollectionTable(name = "protein_set_object_tree_map", joinColumns = @JoinColumn(name = "protein_set_id", referencedColumnName = "id"))
     private Map<String, Long> objectTreeIdByName;
 
+    @Transient
+    private Map<String, Object> serializedPropertiesMap;
+    
     public ProteinSet() {
     }
 
@@ -126,6 +131,7 @@ public class ProteinSet implements Serializable {
 
     public void setSerializedProperties(String serializedProperties) {
 	this.serializedProperties = serializedProperties;
+	this.serializedPropertiesMap = null;
     }
 
     /*
@@ -184,6 +190,20 @@ public class ProteinSet implements Serializable {
 	}
 
 	return result;
+    }
+    
+    @SuppressWarnings("unchecked")
+    public Map<String, Object> getSerializedPropertiesAsMap() throws Exception {
+	if ((serializedPropertiesMap == null) && (serializedProperties != null)) {
+	    serializedPropertiesMap = JsonSerializer.getMapper().readValue(getSerializedProperties(),
+		    Map.class);
+	}
+	return serializedPropertiesMap;
+    }
+
+    public void setSerializedPropertiesAsMap(Map<String, Object> serializedPropertiesMap) throws Exception {
+	this.serializedPropertiesMap = serializedPropertiesMap;
+	this.serializedProperties = JsonSerializer.getMapper().writeValueAsString(serializedPropertiesMap);
     }
 
 
