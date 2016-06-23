@@ -1,5 +1,9 @@
 package fr.proline.core.orm.msi.dto;
 
+import java.util.Map;
+
+import fr.proline.core.orm.util.JsonSerializer;
+
 
 /**
  *
@@ -15,9 +19,10 @@ public class DProteinSet {
     
     private Integer m_spectralCount; 
     private Integer m_specificSpectralCount;
+
+    private String m_serializedProperties = null;
+    private Map<String, Object> m_serializedPropertiesMap = null;
     
-    /*private Integer m_peptideMatchCount; // JPM : clean up to do
-    private Integer m_basicSpectralCount;*/
     
     private Integer m_sameSetCount;
     private Integer m_subSetCount;
@@ -30,9 +35,20 @@ public class DProteinSet {
         m_resultSummaryId = resultSummaryId;
         
         m_typicalProteinMatch = null;
-        m_spectralCount = null;  // JPM : will be removed
-        //m_peptideMatchCount = null;
-        //m_basicSpectralCount = null;
+        m_spectralCount = null;
+        m_specificSpectralCount = null;
+        m_sameSetCount = null;
+        m_subSetCount = null;
+    }
+    
+    public DProteinSet(long id, long typicalProteinMatchId, long resultSummaryId, String serializedProperties) {
+        m_id = id;
+        m_typicalProteinMatchId = typicalProteinMatchId;
+        m_resultSummaryId = resultSummaryId;
+        m_serializedProperties = serializedProperties;
+        
+        m_typicalProteinMatch = null;
+        m_spectralCount = null;
         m_specificSpectralCount = null;
         m_sameSetCount = null;
         m_subSetCount = null;
@@ -69,25 +85,6 @@ public class DProteinSet {
     public void setSpectralCount(Integer spectralCount) {
         m_spectralCount = spectralCount;
     }
-    
-   // JPM : clean up to do
-
-   /* public Integer getPeptideMatchCount() {
-        return m_peptideMatchCount;
-    }
-
-    public void setPeptideMatchCount(Integer peptideMatchCount) {
-    	m_peptideMatchCount = peptideMatchCount;
-    }
-
-    public Integer getBasicSpectralCount() {
-        return m_basicSpectralCount;
-    }
-
-    public void setBasicSpectralCount(Integer basicSpectralCount) {
-    	m_basicSpectralCount = basicSpectralCount;
-    }*/
-
     
     public Integer getSpecificSpectralCount() {
         return m_specificSpectralCount;
@@ -127,5 +124,18 @@ public class DProteinSet {
 
     public void setSubSet(DProteinMatch[] subSet) {
         m_subSet = subSet;
+    }
+    
+    @SuppressWarnings("unchecked")
+    public Map<String, Object> getSerializedPropertiesAsMap() throws Exception {
+	if ((m_serializedPropertiesMap == null) && (m_serializedProperties != null)) {
+		m_serializedPropertiesMap = JsonSerializer.getMapper().readValue(m_serializedProperties, Map.class);
+	}
+	return m_serializedPropertiesMap;
+    }
+
+    public void setSerializedPropertiesAsMap(Map<String, Object> serializedPropertiesMap) throws Exception {
+    	m_serializedPropertiesMap = serializedPropertiesMap;
+		m_serializedProperties = JsonSerializer.getMapper().writeValueAsString(serializedPropertiesMap);
     }
 }
