@@ -11,6 +11,7 @@ import fr.proline.core.dal.tables.SelectQueryBuilder1
 import fr.proline.core.dal.tables.msi.MsiDbResultSetRelationTable
 import fr.proline.core.dal.tables.msi.MsiDbResultSummaryRelationTable
 import fr.profi.util.primitives._
+import fr.proline.core.dal.tables.msi.MsiDbResultSummaryTable
 
 class MsiDbHelper(msiDbCtx: DatabaseConnectionContext) {
 
@@ -83,6 +84,29 @@ class MsiDbHelper(msiDbCtx: DatabaseConnectionContext) {
       }
       
     })
+  }
+  
+  def getResultSummaryLeavesIds(rsmId: Long): Array[Long] = {
+      var allRSMIds = new ArrayBuffer[Long]()
+           
+      DoJDBCWork.withEzDBC(msiDbCtx) { ezDBC =>
+        var childDefined = false
+         val sqlQuery = new SelectQueryBuilder1(MsiDbResultSummaryRelationTable).mkSelectQuery( (t,c) =>
+          List(t.CHILD_RESULT_SUMMARY_ID) -> "WHERE "~ t.PARENT_RESULT_SUMMARY_ID ~" = "~ rsmId
+        )
+        
+        ezDBC.selectAndProcess(sqlQuery){ r =>
+            childDefined = true
+            val nextChildId = r.nextLong
+            allRSMIds ++= getResultSummaryLeavesIds(nextChildId)
+         }
+               
+        if (!childDefined)
+          allRSMIds += rsmId
+        
+      } // End of jdbcWork anonymous inner class
+    
+      allRSMIds.toArray
   }
   
   private def _getChildrenIds(ids: Array[Long], parentIdsToChildIds: Array[Long] => Array[Long]): Array[Long] = {
