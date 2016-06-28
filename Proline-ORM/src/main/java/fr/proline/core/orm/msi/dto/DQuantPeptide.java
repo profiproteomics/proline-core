@@ -2,16 +2,22 @@ package fr.proline.core.orm.msi.dto;
 
 public class DQuantPeptide {
 	
+
 	Float rawAbundance;
 	Float abundance;
 	Integer selectionLevel;
 	Integer peptideMatchesCount;
 	Long quantChannelId;
 	Float elutionTime;
+    
+    @JsonIgnore
 	Long peptideId;
+    
+    @JsonIgnore
 	Long peptideInstanceId;
 	
 	// to display psm count from identification (which is different from the quantification psm count)
+    @JsonIgnore
 	private Integer identPeptideMatchCount;
     
     // Necessary Construtor for JSON parsing !
@@ -76,7 +82,7 @@ public class DQuantPeptide {
 		return peptideId;
 	}
 
-
+	@JsonIgnore
 	public void setPeptideId(Long peptideId) {
 		this.peptideId = peptideId;
 	}
@@ -86,7 +92,7 @@ public class DQuantPeptide {
 		return peptideInstanceId;
 	}
 
-
+	@JsonIgnore
 	public void setPeptideInstanceId(Long peptideInstanceId) {
 		this.peptideInstanceId = peptideInstanceId;
 	}
@@ -96,7 +102,7 @@ public class DQuantPeptide {
 		return identPeptideMatchCount;
 	}
 
-
+	@JsonIgnore
 	public void setIdentPeptideMatchCount(Integer identPeptideMatchCount) {
 		this.identPeptideMatchCount = identPeptideMatchCount;
 	}
