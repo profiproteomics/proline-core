@@ -1,5 +1,7 @@
 package fr.proline.core.orm.msi.dto;
 
+import com.fasterxml.jackson.annotation.JsonIgnore
+
 public class DQuantPeptide {
 	
 
