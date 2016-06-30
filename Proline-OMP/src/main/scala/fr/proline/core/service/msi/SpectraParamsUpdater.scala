@@ -145,6 +145,10 @@ class SpectraParamsUpdater(
       msiEM.persist(newMsiPklSoft)
     }
     
+    // Synchronize the persistence context to the underlying database.
+    msiEM.flush()
+    
+    // Update the peaklist_software_id in the peaklist table
     DoJDBCWork.withEzDBC(msiDbCtx) { msiEzDBC =>
       msiEzDBC.execute( s"UPDATE peaklist SET peaklist_software_id = $softwareId WHERE id = $peaklistId" )
     }
