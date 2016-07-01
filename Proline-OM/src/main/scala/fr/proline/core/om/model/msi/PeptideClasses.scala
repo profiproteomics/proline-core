@@ -481,7 +481,8 @@ case class PeptideMatchOmssaProperties (
 case class PeptideMatchXtandemProperties (
   @BeanProperty var expectationValue: Double,
   @BeanProperty var nextScore: Double,
-  @BeanProperty var ionSeries: Array[String] = Array[String]()
+  @BeanProperty var ionSeriesMatches: Map[String, Int] = null,
+  @BeanProperty var ionSeriesScores: Map[String, Double] = null
 )
 
 case class PeptideMatchResultSummaryProperties (
