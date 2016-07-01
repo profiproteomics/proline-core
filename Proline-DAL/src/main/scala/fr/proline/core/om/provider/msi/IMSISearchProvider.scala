@@ -10,6 +10,5 @@ trait IMSISearchProvider {
   def getMSISearches( msiSearchIds: Seq[Long] ): Array[MSISearch]
   
   def getMSISearch( msiSearchId:Long ): Option[MSISearch] = { getMSISearchesAsOptions( Array(msiSearchId) )(0) }
- 
-  
+
 }

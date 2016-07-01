@@ -472,6 +472,7 @@ case class PeptideMatchMascotProperties (
 )
 
 case class PeptideMatchOmssaProperties (
+//  @BeanProperty var expectationValue: Double,
   @BeanProperty var pValue: Double,
   @BeanProperty var correctedCharge: Int,
   @BeanProperty var ionSeries: Array[String] = Array[String]()
@@ -479,11 +480,8 @@ case class PeptideMatchOmssaProperties (
 
 case class PeptideMatchXtandemProperties (
   @BeanProperty var expectationValue: Double,
-  @BeanProperty var readableVarMods: Option[String] = None,
-  @BeanProperty var varModsPositions: Option[String] = None,
-  @BeanProperty var ambiguityString: Option[String] = None,
-  @BeanProperty var nlString: Option[String] = None,
-  @BeanProperty var usedPeaksCount: Option[Int] = None
+  @BeanProperty var nextScore: Double,
+  @BeanProperty var ionSeries: Array[String] = Array[String]()
 )
 
 case class PeptideMatchResultSummaryProperties (

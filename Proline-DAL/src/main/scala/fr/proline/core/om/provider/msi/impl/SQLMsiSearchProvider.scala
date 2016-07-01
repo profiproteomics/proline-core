@@ -170,8 +170,9 @@ class SQLMsiSearchProvider(
   
   def getAllEnzymes(): Array[Enzyme] = {
     DoJDBCReturningWork.withEzDBC(udsDbCtx, { udsEzDBC =>
-      buildEnzymes( selectAndMapAllEnzymeRecords(udsEzDBC), 
-      enzymeId => selectAndMapEnzymeCleavageRecords( udsEzDBC, enzymeId ))
+      buildEnzymes( 
+          selectAndMapAllEnzymeRecords(udsEzDBC),
+          enzymeId => selectAndMapEnzymeCleavageRecords( udsEzDBC, enzymeId ))
     })
   }
 
