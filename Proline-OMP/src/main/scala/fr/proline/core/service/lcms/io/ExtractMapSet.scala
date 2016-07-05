@@ -899,7 +899,7 @@ class ExtractMapSet(
               runMetrics
             )
 
-            if (peakelOpt.isDefined) {
+            if (peakelOpt.isDefined && peakelOpt.get._2) {
 
               val( peakel, isReliable) = peakelOpt.get
               val mzDbFt = _createMzDbFeature(
