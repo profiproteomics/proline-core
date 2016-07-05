@@ -118,7 +118,12 @@ public class Scoring implements Serializable {
 		XTANDEM_HYPERSCORE(
 			"xtandem", "hyperscore",
 			"The hyperscore provided by X!Tandem for a peptide match."
-		);
+		),
+		MAXQUANT_SCORE(
+			"maxquant","score",
+			"The score provided by MaxQuant for a peptide match."
+		)
+		;
 
 		private final String m_searchEngine;
 		private final String m_name;
