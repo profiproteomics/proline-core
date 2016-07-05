@@ -170,7 +170,7 @@ class ResultSetMerger(
     storerContext: StorerContext
   ) {
     
-    logger.debug("TARGET ResultSet Ids: " + resultSetIds.mkString("[",", ","]"))
+    logger.debug("TARGET ResultSet Ids: " + targetRsIds.mkString("[",", ","]"))
     logger.debug("DECOY ResultSet Ids: " + decoyRsIds.mkString("[",", ","]"))
 
     val targetRsCount = targetRsIds.length
