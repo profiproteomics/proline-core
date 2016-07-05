@@ -116,4 +116,19 @@ public class MasterQuantComponent implements Serializable {
 	this.masterQuantReporterIons = masterQuantReporterIons;
     }
 
+    @SuppressWarnings("unchecked")
+    public Map<String, Object> getSerializedPropertiesAsMap() throws Exception {
+	if ((serializedPropertiesMap == null) && (serializedProperties != null)) {
+	    serializedPropertiesMap = JsonSerializer.getMapper().readValue(getSerializedProperties(),
+		    Map.class);
+	}
+	return serializedPropertiesMap;
+    }
+
+    public void setSerializedPropertiesAsMap(Map<String, Object> serializedPropertiesMap) throws Exception {
+	this.serializedPropertiesMap = serializedPropertiesMap;
+	this.serializedProperties = JsonSerializer.getMapper().writeValueAsString(serializedPropertiesMap);
+    }
+
+    
 }
