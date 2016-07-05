@@ -13,6 +13,9 @@ import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
 import javax.persistence.Table;
 import java.util.Map;
+import javax.persistence.Transient;
+import fr.profi.util.StringUtils;
+import fr.proline.core.orm.util.JsonSerializer;
 
 /**
  * The persistent class for the consensus_spectrum database table.
