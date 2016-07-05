@@ -50,6 +50,9 @@ public class MasterQuantComponent implements Serializable {
     @OneToMany(mappedBy = "masterQuantComponent")
     private Set<MasterQuantReporterIon> masterQuantReporterIons;
 
+    @Transient
+    private Map<String, Object> serializedPropertiesMap;
+    
     public MasterQuantComponent() {
     }
 
