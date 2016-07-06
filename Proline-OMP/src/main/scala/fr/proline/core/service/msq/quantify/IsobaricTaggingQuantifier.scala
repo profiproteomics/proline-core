@@ -263,6 +263,7 @@ class IsobaricTaggingQuantifier(
     identifiedMs2QueryBySpectrumId: LongMap[Ms2Query]
   )( onEachSpectrum: (Long, IsobaricTaggingQuantifier.ISpectrum, Ms2Query) => Unit ): Unit = {
     
+    import fr.profi.mzdb.db.model.params.param.CVEntry
     import fr.profi.mzdb.model.SpectrumHeader
     
     val reporterIonDataSource = quantConfig.reporterIonDataSource
@@ -279,57 +280,122 @@ class IsobaricTaggingQuantifier(
       Some(new fr.profi.mzdb.MzDbReader(mzDbFilePathOpt.get, true) )
     }
     
-    lazy val ms3SpectraHeadersByParentSpecId = if(mzDbReaderOpt.isEmpty) LongMap.empty[ArrayBuffer[SpectrumHeader]]
+    lazy val ms3SpectraHeaderByMs2SpecId = if (mzDbReaderOpt.isEmpty) LongMap.empty[SpectrumHeader]
     else {
-      val spectraHeaders = mzDbReaderOpt.get.getSpectrumHeaders
-      val ms3ShMap = new LongMap[ArrayBuffer[SpectrumHeader]](spectraHeaders.length)
+      val mzDbReader = mzDbReaderOpt.get
       
-      var parentSpecInitialId = 0L
-      for( sh <- mzDbReaderOpt.get.getSpectrumHeaders ) {
-        if (sh.getMsLevel == 2 ) {
-          parentSpecInitialId = sh.getInitialId
+      // Enable meta-data loading
+      mzDbReader.enableScanListLoading()
+      mzDbReader.enablePrecursorListLoading()
+      
+      val spectraHeaders = mzDbReaderOpt.get.getSpectrumHeaders
+      val spectraHeadersByCycle = spectraHeaders.groupBy(_.getCycle)
+      val ms3ShMap = new LongMap[SpectrumHeader](spectraHeaders.length)
+      
+      for( (cycle, msnSpecHeadersInCycle) <- spectraHeadersByCycle ) {
+        
+        val ms2SpecHeadersInCycle = new ArrayBuffer[SpectrumHeader](msnSpecHeadersInCycle.length)
+        val ms3SpecHeadersInCycle = new ArrayBuffer[SpectrumHeader](msnSpecHeadersInCycle.length)
+        
+        for (sh <- msnSpecHeadersInCycle) {
+          if (sh.getMsLevel == 2) {
+            ms2SpecHeadersInCycle += sh
+          }
+          else if (sh.getMsLevel == 3) {
+            ms3SpecHeadersInCycle += sh
+          }
         }
-        else if (sh.getMsLevel == 3 ) {
-          ms3ShMap.getOrElseUpdate(parentSpecInitialId, new ArrayBuffer[SpectrumHeader]) += sh
+        
+        for (ms3SpecHeader <- ms3SpecHeadersInCycle) {
+          
+          val ms3SpecInitialId = ms3SpecHeader.getInitialId
+          //println( ms3SpecHeader.getElutionTime )
+          //println( ms3SpecInitialId )
+          //println( ms3SpecHeader.getMsLevel )
+          
+          val thermoMetaData = ms3SpecHeader.getScanList().getScans().get(0).getThermoMetaData()
+          assert(thermoMetaData != null, "Isobaric quantification of MS3 data is only supported for Thermo data")
+          
+          val ms1Target = thermoMetaData.getTargets().apply(0)
+          val ms1TargetMz = ms1Target.getMz
+          //println( "ms1TargetMz", ms1TargetMz )
+          
+          val( nearestMs2Sh, lowestDiff ) = ms2SpecHeadersInCycle.map { ms2Sh =>
+            val isolationWindow = ms2Sh.getPrecursor.getIsolationWindow
+            val isolationWindowTargetMz = isolationWindow.getCVParam(CVEntry.ISOLATION_WINDOW_TARGET_MZ).getValue.toFloat
+            ms2Sh -> math.abs(isolationWindowTargetMz - ms1TargetMz)
+          }.minBy { _._2 }
+
+          //println( "nearestMs2Sh.getPrecursorMz", nearestMs2Sh.getPrecursorMz )
+          
+          // Check m/z difference between nearestMs2Sh precursor m/z and ms2TargetMz is not too high
+          assert(
+            lowestDiff < 0.05,
+            s"Can't find an MS2 spectrum corresponding to the MS3 spectrum #$ms3SpecInitialId"
+          )
+          
+          val ms2SpecInitialId = nearestMs2Sh.getInitialId
+          assert(
+            ms3ShMap.contains(ms2SpecInitialId) == false,
+            s"The MS2 spectrum #$ms2SpecInitialId is already mapped to another MS3 spectrum (#${ms3ShMap(ms2SpecInitialId).getId}), "+
+            s"can't create a new mapping with MS3 spectrum #$ms3SpecInitialId"
+          )
+          
+          ms3ShMap.put(ms2SpecInitialId, ms3SpecHeader)
         }
-      }
+        
+      } // ends foreach spectraHeadersByCycle
       
       ms3ShMap
     }
     
+    val mzDbFileName = mzDbReaderOpt.map( mzdb => new java.io.File(mzdb.getDbLocation).getName ).getOrElse("")
+    
     try {
       val spectrumProvider = new SQLSpectrumProvider(msiDbCtx)
+      
+      // Iterate over the spectra
       spectrumProvider.foreachPeaklistSpectrum(peaklistId, loadPeaks = isProlineDataSource) { spectrum =>
         
         val identifiedMs2QueryOpt = identifiedMs2QueryBySpectrumId.get(spectrum.id)
         
         // Quantify only identified PSMs
-        if( identifiedMs2QueryOpt.isDefined ) {
+        if (identifiedMs2QueryOpt.isDefined) {
           val specId = spectrum.id
           val identifiedMs2Query = identifiedMs2QueryOpt.get
           
           reporterIonDataSource match {
             case ReporterIonDataSource.PROLINE_SPECTRUM => onEachSpectrum(specId, spectrum, identifiedMs2Query)
             case ReporterIonDataSource.MZDB_MS2_SPECTRUM => {
-              require( spectrum.firstScan > 0, s"undefined firstScan for spectrum #$specId: you may have used a wrong peaklist parsing rule")
+              require(
+                spectrum.firstScan > 0,
+                s"mzDB file $mzDbFileName: undefined firstScan for Proline spectrum #$specId, you may have provided a wrong peaklist software"
+              )
               
               val mzDbSpectrum = mzDbReaderOpt.get.getSpectrum(spectrum.firstScan)
               onEachSpectrum(specId, mzDbSpectrum, identifiedMs2Query)
             }
             case ReporterIonDataSource.MZDB_MS3_SPECTRUM => {
-              require( spectrum.firstScan > 0, s"undefined firstScan for spectrum #$specId: you may have used a wrong peaklist parsing rule")
+              require(
+                spectrum.firstScan > 0,
+                s"mzDB file $mzDbFileName: undefined firstScan for Proline spectrum #$specId, you may have provided a wrong peaklist software"
+              )
               
-              val mzDbReader = mzDbReaderOpt.get
-              val ms3ShsOpt = ms3SpectraHeadersByParentSpecId.get(spectrum.firstScan)
-              assert( ms3ShsOpt.isDefined, s"can't find MS3 spectra in mzDB file for Proline spectrum #$specId" )
+              val mzDbReader =  mzDbReaderOpt.get
+              val ms3ShOpt = ms3SpectraHeaderByMs2SpecId.get(spectrum.firstScan)
+              //assert( ms3ShsOpt.isDefined, s"can't find MS3 spectra in mzDB file for Proline spectrum #$specId" )
               
-              for( ms3Sh <- ms3ShsOpt.get ) {
-                onEachSpectrum(specId, mzDbReader.getSpectrum(ms3Sh.getId), identifiedMs2Query)
+              if (ms3ShOpt.isDefined) {
+                onEachSpectrum(specId, mzDbReader.getSpectrum(ms3ShOpt.get.getId), identifiedMs2Query)
+              } else {
+                logger.warn(s"can't find an MS3 spectrum in the mzDB file $mzDbFileName for Proline MS2 spectrum #$specId")
               }
-            }
+              
+            } // ends case ReporterIonDataSource.MZDB_MS3_SPECTRUM
           }
-        }
-      }
+        } // ends if (identifiedMs2QueryOpt.isDefined)
+      } // ends foreachPeaklistSpectrum
+      
     } finally {
       if (mzDbReaderOpt.isDefined) {
         mzDbReaderOpt.get.close()

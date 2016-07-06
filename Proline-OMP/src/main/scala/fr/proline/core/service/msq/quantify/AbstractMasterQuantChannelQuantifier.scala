@@ -92,9 +92,11 @@ abstract class AbstractMasterQuantChannelQuantifier extends LazyLogging {
    * in each specific quantifier.
    */
   def quantify() = {
-
+    
     // Check if the quantification has been already performed
     require(_quantified==false,"This master quant channel has been already quantified")
+    
+    this.logger.info(s"Quantification of master quant channel with id=${udsMasterQuantChannel.getId} has started !")
 
     // Run the quantification process
     this.quantifyMasterChannel()
