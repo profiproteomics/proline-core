@@ -247,7 +247,8 @@ case class ResultSet(
 case class ResultSetProperties(
   @BeanProperty var targetDecoyMode: Option[String] = None, // CONCATENATED | SEPARATED
   @BeanProperty var mascotImportProperties: Option[MascotImportProperties] = None,
-  @BeanProperty var omssaImportProperties: Option[OmssaImportProperties] = None
+  @BeanProperty var omssaImportProperties: Option[OmssaImportProperties] = None,
+  @BeanProperty var xtandemImportProperties: Option[XTandemImportProperties] = None
 )
 
 case class MascotImportProperties(
@@ -262,6 +263,10 @@ case class MascotImportProperties(
 )
 
 case class OmssaImportProperties(
+  @BeanProperty var rawSettings: Option[Map[String, String]] = None
+)
+
+case class XTandemImportProperties(
   @BeanProperty var rawSettings: Option[Map[String, String]] = None
 )
 
