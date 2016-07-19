@@ -23,7 +23,7 @@ import fr.profi.mzdb.model.{ Feature => MzDbFeature, Peak => MzDbPeak, Peakel =>
 import fr.profi.mzdb.model.PeakelDataMatrix
 import fr.profi.mzdb.model.PutativeFeature
 import fr.profi.mzdb.model.SpectrumData
-import fr.profi.mzdb.utils.ms.MsUtils
+import fr.profi.mzdb.util.ms.MsUtils
 import fr.profi.util.collection._
 import fr.profi.util.ms.massToMoz
 import fr.profi.util.metrics.Metric
