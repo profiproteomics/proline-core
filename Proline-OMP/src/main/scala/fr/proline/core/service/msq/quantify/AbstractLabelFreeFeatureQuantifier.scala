@@ -8,7 +8,6 @@ import scala.collection.mutable.LongMap
 import com.typesafe.scalalogging.LazyLogging
 import fr.profi.jdbc.easy._
 import fr.profi.mzdb.MzDbReader
-import fr.profi.mzdb.utils.ms.MsUtils
 import fr.profi.util.collection._
 import fr.profi.util.serialization.ProfiJson
 import fr.proline.context.DatabaseConnectionContext
