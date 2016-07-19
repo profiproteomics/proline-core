@@ -8,9 +8,11 @@ import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.HashMap
 import scala.collection.mutable.ListBuffer
 
+/*
 import org.biojava.bio.proteomics.MassCalc
 import org.biojava.bio.seq.ProteinTools
 import org.biojava.bio.symbol.SymbolPropertyTable
+*/
 
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize
@@ -23,6 +25,8 @@ import fr.profi.util.misc.InMemoryIdGen
 import fr.profi.util.ms.massToMoz
 
 object Peptide extends InMemoryIdGen with LazyLogging {
+  
+  private val massComputer = new fr.profi.chemistry.algo.MassComputer(fr.profi.chemistry.model.ProteinogenicAminoAcidTable)
   
   // TODO: use this pattern everywhere empty arrays may be created
   final val EMPTY_PTM_ARRAY = Array.empty[LocatedPtm]
@@ -172,36 +176,38 @@ object Peptide extends InMemoryIdGen with LazyLogging {
     
     mass
   }
-  
-  def calcMass( sequence: String ): Double = {
-    require( sequence != null, "sequence is null" )
-    
-    var mass : Double = 0
-    
+
+  def calcMass(sequence: String): Double = {
+    require(sequence != null, "sequence is null")
+
+    var mass: Double = 0
+
     // FIXME: find another way to deal with ambiguous residues
-    import fr.profi.util.regex.RegexUtils._
+    //import fr.profi.util.regex.RegexUtils._
 
-      val massCalcObject = new MassCalc(SymbolPropertyTable.MONO_MASS, false)
-      massCalcObject.setSymbolModification('U', 150.95363)
-      massCalcObject.setSymbolModification('O', 255.158295)
-      massCalcObject.setSymbolModification('B', 114.53494)
-      massCalcObject.setSymbolModification('X', 111.0)
-      massCalcObject.setSymbolModification('Z', 128.55059)
-      massCalcObject.setSymbolModification('J', 113.084064)
+    /*val massCalcObject = new MassCalc(SymbolPropertyTable.MONO_MASS, false)
+    massCalcObject.setSymbolModification('U', 150.95363)
+    massCalcObject.setSymbolModification('O', 255.158295)
+    massCalcObject.setSymbolModification('B', 114.53494)
+    massCalcObject.setSymbolModification('X', 111.0)
+    massCalcObject.setSymbolModification('Z', 128.55059)
+    massCalcObject.setSymbolModification('J', 113.084064)*/
 
-      mass = try {
-        //        new MassCalc(SymbolPropertyTable.MONO_MASS, false).getMass( ProteinTools.createProtein(sequence) )
-        massCalcObject.getMass(ProteinTools.createProtein(sequence))
-      } catch {
-        case e: Exception => Double.NaN
-      }
-    
-    if( mass.isNaN() ) {
-      throw new Exception("can't compute peptide mass for sequence="+sequence)
+    mass = try {
+      massComputer.computeMass(sequence)
+      // new MassCalc(SymbolPropertyTable.MONO_MASS, false).getMass( ProteinTools.createProtein(sequence) )
+      // massCalcObject.getMass(ProteinTools.createProtein(sequence))
+      
+    } catch {
+      case e: Exception => Double.NaN
     }
-    
+
+    if (mass.isNaN()) {
+      throw new Exception("can't compute peptide mass for sequence=" + sequence)
+    }
+
     mass
-    
+
   }
 
 }

@@ -90,6 +90,12 @@ object BuildProtein extends InMemoryIdGen {
 
 // TODO: merge with BuildProtein object when the Protein case class has been removed
 object Protein extends InMemoryIdGen {
+  
+  import fr.profi.chemistry.algo._
+  import fr.profi.chemistry.model.ProteinogenicAminoAcidTable
+  
+  private val massComputer = new MassComputer(ProteinogenicAminoAcidTable, MassPrecision.AVERAGE)
+  private val piComputer = new IsoelectricPointComputer(ProteinogenicAminoAcidTable)
 
   /** A percentage (between 0 and 100) expressing the sequence coverage of the protein */
   def calcSequenceCoverage(protSeqLength: Int, seqPositions: Iterable[Tuple2[Int, Int]]): Float = {
@@ -108,7 +114,7 @@ object Protein extends InMemoryIdGen {
     coverage
   }
 
-  import org.biojava.bio.BioException
+  /*import org.biojava.bio.BioException
   import org.biojava.bio.proteomics._
   import org.biojava.bio.seq._
   import org.biojava.bio.symbol._
@@ -119,21 +125,28 @@ object Protein extends InMemoryIdGen {
     } catch {
       case e: BioException => Double.NaN
     }
-  }
+  }*/
 
-  def calcPI(sequence: String): Float = {
+  /*def calcPI(sequence: String): Float = {
     try {
       (new IsoelectricPointCalc().getPI(ProteinTools.createProtein(sequence), true, true)).toFloat
     } catch {
       case e: IllegalAlphabetException => Float.NaN
       case be: BioException            => Float.NaN
     }
+  }*/
+  
+  def calcMass(sequence: String): Double = {
+    try {
+      massComputer.computeMass(sequence)
+    } catch {
+      case e: Exception => Double.NaN
+    }
   }
+  
+  def calcPI(sequence: String): Float = piComputer.computePI(sequence)
 
-  // TODO: compute the CRC64
-  def calcCRC64(sequence: String): String = {
-    null
-  }
+  def calcCRC64(sequence: String): String = fr.profi.util.HashingUtils.crc64Hex(sequence)
 
 }
 
@@ -216,10 +229,26 @@ case class ProteinMatch(
 
 case class ProteinMatchProperties()
 
- 
+/*
+// TODO: change the API to use the ProteinSetItem case class ???
+case class ProteinSetItem(
+   
+  // Required fields
+  val proteinMatch: ProteinMatch,
+  
+  // Mutable optional fields
+  val isInSubset: Boolean,
+  val coverage: Float,
+  
+  var properties: Option[ProteinSetItemProperties] = None
+)
+
+case class ProteinSetItemProperties()
+*/
+
 object ProteinSet extends InMemoryIdGen
 
-case class ProteinSet ( 
+case class ProteinSet( 
   // Required fields
   @transient val peptideSet: PeptideSet,
   var hasPeptideSubset: Boolean,
@@ -250,7 +279,7 @@ case class ProteinSet (
   var selectionLevel: Int = 2,
   
   var properties: Option[ProteinSetProperties] = None,
-  var proteinMatchPropertiesById: Map[Long, ProteinMatchResultSummaryProperties ] = null
+  var proteinMatchPropertiesById: Map[Long, ProteinMatchResultSummaryProperties] = null
 ) {
 
   @JsonProperty lazy val peptideSetId = peptideSet.id
