@@ -188,6 +188,8 @@ class IsobaricTaggingWithLabelFreeEntitiesSummarizer(
   //type CombinedQIons = (QuantPeptideIon,MasterQuantPeptideIon,Long)
   private val childMapsCount = lcmsMapSet.childMaps.length
   
+  type LFQPepIon = (QuantPeptideIon,MasterQuantPeptide,Int)
+  
   def computeMasterQuantPeptides(
     masterQuantChannel: MasterQuantChannel,
     quantMergedRSM: ResultSummary,
@@ -247,7 +249,7 @@ class IsobaricTaggingWithLabelFreeEntitiesSummarizer(
     )
     
     // Convert master quant peptides into quant peptides ions mapped by their corresponding identification RSM id
-    val lfQPepIonsByIdentRsmId = new LongMap[ArrayBuffer[(QuantPeptideIon,Int)]](childMapsCount)
+    val lfQPepIonsByIdentRsmId = new LongMap[ArrayBuffer[LFQPepIon]](childMapsCount)
     val approxQPepIonsCount = lfMqPeptides.length * 2
     
     for(
@@ -256,8 +258,8 @@ class IsobaricTaggingWithLabelFreeEntitiesSummarizer(
       (qcId,qPepIon) <- mqPepIon.quantPeptideIonMap
     ) {
       val identRsmId = identRsmIdByFakeQcId(qcId)
-      val qPepIons = lfQPepIonsByIdentRsmId.getOrElseUpdate(identRsmId, new ArrayBuffer[(QuantPeptideIon,Int)](approxQPepIonsCount))
-      qPepIons += Tuple2(qPepIon, mqPepIon.charge)
+      val qPepIons = lfQPepIonsByIdentRsmId.getOrElseUpdate(identRsmId, new ArrayBuffer[LFQPepIon](approxQPepIonsCount))
+      qPepIons += Tuple3(qPepIon, mqPep, mqPepIon.charge)
     }
     
     val isoMqPepIonsByChargeByPepId = new LongMap[LongMap[ArrayBuffer[MasterQuantPeptideIon]]](lfMqPeptides.length)
@@ -270,8 +272,8 @@ class IsobaricTaggingWithLabelFreeEntitiesSummarizer(
       
       // Retrieve label-free quant peptides for this child RSM
       val lfQPepIons = lfQPepIonsByIdentRsmId(identRsmId)
-      val lfQPepIonByPepIdAndCharge = Map() ++ lfQPepIons.map { case (qPepIon,charge) =>
-        (qPepIon.peptideId.get,charge) -> qPepIon
+      val lfQPepIonByPepIdAndCharge = Map() ++ lfQPepIons.map { case (qPepIon,mqPep,charge) =>
+        (mqPep.id,charge) -> qPepIon
       }
       
       // Summarize MQ peptides from MQ reporter ions quantified in this RSM
