@@ -341,13 +341,14 @@ class IsobaricTaggingWithLabelFreeEntitiesSummarizer(
     
     for(
       (pepId,combinedQPepIonsByCharge) <- combinedQPepIonsByChargeByPepId;
+      if combinedQPepIonsByCharge.nonEmpty; // Exclude identified but not quantified peptides
       lfMqPep <- lfMqPepByPepId.get(pepId) // TODO: check why not always defined
     ) {
       
       val lfMqPepIonByCharge = lfMqPep.masterQuantPeptideIons.mapByLong(_.charge)
       val isoMqPepIonsByCharge = isoMqPepIonsByChargeByPepId(pepId)
       
-      val combinedMqPepIons = for( (charge, combinedQPepIons ) <- combinedQPepIonsByCharge) yield {
+      val combinedMqPepIons = for( (charge, combinedQPepIons) <- combinedQPepIonsByCharge) yield {
         val lfMqPepIon = lfMqPepIonByCharge(charge)
         val isoMqPepIons = isoMqPepIonsByCharge(charge)
         
