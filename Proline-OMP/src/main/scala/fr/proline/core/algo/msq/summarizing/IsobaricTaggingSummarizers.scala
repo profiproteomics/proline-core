@@ -276,13 +276,16 @@ class IsobaricTaggingWithLabelFreeEntitiesSummarizer(
         (mqPep.id,charge) -> qPepIon
       }
       
+      val rsmOpt = resultSummaries.find(_.id == identRsmId)
+      assert( rsmOpt.isDefined, "can't find the identified result summary with id="+ identRsmId)
+      
       // Summarize MQ peptides from MQ reporter ions quantified in this RSM
       val isobaricMqPeps = new IsobaricTaggingEntitiesSummarizer(
         mqReporterIons
-      ).computeMasterQuantPeptides(masterQuantChannel, quantMergedRSM, resultSummaries)
+      ).computeMasterQuantPeptides(masterQuantChannel, quantMergedRSM, Array(rsmOpt.get) )
       
       // Combine isobaric MQ peptides with label-free quant peptides
-      for( isoMqPep <- isobaricMqPeps ) {
+      for (isoMqPep <- isobaricMqPeps) {
         val peptideId = isoMqPep.peptideInstance.get.peptideId
         
         val isoMqPepIonsByCharge = isoMqPepIonsByChargeByPepId.getOrElseUpdate(
