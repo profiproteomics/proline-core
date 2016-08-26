@@ -1,17 +1,19 @@
 package fr.proline.core.orm.msi.dto;
 
 import fr.proline.core.orm.msi.ResultSummary;
+import fr.proline.core.orm.msi.Peptide;
 
 
 public class DPeptideInstance {
 
 	private long m_id;
 	private long m_peptideId;
+	private Peptide m_peptide;
 	private int m_validatedProteinSetCount;
 	private Float m_elutionTime;
 	
+	
 	private DPeptideMatch m_bestPeptideMatch;
-	//private SequenceMatch m_sequenceMatch; // JPM.TODO : to be removed
 	
 	private ResultSummary resultSummary;
 	
@@ -22,7 +24,7 @@ public class DPeptideInstance {
         m_peptideId = peptideId;
         
         m_bestPeptideMatch = null;
-        //m_sequenceMatch = null;
+        m_peptide = null;
     }
 	
     public long getId() {
@@ -31,6 +33,14 @@ public class DPeptideInstance {
 
     public long getPeptideId() {
     	return m_peptideId;
+    }
+    
+    public void setPeptide(Peptide p) {
+    	m_peptide = p;
+    }
+    
+    public Peptide getPeptide() {
+        return m_peptide;
     }
     
     public int getValidatedProteinSetCount() {
@@ -56,12 +66,5 @@ public class DPeptideInstance {
 	public void setResultSummary(ResultSummary resultSummary) {
 		this.resultSummary = resultSummary;
 	}
-    
-    /*public SequenceMatch getSequenceMatch() {
-    	return m_sequenceMatch;
-    }
-    
-    public void setSequenceMatch(SequenceMatch sequenceMatch) {
-    	m_sequenceMatch = sequenceMatch;
-    }*/
+
 }
