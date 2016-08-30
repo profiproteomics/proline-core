@@ -5,13 +5,17 @@ import fr.proline.core.orm.msi.MasterQuantComponent;
 import fr.proline.core.orm.msi.ResultSummary;
 import fr.proline.core.orm.msi.dto.DPeptideInstance;
 import fr.proline.core.orm.msi.dto.DQuantPeptideIon;
+
 import java.util.List;
 import java.util.Map;
+
 import com.fasterxml.jackson.core.type.TypeReference;
+
 import fr.proline.core.orm.msi.MasterQuantPeptideIon;
 import fr.proline.core.orm.msi.Peptide;
 import fr.proline.core.orm.msi.PeptideInstance;
 import fr.proline.core.orm.util.JsonSerializer;
+
 import java.util.HashMap;
 
 /**
@@ -29,6 +33,7 @@ public class DMasterQuantPeptideIon {
     private int m_charge;
     private double m_moz;
     private float m_elutionTime;
+    private Long m_lcmsMasterFeatureId;
     
     public DMasterQuantPeptideIon() {
         
@@ -42,6 +47,7 @@ public class DMasterQuantPeptideIon {
         m_charge = mqpi.getCharge();
         m_moz = mqpi.getMoz();
         m_elutionTime = mqpi.getElutionTime();
+        m_lcmsMasterFeatureId = mqpi.getLcmsMasterFeatureId();
     }
     
     public DMasterQuantPeptideIon(PeptideInstance pi, MasterQuantPeptideIon mqpi, Peptide p) {
@@ -54,6 +60,7 @@ public class DMasterQuantPeptideIon {
         m_elutionTime = mqpi.getElutionTime();
         m_peptideInstance = new DPeptideInstance(pi.getId(), p.getId(), pi.getValidatedProteinSetCount(), pi.getElutionTime());
         m_peptideInstance.setPeptide(p);
+        m_lcmsMasterFeatureId = mqpi.getLcmsMasterFeatureId();
     }
     
     
@@ -109,6 +116,14 @@ public class DMasterQuantPeptideIon {
         return m_quantPeptideIonByQchIds;
     }
 
+    public Long getLcmsMasterFeatureId() {
+    	return m_lcmsMasterFeatureId;
+    }
+
+    public void setLcmsMasterFeatureId(final Long pLcmsMasterFeatureId) {
+    	m_lcmsMasterFeatureId = pLcmsMasterFeatureId;
+    }
+    
     public void setQuantPeptideIonByQchIds(Map<Long, DQuantPeptideIon> quantPeptideIonByQchIds) {
         this.m_quantPeptideIonByQchIds = quantPeptideIonByQchIds;
     }
