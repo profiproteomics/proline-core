@@ -1123,6 +1123,8 @@ class ExtractMapSet(
     // Put PSMs into a matrix structure to optimize the lookup operations
     val lastSpecNumber = scanSequence.scans.last.initialId
     val pepMatchesMatrix = new Array[ArrayBuffer[PeptideMatch]](lastSpecNumber + 1)
+    logger.debug(s"Last spectrum initial ID of run ${scanSequence.runId} is $lastSpecNumber" )
+    
     for ( (specNum,pepMatches) <- pepMatchesBySpectrumNumber) {
       pepMatchesMatrix(specNum.toInt) = pepMatches
     }
