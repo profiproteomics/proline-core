@@ -86,8 +86,11 @@ trait IMQProteinSetSummarizer {
               pepMatchesCountByQcId.getOrElseUpdate(qcId,0)
               pepMatchesCountByQcId(qcId) += quantPep.peptideMatchesCount
               
-              pepCountByQcId.getOrElseUpdate(qcId,0)
-              pepCountByQcId(qcId) += 1
+              if (quantPep.peptideMatchesCount > 0) {
+                pepCountByQcId.getOrElseUpdate(qcId,0)
+                pepCountByQcId(qcId) += 1
+              }
+
             }
             
             for (mqPepIon <- mqPep.masterQuantPeptideIons) {
