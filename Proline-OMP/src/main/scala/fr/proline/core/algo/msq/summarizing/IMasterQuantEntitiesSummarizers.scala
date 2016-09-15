@@ -57,6 +57,7 @@ trait IMQProteinSetSummarizer {
       val abundanceSumByQcId = new LongMap[Float](qcCount)
       val rawAbundanceSumByQcId = new LongMap[Float](qcCount)
       val pepMatchesCountByQcId = new LongMap[Int](qcCount)
+      val pepCountByQcId = new LongMap[Int](qcCount)
       
       for( mergedPepInst <- mergedPepInsts ) {
         
@@ -84,6 +85,9 @@ trait IMQProteinSetSummarizer {
   
               pepMatchesCountByQcId.getOrElseUpdate(qcId,0)
               pepMatchesCountByQcId(qcId) += quantPep.peptideMatchesCount
+              
+              pepCountByQcId.getOrElseUpdate(qcId,0)
+              pepCountByQcId(qcId) += 1
             }
             
             for (mqPepIon <- mqPep.masterQuantPeptideIons) {
@@ -99,7 +103,10 @@ trait IMQProteinSetSummarizer {
           rawAbundance = rawAbundanceSumByQcId(qcId),
           abundance = abundanceSum,
           peptideMatchesCount = pepMatchesCountByQcId(qcId),
+          peptidesCount = Some(pepCountByQcId(qcId)),
           quantChannelId = qcId,
+          proteinSetId = None,
+          proteinMatchId = None,
           selectionLevel = 2
         )
       }

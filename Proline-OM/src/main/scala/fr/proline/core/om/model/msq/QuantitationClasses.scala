@@ -466,14 +466,21 @@ case class QuantProteinSet(
   val rawAbundance: Float,
   var abundance: Float,
   val peptideMatchesCount: Int,
-  // TODO: add peptidesCount: Int => need to update MSIdb
+  
+  // TODO: fill this value and update the MSIdb
+  @JsonDeserialize(contentAs = classOf[java.lang.Integer] )
+  val peptidesCount: Option[Int] = None,
+  
   val quantChannelId: Long,
+  
   // TODO: fill this value
   @JsonDeserialize(contentAs = classOf[java.lang.Long] )
   val proteinSetId: Option[Long] = None,
+  
   // TODO: fill this value
   @JsonDeserialize(contentAs = classOf[java.lang.Long] )
   val proteinMatchId: Option[Long] = None,
+  
   var selectionLevel: Int
 ) extends QuantComponent
 
