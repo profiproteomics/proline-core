@@ -106,7 +106,7 @@ trait IMQProteinSetSummarizer {
           rawAbundance = rawAbundanceSumByQcId(qcId),
           abundance = abundanceSum,
           peptideMatchesCount = pepMatchesCountByQcId(qcId),
-          peptidesCount = Some(pepCountByQcId(qcId)),
+          peptidesCount = pepCountByQcId.get(qcId),
           quantChannelId = qcId,
           proteinSetId = None,
           proteinMatchId = None,
