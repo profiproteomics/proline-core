@@ -583,7 +583,8 @@ class ExtractMapSet(
 
         // Link peakels to peptides
         this.logger.debug("linking peakels to peptides...")
-        val psmByScanNumber = peptideMatchByRunIdAndScanNumber.map(_(lcMsRun.id)).getOrElse(LongMap.empty[ArrayBuffer[PeptideMatch]])
+        //val psmByScanNumber = peptideMatchByRunIdAndScanNumber.map(_(lcMsRun.id)).getOrElse(LongMap.empty[ArrayBuffer[PeptideMatch]])
+        val psmByScanNumber = peptideMatchByRunIdAndScanNumber.flatMap(_.get(lcMsRun.id)).getOrElse(LongMap.empty[ArrayBuffer[PeptideMatch]])
 
         // Map detected peakels
         val peakelMatches = _buildPeakelMatches(
