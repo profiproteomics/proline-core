@@ -106,7 +106,7 @@ class SpectraParamsUpdater(
           ezDBC.execute( "UPDATE spectrum SET " + attrsToUpdate.mkString(",") + " WHERE id = " + spectrumId )
           updatedSpectraCount += 1
         } else {
-          this.logger.trace(s"Can't use parsing rule #$specTitleRuleId to parse information from spectrum title: " + spectrumTitle)
+          this.logger.trace(s"Can't use parsing rule #$specTitleRuleId to parse information from spectrum title: #$spectrumTitle ")
         }
         
         ()

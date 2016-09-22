@@ -287,7 +287,14 @@ class WeightedSpectralCountQuantifier(
 		
 		val newChilds = newChildsBuilder.result
 		if(!newChilds.isEmpty){
-		  resultMap ++=  createRSMHierarchyMap(newChilds, tmpChildPerParentMap)
+      val returnedResultMap = createRSMHierarchyMap(newChilds, tmpChildPerParentMap)
+		  returnedResultMap.foreach(entry => {
+		    val retParentId = entry._1
+        val retChildList = entry._2
+        val childList = resultMap.getOrElseUpdate(retParentId, new ArrayBuffer[Long]())
+        childList ++=retChildList
+        resultMap.put(retParentId,childList )
+		  })		  		 
 		}
               
 		resultMap
