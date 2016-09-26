@@ -18,6 +18,7 @@ import fr.proline.core.om.provider.msi.impl.ORMResultSetProvider
 import fr.proline.core.om.provider.msi.impl.SQLResultSetProvider
 import fr.proline.core.om.storer.msi.RsmStorer
 import fr.proline.core.algo.msq.spectralcount.PepInstanceFilteringLeafSCUpdater
+import fr.proline.core.algo.msi.filtering.proteinset.PeptidesCountPSFilter
 
 // TODO: use this config in the constructors
 case class ValidationConfig(
@@ -354,7 +355,7 @@ class ResultSetValidator(
   }
 
   private def _validateProteinSets(targetRsm: ResultSummary, rsmValProperties: RsmValidationProperties): Option[MsiRocCurve] = {
-    if (protSetFilters.isEmpty && protSetValidator.isEmpty) return None
+//    if (protSetFilters.isEmpty && protSetValidator.isEmpty) return None
 
     val filterDescriptors = new ArrayBuffer[FilterDescriptor]()
     var finalValidationResult: ValidationResult = null
@@ -382,6 +383,9 @@ class ResultSetValidator(
 
     >>>
 
+    val tdModeStr = targetRsm.resultSet.get.properties.get.targetDecoyMode.get
+    val tdMode = TargetDecoyModes.withName(tdModeStr)
+
     // If define, execute protein set validator  
     val rocCurveOpt = if (protSetValidator.isEmpty) None
     else {
@@ -389,8 +393,6 @@ class ResultSetValidator(
       logger.debug("Run protein set validator: " + protSetValidator.get.toFilterDescriptor.parameter)
 
       // Update the target/decoy mode of the protein set validator for this RSM
-      val tdModeStr = targetRsm.resultSet.get.properties.get.targetDecoyMode.get
-      val tdMode = TargetDecoyModes.withName(tdModeStr)
       protSetValidator.get.targetDecoyMode = Some(tdMode)
 
       val valResults = protSetValidator.get.validateProteinSets(targetRsm)
@@ -414,9 +416,19 @@ class ResultSetValidator(
       val decoyMatchesCount = if (targetRsm.decoyResultSummary == null || targetRsm.decoyResultSummary.isEmpty) None
       else Some(targetRsm.decoyResultSummary.get.proteinSets.count(_.isValidated))
 
+      //Compute FDR 
+      var fdr : Option[Float] = None
+      if(decoyMatchesCount.isDefined){             
+        tdMode match {
+          case TargetDecoyModes.CONCATENATED => { fdr = Some(TargetDecoyComputer.calcCdFDR(targetMatchesCount, decoyMatchesCount.get)) }
+          case TargetDecoyModes.SEPARATED    => { fdr = Some(TargetDecoyComputer.calcSdFDR(targetMatchesCount, decoyMatchesCount.get)) }    
+        }
+      }
+      
       RsmValidationResultProperties(
         targetMatchesCount = targetMatchesCount,
-        decoyMatchesCount = decoyMatchesCount
+        decoyMatchesCount = decoyMatchesCount,
+        fdr = fdr
       )
     } else {
       RsmValidationResultProperties(
