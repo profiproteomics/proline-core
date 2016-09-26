@@ -100,7 +100,7 @@ class RSMProtSetFiltererF136482Test extends StrictLogging {
     Assert.assertTrue(tRSM.properties.isDefined)
 
     var protFilterPropsOpt = tRSM.properties.get.getValidationProperties.get.getParams.getProteinFilters
-    Assert.assertFalse(protFilterPropsOpt.isDefined)
+    Assert.assertTrue(protFilterPropsOpt.isDefined)
     Assert.assertTrue("all targetRSM ProteinSet should validated ", tRSM.proteinSets.count(!_.isValidated) == 0)
 //    Assert.assertTrue("all decoyRSM  ProteinSet should validated ", dRSM.get.proteinSets.count(!_.isValidated) == 0)
 
