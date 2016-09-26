@@ -7,6 +7,7 @@ import com.typesafe.scalalogging.LazyLogging
 import fr.proline.core.algo.msi.filtering._
 import fr.proline.core.algo.msi.validation.MascotValidationHelper
 import fr.proline.core.om.model.msi.ProteinSet
+import fr.profi.util.primitives._
 
 object ScoreProtSetFilter {
   val thresholdStartValue = 0.0f
@@ -45,6 +46,6 @@ class ScoreProtSetFilter(
   def getThresholdValue(): AnyVal = scoreThreshold
   
   def setThresholdValue( currentVal: AnyVal ){
-    scoreThreshold = currentVal.asInstanceOf[Float]
+    scoreThreshold = toFloat(currentVal)
   }
 }
