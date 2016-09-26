@@ -383,8 +383,11 @@ class ResultSetValidator(
 
     >>>
 
-    val tdModeStr = targetRsm.resultSet.get.properties.get.targetDecoyMode.get
-    val tdMode = TargetDecoyModes.withName(tdModeStr)
+    
+    val tdModeOpt = if(targetRsm.resultSet.get.properties.isDefined && targetRsm.resultSet.get.properties.get.targetDecoyMode.isDefined){
+      val tdModeStr = targetRsm.resultSet.get.properties.get.targetDecoyMode.get  
+      Some(TargetDecoyModes.withName(tdModeStr))
+    } else None
 
     // If define, execute protein set validator  
     val rocCurveOpt = if (protSetValidator.isEmpty) None
@@ -393,7 +396,7 @@ class ResultSetValidator(
       logger.debug("Run protein set validator: " + protSetValidator.get.toFilterDescriptor.parameter)
 
       // Update the target/decoy mode of the protein set validator for this RSM
-      protSetValidator.get.targetDecoyMode = Some(tdMode)
+      protSetValidator.get.targetDecoyMode = tdModeOpt
 
       val valResults = protSetValidator.get.validateProteinSets(targetRsm)
       finalValidationResult = valResults.finalResult
@@ -418,8 +421,8 @@ class ResultSetValidator(
 
       //Compute FDR 
       var fdr : Option[Float] = None
-      if(decoyMatchesCount.isDefined && decoyMatchesCount.get > 0){             
-        tdMode match {
+      if(decoyMatchesCount.isDefined && decoyMatchesCount.get > 0 && tdModeOpt.isDefined){             
+        tdModeOpt.get match {
           case TargetDecoyModes.CONCATENATED => { fdr = Some(TargetDecoyComputer.calcCdFDR(targetMatchesCount, decoyMatchesCount.get)) }
           case TargetDecoyModes.SEPARATED    => { fdr = Some(TargetDecoyComputer.calcSdFDR(targetMatchesCount, decoyMatchesCount.get)) }    
         }
