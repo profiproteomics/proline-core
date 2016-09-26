@@ -77,22 +77,23 @@ class IterativeMapAligner extends ILcmsMapAligner with LazyLogging {
     for (map <- lcmsMaps) {
       if (map.id != currentRefMap.id) { // skip current reference map
 
-        val mapAlnSet = mapAlnSetByMapId(map.id)
+        mapAlnSetByMapId.get(map.id).map { mapAlnSet =>
 
-        var distance: Float = 0 // mean of delta times
-        var nbLandmarks = 0
+          var distance: Float = 0 // mean of delta times
+          var nbLandmarks = 0
 
-        for (mapAln <- mapAlnSet.mapAlignments) {
-          val deltaTimeList = mapAln.deltaTimeList.toList
-          distance += deltaTimeList.sum
-          nbLandmarks += deltaTimeList.length
+          for (mapAln <- mapAlnSet.mapAlignments) {
+            val deltaTimeList = mapAln.deltaTimeList.toList
+            distance += deltaTimeList.sum
+            nbLandmarks += deltaTimeList.length
+          }
+
+          if (distance > 0) distance /= nbLandmarks
+
+          mapDistanceByIdBuilder += (map.id -> distance)
+
+          //print map.id .": " .distance."\n"
         }
-
-        if (distance > 0) distance /= nbLandmarks
-
-        mapDistanceByIdBuilder += (map.id -> distance)
-
-        //print map.id .": " .distance."\n"
       }
     }
 
