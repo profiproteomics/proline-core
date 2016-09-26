@@ -418,7 +418,7 @@ class ResultSetValidator(
 
       //Compute FDR 
       var fdr : Option[Float] = None
-      if(decoyMatchesCount.isDefined){             
+      if(decoyMatchesCount.isDefined && decoyMatchesCount.get > 0){             
         tdMode match {
           case TargetDecoyModes.CONCATENATED => { fdr = Some(TargetDecoyComputer.calcCdFDR(targetMatchesCount, decoyMatchesCount.get)) }
           case TargetDecoyModes.SEPARATED    => { fdr = Some(TargetDecoyComputer.calcSdFDR(targetMatchesCount, decoyMatchesCount.get)) }    
