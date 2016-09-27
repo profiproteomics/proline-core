@@ -8,9 +8,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import fr.proline.core.orm.msi.MasterQuantPeptideIon;
 import fr.proline.core.orm.util.JsonSerializer;
+
 
 
 /**
@@ -52,21 +55,23 @@ public class DMasterQuantPeptide {
 	DCluster m_cluster;
 	
 	
-	public DMasterQuantPeptide(long m_id, 
-			int m_selectionLevel, long m_objectTreeId,
-			String m_serializedProperties, Long m_quantResultSummaryId) {
+	public DMasterQuantPeptide(long id, 
+			int selectionLevel, long objectTreeId,
+			String serializedProperties, Long quantResultSummaryId) {
 		super();
-		this.m_id = m_id;
-		this.m_selectionLevel = m_selectionLevel;
-		this.m_objectTreeId = m_objectTreeId;
-		this.m_serializedProperties = m_serializedProperties;
-		this.m_quantResultSummaryId = m_quantResultSummaryId;
+		m_id = id;
+		m_selectionLevel = selectionLevel;
+		m_objectTreeId = objectTreeId;
+		m_serializedProperties = serializedProperties;
+		m_quantResultSummaryId = quantResultSummaryId;
 	}
 
 	public Map<Long, DQuantPeptide> parseQuantPeptideFromProperties(String quantPeptideData){
 
 		try {
-			List<DQuantPeptide> quantPeptides = JsonSerializer.getMapper().readValue(quantPeptideData, new TypeReference<List<DQuantPeptide>>() {});
+			ObjectMapper objectMapper = JsonSerializer.getMapper();
+			objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+			List<DQuantPeptide> quantPeptides = objectMapper.readValue(quantPeptideData, new TypeReference<List<DQuantPeptide>>() {});
 			
 			m_quantPeptideByQchIds = new HashMap<Long, DQuantPeptide>();		
 			for(int i=0;i<quantPeptides.size();i++){
@@ -138,7 +143,8 @@ public class DMasterQuantPeptide {
 		if ((m_mqPeptideProperties == null) && (m_serializedProperties != null)) {
 			try {
     			//	Parse properties to get Values
-				m_mqPeptideProperties =JsonSerializer.getMapper().readValue(m_serializedProperties,  MasterQuantPeptideProperties.class);
+				ObjectMapper objectMapper = JsonSerializer.getMapper();
+				m_mqPeptideProperties = objectMapper.readValue(m_serializedProperties,  MasterQuantPeptideProperties.class);
     		} catch(Exception e){
     			LOG.warn(" Error parsiong MasterQuantPeptideProperties ",e);
     			
