@@ -67,71 +67,82 @@ private[msi] class SQLRsmStorer() extends IRsmStorer {
 
     // AW: workaround for issue: #9147 : to allow RT time in RSM/Peptides RT column instead of zero after validation
     ///    get the peaklist ids associated with this single take peptide instance
-    val rsId = rsm.getResultSetId
     
-    if ( rsId == 0 ) logger.debug("rsId negative or zero !!!")
-    else if ( rsm.peptideInstances.isEmpty )  {
-      logger.error("no peptide instance for this rsm!")
-    } else {
-
-      val spectrumIdElutionTimeMap = new HashMap[Long, Float]()
-      var firstTimeNullErrHappened: Boolean = false // indicates if 1 or more error of this type occurred
-      
-      DoJDBCWork.withEzDBC(execCtx.getMSIDbConnectionContext(), { ezDBC =>
-
-        /*val peaklistIdSqlQuery = "select peaklist_id " +
-        "  from result_set RS inner join msi_search MS " +
-        "  on RS.msi_search_id = MS.id " +
-        "  where RS.id = " + rsId*/
+    // VDS : use ResultSet ChildMSI if defined to create spectrumIdElutionTimeMap
+     val spectrumIdElutionTimeMap = new HashMap[Long, Float]()
+      if (! rsm.peptideInstances.isEmpty )  {
         
-        val peaklistIdSqlQuery = new SelectQueryBuilder2(MsiDbResultSetTable,MsiDbMsiSearchTable).mkSelectQuery( (rsT,rsC,msiT,msiC) =>
-          List(msiT.PEAKLIST_ID) -> "WHERE "~ rsT.MSI_SEARCH_ID ~"="~ msiT.ID ~" AND "~ rsT.ID ~ "="~ rsId
-        )
-        
-        //val sqlQuery = "SELECT id, title, first_time FROM spectrum WHERE peaklist_id in (" + peaklistIdSqlQuery + ")"
-        val sqlQuery = new SelectQueryBuilder1(MsiDbSpectrumTable).mkSelectQuery( (t,c) =>
-          List(t.ID,t.TITLE,t.FIRST_TIME) -> "WHERE "~ t.PEAKLIST_ID ~" IN("~ peaklistIdSqlQuery ~" )"
-        )
-        logger.debug("SQL query for spectrumIdElutionTimeMap: " + sqlQuery)
-        
-        ezDBC.selectAndProcess(sqlQuery) { r =>
-
-          val spectrumId = toLong(r.nextAny)
-          val spectrumTitle = r.nextString
-
-          val firstTime = r.nextAny
-          if (firstTime != null) {
-            spectrumIdElutionTimeMap += (spectrumId.toLong -> firstTime.asInstanceOf[Float])
-          } else {
-            if (firstTimeNullErrHappened == false) {
-              firstTimeNullErrHappened = true
-              logger.info("first time is null for spectrum id: " + spectrumId + " title: " + spectrumTitle
-                + "\nIt might be that you specified a wrong peaklist software when importing the result file"
-                + "\n or that there is no retention time information provided"
-                + "\nNo more messages shown of that error even if it occurs again (for every Title...)")
+        var peaklistIdSqlQuery : String = ""
+        if(rsm.getResultSet().isDefined){   
+            val rsLike=  rsm.getResultSet().get
+            if(rsLike.msiSearch.isDefined) {
+              val msiSearchesId =  rsLike.msiSearch.get.id
+               peaklistIdSqlQuery =  new SelectQueryBuilder1(MsiDbMsiSearchTable).mkSelectQuery( (msiT,msiC) =>
+               List(msiT.PEAKLIST_ID) -> "WHERE "~ msiT.ID ~ " = "~ msiSearchesId );
+              
+            } else if(rsLike.childMsiSearches != null && rsLike.childMsiSearches.length>0) {
+              val msiSearchesIds = rsm.getResultSet().get.childMsiSearches.map(msiS => msiS.id).toSeq
+               peaklistIdSqlQuery =  new SelectQueryBuilder1(MsiDbMsiSearchTable).mkSelectQuery( (msiT,msiC) =>
+               List(msiT.PEAKLIST_ID) -> "WHERE "~ msiT.ID ~ " IN("~ msiSearchesIds.mkString(",") ~" )");
             }
-          }
-
+        } else {             
+            val rsId = rsm.getResultSetId
+            if ( rsId > 0 ) {    
+                peaklistIdSqlQuery = new SelectQueryBuilder2(MsiDbResultSetTable,MsiDbMsiSearchTable).mkSelectQuery( (rsT,rsC,msiT,msiC) =>
+                  List(msiT.PEAKLIST_ID) -> "WHERE "~ rsT.MSI_SEARCH_ID ~"="~ msiT.ID ~" AND "~ rsT.ID ~ "="~ rsId );
+              } 
         }
-      })
+            
+            
+        if(!peaklistIdSqlQuery.isEmpty()) {
+            var firstTimeNullErrHappened: Boolean = false // indicates if 1 or more error of this type occurred      
+            DoJDBCWork.withEzDBC(execCtx.getMSIDbConnectionContext(), { ezDBC =>
+          
+            //val sqlQuery = "SELECT id, title, first_time FROM spectrum WHERE peaklist_id in (" + peaklistIdSqlQuery + ")"
+            val sqlQuery = new SelectQueryBuilder1(MsiDbSpectrumTable).mkSelectQuery( (t,c) =>
+              List(t.ID,t.TITLE,t.FIRST_TIME) -> "WHERE "~ t.PEAKLIST_ID ~" IN("~ peaklistIdSqlQuery ~" )"
+            )
+            logger.debug("SQL query for spectrumIdElutionTimeMap: " + sqlQuery)
+          
+            ezDBC.selectAndProcess(sqlQuery) { r =>
+  
+              val spectrumId = toLong(r.nextAny)
+              val spectrumTitle = r.nextString
+  
+              val firstTime = r.nextAny
+              if (firstTime != null) {
+                spectrumIdElutionTimeMap += (spectrumId.toLong -> firstTime.asInstanceOf[Float])
+              } else {
+                if (firstTimeNullErrHappened == false) {
+                  firstTimeNullErrHappened = true
+                  logger.info("first time is null for spectrum id: " + spectrumId + " title: " + spectrumTitle
+                    + "\nIt might be that you specified a wrong peaklist software when importing the result file"
+                    + "\n or that there is no retention time information provided"
+                    + "\nNo more messages shown of that error even if it occurs again (for every Title...)")
+                }
+              }
+            }
+          }) //END DoJDBCWork
+          } //END peaklistIdSqlQuery not empty !
+     
+     } else 
+        logger.error("no peptide instance for this rsm!")
 
       if (spectrumIdElutionTimeMap.isEmpty) {
-        this.logger.warn("spectrumIdElutionTimeMap is empty: it means probably this result summary comes from a merged result set")
+          this.logger.warn("spectrumIdElutionTimeMap is empty: it means probably this result summary comes from a merged result set")
       } else {
-        rsm.peptideInstances.foreach { pepInst =>
-
-          val bestPepMatchForThisPepInstOpt = pepInst.peptideMatches.find(_.id == pepInst.bestPeptideMatchId)
-          if ( bestPepMatchForThisPepInstOpt.isDefined ) {
-            val spectrumId = bestPepMatchForThisPepInstOpt.get.getMs2Query.spectrumId
-            if (spectrumIdElutionTimeMap.contains(spectrumId)) {
-              pepInst.elutionTime = spectrumIdElutionTimeMap(spectrumId) // modify elution time in peptide instance
+          rsm.peptideInstances.foreach { pepInst =>
+  
+            val bestPepMatchForThisPepInstOpt = pepInst.peptideMatches.find(_.id == pepInst.bestPeptideMatchId)
+            if ( bestPepMatchForThisPepInstOpt.isDefined ) {
+              val spectrumId = bestPepMatchForThisPepInstOpt.get.getMs2Query.spectrumId
+              if (spectrumIdElutionTimeMap.contains(spectrumId)) {
+                pepInst.elutionTime = spectrumIdElutionTimeMap(spectrumId) // modify elution time in peptide instance
+              }
             }
-          }
+          } //END for each pepInst
         }
-      }
       
-    }
-
     DoJDBCWork.withEzDBC(execCtx.getMSIDbConnectionContext, { msiEzDBC =>
       
       // Insert peptide instances
