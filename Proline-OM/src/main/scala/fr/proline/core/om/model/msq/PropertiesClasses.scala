@@ -29,7 +29,7 @@ case class MasterQuantPeptideIonProperties(
   
   // Key = QuantChannel ID ; Value = PeptideMatch ID
   @JsonDeserialize( keyAs = classOf[java.lang.Long], contentAs = classOf[java.lang.Long] )
-  var bestPeptideMatchIdMap: scala.collection.immutable.HashMap[Long,Long] = scala.collection.immutable.HashMap()
+  @BeanProperty var bestPeptideMatchIdMap: scala.collection.immutable.HashMap[Long,Long] = scala.collection.immutable.HashMap()
 ) {
   if( bestPeptideMatchIdMap == null ) bestPeptideMatchIdMap = scala.collection.immutable.HashMap()
 }

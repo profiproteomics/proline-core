@@ -34,8 +34,6 @@ trait MasterQuantComponent[A <: QuantComponent] extends Item {
   def id: Long
   
   protected def getQuantComponentMap(): LongMap[A]
-  
-  @deprecated("0.6.0","this method should not be called since the quant component is now mutable")
   protected def setQuantComponentMap(quantComponentMap: LongMap[A]): Unit
   
   protected def getMostAbundantQuantComponent(): A = {
@@ -366,88 +364,6 @@ case class MasterQuantPeptide(
       )
     )
   }
-  
-  /*def getBestQuantPeptide: QuantPeptide = {
-    this.quantPeptideMap.values.reduce { (a,b) => if( a.abundance > b.abundance ) a else b }
-  }
-  
-  def getQuantPeptidePepMatchesCount( quantChannelId: Long ): Int = {
-    val quantPeptide = this.quantPeptideMap.get(quantChannelId)
-    if( quantPeptide.isEmpty ) 0 else quantPeptide.get.peptideMatchesCount
-  }
-  
-  def getQuantPeptideRawAbundance( quantChannelId: Long ): Float = {
-    val quantPeptide = this.quantPeptideMap.get(quantChannelId)
-    if( quantPeptide.isEmpty ) Float.NaN else quantPeptide.get.rawAbundance
-  }
-  
-  def getQuantPeptideAbundance( quantChannelId: Long ): Float = {
-    val quantPeptide = this.quantPeptideMap.get(quantChannelId)
-    if( quantPeptide.isEmpty ) Float.NaN else quantPeptide.get.abundance
-  }
-  
-  def getPepMatchesCountsForQuantChannels( quantChannelIds: Array[Long] ): Array[Int] = {   
-    quantChannelIds.map( getQuantPeptidePepMatchesCount(_) )
-  }
-  
-  def getRawAbundancesForQuantChannels( quantChannelIds: Array[Long] ): Array[Float] = {   
-    quantChannelIds.map( getQuantPeptideRawAbundance(_) )
-  }
-  
-  def getAbundancesForQuantChannels( quantChannelIds: Array[Long] ): Array[Float] = {   
-    quantChannelIds.map( getQuantPeptideAbundance(_) )
-  }
-  
-  def setAbundancesForQuantChannels( abundances: Seq[Float], quantChannelIds: Seq[Long] ) {
-    
-    for( (ab, qcId) <- abundances.zip( quantChannelIds ) ) {
-      if( this.quantPeptideMap.contains(qcId) ) {
-        this.quantPeptideMap(qcId).abundance = ab
-      } else {
-        this.quantPeptideMap = this.quantPeptideMap + (
-          qcId -> QuantPeptide(
-            rawAbundance = Float.NaN,
-            abundance = ab,
-            elutionTime = Float.NaN,
-            peptideMatchesCount = 0,
-            selectionLevel = 2,
-            quantChannelId = qcId
-          )
-        )
-      }
-    }
-    
-  }
-  
-  def getDefinedAbundancesForQuantChannels( quantChannelIds: Array[Long] ): Array[Float] = {    
-    quantChannelIds map { quantChannelId => getQuantPeptideAbundance(quantChannelId) } filter { ! _.isNaN }
-  }
-   
-  def calcMeanAbundanceForQuantChannels( quantChannelIds: Array[Long] ): Float = {
-    
-    val values = this.getDefinedAbundancesForQuantChannels( quantChannelIds )
-    val nbValues = values.length
-    
-    var mean = Float.NaN
-    if( nbValues > 0 ) {
-      mean = values.reduceLeft[Float](_+_) / nbValues
-    }
-    
-    mean
-  }
-
-  def calcRatio( numQuantChannelIds: Array[Long], denomQuantChannelIds: Array[Long] ): Float = {
-
-    val quantPepMap = this.quantPeptideMap
-    
-    val numerator = this.calcMeanAbundanceForQuantChannels( denomQuantChannelIds )
-    if( numerator.isNaN || numerator == 0 ) return Float.NaN
-    
-    val denominator = this.calcMeanAbundanceForQuantChannels( denomQuantChannelIds )
-    if( denominator.isNaN || denominator == 0  ) return Float.NaN
-    
-    numerator/denominator
-  }*/
   
   def getRatios( groupSetupNumber: Int ): List[Option[ComputedRatio]] = {
     this.properties.flatMap { mqPepProps =>
