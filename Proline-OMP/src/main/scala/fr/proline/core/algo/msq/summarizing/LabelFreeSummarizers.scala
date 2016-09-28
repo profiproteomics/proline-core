@@ -229,6 +229,8 @@ class LabelFreeEntitiesSummarizer(
       require( qPepIons != null && qPepIons.length > 0, "qPepIons must not be empty")
       require( masterFt.isMaster, "can't create a master quant peptide ion wihtout a master feature" )
       
+      val masterFtCharge = masterFt.charge
+      
       // Map quant peptide ions by feature id or feature id
       val qPepIonByQcId = qPepIons.toLongMapWith( qpi => qpi.quantChannelId -> qpi )
       require( qPepIonByQcId.size == qPepIons.length, "duplicated feature detected in quant peptide ions" )
@@ -247,8 +249,12 @@ class LabelFreeEntitiesSummarizer(
           val qcIdentPepInstByPepId = identPepInstByQcIdAndPepId(qcId)
           
           if( qcIdentPepInstByPepId.contains(masterPepInst.peptide.id) ) {
-            val qcIdentPepInst = qcIdentPepInstByPepId(masterPepInst.peptide.id)            
-            bestPeptideMatchIdMapBuilder += qcId -> qcIdentPepInst.bestPeptideMatchId
+            val qcIdentPepInst = qcIdentPepInstByPepId(masterPepInst.peptide.id)
+            val sameChargePepMatches = qcIdentPepInst.peptideMatches.filter(_.charge == masterFtCharge)
+            
+            if (sameChargePepMatches.nonEmpty) {
+              bestPeptideMatchIdMapBuilder += qcId -> sameChargePepMatches.maxBy(_.score).id
+            }
           }
         }
         
