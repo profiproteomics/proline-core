@@ -8,6 +8,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import fr.proline.core.orm.util.JsonSerializer;
 
@@ -105,7 +107,9 @@ public class DMasterQuantProteinSet {
 	public Map<Long, DQuantProteinSet> parseQuantProteinSetFromProperties(String quantProtSetdata){
 
 		try {
-			List<DQuantProteinSet> quantProtSets = JsonSerializer.getMapper().readValue(quantProtSetdata, new TypeReference<List<DQuantProteinSet>>() {});
+			ObjectMapper objectMapper = JsonSerializer.getMapper();
+			objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+			List<DQuantProteinSet> quantProtSets = objectMapper.readValue(quantProtSetdata, new TypeReference<List<DQuantProteinSet>>() {});
 			
 			quantProteinSetByQchIds = new HashMap<Long, DQuantProteinSet>();		
 			for(int i=0;i<quantProtSets.size();i++){

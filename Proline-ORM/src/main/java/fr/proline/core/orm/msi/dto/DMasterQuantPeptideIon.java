@@ -10,6 +10,8 @@ import java.util.List;
 import java.util.Map;
 
 import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import fr.proline.core.orm.msi.MasterQuantPeptideIon;
 import fr.proline.core.orm.msi.Peptide;
@@ -139,7 +141,9 @@ public class DMasterQuantPeptideIon {
     public Map<Long, DQuantPeptideIon> parseQuantPeptideIonFromProperties(String quantPeptideIonData) {
 
         try {
-            List<DQuantPeptideIon> quantPepIons = JsonSerializer.getMapper().readValue(quantPeptideIonData, new TypeReference<List<DQuantPeptideIon>>() {
+        	ObjectMapper objectMapper = JsonSerializer.getMapper();
+			objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+            List<DQuantPeptideIon> quantPepIons = objectMapper.readValue(quantPeptideIonData, new TypeReference<List<DQuantPeptideIon>>() {
             });
 
             m_quantPeptideIonByQchIds = new HashMap<Long, DQuantPeptideIon>();
