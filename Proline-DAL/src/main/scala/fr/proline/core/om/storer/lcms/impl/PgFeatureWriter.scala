@@ -11,6 +11,7 @@ import com.typesafe.scalalogging.StrictLogging
 import fr.profi.jdbc.PreparedStatementWrapper
 import fr.profi.jdbc.easy._
 import fr.profi.mzdb.model.PeakelDataMatrix
+import fr.profi.util.MathUtils
 import fr.profi.util.bytes._
 import fr.profi.util.serialization.ProfiJson
 import fr.profi.util.sql._
@@ -23,6 +24,10 @@ import fr.proline.core.dal.tables.lcms._
 import fr.proline.core.om.model.lcms._
 import fr.proline.core.om.storer.lcms.IFeatureWriter
 import fr.proline.repository.util.PostgresUtils
+
+object PgConstants {
+  val DOUBLE_PRECISION = 1e-11 // note: this is the precision we observe when using PgCopy (maybe toString is involved)
+}
 
 class PgFeatureWriter(lcmsDbCtx: LcMsDbConnectionContext) extends IFeatureWriter with StrictLogging {
   
@@ -304,8 +309,9 @@ class PgFeatureWriter(lcmsDbCtx: LcMsDbConnectionContext) extends IFeatureWriter
       while( peakelIdx < peakelsCount ) {
         val peakel = peakels(peakelIdx)
         val idMzPair = sortedIdMzPairs(peakelIdx)
+        // Check we retrieve records in the same order
         assert(
-          peakel.moz == idMzPair._2,
+          MathUtils.nearlyEquals(peakel.moz, idMzPair._2, PgConstants.DOUBLE_PRECISION),
           s"error while trying to update peakel id, m/z values are different: was ${peakel.moz} and is now ${idMzPair._2}"
         )
         
