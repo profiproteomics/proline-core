@@ -8,7 +8,7 @@ import fr.proline.core.om.model.lcms._
 
 case class AlignmentResult( alnRefMapId: Long, mapAlnSets: Array[MapAlignmentSet] )
 
-trait ILcmsMapAligner extends LazyLogging {
+abstract class AbstractLcmsMapAligner extends LazyLogging {
   
   import scala.collection.mutable.ArrayBuffer
   import fr.proline.core.algo.lcms.AlnSmoother
@@ -83,7 +83,6 @@ trait ILcmsMapAligner extends LazyLogging {
       )
       
       ftAlignments += mapAlignment //alnSmoother.smoothMapAlignment( landmarksSortedByTime, alnParams.smoothingParams )
-      
     }
     
     if( ftAlignments.isEmpty ) {

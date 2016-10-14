@@ -1,39 +1,33 @@
 package fr.proline.core.algo.lcms.alignment
 
+import scala.collection.mutable.ArrayBuffer
+import scala.collection.mutable.HashMap
+
+import fr.profi.util.collection._
+import fr.profi.util.math.combinations
+
 import fr.proline.core.algo.lcms.AlignmentParams
+import fr.proline.core.om.model.lcms._
 
-class ComprehensiveMapAligner extends ILcmsMapAligner {
+class ComprehensiveMapAligner extends AbstractLcmsMapAligner {
 
-  import scala.collection.mutable.ArrayBuffer
-  import scala.collection.mutable.HashMap
-  import fr.profi.util.math.combinations
-  import fr.proline.core.om.model.lcms._
-  
   def computeMapAlignments( lcmsMaps: Seq[ProcessedMap], alnParams: AlignmentParams ): AlignmentResult = {
     
     val nbMaps = lcmsMaps.length
     
     // Compute map pairs
-    val mapById = lcmsMaps.map { lcmsMap => (lcmsMap.id -> lcmsMap) } toMap
+    val mapById = lcmsMaps.mapByLong(_.id)
     val mapIds = mapById.keys.toList
     val nrMapIdPairs = combinations( 2, mapIds )
     
-    // Remove map pair redundancy
-    /*val mapIdPairHash
-    for( mapIdPair <- mapIdPairs ) {
-      val sortedMapIdPair = sort { a <= b } mapIdPair
-      val key = join('-', sortedMapIdPair )
-      mapIdPairHash(key) = sortedMapIdPair
-    }
-    val nrMapIdPairs = values(mapIdPairHash)*/
-    
     val mapAlnSets = new ArrayBuffer[MapAlignmentSet](nrMapIdPairs.length)
-    for( mapIdPair <- nrMapIdPairs ) {
+    for (mapIdPair <- nrMapIdPairs) {
 
-      val( map1, map2 ) = ( mapById(mapIdPair(0)), mapById(mapIdPair(1)) )
+      val map1 = mapById(mapIdPair(0))
+      val map2 = mapById(mapIdPair(1))
       
       val mapAlnSetOpt = this.computePairwiseAlnSet( map1, map2, alnParams )
-      for ( mapAlnSet <- mapAlnSetOpt ) mapAlnSets += mapAlnSet
+      if (mapAlnSetOpt.isDefined) mapAlnSets += mapAlnSetOpt.get
     }
     
     val refMap = this.determineAlnReferenceMap( lcmsMaps, mapAlnSets )
@@ -41,11 +35,14 @@ class ComprehensiveMapAligner extends ILcmsMapAligner {
     AlignmentResult( refMap.id, mapAlnSets.toArray )
   }
   
-  def determineAlnReferenceMap( lcmsMaps: Seq[ProcessedMap], 
-                                mapAlnSets: Seq[MapAlignmentSet],
-                                currentRefMap: ProcessedMap = null ): ProcessedMap = {
+  def determineAlnReferenceMap(
+    lcmsMaps: Seq[ProcessedMap], 
+    mapAlnSets: Seq[MapAlignmentSet],
+    currentRefMap: ProcessedMap = null
+  ): ProcessedMap = {
+    require(lcmsMaps.nonEmpty, "lcmsMaps is empty")
     
-    if( lcmsMaps.length <= 2 ) return lcmsMaps(0)
+    if (lcmsMaps.length <= 2) return lcmsMaps(0)
     
     val mapAlnSetsByMapId = new HashMap[Long,ArrayBuffer[MapAlignmentSet]]
     for( mapAlnSet <- mapAlnSets ) {
@@ -58,26 +55,23 @@ class ComprehensiveMapAligner extends ILcmsMapAligner {
     
     for( tmpRefMap <- lcmsMaps ) {
       val mapAlnSetsOpt = mapAlnSetsByMapId.get(tmpRefMap.id)
-      
-      var distance = 0.0 // mean of absolute delta times
+
+      var absMeanDistance = 0f // mean of absolute delta times
       var nbLandmarks = 0
-      for( mapAlnSets <- mapAlnSetsOpt ; mapAlnSet <- mapAlnSets ) {
-        for( mapAln <- mapAlnSet.mapAlignments ) {
+      for (mapAlnSets <- mapAlnSetsOpt; mapAlnSet <- mapAlnSets) {
+        for (mapAln <- mapAlnSet.mapAlignments) {
           val deltaTimeList = mapAln.deltaTimeList.toList
-          distance += deltaTimeList.reduceLeft( (a:Float, b:Float) => math.abs(a) + math.abs(b) )
+          absMeanDistance += deltaTimeList.foldLeft(0f)( (sum, delta) => sum + math.abs(delta) )
           nbLandmarks += deltaTimeList.length
         }
       }
-      if( distance > 0 ) distance /= nbLandmarks 
-      
-      if( refMapDistance.isNaN || distance < refMapDistance ) {
+      if (absMeanDistance > 0) absMeanDistance /= nbLandmarks
+
+      if (refMapDistance.isNaN || absMeanDistance < refMapDistance) {
         refMap = tmpRefMap
-        refMapDistance = distance
+        refMapDistance = absMeanDistance
       }
-        
-      //print tmpRefMap.id .": " .distance."\n"
     }
-    //print "ref map_id: ".refMap.id."\n"
     
     refMap
   }

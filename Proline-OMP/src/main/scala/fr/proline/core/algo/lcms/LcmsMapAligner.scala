@@ -9,12 +9,12 @@ object LcmsMapAligner {
 
   import alignment._
   
-  def apply( methodName: String ): ILcmsMapAligner = {
+  def apply( methodName: String ): AbstractLcmsMapAligner = {
     
     val alnMethod = try {
       AlnMethod.withName( methodName.toUpperCase() )
     } catch {
-      case _ : Throwable => throw new Exception("can't find an appropriate lcms map aligner")
+      case t: Throwable => throw new Exception("can't find an appropriate lcms map aligner",t)
     }
     
     alnMethod match {

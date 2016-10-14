@@ -1,12 +1,12 @@
 package fr.proline.core.algo.lcms.alignment
 
 import com.typesafe.scalalogging.LazyLogging
+
+import fr.profi.util.math.getMedianObject
 import fr.proline.core.algo.lcms.AlignmentParams
+import fr.proline.core.om.model.lcms._
 
-class IterativeMapAligner extends ILcmsMapAligner with LazyLogging {
-
-  import fr.proline.core.om.model.lcms._
-  import fr.profi.util.math.getMedianObject
+class IterativeMapAligner extends AbstractLcmsMapAligner with LazyLogging {
 
   def computeMapAlignments(lcmsMaps: Seq[ProcessedMap], alnParams: AlignmentParams): AlignmentResult = {
 
@@ -15,20 +15,20 @@ class IterativeMapAligner extends ILcmsMapAligner with LazyLogging {
     val randomRefMap = lcmsMaps(refMapRandomIndex)
 
     this.findBestMapAlignments(lcmsMaps, randomRefMap, alnParams, 1)
-
   }
 
-  private def findBestMapAlignments(lcmsMaps: Seq[ProcessedMap],
-                                    alnRefMap: ProcessedMap,
-                                    alnParams: AlignmentParams,
-                                    iterationNum: Int): AlignmentResult = {
+  private def findBestMapAlignments(
+    lcmsMaps: Seq[ProcessedMap],
+    alnRefMap: ProcessedMap,
+    alnParams: AlignmentParams,
+    iterationNum: Int
+  ): AlignmentResult = {
 
     // Retrieve some vars
     val maxIterNum = alnParams.maxIterations
     val alnRefMapId = alnRefMap.id
 
     // Iterate over maps to compute alignments with the random or new reference map
-    //val mapAlnSets = lcmsMaps filter { _.id != alnRefMap.id } map { this.computePairwiseAlnSet( alnRefMap, _, alnParams) }
     val mapAlnSets = this.computeMapAlnSets(lcmsMaps, alnRefMap, alnParams)
 
     // Determine the best alignment reference map using the previously computed alignements
@@ -51,9 +51,11 @@ class IterativeMapAligner extends ILcmsMapAligner with LazyLogging {
 
   }
 
-  private def computeMapAlnSets(lcmsMaps: Seq[ProcessedMap],
-                                alnRefMap: ProcessedMap,
-                                alnParams: AlignmentParams): Seq[MapAlignmentSet] = {
+  private def computeMapAlnSets(
+    lcmsMaps: Seq[ProcessedMap],
+    alnRefMap: ProcessedMap,
+    alnParams: AlignmentParams
+  ): Seq[MapAlignmentSet] = {
     //print "computing feature alignments...\n"
 
     // Iterate over maps to compute alignments with the random or new reference map
@@ -64,9 +66,12 @@ class IterativeMapAligner extends ILcmsMapAligner with LazyLogging {
       .map { _.get }
   }
 
-  def determineAlnReferenceMap(lcmsMaps: Seq[ProcessedMap],
-                               mapAlnSets: Seq[MapAlignmentSet],
-                               currentRefMap: ProcessedMap): ProcessedMap = {
+  def determineAlnReferenceMap(
+    lcmsMaps: Seq[ProcessedMap],
+    mapAlnSets: Seq[MapAlignmentSet],
+    currentRefMap: ProcessedMap
+  ): ProcessedMap = {
+    require(lcmsMaps.nonEmpty, "lcmsMaps is empty")
 
     if (lcmsMaps.length <= 2) return lcmsMaps(0)
 
@@ -79,37 +84,28 @@ class IterativeMapAligner extends ILcmsMapAligner with LazyLogging {
 
         mapAlnSetByMapId.get(map.id).map { mapAlnSet =>
 
-          var distance: Float = 0 // mean of delta times
+          var meanDistance = 0f // mean of delta times (without absolute value conversion)
           var nbLandmarks = 0
 
           for (mapAln <- mapAlnSet.mapAlignments) {
             val deltaTimeList = mapAln.deltaTimeList.toList
-            distance += deltaTimeList.sum
+            meanDistance += deltaTimeList.sum
             nbLandmarks += deltaTimeList.length
           }
 
-          if (distance > 0) distance /= nbLandmarks
+          if (meanDistance > 0) meanDistance /= nbLandmarks
 
-          mapDistanceByIdBuilder += (map.id -> distance)
-
-          //print map.id .": " .distance."\n"
+          mapDistanceByIdBuilder += (map.id -> meanDistance)
         }
       }
     }
 
-    //print "map distance by map id:\n"
-    //print Dumper( mapDistanceById )
     val mapDistanceById = mapDistanceByIdBuilder.result()
 
-    val mapDistanceSortFunc = new Function2[Long, Long, Boolean] {
-      def apply(a: Long, b: Long): Boolean = if (mapDistanceById(a) < mapDistanceById(a)) true else false
-    }
+    val mapDistanceSortFunc = (a: Long, b: Long) => if (mapDistanceById(a) < mapDistanceById(b)) true else false
+    val medianMapId = getMedianObject(mapDistanceById.keys.toList,mapDistanceSortFunc)
 
-    val medianMapId = getMedianObject(mapDistanceById.keys.toList, mapDistanceSortFunc)
-    //print "ref map_id: ".medianMapId."\n"
-
-    lcmsMaps.find { _.id == medianMapId } get
-
+    lcmsMaps.find( _.id == medianMapId ).get
   }
 
 }
