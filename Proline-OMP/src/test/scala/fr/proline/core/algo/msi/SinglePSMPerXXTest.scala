@@ -10,8 +10,9 @@ import fr.proline.core.om.provider.msi.impl.SQLPeptideMatchProvider
 import fr.proline.core.om.provider.msi.impl.SQLPeptideProvider
 import fr.proline.core.algo.msi.filtering.pepmatch.SinglePSMPerPrettyRankFilter
 import org.junit.Assert
+import fr.proline.core.algo.msi.filtering.pepmatch.SinglePSMPerQueryFilter
 
-object SinglePSMPerRankTest extends AbstractResultSetTestCase with StrictLogging {
+object SinglePSMPerXXTest extends AbstractResultSetTestCase with StrictLogging {
   
   // Define some vars
   val driverType = DriverType.H2
@@ -24,10 +25,10 @@ object SinglePSMPerRankTest extends AbstractResultSetTestCase with StrictLogging
   
 }
 
-class SinglePSMPerRankTest extends StrictLogging {
+class SinglePSMPerXXTest extends StrictLogging {
   
- val targetRSId = SinglePSMPerRankTest.targetRSId
- val executionContext = SinglePSMPerRankTest.executionContext
+ val targetRSId = SinglePSMPerXXTest.targetRSId
+ val executionContext = SinglePSMPerXXTest.executionContext
 
   
   @Test
@@ -35,7 +36,7 @@ class SinglePSMPerRankTest extends StrictLogging {
      val pepProvider = new SQLPeptideProvider(executionContext.getPSDbConnectionContext)
      val psmProvider = new SQLPeptideMatchProvider(executionContext.getMSIDbConnectionContext(), pepProvider)
      
-     val filter= new SinglePSMPerPrettyRankFilter(SinglePSMPerRankTest.getRS())
+     val filter= new SinglePSMPerPrettyRankFilter(SinglePSMPerXXTest.getRS())
      val psms = psmProvider.getResultSetPeptideMatches(targetRSId,None)
      
      Assert.assertEquals(1525, psms.filter(_.isValidated).length)       
@@ -44,5 +45,18 @@ class SinglePSMPerRankTest extends StrictLogging {
           
  }
   
+   @Test
+  def singlePsmPerQueryFilter(){
+     val pepProvider = new SQLPeptideProvider(executionContext.getPSDbConnectionContext)
+     val psmProvider = new SQLPeptideMatchProvider(executionContext.getMSIDbConnectionContext(), pepProvider)
+     
+     val filter= new SinglePSMPerQueryFilter(SinglePSMPerXXTest.getRS())
+     val psms = psmProvider.getResultSetPeptideMatches(targetRSId,None)
+     
+     Assert.assertEquals(1525, psms.filter(_.isValidated).length)       
+     filter.filterPeptideMatches(psms, false,false)
+     Assert.assertEquals(1436, psms.filter(_.isValidated).length) //valeur 21/10, pas vraiment verifie.... mais test fonctionnel        
+          
+ }
   
 }
