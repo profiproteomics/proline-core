@@ -2,7 +2,7 @@ package fr.proline.core.om.provider.msq.impl
 
 import fr.profi.util.serialization.ProfiJson
 import fr.proline.context.UdsDbConnectionContext
-import fr.proline.core.algo.msq.config.ProfilizerConfig
+import fr.proline.core.algo.msq.config.profilizer.ProfilizerConfig
 import fr.proline.core.dal.DoJDBCReturningWork
 import fr.proline.core.dal.tables._
 import fr.proline.core.dal.tables.SelectQueryBuilder._

@@ -1,4 +1,4 @@
-package fr.proline.core.algo.msq.config
+package fr.proline.core.algo.msq.config.profilizer
 
 import fr.profi.util.lang.EnhancedEnum
 
