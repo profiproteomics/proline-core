@@ -1,11 +1,5 @@
 package fr.proline.core.algo.lcms
 
-object AlnSmoothing extends Enumeration {
-  val LANDMARK_RANGE = Value("LANDMARK_RANGE")
-  val LOESS = Value("LOESS")
-  val TIME_WINDOW = Value("TIME_WINDOW")
-}
-
 object AlnSmoother {
   
   import alignment._

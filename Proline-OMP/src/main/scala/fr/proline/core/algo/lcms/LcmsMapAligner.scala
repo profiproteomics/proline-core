@@ -1,10 +1,5 @@
 package fr.proline.core.algo.lcms
 
-object AlnMethod extends Enumeration {
-  val EXHAUSTIVE = Value("EXHAUSTIVE")
-  val ITERATIVE = Value("ITERATIVE")
-}
-
 object LcmsMapAligner {
 
   import alignment._

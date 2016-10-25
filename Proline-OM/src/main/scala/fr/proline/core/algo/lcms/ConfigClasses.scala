@@ -6,6 +6,11 @@ trait IMzTimeTolerant extends IMzTolerant {
   val timeTol: Float
 }
 
+object AlnMethod extends Enumeration {
+  val EXHAUSTIVE = Value("EXHAUSTIVE")
+  val ITERATIVE = Value("ITERATIVE")
+}
+
 case class AlignmentParams(
   massInterval: Int,
   smoothingMethodName: String,
@@ -13,6 +18,12 @@ case class AlignmentParams(
   ftMappingParams: FeatureMappingParams,
   maxIterations: Int = 3
 )
+
+object AlnSmoothing extends Enumeration {
+  val LANDMARK_RANGE = Value("LANDMARK_RANGE")
+  val LOESS = Value("LOESS")
+  val TIME_WINDOW = Value("TIME_WINDOW")
+}
 
 case class AlnSmoothingParams( windowSize: Int, windowOverlap: Int, minWindowLandmarks: Int = 0 )
 
