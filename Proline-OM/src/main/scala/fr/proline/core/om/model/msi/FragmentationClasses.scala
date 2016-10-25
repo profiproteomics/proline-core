@@ -129,16 +129,14 @@ case class ChargeConstraint(
   
 ) extends FragmentationRule
 
+object RequiredSeriesQualityLevel extends Enumeration {
+  val SIGNIFICANT = Value("significant")
+  val HIGHEST_SCORING = Value("highest_scoring")
+}
+
 trait FragmentationSeriesRequirement {
-  
   val requiredSeries: FragmentIonSeries.Value
-  val requiredSeriesQualityLevel: String
-  
-  // Requirements
-  if( requiredSeriesQualityLevel != null ) {
-    require( requiredSeriesQualityLevel == "significant" || 
-             requiredSeriesQualityLevel == "highest_scoring" )
-  }
+  val requiredSeriesQualityLevel: RequiredSeriesQualityLevel.Value
 }
 
 case class RequiredSeries (
@@ -146,7 +144,7 @@ case class RequiredSeries (
   // Required fields
   val description: String,
   val requiredSeries: FragmentIonSeries.Value,
-  val requiredSeriesQualityLevel: String,
+  val requiredSeriesQualityLevel: RequiredSeriesQualityLevel.Value,
   
   var properties: Option[FragmentationRuleProperties] = None
   
@@ -163,7 +161,7 @@ case class FragmentIonRequirement(
   val description: String,
   val ionType: FragmentIonType,
   val requiredSeries: FragmentIonSeries.Value = null,
-  val requiredSeriesQualityLevel: String = null,
+  val requiredSeriesQualityLevel: RequiredSeriesQualityLevel.Value = null,
  
   // Immutable optional fields
   val fragmentMaxMoz: Option[Float] = None,

@@ -50,7 +50,9 @@ case class FragmentMatch(
     }
   }
 
-  def ionSeries: String = { _parseLabelIfNotDone(); this._ionSeries }
+  // TODO: check usages
+  //def ionSeries: String = { _parseLabelIfNotDone(); this._ionSeries }
+  def ionSeries: FragmentIonSeries.Value = { _parseLabelIfNotDone(); FragmentIonSeries.withName(this._ionSeries) }
   def aaPosition: Int = { _parseLabelIfNotDone(); this._aaPosition }
   def charge: Int = { _parseLabelIfNotDone(); this._charge }
 
@@ -103,7 +105,9 @@ case class TheoreticalFragmentSeries(
     }
   }
 
-  def ionSeries: String = { _parseFragSeriesIfNotDone(); this._ionSeries }
+  // TODO: check usages
+  //def ionSeries: String = { _parseFragSeriesIfNotDone(); this._ionSeries }
+  def ionSeries: FragmentIonSeries.Value = { _parseFragSeriesIfNotDone(); FragmentIonSeries.withName(this._ionSeries) }
   def charge: Int = { _parseFragSeriesIfNotDone(); this._charge }
 }
 
