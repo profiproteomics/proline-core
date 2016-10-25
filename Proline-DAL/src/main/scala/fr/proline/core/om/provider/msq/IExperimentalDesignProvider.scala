@@ -1,6 +1,5 @@
 package fr.proline.core.om.provider.msq
 
-import fr.proline.context.DatabaseConnectionContext
 import fr.proline.core.om.model.msq.ExperimentalDesign
 
 trait IExperimentalDesignProvider {

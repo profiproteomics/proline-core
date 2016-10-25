@@ -5,7 +5,7 @@ import scala.collection.mutable.HashSet
 import scala.collection.mutable.LongMap
 import fr.profi.util.collection._
 import fr.profi.util.primitives._
-import fr.proline.context.DatabaseConnectionContext
+import fr.proline.context.UdsDbConnectionContext
 import fr.proline.core.om.provider.msq.IExperimentalDesignProvider
 import fr.proline.core.om.model.msq._
 import fr.proline.core.dal.DoJDBCReturningWork
@@ -24,7 +24,7 @@ import fr.proline.core.dal.tables.uds.UdsDbQuantChannelTable
 import fr.proline.core.dal.tables.uds.UdsDbSampleAnalysisTable
 import fr.proline.core.dal.tables.uds.UdsDbRatioDefinitionTable
 
-class SQLExperimentalDesignProvider(val udsDbCtx: DatabaseConnectionContext) extends IExperimentalDesignProvider {
+class SQLExperimentalDesignProvider(val udsDbCtx: UdsDbConnectionContext) extends IExperimentalDesignProvider {
 
   val BioGroupCols = UdsDbBiologicalGroupTable.columns
   val BioSampleCols = UdsDbBiologicalSampleTable.columns
