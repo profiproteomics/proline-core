@@ -112,10 +112,10 @@ case class ProfilizerConfig(
     profileClusteringMethod = Some(MqPeptidesClusteringMethod.QUANT_PROFILE)
   }
   if( abundanceSummarizerMethod == null) {
-    abundanceSummarizerMethod = AbundanceSummarizer.Method.MEAN
+    abundanceSummarizerMethod = AbundanceSummarizerMethod.MEAN
   }
   // force QUANT_PEPTIDE_IONS if Summarizer is LFQ
-  if (abundanceSummarizerMethod == AbundanceSummarizer.Method.LFQ.toString) {
+  if (abundanceSummarizerMethod == AbundanceSummarizerMethod.LFQ.toString) {
     summarizingBasedOn = Some(QuantComponentItem.QUANT_PEPTIDE_IONS)
   }
   
