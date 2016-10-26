@@ -195,7 +195,7 @@ class SerializationSpec extends AbstractSerializationSpec {
       profiDeserializer = None,
       protMatch,
       """{"accession":"UNKNOWN","description":"unknown protein","is_decoy":false,"is_last_bio_sequence":false,"id":-1,"""+
-      """"taxon_id":0,"result_set_id":0,"protein_id":0,"gene_name":"UNKNOWN","score":20.0,"""+
+      """"taxon_id":0,"result_set_id":0,"protein_id":0,"gene_name":"UNKNOWN","seq_database_ids":[],"score":20.0,"""+
       """"score_type":"mascot:standard score","coverage":0.0,"peptide_matches_count":0,"sequence_matches":"""+
       """[{"start":1,"end":6,"residue_before":"-","residue_after":"-","is_decoy":false,"result_set_id":0,"""+
       """"peptide_id":0,"best_peptide_match_id":0}],"peptides_count":1}"""
