@@ -343,13 +343,12 @@ private[msi] object PgRsWriter extends AbstractSQLRsWriter() {
       stmt.executeUpdate("INSERT into protein_match (" + protMatchTableCols + ") " +
         "SELECT " + protMatchTableCols + " FROM " + tmpProtMatchTableName)
   
-      // Retrieve generated protein match ids
-      val protMatchIdByAc = msiEzDBC.select( protMatchUniqueFKQuery, rsId) { r =>
-        (r.nextString -> toLong(r.nextAny))
-      } toMap
-  
-      // Iterate over protein matches to update them
-      proteinMatches.foreach { protMatch => protMatch.id = protMatchIdByAc(protMatch.accession) }
+      // Retrieve generated protein match ids and update protein matches ids
+      msiEzDBC.select( protMatchUniqueFKQuery, rsId) { r =>
+        val accession = r.nextString
+        val id = toLong(r.nextAny)
+        proteinMatches.filter(pm => {pm.accession.equals(accession) && pm.id < 0}).head.id = id
+      }
       
       // Link protein matches to seq databases
       // TODO: implement this method with PgCopy

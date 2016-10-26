@@ -225,7 +225,10 @@ abstract class AbstractSQLMsiSearchWriter extends IMsiSearchWriter with LazyLogg
     
     // Insert used PTMs    
     for (ptmDef <- searchSettings.fixedPtmDefs) _insertUsedPTM(ssId, ptmDef, true, msiEzDBC)
-    for (ptmDef <- searchSettings.variablePtmDefs) _insertUsedPTM(ssId, ptmDef, false, msiEzDBC)
+    // do not store Ptms already declared as fixed in case a user use a same Ptm as fixed AND variable
+    var variablePtms = searchSettings.variablePtmDefs.toBuffer
+    variablePtms --= searchSettings.fixedPtmDefs
+    for (ptmDef <- variablePtms) _insertUsedPTM(ssId, ptmDef, false, msiEzDBC)
     
     // Link search settings to sequence databases
     msiEzDBC.executePrepared("INSERT INTO search_settings_seq_database_map VALUES (?,?,?,?)") { stmt =>
