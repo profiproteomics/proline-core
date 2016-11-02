@@ -12,8 +12,7 @@ import com.typesafe.scalalogging.LazyLogging
 
 import fr.profi.util.collection._
 import fr.profi.util.serialization.ProfiJson
-import fr.proline.context.DatabaseConnectionContext
-import fr.proline.context.IExecutionContext
+import fr.proline.context._
 import fr.proline.core.algo.msi.ResultSummaryAdder
 import fr.proline.core.algo.msi.scoring.PepSetScoring
 import fr.proline.core.algo.msi.scoring.PeptideSetScoreUpdater
@@ -70,7 +69,7 @@ abstract class AbstractMasterQuantChannelQuantifier extends LazyLogging {
   protected val msiEm = msiDbCtx.getEntityManager
   protected val psDbCtx = executionContext.getPSDbConnectionContext
   
-  protected lazy val mergedResultSummary = getMergedResultSummary(msiDbCtx : DatabaseConnectionContext)
+  protected lazy val mergedResultSummary = getMergedResultSummary(msiDbCtx)
   
   //protected val defaultEntityCache = new MasterQuantChannelEntityCache(executionContext, udsMasterQuantChannel)
   //protected def providedEntityCache: Option[MasterQuantChannelEntityCache] = None
@@ -115,7 +114,7 @@ abstract class AbstractMasterQuantChannelQuantifier extends LazyLogging {
   protected lazy val quantProteinSetsSchema: MsiObjectTreeSchema = {
     ObjectTreeSchemaRepository.loadOrCreateObjectTreeSchema(msiEm, SchemaName.QUANT_PROTEIN_SETS.toString())
   }
-  protected def getMergedResultSummary(msiDbCtx: DatabaseConnectionContext): ResultSummary
+  protected def getMergedResultSummary(msiDbCtx: MsiDbConnectionContext): ResultSummary
   def getResultAsJSON(): String
   
   protected def storeMsiQuantResultSet(msiIdentResultSets: List[MsiResultSet]): MsiResultSet = {

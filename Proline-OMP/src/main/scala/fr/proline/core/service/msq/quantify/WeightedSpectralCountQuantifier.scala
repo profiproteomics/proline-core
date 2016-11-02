@@ -4,7 +4,7 @@ import fr.profi.util.primitives._
 import fr.proline.core.util.ResidueUtils._
 import com.typesafe.scalalogging.LazyLogging
 import fr.profi.util.serialization.ProfiJson
-import fr.proline.context.DatabaseConnectionContext
+import fr.proline.context.MsiDbConnectionContext
 import fr.proline.context.IExecutionContext
 import fr.proline.core.algo.msq.config._
 import fr.proline.core.om.model.msi.ResultSummary
@@ -705,7 +705,7 @@ class WeightedSpectralCountQuantifier(
     ObjectTreeSchemaRepository.loadOrCreateObjectTreeSchema(msiEm, SchemaName.SPECTRAL_COUNTING_QUANT_PEPTIDE_IONS.toString())
   }
 
-  protected def getMergedResultSummary(msiDbCtx: DatabaseConnectionContext): ResultSummary = {
+  protected def getMergedResultSummary(msiDbCtx: MsiDbConnectionContext): ResultSummary = {
     if (quantConfig.parentRSMId.isEmpty)
       createMergedResultSummary(msiDbCtx)
     else {

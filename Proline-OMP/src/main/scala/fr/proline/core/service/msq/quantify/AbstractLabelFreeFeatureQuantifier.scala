@@ -10,7 +10,7 @@ import fr.profi.jdbc.easy._
 import fr.profi.mzdb.MzDbReader
 import fr.profi.util.collection._
 import fr.profi.util.serialization.ProfiJson
-import fr.proline.context.DatabaseConnectionContext
+import fr.proline.context._
 import fr.proline.core.algo.lcms._
 import fr.proline.core.algo.msq.config._
 import fr.proline.core.algo.msq.summarizing.LabelFreeEntitiesSummarizer
@@ -116,7 +116,7 @@ abstract class AbstractLabelFreeFeatureQuantifier extends AbstractMasterQuantCha
     ObjectTreeSchemaRepository.loadOrCreateObjectTreeSchema(msiEm, SchemaName.LABEL_FREE_QUANT_PEPTIDE_IONS.toString())
   }
   
-  protected def getMergedResultSummary(msiDbCtx : DatabaseConnectionContext): ResultSummary = {
+  protected def getMergedResultSummary(msiDbCtx: MsiDbConnectionContext): ResultSummary = {
     isMergedRsmProvided = false
     createMergedResultSummary(msiDbCtx)
   }

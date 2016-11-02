@@ -8,8 +8,7 @@ import com.typesafe.scalalogging.LazyLogging
 import fr.profi.util.collection._
 import fr.profi.util.ms._
 import fr.profi.util.serialization.ProfiJson
-import fr.proline.context.DatabaseConnectionContext
-import fr.proline.context.IExecutionContext
+import fr.proline.context._
 import fr.proline.core.algo.msq.config._
 import fr.proline.core.algo.msq.summarizing._
 import fr.proline.core.om.model.msi.LazyResultSummary
@@ -160,7 +159,7 @@ class IsobaricTaggingQuantifier(
     ObjectTreeSchemaRepository.loadOrCreateObjectTreeSchema(msiEm, SchemaName.ISOBARIC_TAGGING_QUANT_PEPTIDE_IONS.toString())
   }
   
-  protected def getMergedResultSummary(msiDbCtx: DatabaseConnectionContext): ResultSummary = {
+  protected def getMergedResultSummary(msiDbCtx: MsiDbConnectionContext): ResultSummary = {
     val mergedIdentRsmIdOpt = masterQc.identResultSummaryId
     require(mergedIdentRsmIdOpt.isDefined, "mergedIdentRsmIdOpt is not defined")
     

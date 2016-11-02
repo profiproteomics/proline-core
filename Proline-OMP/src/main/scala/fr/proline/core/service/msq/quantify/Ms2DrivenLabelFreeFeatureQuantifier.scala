@@ -1,6 +1,5 @@
 package fr.proline.core.service.msq.quantify
 
-
 import javax.persistence.EntityManager
 import scala.collection.JavaConversions.collectionAsScalaIterable
 import scala.collection.mutable.ArrayBuffer
@@ -8,7 +7,7 @@ import scala.collection.mutable.HashMap
 import fr.profi.util.primitives._
 import fr.profi.jdbc.easy._
 import fr.profi.util.serialization.ProfiJson
-import fr.proline.context.DatabaseConnectionContext
+import fr.proline.context._
 import fr.proline.context.IExecutionContext
 import fr.proline.core.algo.msq.config._
 import fr.proline.core.dal.DoJDBCReturningWork
@@ -74,7 +73,7 @@ class Ms2DrivenLabelFreeFeatureQuantifier(
     super.quantifyMasterChannel()
   }
   
-  override protected def getMergedResultSummary(msiDbCtx: DatabaseConnectionContext): ResultSummary = {
+  override protected def getMergedResultSummary(msiDbCtx: MsiDbConnectionContext): ResultSummary = {
     if (masterQc.identResultSummaryId.isEmpty) {
       isMergedRsmProvided = false
       createMergedResultSummary(msiDbCtx)
