@@ -2,6 +2,7 @@ package fr.proline.core.om.provider.msi.impl
 
 import fr.profi.util.serialization.ProfiJson
 import fr.profi.util.misc.MapIfNotNull
+import fr.proline.context._
 import fr.proline.core.dal.DoJDBCReturningWork
 import fr.proline.core.dal.tables.msi.MsiDbResultSetTable
 import fr.proline.core.dal.tables.msi.MsiDbResultSummaryTable
@@ -14,12 +15,11 @@ import fr.proline.core.om.model.msi.ResultSummary
 import fr.proline.core.om.model.msi.ResultSummaryProperties
 import fr.proline.core.om.model.msi.ValidatedResultSetBuilder
 import fr.proline.core.om.provider.msi.IResultSummaryProvider
-import fr.proline.context.DatabaseConnectionContext
 
 class SQLResultSummaryProvider(
-  val msiDbCtx: DatabaseConnectionContext,
+  val msiDbCtx: MsiDbConnectionContext,
   val psDbCtx: DatabaseConnectionContext,
-  val udsDbCtx: DatabaseConnectionContext = null
+  val udsDbCtx: UdsDbConnectionContext = null
 ) extends SQLResultSetLoader with IResultSummaryProvider {
 
   // Instantiate a MSIdb helper
@@ -51,7 +51,7 @@ class SQLResultSummaryProvider(
       List(t1.*,t2.TYPE) -> "WHERE "~ t1.ID ~" IN("~ rsmIds.mkString(",") ~") AND "~ t1.RESULT_SET_ID ~"="~ t2.ID
     )
 
-    DoJDBCReturningWork.withEzDBC(msiDbCtx, { msiEzDBC =>
+    DoJDBCReturningWork.withEzDBC(msiDbCtx) { msiEzDBC =>
     
       // TODO: load all result sets at once to avoid duplicated entities and for a faster loading
       val rsms = msiEzDBC.select(rsmQuery) { r =>
@@ -128,7 +128,7 @@ class SQLResultSummaryProvider(
     
       rsms.toArray
       
-    })
+    }
 
   }
 

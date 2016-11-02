@@ -23,18 +23,18 @@ class SQLPeaklistSoftwareProvider(val dbCtx: DatabaseConnectionContext) extends 
   def getPeaklistSoftwareList(pklSoftIds: Seq[Long]): Array[PeaklistSoftware] = {
     if( pklSoftIds.isEmpty ) return Array()
     
-    DoJDBCReturningWork.withEzDBC(dbCtx, { msiEzDBC =>
+    DoJDBCReturningWork.withEzDBC(dbCtx) { msiEzDBC =>
       PeaklistSoftwareBuilder.buildPeaklistSoftwareList( SQLPeaklistSoftwareProvider.selectPklSoftRecords(msiEzDBC,pklSoftIds) )
-    })
+    }
   }
   
   def getPeaklistSoftware( softName: String, softVersion: String ): Option[PeaklistSoftware] = {
     
-    DoJDBCReturningWork.withEzDBC(dbCtx, { udsEzDBC =>
+    DoJDBCReturningWork.withEzDBC(dbCtx) { udsEzDBC =>
       SQLPeaklistSoftwareProvider.selectPklSoftRecord(udsEzDBC,softName,softVersion) { r =>
         PeaklistSoftwareBuilder.buildPeaklistSoftware(r)
       }
-    })
+    }
   }
 
 }

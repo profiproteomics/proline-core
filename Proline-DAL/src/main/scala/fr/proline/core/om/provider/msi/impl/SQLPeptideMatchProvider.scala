@@ -1,7 +1,7 @@
 package fr.proline.core.om.provider.msi.impl
 
 import fr.profi.util.primitives._
-import fr.proline.context.DatabaseConnectionContext
+import fr.proline.context._
 import fr.proline.core.dal.DoJDBCReturningWork
 import fr.proline.core.dal.helper.MsiDbHelper
 import fr.proline.core.dal.tables.{SelectQueryBuilder1,SelectQueryBuilder2}
@@ -15,7 +15,7 @@ import fr.proline.core.om.provider.msi._
 import fr.proline.repository.ProlineDatabaseType
 
 class SQLPeptideMatchProvider(
-  val msiDbCtx: DatabaseConnectionContext,
+  val msiDbCtx: MsiDbConnectionContext,
   var peptideProvider: IPeptideProvider
 ) extends IPeptideMatchProvider {
   
@@ -24,7 +24,7 @@ class SQLPeptideMatchProvider(
   
   require( msiDbCtx.getProlineDatabaseType == ProlineDatabaseType.MSI, "MsiDb connection required")
   
-  def this(msiDbCtx: DatabaseConnectionContext, psSqlCtx: DatabaseConnectionContext) = {
+  def this(msiDbCtx: MsiDbConnectionContext, psSqlCtx: DatabaseConnectionContext) = {
     this(msiDbCtx, new SQLPeptideProvider(psSqlCtx) )
   }
 
@@ -37,7 +37,7 @@ class SQLPeptideMatchProvider(
   def getPeptideMatches(pepMatchIds: Seq[Long]): Array[PeptideMatch] = {
     if( pepMatchIds.isEmpty ) return Array()
     
-    DoJDBCReturningWork.withEzDBC(msiDbCtx, { msiEzDBC =>
+    DoJDBCReturningWork.withEzDBC(msiDbCtx) { msiEzDBC =>
     
       // TODO: use max nb iterations
       val sqlQuery = new SelectQueryBuilder1(MsiDbPeptideMatchTable).mkSelectQuery( (t,c) =>
@@ -48,7 +48,7 @@ class SQLPeptideMatchProvider(
       val msQueries = this._loadMsQueries(pmRecords)
       
       PeptideMatchBuilder.buildPeptideMatches(pmRecords,msQueries,scoreTypeById,peptideProvider)
-    })
+    }
   }
 
   def getPeptideMatchesAsOptions(pepMatchIds: Seq[Long]): Array[Option[PeptideMatch]] = {
@@ -63,7 +63,7 @@ class SQLPeptideMatchProvider(
   def getPeptideMatchesByPeptideIds(peptideIds: Seq[Long]): Array[PeptideMatch] = {
     if( peptideIds.isEmpty ) return Array()
     
-    DoJDBCReturningWork.withEzDBC(msiDbCtx, { msiEzDBC =>
+    DoJDBCReturningWork.withEzDBC(msiDbCtx) { msiEzDBC =>
     
       // TODO: use max nb iterations
       val sqlQuery = new SelectQueryBuilder1(MsiDbPeptideMatchTable).mkSelectQuery( (t,c) =>
@@ -74,13 +74,13 @@ class SQLPeptideMatchProvider(
       val msQueries = this._loadMsQueries(pmRecords)
       
       PeptideMatchBuilder.buildPeptideMatches(pmRecords,msQueries,scoreTypeById,peptideProvider)
-    })
+    }
   }
 
   def getResultSetsPeptideMatches(rsIds: Seq[Long], pepMatchFilter: Option[PeptideMatchFilter] = None): Array[PeptideMatch] = {
     if( rsIds.isEmpty ) return Array()
     
-    DoJDBCReturningWork.withEzDBC(msiDbCtx, { msiEzDBC =>
+    DoJDBCReturningWork.withEzDBC(msiDbCtx) { msiEzDBC =>
       
       val sqlPepMatchFilter = pepMatchFilter.map( _pepMatchFilterToSQLCondition(_) ).getOrElse("")
     
@@ -92,14 +92,14 @@ class SQLPeptideMatchProvider(
       val msQueries = this._loadResulSetMsQueries(rsIds.toArray, pmRecords)
       
       PeptideMatchBuilder.buildPeptideMatches(pmRecords,msQueries,scoreTypeById,peptideProvider)
-    })
+    }
 
   }
 
   def getResultSummariesPeptideMatches(rsmIds: Seq[Long]): Array[PeptideMatch] = {
     if( rsmIds.isEmpty ) return Array()
     
-    DoJDBCReturningWork.withEzDBC(msiDbCtx, { msiEzDBC =>
+    DoJDBCReturningWork.withEzDBC(msiDbCtx) { msiEzDBC =>
       
       //val sqlPepMatchFilter = pepMatchFilter.map( _pepMatchFilterToSQLCondition(_) ).getOrElse("")
   
@@ -117,7 +117,7 @@ class SQLPeptideMatchProvider(
       val msQueries = this._loadResulSetMsQueries(rsIds, pmRecords)
       
       PeptideMatchBuilder.buildPeptideMatches(pmRecords,msQueries,scoreTypeById,peptideProvider)
-    })
+    }
 
   }
   

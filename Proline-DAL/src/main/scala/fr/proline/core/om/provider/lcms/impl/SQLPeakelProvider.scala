@@ -3,7 +3,7 @@ package fr.proline.core.om.provider.lcms.impl
 import scala.collection.mutable.ArrayBuffer
 import fr.profi.jdbc.ResultSetRow
 import fr.profi.mzdb.model.PeakelDataMatrix
-import fr.proline.context.DatabaseConnectionContext
+import fr.proline.context.LcMsDbConnectionContext
 import fr.proline.core.dal.{ DoJDBCWork, DoJDBCReturningWork }
 import fr.proline.core.dal.tables.SelectQueryBuilder._
 import fr.proline.core.dal.tables.SelectQueryBuilder1
@@ -15,7 +15,7 @@ import fr.profi.util.serialization.ProfiJson
 //import fr.profi.util.serialization.ProfiMsgPack
 import scala.collection.mutable.HashMap
 
-class SQLPeakelProvider(val lcmsDbCtx: DatabaseConnectionContext) {
+class SQLPeakelProvider(val lcmsDbCtx: LcMsDbConnectionContext) {
   
   val PeakelCols = LcmsDbPeakelColumns
   val PeakelItemCols = LcmsDbFeaturePeakelItemColumns
@@ -23,7 +23,7 @@ class SQLPeakelProvider(val lcmsDbCtx: DatabaseConnectionContext) {
   def getPeakels( peakelIds: Seq[Long] ): Array[Peakel] = {
     if( peakelIds.isEmpty ) return Array()
 
-    DoJDBCReturningWork.withEzDBC(lcmsDbCtx, { ezDBC =>
+    DoJDBCReturningWork.withEzDBC(lcmsDbCtx) { ezDBC =>
       
       // Build peakels SQL query
       val peakelQuery = new SelectQueryBuilder1(LcmsDbPeakelTable).mkSelectQuery( (t,c) =>
@@ -32,14 +32,14 @@ class SQLPeakelProvider(val lcmsDbCtx: DatabaseConnectionContext) {
       
       // Load peakels
       ezDBC.select( peakelQuery ) { this.buildPeakel(_) } toArray
-    })
+    }
 
   }
 
   def getRawMapPeakels(rawMapIds: Seq[Long]): Array[Peakel] = {
     if( rawMapIds.isEmpty ) return Array()
 
-    DoJDBCReturningWork.withEzDBC(lcmsDbCtx, { ezDBC =>
+    DoJDBCReturningWork.withEzDBC(lcmsDbCtx) { ezDBC =>
       
       val mapIdsStr = rawMapIds.mkString(",")
       
@@ -54,7 +54,7 @@ class SQLPeakelProvider(val lcmsDbCtx: DatabaseConnectionContext) {
       
       // Load peakels
       ezDBC.select( peakelQuery ) { this.buildPeakel(_) } toArray
-    })
+    }
 
   }
   
@@ -94,7 +94,7 @@ class SQLPeakelProvider(val lcmsDbCtx: DatabaseConnectionContext) {
   def getPeakelItems( peakelIds: Seq[Long], loadPeakels: Boolean = true ): Array[FeaturePeakelItem] = {
     if( peakelIds.isEmpty ) return Array()
     
-    DoJDBCReturningWork.withEzDBC(lcmsDbCtx, { ezDBC =>
+    DoJDBCReturningWork.withEzDBC(lcmsDbCtx) { ezDBC =>
       
       // Build peakels SQL query
       val peakelItemQuery = new SelectQueryBuilder1(LcmsDbFeaturePeakelItemTable).mkSelectQuery( (t,c) =>
@@ -116,14 +116,14 @@ class SQLPeakelProvider(val lcmsDbCtx: DatabaseConnectionContext) {
       }
       
       peakelItems
-    })
+    }
 
   }
   
   def getFeaturePeakelItems( featureIds: Seq[Long], loadPeakels: Boolean = true ): Array[FeaturePeakelItem] = {
     if( featureIds.isEmpty ) return Array()
     
-    DoJDBCReturningWork.withEzDBC(lcmsDbCtx, { ezDBC =>
+    DoJDBCReturningWork.withEzDBC(lcmsDbCtx) { ezDBC =>
       
       // Build peakels SQL query
       val peakelItemQuery = new SelectQueryBuilder1(LcmsDbFeaturePeakelItemTable).mkSelectQuery( (t,c) =>
@@ -147,14 +147,14 @@ class SQLPeakelProvider(val lcmsDbCtx: DatabaseConnectionContext) {
       }
       
       peakelItems
-    })
+    }
 
   }
   
   def getRawMapPeakelItems(rawMapIds: Seq[Long], loadPeakels: Boolean = true): Array[FeaturePeakelItem] = {
     if( rawMapIds.isEmpty ) return Array()
     
-    DoJDBCReturningWork.withEzDBC(lcmsDbCtx, { ezDBC =>
+    DoJDBCReturningWork.withEzDBC(lcmsDbCtx) { ezDBC =>
       
       val mapIdsStr = rawMapIds.mkString(",")
       
@@ -177,7 +177,7 @@ class SQLPeakelProvider(val lcmsDbCtx: DatabaseConnectionContext) {
       }
       
       peakelItems
-    })
+    }
     
   }
   

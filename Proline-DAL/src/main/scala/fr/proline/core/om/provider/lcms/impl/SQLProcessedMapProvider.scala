@@ -4,7 +4,7 @@ import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.HashMap
 
 import fr.profi.jdbc.ResultSetRow
-import fr.proline.context.DatabaseConnectionContext
+import fr.proline.context.LcMsDbConnectionContext
 import fr.proline.core.dal.{ DoJDBCWork, DoJDBCReturningWork }
 import fr.proline.core.dal.tables.SelectQueryBuilder._
 import fr.proline.core.dal.tables.{ SelectQueryBuilder1, SelectQueryBuilder2 }
@@ -15,7 +15,7 @@ import fr.proline.core.om.provider.lcms.IProcessedMapProvider
 import fr.profi.util.primitives._
   
 class SQLProcessedMapProvider(
-  val lcmsDbCtx: DatabaseConnectionContext
+  val lcmsDbCtx: LcMsDbConnectionContext
 ) extends AbstractSQLLcMsMapProvider with IProcessedMapProvider {
   
   val ProcFtCols = LcmsDbProcessedMapFeatureItemTable.columns
@@ -48,7 +48,7 @@ class SQLProcessedMapProvider(
     val processedMaps = new Array[ProcessedMap](processedMapIds.length)
     var lcmsMapIdx = 0
     
-    DoJDBCWork.withEzDBC(lcmsDbCtx, { ezDBC =>
+    DoJDBCWork.withEzDBC(lcmsDbCtx) { ezDBC =>
       
       val procMapQuery = new SelectQueryBuilder2(LcmsDbMapTable, LcmsDbProcessedMapTable).mkSelectQuery((t1, c1, t2, c2) =>
         List(t1.*, t2.*) ->
@@ -89,9 +89,7 @@ class SQLProcessedMapProvider(
         
         ()
       }
-      
-    })
-    
+    }
     
     processedMaps
     
@@ -102,7 +100,7 @@ class SQLProcessedMapProvider(
     
     val rawMapIdBufferByProcessedMapId = new HashMap[Long,ArrayBuffer[Long]]
     
-    DoJDBCWork.withEzDBC(lcmsDbCtx, { ezDBC =>
+    DoJDBCWork.withEzDBC(lcmsDbCtx) { ezDBC =>
       
       val mapMappingQuery = new SelectQueryBuilder1(LcmsDbProcessedMapRawMapMappingTable).mkSelectQuery( (t,c) =>
         List(t.*) -> "WHERE "~ t.PROCESSED_MAP_ID ~" IN("~ processedMapIds.mkString(",") ~") "
@@ -114,8 +112,7 @@ class SQLProcessedMapProvider(
         rawMapIdBufferByProcessedMapId.getOrElseUpdate(processedMapId, new ArrayBuffer[Long](1) ) += rawMapId
         
       }
-      
-    })
+    }
     
     // Convert the HashMap into an immutable Map
     val mapBuilder = scala.collection.immutable.Map.newBuilder[Long,Array[Long]]
@@ -135,7 +132,7 @@ class SQLProcessedMapProvider(
   def getFeatures( processedMapIds: Seq[Long], loadPeakels: Boolean = false ): Array[Feature] = {
     if( processedMapIds.isEmpty ) return Array()
  
-    DoJDBCReturningWork.withEzDBC(lcmsDbCtx, { ezDBC =>
+    DoJDBCReturningWork.withEzDBC(lcmsDbCtx) { ezDBC =>
       
       // Check that provided map ids correspond to run maps
       val nbMaps: Int = ezDBC.selectInt( "SELECT count(id) FROM processed_map WHERE id IN (" + processedMapIds.mkString(",") + ")" )
@@ -235,14 +232,14 @@ class SQLProcessedMapProvider(
       
       ftArray
     
-    })
+    }
     
   }
   
   def eachProcessedFeatureRecord( processedMapIds: Seq[Long], onEachFt: ResultSetRow => Unit ): Unit = {
     if( processedMapIds.isEmpty ) return ()
     
-    DoJDBCWork.withEzDBC(lcmsDbCtx, { ezDBC =>
+    DoJDBCWork.withEzDBC(lcmsDbCtx) { ezDBC =>
     
       val procFtQuery = new SelectQueryBuilder2(LcmsDbFeatureTable, LcmsDbProcessedMapFeatureItemTable).mkSelectQuery( (t1,c1,t2,c2) =>
         List(t1.*,t2.*) ->
@@ -260,7 +257,7 @@ class SQLProcessedMapProvider(
         ()
       }
     
-    })
+    }
     
   }
   
@@ -270,7 +267,7 @@ class SQLProcessedMapProvider(
     
     val subFtIdBufferByClusterFtId = new HashMap[Long,ArrayBuffer[Long]]
     
-    DoJDBCWork.withEzDBC(lcmsDbCtx, { ezDBC =>
+    DoJDBCWork.withEzDBC(lcmsDbCtx) { ezDBC =>
       
       val ftClusterRelationQuery = new SelectQueryBuilder1(LcmsDbFeatureClusterItemTable).mkSelectQuery( (t,c) =>
         List(t.CLUSTER_FEATURE_ID,t.SUB_FEATURE_ID) ->
@@ -284,7 +281,7 @@ class SQLProcessedMapProvider(
         
         ()
       }
-    })
+    }
     
     // Convert the HashMap into an immutable Map
     val mapBuilder = scala.collection.immutable.Map.newBuilder[Long,Array[Long]]

@@ -3,7 +3,7 @@ package fr.proline.core.om.provider.msi.impl
 import fr.profi.jdbc.easy.EasyDBC
 import fr.profi.util.bytes._
 import fr.profi.util.primitives._
-import fr.proline.context.DatabaseConnectionContext
+import fr.proline.context.MsiDbConnectionContext
 import fr.proline.core.dal.DoJDBCReturningWork
 import fr.proline.core.dal.tables.SelectQueryBuilder._
 import fr.proline.core.dal.tables.SelectQueryBuilder1
@@ -13,7 +13,7 @@ import fr.proline.core.om.model.msi.Spectrum
 import fr.proline.core.om.provider.msi.ISpectrumProvider
 import fr.proline.repository.ProlineDatabaseType
 
-class SQLSpectrumProvider(val msiDbCtx: DatabaseConnectionContext) extends ISpectrumProvider {
+class SQLSpectrumProvider(val msiDbCtx: MsiDbConnectionContext) extends ISpectrumProvider {
 
   val SpecCols = MsiDbSpectrumTable.columns
 
@@ -22,26 +22,26 @@ class SQLSpectrumProvider(val msiDbCtx: DatabaseConnectionContext) extends ISpec
   def getSpectra(spectrumIds: Seq[Long], loadPeaks: Boolean = true): Array[Spectrum] = {
     if (spectrumIds.isEmpty) return Array()
 
-    DoJDBCReturningWork.withEzDBC(msiDbCtx, { msiEzDBC =>
+    DoJDBCReturningWork.withEzDBC(msiDbCtx,false) { msiEzDBC =>
       val spectrumIdsAsStr = spectrumIds.mkString(",")
       val whereClause = "WHERE " ~ SpecCols.ID ~ " IN(" ~ spectrumIdsAsStr ~ ")"
       val specQuery = _buildSqlQuery(whereClause, loadPeaks)
 
       SpectrumBuilder.buildSpectra(msiEzDBC.select(specQuery), loadPeaks).toArray
 
-    }, false)
+    }
   }
   
   def getPeaklistsSpectra( peaklistIds: Seq[Long], loadPeaks: Boolean = true ): Array[Spectrum] = {
     if (peaklistIds.isEmpty) return Array()
 
-    DoJDBCReturningWork.withEzDBC(msiDbCtx, { msiEzDBC =>
+    DoJDBCReturningWork.withEzDBC(msiDbCtx,false) { msiEzDBC =>
       val whereClause = "WHERE " ~ peaklistIds.map(id => "" ~ SpecCols.PEAKLIST_ID ~ s"=$id").mkString(" OR ")
       val spQuery = _buildSqlQuery(whereClause, loadPeaks)
 
       SpectrumBuilder.buildSpectra(msiEzDBC.select(spQuery), loadPeaks).toArray
 
-    }, false)
+    }
   }
   
   def foreachPeaklistSpectrum( peaklistId: Long, loadPeaks: Boolean = true )( onEachSpectrum: Spectrum => Unit ) {
@@ -51,7 +51,7 @@ class SQLSpectrumProvider(val msiDbCtx: DatabaseConnectionContext) extends ISpec
   def foreachPeaklistsSpectrum( peaklistIds: Seq[Long], loadPeaks: Boolean = true )( onEachSpectrum: Spectrum => Unit ) {
     if (peaklistIds.isEmpty) return ()
 
-    DoJDBCReturningWork.withEzDBC(msiDbCtx, { msiEzDBC =>
+    DoJDBCReturningWork.withEzDBC(msiDbCtx,false) { msiEzDBC =>
       val whereClause = "WHERE " ~ peaklistIds.map(id => "" ~ SpecCols.PEAKLIST_ID ~ s"=$id").mkString(" OR ")
       val spQuery = _buildSqlQuery(whereClause, loadPeaks)
 
@@ -59,7 +59,7 @@ class SQLSpectrumProvider(val msiDbCtx: DatabaseConnectionContext) extends ISpec
         onEachSpectrum(SpectrumBuilder.buildSpectrum(r, loadPeaks))
       }
 
-    }, false)
+    }
   }
   
   private def _buildSqlQuery(whereClause: String, loadPeaks: Boolean): String = {

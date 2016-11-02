@@ -6,7 +6,7 @@ import scala.collection.mutable.ArrayBuffer
 
 import fr.profi.util.serialization.ProfiJson
 import fr.profi.util.misc.MapIfNotNull
-import fr.proline.context.DatabaseConnectionContext
+import fr.proline.context._
 import fr.proline.core.dal.DoJDBCReturningWork
 import fr.proline.core.dal.tables.msi.MsiDbResultSetTable
 import fr.proline.core.dal.tables.SelectQueryBuilder1
@@ -19,9 +19,9 @@ trait SQLResultSetLoader extends LazyLogging {
 
   import fr.proline.core.dal.helper.MsiDbHelper
 
-  val msiDbCtx: DatabaseConnectionContext
+  val msiDbCtx: MsiDbConnectionContext
   val psDbCtx: DatabaseConnectionContext
-  val udsDbCtx: DatabaseConnectionContext
+  val udsDbCtx: UdsDbConnectionContext
 
   val RSCols = MsiDbResultSetTable.columns
 
@@ -63,7 +63,7 @@ trait SQLResultSetLoader extends LazyLogging {
       List(t.*) -> "WHERE " ~ t.ID ~ " IN(" ~ rsIds.mkString(",") ~ ")"
     )
 
-    DoJDBCReturningWork.withEzDBC(msiDbCtx, { msiEzDBC =>
+    DoJDBCReturningWork.withEzDBC(msiDbCtx) { msiEzDBC =>
 
       val start = System.currentTimeMillis()
 
@@ -103,16 +103,16 @@ trait SQLResultSetLoader extends LazyLogging {
 
       resultSets.toArray
 
-    })
+    }
 
   }
 
 }
 
 class SQLResultSetProvider(
-  val msiDbCtx: DatabaseConnectionContext,
+  val msiDbCtx: MsiDbConnectionContext,
   val psDbCtx: DatabaseConnectionContext,
-  val udsDbCtx: DatabaseConnectionContext
+  val udsDbCtx: UdsDbConnectionContext
 ) extends SQLResultSetLoader with IResultSetProvider {
 
   def getResultSets(

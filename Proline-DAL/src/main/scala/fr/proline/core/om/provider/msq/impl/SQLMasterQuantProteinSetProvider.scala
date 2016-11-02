@@ -6,7 +6,7 @@ import scala.collection.mutable.LongMap
 import fr.profi.jdbc.easy.EasyDBC
 import fr.profi.util.primitives._
 import fr.profi.util.serialization.ProfiJson
-import fr.proline.context.DatabaseConnectionContext
+import fr.proline.context._
 import fr.proline.core.dal.DoJDBCReturningWork
 import fr.proline.core.dal.tables.SelectQueryBuilder._
 import fr.proline.core.dal.tables.SelectQueryBuilder1
@@ -24,7 +24,7 @@ import fr.proline.core.om.provider.msi.impl.SQLProteinSetProvider
 import fr.proline.repository.ProlineDatabaseType
 
 class SQLMasterQuantProteinSetProvider(
-  val msiDbCtx: DatabaseConnectionContext,
+  val msiDbCtx: MsiDbConnectionContext,
   val psDbCtx: DatabaseConnectionContext
 ) {
   require( msiDbCtx.getProlineDatabaseType() == ProlineDatabaseType.MSI, "msiDbCtx must be of type MSI")
@@ -88,7 +88,7 @@ class SQLMasterQuantProteinSetProvider(
   ): Array[MasterQuantProteinSet] = {
     if( mqProtSetIds.isEmpty ) return Array()
 
-    DoJDBCReturningWork.withEzDBC(msiDbCtx, { msiEzDBC =>
+    DoJDBCReturningWork.withEzDBC(msiDbCtx) { msiEzDBC =>
 
       this.buildMasterQuantProteinSets(
         this.selectMasterQuantProteinSets(msiEzDBC, mqProtSetIds),
@@ -96,7 +96,7 @@ class SQLMasterQuantProteinSetProvider(
         mqPepByPepInstId
       )
 
-    })
+    }
 
   }
 
@@ -148,7 +148,7 @@ class SQLMasterQuantProteinSetProvider(
   ): Array[MasterQuantProteinSet] = {
     if( quantRsmIds.isEmpty ) return Array()
     
-    DoJDBCReturningWork.withEzDBC(msiDbCtx, { msiEzDBC =>
+    DoJDBCReturningWork.withEzDBC(msiDbCtx) { msiEzDBC =>
     
       this.buildMasterQuantProteinSets(
         this.selectQuantResultSummariesMasterQuantProteinSets(msiEzDBC, quantRsmIds),
@@ -156,7 +156,7 @@ class SQLMasterQuantProteinSetProvider(
         mqPepByPepInstId
       )
       
-    })
+    }
     
   }
   

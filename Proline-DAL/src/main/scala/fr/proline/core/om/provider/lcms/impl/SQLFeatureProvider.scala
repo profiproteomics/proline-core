@@ -2,7 +2,7 @@ package fr.proline.core.om.provider.lcms.impl
 
 import scala.collection.mutable.ArrayBuffer
 import fr.profi.jdbc.ResultSetRow
-import fr.proline.context.DatabaseConnectionContext
+import fr.proline.context.LcMsDbConnectionContext
 import fr.proline.core.dal.{ DoJDBCWork, DoJDBCReturningWork }
 import fr.proline.core.dal.helper.LcmsDbHelper
 import fr.proline.core.dal.tables.SelectQueryBuilder._
@@ -15,7 +15,7 @@ import fr.proline.core.om.provider.lcms.impl._
 import scala.collection.mutable.HashMap
   
 class SQLFeatureProvider(
-  val lcmsDbCtx: DatabaseConnectionContext,
+  val lcmsDbCtx: LcMsDbConnectionContext,
   val loadPeaks: Boolean = false
 ) {
 
@@ -30,7 +30,7 @@ class SQLFeatureProvider(
   def getProcessedFeatures( featureIds: Seq[Long], loadSubFeatures: Boolean = false ): Array[Feature] = {
     if( featureIds.isEmpty ) return Array()
 
-    DoJDBCReturningWork.withEzDBC(lcmsDbCtx, { ezDBC =>
+    DoJDBCReturningWork.withEzDBC(lcmsDbCtx) { ezDBC =>
 
       // --- Load processed map ids ---
       val procMapIdsSqlQuery = new SelectQueryBuilder1(LcmsDbProcessedMapFeatureItemTable).mkSelectQuery( (t1,c1) =>
@@ -144,7 +144,7 @@ class SQLFeatureProvider(
         ftArray
       }
 
-    })
+    }
 
   }
 
@@ -155,7 +155,7 @@ class SQLFeatureProvider(
 
     val subFtIdBufferByClusterFtId = new HashMap[Long,ArrayBuffer[Long]]
 
-    DoJDBCWork.withEzDBC(lcmsDbCtx, { ezDBC =>
+    DoJDBCWork.withEzDBC(lcmsDbCtx) { ezDBC =>
 
       val ftClusterRelationQuery = new SelectQueryBuilder1(LcmsDbFeatureClusterItemTable).mkSelectQuery( (t,c) =>
         List(t.CLUSTER_FEATURE_ID,t.SUB_FEATURE_ID) ->
@@ -169,7 +169,7 @@ class SQLFeatureProvider(
 
         ()
       }
-    })
+    }
 
     // Convert the HashMap into an immutable Map
     val mapBuilder = scala.collection.immutable.Map.newBuilder[Long,Array[Long]]
@@ -183,7 +183,7 @@ class SQLFeatureProvider(
   def eachProcessedFeatureRecord( featureIds: Seq[Long], onEachFt: ResultSetRow => Unit ): Unit = {
     if( featureIds.isEmpty ) return ()
 
-    DoJDBCWork.withEzDBC(lcmsDbCtx, { ezDBC =>
+    DoJDBCWork.withEzDBC(lcmsDbCtx) { ezDBC =>
 
       val procFtQuery = new SelectQueryBuilder2(LcmsDbFeatureTable, LcmsDbProcessedMapFeatureItemTable).mkSelectQuery( (t1,c1,t2,c2) =>
         List(t1.*,t2.*) ->
@@ -201,7 +201,7 @@ class SQLFeatureProvider(
         ()
       }
 
-    })
+    }
 
   }
 
@@ -253,8 +253,8 @@ class SQLFeatureProvider(
       isClusterized = isClusterized,
       selectionLevel = selectionLevel,
       // FIXME: feature properties can't be deserialized at the moment
-      //properties = ftRecord.getStringOption(FtCols.SERIALIZED_PROPERTIES.toAliasedString).map( ProfiJson.deserialize[FeatureProperties](_) ),
-      properties = None,
+      properties = ftRecord.getStringOption(FtCols.SERIALIZED_PROPERTIES.toAliasedString).map( ProfiJson.deserialize[FeatureProperties](_) ),
+      //properties = None,
       relations = new FeatureRelations(
         peakelItems = peakelItems,
         firstScanInitialId = scanInitialIdById(firstScanId),

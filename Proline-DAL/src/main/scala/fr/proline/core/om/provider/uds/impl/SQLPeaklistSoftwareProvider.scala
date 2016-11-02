@@ -2,7 +2,7 @@ package fr.proline.core.om.provider.uds.impl
 
 import scala.util.matching.Regex
 import fr.profi.jdbc.easy._
-import fr.proline.context.DatabaseConnectionContext
+import fr.proline.context.UdsDbConnectionContext
 import fr.proline.core.dal.DoJDBCReturningWork
 import fr.proline.core.dal.tables.uds.UdsDbPeaklistSoftwareTable
 import fr.proline.core.dal.tables.uds.UdsDbSpecTitleParsingRuleTable    
@@ -11,7 +11,7 @@ import fr.proline.core.om.provider.uds.IPeaklistSoftwareProvider
 import fr.profi.util.primitives._
  
 // TODO: use Select Query builder
-class SQLPeaklistSoftwareProvider(val udsDbCtx: DatabaseConnectionContext) extends IPeaklistSoftwareProvider {
+class SQLPeaklistSoftwareProvider(val udsDbCtx: UdsDbConnectionContext) extends IPeaklistSoftwareProvider {
   
   val PklSoftCols = UdsDbPeaklistSoftwareTable.columns
   val SpecTitleCols = UdsDbSpecTitleParsingRuleTable.columns
@@ -28,13 +28,13 @@ class SQLPeaklistSoftwareProvider(val udsDbCtx: DatabaseConnectionContext) exten
     
     val specRuleById = _getSpectrumTitleParsingRuleById()
 
-    DoJDBCReturningWork.withEzDBC(udsDbCtx, { ezDBC =>
+    DoJDBCReturningWork.withEzDBC(udsDbCtx) { ezDBC =>
 
       ezDBC.select("SELECT * FROM peaklist_software WHERE id IN(" + pklSoftIds.mkString(",") +")") { r =>
         _buildNewPeaklistSoftware( r, specRuleById )
       } toArray
       
-    })
+    }
 
   }
   
@@ -42,12 +42,12 @@ class SQLPeaklistSoftwareProvider(val udsDbCtx: DatabaseConnectionContext) exten
     
     val specRuleById = _getSpectrumTitleParsingRuleById()
     
-    DoJDBCReturningWork.withEzDBC(udsDbCtx, { udsEzDBC =>
+    DoJDBCReturningWork.withEzDBC(udsDbCtx) { udsEzDBC =>
       udsEzDBC.selectHeadOption(
         "SELECT * FROM peaklist_software WHERE name= ? and version= ? ", softName, softVersion) { r =>
           _buildNewPeaklistSoftware( r, specRuleById )
         }
-    })
+    }
   }
   
   private def _buildNewPeaklistSoftware(
@@ -65,7 +65,7 @@ class SQLPeaklistSoftwareProvider(val udsDbCtx: DatabaseConnectionContext) exten
   
   private def _getSpectrumTitleParsingRuleById(): Map[Long,SpectrumTitleParsingRule] = {
 
-    val specTitleRules = DoJDBCReturningWork.withEzDBC(udsDbCtx, { ezDBC =>
+    val specTitleRules = DoJDBCReturningWork.withEzDBC(udsDbCtx) { ezDBC =>
       
       ezDBC.select("SELECT * FROM spec_title_parsing_rule") { r =>
         new SpectrumTitleParsingRule(
@@ -81,7 +81,7 @@ class SQLPeaklistSoftwareProvider(val udsDbCtx: DatabaseConnectionContext) exten
         
       } toArray
       
-    })
+    }
     
     Map() ++ specTitleRules.map( rule => rule.id -> rule )
     

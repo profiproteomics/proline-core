@@ -2,7 +2,7 @@ package fr.proline.core.om.provider.lcms.impl
 
 import scala.collection.mutable.ArrayBuffer
 import fr.profi.jdbc.ResultSetRow
-import fr.proline.context.DatabaseConnectionContext
+import fr.proline.context.LcMsDbConnectionContext
 import fr.proline.core.dal.{ DoJDBCWork, DoJDBCReturningWork }
 import fr.proline.core.dal.tables.SelectQueryBuilder._
 import fr.proline.core.dal.tables.{ SelectQueryBuilder1, SelectQueryBuilder2 }
@@ -14,7 +14,7 @@ import fr.profi.util.sql._
 import fr.profi.util.primitives._
 
 class SQLRawMapProvider(
-  val lcmsDbCtx: DatabaseConnectionContext,
+  val lcmsDbCtx: LcMsDbConnectionContext,
   val scans: Array[LcMsScan],
   val loadPeaks: Boolean = false
 ) extends AbstractSQLLcMsMapProvider with IRawMapProvider {
@@ -41,7 +41,7 @@ class SQLRawMapProvider(
     val rawMaps = new Array[RawMap](rawMapIds.length)
     var lcmsMapIdx = 0
 
-    DoJDBCWork.withEzDBC(lcmsDbCtx, { ezDBC =>
+    DoJDBCWork.withEzDBC(lcmsDbCtx) { ezDBC =>
       
       val rawMapQuery = new SelectQueryBuilder2(LcmsDbMapTable, LcmsDbRawMapTable).mkSelectQuery((t1, c1, t2, c2) =>
         List(t1.*, t2.SCAN_SEQUENCE_ID, t2.PEAK_PICKING_SOFTWARE_ID, t2.PEAKEL_FITTING_MODEL_ID) ->
@@ -81,7 +81,7 @@ class SQLRawMapProvider(
         
         lcmsMapIdx += 1
       }
-    })
+    }
 
     rawMaps
   }
@@ -90,7 +90,7 @@ class SQLRawMapProvider(
   def getFeatures(mapIds: Seq[Long], loadPeakels: Boolean = false): Array[Feature] = {
     if( mapIds.isEmpty ) return Array()
 
-    DoJDBCReturningWork.withEzDBC(lcmsDbCtx, { ezDBC =>
+    DoJDBCReturningWork.withEzDBC(lcmsDbCtx) { ezDBC =>
       
       val mapIdsStr = mapIds.mkString(",")
       
@@ -138,7 +138,7 @@ class SQLRawMapProvider(
 
       ftBuffer.toArray
 
-    })
+    }
 
   }
 

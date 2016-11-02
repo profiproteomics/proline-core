@@ -6,7 +6,7 @@ import scala.collection.mutable.ArrayBuffer
 import fr.profi.jdbc.easy.EasyDBC
 import fr.profi.util.primitives._
 import fr.profi.util.sql.StringOrBoolAsBool._
-import fr.proline.context.DatabaseConnectionContext
+import fr.proline.context._
 import fr.proline.core.dal.DoJDBCReturningWork
 import fr.proline.core.dal.tables.{SelectQueryBuilder1, SelectQueryBuilder2}
 import fr.proline.core.dal.tables.SelectQueryBuilder._
@@ -21,8 +21,8 @@ import fr.proline.core.om.provider.msi.IMSISearchProvider
 import fr.proline.repository.ProlineDatabaseType
 
 class SQLMsiSearchProvider(
-  val udsDbCtx: DatabaseConnectionContext,
-  val msiDbCtx: DatabaseConnectionContext,
+  val udsDbCtx: UdsDbConnectionContext,
+  val msiDbCtx: MsiDbConnectionContext,
   val psDbCtx: DatabaseConnectionContext
 ) extends IMSISearchProvider {
   
@@ -40,9 +40,9 @@ class SQLMsiSearchProvider(
   def getMSISearches(msiSearchIds: Seq[Long]): Array[MSISearch] = {
     if( msiSearchIds.isEmpty ) return Array()
     
-    DoJDBCReturningWork.withEzDBC(udsDbCtx, { udsEzDBC =>
+    DoJDBCReturningWork.withEzDBC(udsDbCtx) { udsEzDBC =>
       
-      DoJDBCReturningWork.withEzDBC(msiDbCtx, { msiEzDBC =>
+      DoJDBCReturningWork.withEzDBC(msiDbCtx) { msiEzDBC =>
   
         val searchSettingsIdByMsiSearchId = new HashMap[Long, Long]
         val peaklistIdByMsiSearchId = new HashMap[Long, Long]
@@ -69,9 +69,8 @@ class SQLMsiSearchProvider(
           ptmProvider
         )
         
-      })
-      
-    })
+      }
+    }
   }
 
   def getMSISearchesAsOptions(msiSearchIds: Seq[Long]): Array[Option[MSISearch]] = {
@@ -81,15 +80,12 @@ class SQLMsiSearchProvider(
     msiSearchIds.map { msiSearchById.get(_) } toArray
   }
 
-
-
-
   def getSearchSettingsList(searchSettingsIds: Seq[Long]): Array[SearchSettings] = {
     if( searchSettingsIds.isEmpty ) return Array()
     
-    DoJDBCReturningWork.withEzDBC(udsDbCtx, { udsEzDBC =>
+    DoJDBCReturningWork.withEzDBC(udsDbCtx) { udsEzDBC =>
       
-      DoJDBCReturningWork.withEzDBC(msiDbCtx, { msiEzDBC =>
+      DoJDBCReturningWork.withEzDBC(msiDbCtx) { msiEzDBC =>
   
         buildSearchSettingsList(
           selectAndMapSearchSettingsRecords(msiEzDBC,searchSettingsIds),
@@ -106,36 +102,33 @@ class SQLMsiSearchProvider(
           ptmProvider
         )
         
-      })
-      
-    })
+      }
+    }
   }
 
   def getSeqDatabases(seqDbIds: Seq[Long]): Array[SeqDatabase] = {
     if( seqDbIds.isEmpty ) return Array()
     
-    DoJDBCReturningWork.withEzDBC(msiDbCtx, { msiEzDBC =>
+    DoJDBCReturningWork.withEzDBC(msiDbCtx) { msiEzDBC =>
     
       val seqDbQuery = new SelectQueryBuilder1(MsiDbSeqDatabaseTable).mkSelectQuery( (t,c) =>
         List(t.*) -> "WHERE "~ t.ID ~" IN("~ seqDbIds.mkString(",") ~")"
       )
       
       buildSeqDatabases( msiEzDBC.select(seqDbQuery) )    
-    })
+    }
   }
   
   def getSearchedSeqDatabases(searchSettingsId: Long): Array[SeqDatabase] = {    
-    DoJDBCReturningWork.withEzDBC(msiDbCtx, { msiEzDBC =>
+    DoJDBCReturningWork.withEzDBC(msiDbCtx) { msiEzDBC =>
       buildSearchedSeqDatabases( selectAndMapSearchedSeqDbRecords(msiEzDBC,searchSettingsId) )      
-    })
+    }
   }
-  
-
 
   def getEnzymesByName(enzymeNames: Seq[String]): Array[Enzyme] = {
     if( enzymeNames.isEmpty ) return Array()
     
-    DoJDBCReturningWork.withEzDBC(udsDbCtx, { udsEzDBC =>
+    DoJDBCReturningWork.withEzDBC(udsDbCtx) { udsEzDBC =>
   
       val quotedEnzymeNames = enzymeNames.map(udsEzDBC.dialect.quoteString(_))
       val enzQuery = new SelectQueryBuilder1(UdsDbEnzymeTable).mkSelectQuery( (t,c) =>
@@ -147,33 +140,33 @@ class SQLMsiSearchProvider(
         enzymeId => selectAndMapEnzymeCleavageRecords( udsEzDBC, enzymeId )
       )
     
-    })
-    
+    }
   }
   
   def getEnzymes(enzymeIds: Seq[Long]): Array[Enzyme] = {
     if( enzymeIds.isEmpty ) return Array()
     
-    DoJDBCReturningWork.withEzDBC(udsDbCtx, { udsEzDBC =>
+    DoJDBCReturningWork.withEzDBC(udsDbCtx) { udsEzDBC =>
       buildEnzymes(
         selectAndMapEnzymeRecords( udsEzDBC, enzymeIds ),
         enzymeId => selectAndMapEnzymeCleavageRecords( udsEzDBC, enzymeId )
       )
-    })
+    }
   }
   
   private def getEnzymeCleavages(enzymeId: Long): Array[EnzymeCleavage] = {
-    DoJDBCReturningWork.withEzDBC(udsDbCtx, { udsEzDBC =>
+    DoJDBCReturningWork.withEzDBC(udsDbCtx) { udsEzDBC =>
       buildEnzymeCleavages( selectAndMapEnzymeCleavageRecords(udsEzDBC,enzymeId) )
-    })
+    }
   }
   
   def getAllEnzymes(): Array[Enzyme] = {
-    DoJDBCReturningWork.withEzDBC(udsDbCtx, { udsEzDBC =>
+    DoJDBCReturningWork.withEzDBC(udsDbCtx) { udsEzDBC =>
       buildEnzymes( 
-          selectAndMapAllEnzymeRecords(udsEzDBC),
-          enzymeId => selectAndMapEnzymeCleavageRecords( udsEzDBC, enzymeId ))
-    })
+        selectAndMapAllEnzymeRecords(udsEzDBC),
+        enzymeId => selectAndMapEnzymeCleavageRecords( udsEzDBC, enzymeId )
+      )
+    }
   }
 
 }

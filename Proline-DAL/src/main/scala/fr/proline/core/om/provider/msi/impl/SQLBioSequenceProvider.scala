@@ -2,7 +2,7 @@ package fr.proline.core.om.provider.msi.impl
 
 import fr.profi.util.bytes._
 import fr.profi.util.primitives._
-import fr.proline.context.DatabaseConnectionContext
+import fr.proline.context.MsiDbConnectionContext
 import fr.proline.core.dal.DoJDBCReturningWork
 import fr.proline.core.dal.tables.SelectQueryBuilder._
 import fr.proline.core.dal.tables.SelectQueryBuilder1
@@ -15,7 +15,7 @@ import fr.proline.core.om.model.msi.Protein
 import fr.proline.core.om.model.msi.BioSequence
 import fr.proline.core.dal.tables.msi.MsiDbBioSequenceColumns
 
-class SQLBioSequenceProvider(val msiDbCtx: DatabaseConnectionContext) {
+class SQLBioSequenceProvider(val msiDbCtx: MsiDbConnectionContext) {
   
   require( msiDbCtx.getProlineDatabaseType == ProlineDatabaseType.MSI, "MsiDb connection required")
   

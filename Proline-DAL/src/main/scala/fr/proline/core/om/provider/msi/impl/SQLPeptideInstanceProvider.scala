@@ -4,7 +4,7 @@ import com.typesafe.scalalogging.LazyLogging
 
 import fr.profi.jdbc.easy.EasyDBC
 import fr.profi.util.primitives._
-import fr.proline.context.DatabaseConnectionContext
+import fr.proline.context._
 import fr.proline.core.dal.DoJDBCReturningWork
 import fr.proline.core.dal.tables.SelectQueryBuilder._
 import fr.proline.core.dal.tables.SelectQueryBuilder1
@@ -16,13 +16,13 @@ import fr.proline.core.om.provider.msi.IPeptideProvider
 import fr.proline.repository.ProlineDatabaseType
 
 class SQLPeptideInstanceProvider(
-  val msiDbCtx: DatabaseConnectionContext,
+  val msiDbCtx: MsiDbConnectionContext,
   var peptideProvider: IPeptideProvider
 ) extends IPeptideInstanceProvider with LazyLogging {
   
   require( msiDbCtx.getProlineDatabaseType == ProlineDatabaseType.MSI, "MsiDb connection required")
   
-  def this(msiDbCtx: DatabaseConnectionContext, psSqlCtx: DatabaseConnectionContext) = {
+  def this(msiDbCtx: MsiDbConnectionContext, psSqlCtx: DatabaseConnectionContext) = {
     this(msiDbCtx, new SQLPeptideProvider(psSqlCtx) )
   }
 
@@ -38,7 +38,7 @@ class SQLPeptideInstanceProvider(
   def getPeptideInstances(pepInstIds: Seq[Long]): Array[PeptideInstance] = {
     if( pepInstIds.isEmpty ) return Array()
     
-    DoJDBCReturningWork.withEzDBC(msiDbCtx, { msiEzDBC =>
+    DoJDBCReturningWork.withEzDBC(msiDbCtx) { msiEzDBC =>
       
       // TODO: use max nb iterations
       val sqlQuery1 = new SelectQueryBuilder1(MsiDbPeptideInstanceTable).mkSelectQuery( (t,c) =>
@@ -47,13 +47,13 @@ class SQLPeptideInstanceProvider(
       val pepInstRecords = msiEzDBC.selectAllRecords(sqlQuery1)
       
       this._getPeptideInstances(msiEzDBC,pepInstIds,pepInstRecords)
-    })
+    }
   }
   
   def getPeptideInstancesByPeptideIds(pepIds: Seq[Long]): Array[PeptideInstance] = {
     if( pepIds.isEmpty ) return Array()
     
-    DoJDBCReturningWork.withEzDBC(msiDbCtx, { msiEzDBC =>
+    DoJDBCReturningWork.withEzDBC(msiDbCtx) { msiEzDBC =>
       
       // TODO: use max nb iterations
       val sqlQuery1 = new SelectQueryBuilder1(MsiDbPeptideInstanceTable).mkSelectQuery( (t,c) =>
@@ -63,7 +63,7 @@ class SQLPeptideInstanceProvider(
       val pepInstIds = pepInstRecords.map( _("id").asInstanceOf[Long] )
       
       this._getPeptideInstances(msiEzDBC,pepInstIds,pepInstRecords)
-    })
+    }
   }
   
   private def _getPeptideInstances(
@@ -83,7 +83,7 @@ class SQLPeptideInstanceProvider(
   def getResultSummariesPeptideInstances(rsmIds: Seq[Long]): Array[PeptideInstance] = {
     if( rsmIds.isEmpty ) return Array()
     
-    DoJDBCReturningWork.withEzDBC(msiDbCtx, { msiEzDBC =>
+    DoJDBCReturningWork.withEzDBC(msiDbCtx) { msiEzDBC =>
       
       // TODO: use max nb iterations
       val sqlQuery1 = new SelectQueryBuilder1(MsiDbPeptideInstanceTable).mkSelectQuery( (t,c) =>
@@ -98,7 +98,7 @@ class SQLPeptideInstanceProvider(
   
       PeptideInstanceBuilder.buildPeptideInstances(pepInstRecords, pepInstPepMatchMapRecords, peptideProvider)
       
-    })
+    }
   }
   
 }

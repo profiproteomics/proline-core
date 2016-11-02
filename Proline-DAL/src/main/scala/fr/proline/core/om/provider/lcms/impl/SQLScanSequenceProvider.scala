@@ -3,7 +3,7 @@ package fr.proline.core.om.provider.lcms.impl
 import scala.collection.mutable.ArrayBuffer
 
 import fr.profi.jdbc.ResultSetRow
-import fr.proline.context.DatabaseConnectionContext
+import fr.proline.context.LcMsDbConnectionContext
 import fr.proline.core.dal.{ DoJDBCWork, DoJDBCReturningWork }
 import fr.proline.core.dal.tables.SelectQueryBuilder._
 import fr.proline.core.dal.tables.SelectQueryBuilder1
@@ -13,7 +13,7 @@ import fr.proline.core.om.provider.lcms.IScanSequenceProvider
 import fr.profi.util.sql._
 import fr.profi.util.primitives._
 
-class SQLScanSequenceProvider(val lcmsDbCtx: DatabaseConnectionContext) extends IScanSequenceProvider {
+class SQLScanSequenceProvider(val lcmsDbCtx: LcMsDbConnectionContext) extends IScanSequenceProvider {
   
   val ScanSeqCols = LcmsDbScanSequenceTable.columns
   val ScanCols = LcmsDbScanTable.columns
@@ -30,7 +30,7 @@ class SQLScanSequenceProvider(val lcmsDbCtx: DatabaseConnectionContext) extends 
     val scanSeqs = new ArrayBuffer[LcMsScanSequence](scanSequenceIds.length)
     
     // Load runs
-    DoJDBCReturningWork.withEzDBC(lcmsDbCtx, { ezDBC =>
+    DoJDBCReturningWork.withEzDBC(lcmsDbCtx) { ezDBC =>
       
       val runQuery = new SelectQueryBuilder1(LcmsDbScanSequenceTable).mkSelectQuery( (t,c) =>
         List(t.*) -> "WHERE "~ t.ID ~" IN("~ scanSequenceIds.mkString(",") ~") "
@@ -45,7 +45,7 @@ class SQLScanSequenceProvider(val lcmsDbCtx: DatabaseConnectionContext) extends 
       }
       
       scanSeqs.toArray
-    })
+    }
   }
   
   def buildScanSequence( runRecord: ResultSetRow, scans: Array[LcMsScan] ): LcMsScanSequence = {
@@ -64,7 +64,7 @@ class SQLScanSequenceProvider(val lcmsDbCtx: DatabaseConnectionContext) extends 
   def getScans( scanSequenceIds: Seq[Long] ): Array[LcMsScan] = {
     if( scanSequenceIds.isEmpty ) return Array()
     
-    DoJDBCReturningWork.withEzDBC(lcmsDbCtx, { ezDBC => 
+    DoJDBCReturningWork.withEzDBC(lcmsDbCtx) { ezDBC => 
       
       val runIdsStr = scanSequenceIds.mkString(",")    
          
@@ -87,7 +87,7 @@ class SQLScanSequenceProvider(val lcmsDbCtx: DatabaseConnectionContext) extends 
       }
       
       scans.sortBy(_.time)
-    })
+    }
   }
   
   def buildLcmsScan( scanRecord: ResultSetRow ): LcMsScan = {

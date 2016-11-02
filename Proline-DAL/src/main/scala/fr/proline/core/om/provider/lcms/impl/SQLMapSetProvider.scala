@@ -4,7 +4,7 @@ import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.HashMap
 import fr.profi.jdbc.ResultSetRow
 import fr.profi.jdbc.easy.EasyDBC
-import fr.proline.context.DatabaseConnectionContext
+import fr.proline.context.LcMsDbConnectionContext
 import fr.proline.core.dal.{ DoJDBCWork, DoJDBCReturningWork }
 import fr.proline.core.dal.tables.SelectQueryBuilder._
 import fr.proline.core.dal.tables.{ SelectQueryBuilder1 }
@@ -15,7 +15,7 @@ import fr.profi.util.primitives._
 //import fr.profi.util.sql._
   
 class SQLMapSetProvider(
-  val lcmsDbCtx: DatabaseConnectionContext
+  val lcmsDbCtx: LcMsDbConnectionContext
 ) extends IMapSetProvider {
   
   val MapSetCols = LcmsDbMapSetTable.columns
@@ -25,7 +25,7 @@ class SQLMapSetProvider(
   
   def getMapSet(mapSetId: Long, loadPeakels: Boolean = false): MapSet = {    
     
-    DoJDBCReturningWork.withEzDBC(lcmsDbCtx, { ezDBC =>
+    DoJDBCReturningWork.withEzDBC(lcmsDbCtx) { ezDBC =>
     
       // Try to retrieve the master map id
       val masterMapIdQuery = new SelectQueryBuilder1(LcmsDbMapSetTable).mkSelectQuery( (t,c) =>
@@ -63,14 +63,16 @@ class SQLMapSetProvider(
         buildMapSet( mapSetRecord, childMaps, masterMap, mapAlnSets )
       }
     
-    })
+    }
     
   }
   
-  def buildMapSet( mapSetRecord: ResultSetRow,
-                   childMaps: Array[ProcessedMap],
-                   masterMap: ProcessedMap,                   
-                   mapAlnSets: Array[MapAlignmentSet] ): MapSet = {
+  def buildMapSet(
+    mapSetRecord: ResultSetRow,
+    childMaps: Array[ProcessedMap],
+    masterMap: ProcessedMap,
+    mapAlnSets: Array[MapAlignmentSet]
+  ): MapSet = {
     
     new MapSet(
       id = toLong(mapSetRecord.getAny(MapSetCols.ID)),

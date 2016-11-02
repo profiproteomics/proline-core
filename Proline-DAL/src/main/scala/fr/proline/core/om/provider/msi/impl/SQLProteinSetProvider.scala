@@ -2,7 +2,7 @@ package fr.proline.core.om.provider.msi.impl
 
 import fr.profi.jdbc.easy.EasyDBC
 import fr.profi.util.primitives._
-import fr.proline.context.DatabaseConnectionContext
+import fr.proline.context._
 import fr.proline.core.dal.DoJDBCReturningWork
 import fr.proline.core.dal.tables.SelectQueryBuilder._
 import fr.proline.core.dal.tables.SelectQueryBuilder1
@@ -13,13 +13,13 @@ import fr.proline.core.om.provider.msi.IPeptideSetProvider
 import fr.proline.repository.ProlineDatabaseType
 
 class SQLProteinSetProvider(
-  val msiDbCtx: DatabaseConnectionContext,
+  val msiDbCtx: MsiDbConnectionContext,
   val peptideSetProvider: IPeptideSetProvider
 ) {
   
   require( msiDbCtx.getProlineDatabaseType == ProlineDatabaseType.MSI, "MsiDb connection required")
   
-  def this(msiDbCtx: DatabaseConnectionContext, psDbCtx: DatabaseConnectionContext) = {
+  def this(msiDbCtx: MsiDbConnectionContext, psDbCtx: DatabaseConnectionContext) = {
     this(msiDbCtx, new SQLPeptideSetProvider(msiDbCtx,psDbCtx) )
   }
 
@@ -34,7 +34,7 @@ class SQLProteinSetProvider(
   def getProteinSets(protSetIds: Seq[Long]): Array[ProteinSet] = {
     if (protSetIds.isEmpty) return Array()
     
-    DoJDBCReturningWork.withEzDBC(msiDbCtx, { msiEzDBC =>
+    DoJDBCReturningWork.withEzDBC(msiDbCtx) { msiEzDBC =>
     
       val pepSetIdQuery = new SelectQueryBuilder1(MsiDbPeptideSetTable).mkSelectQuery( (t,c) =>
         List(t.ID) -> "WHERE "~ t.PROTEIN_SET_ID ~" IN("~ protSetIds.mkString(",") ~")"
@@ -49,19 +49,19 @@ class SQLProteinSetProvider(
         peptideSets
       )
       
-    })
+    }
   }
 
   def getResultSummariesProteinSets(rsmIds: Seq[Long]): Array[ProteinSet] = {
     if (rsmIds.isEmpty) return Array()
     
-    DoJDBCReturningWork.withEzDBC(msiDbCtx, { msiEzDBC =>
+    DoJDBCReturningWork.withEzDBC(msiDbCtx) { msiEzDBC =>
       ProteinSetBuilder.buildProteinSets(
         this._getRSMsProtSetRecords(msiEzDBC,rsmIds),
         this._getRSMsProtSetItemRecords(msiEzDBC,rsmIds),
         this.peptideSetProvider.getResultSummariesPeptideSets(rsmIds)
       )
-    })
+    }
   }
 
   private def _getRSMsProtSetRecords(msiEzDBC: EasyDBC, rsmIds: Seq[Long]): Array[AnyMap] = {

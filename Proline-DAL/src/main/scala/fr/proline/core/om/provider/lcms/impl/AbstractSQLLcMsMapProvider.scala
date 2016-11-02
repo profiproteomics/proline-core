@@ -7,7 +7,7 @@ import fr.profi.jdbc.easy.EasyDBC
 import fr.profi.util.primitives._
 import fr.profi.util.serialization.ProfiJson
 import fr.profi.util.sql.StringOrBoolAsBool._
-import fr.proline.context.DatabaseConnectionContext
+import fr.proline.context.LcMsDbConnectionContext
 import fr.proline.core.dal.DoJDBCReturningWork
 import fr.proline.core.dal.helper.LcmsDbHelper
 import fr.proline.core.dal.tables.SelectQueryBuilder._
@@ -18,7 +18,7 @@ import fr.proline.core.om.provider.lcms.ILcMsMapProvider
 
 abstract class AbstractSQLLcMsMapProvider extends ILcMsMapProvider {
   
-  protected val lcmsDbCtx: DatabaseConnectionContext
+  protected val lcmsDbCtx: LcMsDbConnectionContext
   protected val LcMsMapCols = LcmsDbMapColumns
   protected val FtCols = LcmsDbFeatureColumns
   
@@ -33,7 +33,7 @@ abstract class AbstractSQLLcMsMapProvider extends ILcMsMapProvider {
     require( rawMapIds != null, "rawMapIds is null" )
     if( rawMapIds.isEmpty ) return Map()
     
-    DoJDBCReturningWork.withEzDBC( lcmsDbCtx, { ezDBC =>
+    DoJDBCReturningWork.withEzDBC( lcmsDbCtx) { ezDBC =>
       
       val olpFtIdsByFtId = new HashMap[Long,ArrayBuffer[Long]]
       val olpIdMapQuery = new SelectQueryBuilder1(LcmsDbFeatureOverlapMappingTable).mkSelectQuery( (t,c) =>
@@ -52,8 +52,8 @@ abstract class AbstractSQLLcMsMapProvider extends ILcMsMapProvider {
         mapBuilder += ( ftId -> olpFtIds.toArray )
       }
       
-      mapBuilder.result()      
-    })
+      mapBuilder.result()
+    }
 
   }
   
@@ -64,7 +64,7 @@ abstract class AbstractSQLLcMsMapProvider extends ILcMsMapProvider {
     ms2EventIdsByFtId: Map[Long,Array[Long]]
   ): Map[Long,Feature] = {
     
-    DoJDBCReturningWork.withEzDBC( lcmsDbCtx, { ezDBC =>
+    DoJDBCReturningWork.withEzDBC(lcmsDbCtx) { ezDBC =>
     
       val mapBuilder = scala.collection.immutable.Map.newBuilder[Long,Feature]
       
@@ -85,7 +85,7 @@ abstract class AbstractSQLLcMsMapProvider extends ILcMsMapProvider {
       
       mapBuilder.result()
     
-    })
+    }
   }
   
   protected def eachFeatureRecord(mapIds: Seq[Long], onEachFt: ResultSetRow => Unit): Unit = {

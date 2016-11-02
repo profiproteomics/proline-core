@@ -3,7 +3,7 @@ package fr.proline.core.om.provider.lcms.impl
 import fr.profi.jdbc.ResultSetRow
 import fr.profi.util.primitives._
 import fr.profi.util.serialization.ProfiJson
-import fr.proline.context.DatabaseConnectionContext
+import fr.proline.context.UdsDbConnectionContext
 import fr.proline.core.dal.DoJDBCReturningWork
 import fr.proline.core.dal.tables.{SelectQueryBuilder1, SelectQueryBuilder2}
 import fr.proline.core.dal.tables.SelectQueryBuilder._
@@ -15,7 +15,7 @@ import fr.proline.core.om.provider.ProlineManagedDirectoryType
 import fr.proline.core.om.provider.lcms.IRunProvider
 import fr.proline.core.om.provider.lcms.IScanSequenceProvider
 
-class SQLRawFileProvider(val udsDbCtx: DatabaseConnectionContext, val pathConverter: Option[IProlinePathConverter] ) {
+class SQLRawFileProvider(val udsDbCtx: UdsDbConnectionContext, val pathConverter: Option[IProlinePathConverter] ) {
   
   protected val RawFileCols = UdsDbRawFileTable.columns
   protected val InstCols = UdsDbInstrumentTable.columns
@@ -27,7 +27,7 @@ class SQLRawFileProvider(val udsDbCtx: DatabaseConnectionContext, val pathConver
   def getRawFiles( rawFileIdentifiers: Seq[String] ): Array[RawFile] = {
     if( rawFileIdentifiers.isEmpty ) return Array()
     
-    DoJDBCReturningWork.withEzDBC(udsDbCtx, { ezDBC =>
+    DoJDBCReturningWork.withEzDBC(udsDbCtx) { ezDBC =>
       
       val rawFileQuery = new SelectQueryBuilder2(UdsDbRawFileTable, UdsDbInstrumentTable).mkSelectQuery( (t1,c1, t2, c2) =>
         List(t1.*, t2.*) -> 
@@ -69,14 +69,14 @@ class SQLRawFileProvider(val udsDbCtx: DatabaseConnectionContext, val pathConver
         )
         
       } toArray
-    })
+    }
     
   }
   
 }
 
 class SQLRunProvider(
-  val udsDbCtx: DatabaseConnectionContext,
+  val udsDbCtx: UdsDbConnectionContext,
   val scanSeqProvider: Option[IScanSequenceProvider],
   val pathConverter: Option[IProlinePathConverter] = None
 ) extends IRunProvider {
@@ -104,7 +104,7 @@ class SQLRunProvider(
     var runIdx = 0
     
     // Load runs
-    DoJDBCReturningWork.withEzDBC(udsDbCtx, { ezDBC =>
+    DoJDBCReturningWork.withEzDBC(udsDbCtx) { ezDBC =>
       
       val runQuery = new SelectQueryBuilder1(UdsDbRunTable).mkSelectQuery( (t1,c1) =>
         List(t1.*) -> "WHERE "~ t1.ID ~" IN ("~ distinctRunIds.mkString(",") ~") "
@@ -128,7 +128,7 @@ class SQLRunProvider(
       
       runs
       
-    })
+    }
     
   }
   

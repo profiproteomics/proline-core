@@ -2,7 +2,7 @@ package fr.proline.core.om.provider.msi.impl
 
 import fr.profi.util.misc.MapIfNotNull
 import fr.profi.util.serialization.ProfiJson
-import fr.proline.context.DatabaseConnectionContext
+import fr.proline.context._
 import fr.proline.core.dal.DoJDBCReturningWork
 import fr.proline.core.dal.helper.MsiDbHelper
 import fr.proline.core.dal.tables.SelectQueryBuilder._
@@ -11,9 +11,9 @@ import fr.proline.core.dal.tables.msi.MsiDbResultSummaryTable
 import fr.proline.core.om.model.msi._
 
 class SQLLazyResultSummaryProvider(
-  val msiDbCtx: DatabaseConnectionContext,
+  val msiDbCtx: MsiDbConnectionContext,
   val psDbCtx: DatabaseConnectionContext,
-  val udsDbCtx: DatabaseConnectionContext = null
+  val udsDbCtx: UdsDbConnectionContext = null
 ) extends SQLLazyResultSetLoader {
 
   // Instantiate a MSIdb helper
@@ -166,7 +166,7 @@ class SQLLazyResultSummaryProvider(
       List(t1.*) -> "WHERE "~ t1.ID ~" IN ("~ rsmIds.mkString(",") ~") "
     )
 
-    DoJDBCReturningWork.withEzDBC(msiDbCtx, { msiEzDBC =>
+    DoJDBCReturningWork.withEzDBC(msiDbCtx) { msiEzDBC =>
     
       msiEzDBC.select(rsmQuery) { r =>
         
@@ -185,7 +185,7 @@ class SQLLazyResultSummaryProvider(
         )
       }
       
-    }) toArray
+    } toArray
   }
   
   /**

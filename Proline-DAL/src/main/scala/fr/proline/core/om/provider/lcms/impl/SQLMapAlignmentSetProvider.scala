@@ -3,7 +3,7 @@ package fr.proline.core.om.provider.lcms.impl
 import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.HashMap
 import fr.profi.jdbc.ResultSetRow
-import fr.proline.context.DatabaseConnectionContext
+import fr.proline.context.LcMsDbConnectionContext
 import fr.proline.core.dal.{ DoJDBCWork, DoJDBCReturningWork }
 import fr.proline.core.dal.tables.SelectQueryBuilder._
 import fr.proline.core.dal.tables.SelectQueryBuilder1
@@ -12,7 +12,7 @@ import fr.proline.core.om.model.lcms._
 import fr.proline.core.om.provider.lcms.IMapAlignmentSetProvider
 import fr.profi.util.primitives._
 
-class SQLMapAlignmentSetProvider( val lcmsDbCtx: DatabaseConnectionContext ) extends IMapAlignmentSetProvider {
+class SQLMapAlignmentSetProvider( val lcmsDbCtx: LcMsDbConnectionContext ) extends IMapAlignmentSetProvider {
   
   val MapAlnCols = LcmsDbMapAlignmentTable.columns
   
@@ -40,14 +40,14 @@ class SQLMapAlignmentSetProvider( val lcmsDbCtx: DatabaseConnectionContext ) ext
   def getMapAlignmentSets( mapSetId: Long ): Array[MapAlignmentSet] = {
     
     // Load processed map features
-    val mapAlns = DoJDBCReturningWork.withEzDBC(lcmsDbCtx, { ezDBC =>
+    val mapAlns = DoJDBCReturningWork.withEzDBC(lcmsDbCtx) { ezDBC =>
       
       val mapAlnQuery = new SelectQueryBuilder1(LcmsDbMapAlignmentTable).mkSelectQuery( (t,c) =>
         List(t.*) -> "WHERE "~ t.MAP_SET_ID ~" = "~ mapSetId
       )
       
       ezDBC.select( mapAlnQuery ) { buildMapAlignment( _ ) }
-    })
+    }
     
     val mapAlnByKey = mapAlns.groupBy( mapAln => mapAln.refMapId -> mapAln.targetMapId )
     

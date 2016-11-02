@@ -2,7 +2,7 @@ package fr.proline.core.om.provider.msi.impl
 
 import fr.profi.jdbc.easy.EasyDBC
 import fr.profi.util.primitives._
-import fr.proline.context.DatabaseConnectionContext
+import fr.proline.context._
 import fr.proline.core.dal.DoJDBCReturningWork
 import fr.proline.core.dal.helper.MsiDbHelper
 import fr.proline.core.dal.tables.SelectQueryBuilder._
@@ -14,13 +14,13 @@ import fr.proline.core.om.provider.msi.{ IPeptideSetProvider, IPeptideInstancePr
 import fr.proline.repository.ProlineDatabaseType
 
 class SQLPeptideSetProvider(
-  val msiDbCtx: DatabaseConnectionContext,
+  val msiDbCtx: MsiDbConnectionContext,
   val peptideInstanceProvider: IPeptideInstanceProvider
 ) extends IPeptideSetProvider {
   
   require( msiDbCtx.getProlineDatabaseType == ProlineDatabaseType.MSI, "MsiDb connection required")
   
-  def this(msiDbCtx: DatabaseConnectionContext, psDbCtx: DatabaseConnectionContext) {
+  def this(msiDbCtx: MsiDbConnectionContext, psDbCtx: DatabaseConnectionContext) {
     this(msiDbCtx, new SQLPeptideInstanceProvider(msiDbCtx,psDbCtx) )
   }
   
@@ -45,7 +45,7 @@ class SQLPeptideSetProvider(
   def getPeptideSets(pepSetIds: Seq[Long]): Array[PeptideSet] = {
     if (pepSetIds.isEmpty) return Array()
     
-    DoJDBCReturningWork.withEzDBC(msiDbCtx, { msiEzDBC =>
+    DoJDBCReturningWork.withEzDBC(msiDbCtx) { msiEzDBC =>
     
       val pepSetItemRecords = this._getPepSetItemRecords(msiEzDBC,pepSetIds)
       val pepInstIds = pepSetItemRecords.map { v => toLong(v(PepSetItemCols.PEPTIDE_INSTANCE_ID)) } distinct
@@ -59,13 +59,13 @@ class SQLPeptideSetProvider(
         scoreTypeById
       )
     
-    })
+    }
   }
 
   def getResultSummariesPeptideSets(rsmIds: Seq[Long]): Array[PeptideSet] = {
     if (rsmIds.isEmpty) return Array()
     
-    DoJDBCReturningWork.withEzDBC(msiDbCtx, { msiEzDBC =>
+    DoJDBCReturningWork.withEzDBC(msiDbCtx) { msiEzDBC =>
     
       PeptideSetBuilder.buildPeptideSets(
         this._getRSMsPepSetRecords(msiEzDBC,rsmIds),
@@ -76,7 +76,7 @@ class SQLPeptideSetProvider(
         scoreTypeById
       )
       
-    })
+    }
   }
 
   private def _getRSMsPepSetRecords(msiEzDBC: EasyDBC, rsmIds: Seq[Long]): Array[AnyMap] = {

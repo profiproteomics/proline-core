@@ -2,7 +2,7 @@ package fr.proline.core.om.provider.msi.impl
 
 import fr.profi.jdbc.easy._
 import fr.profi.util.primitives._
-import fr.proline.context.DatabaseConnectionContext
+import fr.proline.context.MsiDbConnectionContext
 import fr.proline.core.dal.DoJDBCReturningWork
 import fr.proline.core.dal.tables.SelectQueryBuilder._
 import fr.proline.core.dal.tables.SelectQueryBuilder1
@@ -15,23 +15,21 @@ import fr.proline.repository.ProlineDatabaseType
  * @author David Bouyssie
  *
  */
-class SQLPeaklistProvider(val msiDbCtx: DatabaseConnectionContext) {
+class SQLPeaklistProvider(val msiDbCtx: MsiDbConnectionContext) {
   require( msiDbCtx.getProlineDatabaseType == ProlineDatabaseType.MSI, "MsiDb connection required")
   
   def getPeaklists(peaklistIds: Seq[Long]): Array[Peaklist] = {
     if( peaklistIds.isEmpty ) return Array()
     
-    DoJDBCReturningWork.withEzDBC(msiDbCtx, { msiEzDBC =>
+    DoJDBCReturningWork.withEzDBC(msiDbCtx) { msiEzDBC =>
 
       PeaklistBuilder.buildPeaklists(
         SQLPeaklistProvider.selectPeaklistRecords(msiEzDBC,peaklistIds),
         pklSoftIds => SQLPeaklistSoftwareProvider.selectPklSoftRecords(msiEzDBC,pklSoftIds)
       )
       
-    })
-
+    }
   }
-  
 
 }
 

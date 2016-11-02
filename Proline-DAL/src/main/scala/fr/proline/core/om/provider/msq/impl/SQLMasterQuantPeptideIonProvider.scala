@@ -5,7 +5,7 @@ import scala.collection.mutable.LongMap
 
 import fr.profi.util.serialization.ProfiJson
 import fr.profi.util.primitives._
-import fr.proline.context.DatabaseConnectionContext
+import fr.proline.context.MsiDbConnectionContext
 import fr.proline.core.dal.DoJDBCReturningWork
 import fr.proline.core.dal.tables.SelectQueryBuilder._
 import fr.proline.core.dal.tables.SelectQueryBuilder3
@@ -17,7 +17,7 @@ import fr.proline.core.om.model.msq.MasterQuantPeptideIonProperties
 import fr.proline.core.om.model.msq.QuantPeptideIon
 import fr.proline.core.om.provider.msq.IMasterQuantPeptideIonProvider
 
-class SQLMasterQuantPeptideIonProvider(val msiDbCtx: DatabaseConnectionContext) extends IMasterQuantPeptideIonProvider {
+class SQLMasterQuantPeptideIonProvider(val msiDbCtx: MsiDbConnectionContext) extends IMasterQuantPeptideIonProvider {
   
   val MQPepIonTable = MsiDbMasterQuantPeptideIonTable
   val MQPepIonCols = MQPepIonTable.columns
@@ -94,7 +94,7 @@ class SQLMasterQuantPeptideIonProvider(val msiDbCtx: DatabaseConnectionContext) 
   
   protected def loadMasterQuantPeptideIons(sqlQuery: String): Array[MasterQuantPeptideIon] = {
     
-    DoJDBCReturningWork.withEzDBC(msiDbCtx, { msiEzDBC =>
+    DoJDBCReturningWork.withEzDBC(msiDbCtx) { msiEzDBC =>
       
       val mqPepIons = new ArrayBuffer[MasterQuantPeptideIon]()
       msiEzDBC.selectAndProcess(sqlQuery) { r =>
@@ -102,7 +102,7 @@ class SQLMasterQuantPeptideIonProvider(val msiDbCtx: DatabaseConnectionContext) 
       }
       
       mqPepIons.toArray
-    })
+    }
 
   }
   

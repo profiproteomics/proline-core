@@ -1,7 +1,7 @@
 package fr.proline.core.om.provider.msi.impl
 
 import com.typesafe.scalalogging.LazyLogging
-import fr.proline.context.DatabaseConnectionContext
+import fr.proline.context._
 import fr.proline.core.dal.DoJDBCReturningWork
 import fr.proline.core.dal.tables.SelectQueryBuilder._
 import fr.proline.core.dal.tables.SelectQueryBuilder1
@@ -15,9 +15,9 @@ trait SQLLazyResultSetLoader extends LazyLogging {
 
   import fr.proline.core.dal.helper.MsiDbHelper
 
-  val msiDbCtx: DatabaseConnectionContext
+  val msiDbCtx: MsiDbConnectionContext
   val psDbCtx: DatabaseConnectionContext
-  val udsDbCtx: DatabaseConnectionContext
+  val udsDbCtx: UdsDbConnectionContext
 
   val RSCols = MsiDbResultSetTable.columns
 
@@ -135,9 +135,9 @@ trait SQLLazyResultSetLoader extends LazyLogging {
 }
 
 class SQLLazyResultSetProvider(
-  val msiDbCtx: DatabaseConnectionContext,
+  val msiDbCtx: MsiDbConnectionContext,
   val psDbCtx: DatabaseConnectionContext,
-  val udsDbCtx: DatabaseConnectionContext
+  val udsDbCtx: UdsDbConnectionContext
 ) extends SQLLazyResultSetLoader { 
 
   def getLazyResultSets(

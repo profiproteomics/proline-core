@@ -5,7 +5,7 @@ import scala.collection.mutable.HashMap
 
 import fr.profi.jdbc.easy.EasyDBC
 import fr.profi.util.serialization.ProfiJson
-import fr.proline.context.DatabaseConnectionContext
+import fr.proline.context._
 import fr.proline.core.dal.DoJDBCReturningWork
 import fr.proline.core.dal.tables.SelectQueryBuilder._
 import fr.proline.core.dal.tables.SelectQueryBuilder1
@@ -23,9 +23,9 @@ import fr.proline.core.om.provider.msq.IQuantResultSummaryProvider
 import fr.profi.util.primitives._
 
 class SQLQuantResultSummaryProvider(
-  override val msiDbCtx: DatabaseConnectionContext,
+  override val msiDbCtx: MsiDbConnectionContext,
   override val psDbCtx: DatabaseConnectionContext,
-  override val udsDbCtx: DatabaseConnectionContext
+  override val udsDbCtx: UdsDbConnectionContext
 ) extends SQLResultSummaryProvider(msiDbCtx,psDbCtx,udsDbCtx) with IQuantResultSummaryProvider {  
   
   protected val mqProtSetProvider = new SQLMasterQuantProteinSetProvider(msiDbCtx, psDbCtx)

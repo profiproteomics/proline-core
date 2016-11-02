@@ -25,7 +25,7 @@ class SQLInstrumentProvider(val dbCtx: DatabaseConnectionContext) extends IInstr
   def getInstruments( instrumentIds: Seq[Long] ): Array[Instrument] = {
     if( instrumentIds.isEmpty ) return Array()
     
-    DoJDBCReturningWork.withEzDBC(dbCtx, { udsEzDBC =>
+    DoJDBCReturningWork.withEzDBC(dbCtx) { udsEzDBC =>
       
       val instrumentQuery = new SelectQueryBuilder1(UdsDbInstrumentTable).mkSelectQuery( (t,c) =>
         List(t.*) -> "WHERE "~ t.ID ~" IN("~ instrumentIds.mkString(",") ~")"
@@ -48,8 +48,7 @@ class SQLInstrumentProvider(val dbCtx: DatabaseConnectionContext) extends IInstr
         instrument
         
       } toArray
-    })
-    
+    }
     
   }
 

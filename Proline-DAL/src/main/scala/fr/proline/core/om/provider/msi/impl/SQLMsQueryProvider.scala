@@ -3,7 +3,7 @@ package fr.proline.core.om.provider.msi.impl
 import scala.collection.mutable.ArrayBuffer
 import fr.profi.jdbc.easy._
 import fr.profi.util.primitives._
-import fr.proline.context.DatabaseConnectionContext
+import fr.proline.context.MsiDbConnectionContext
 import fr.proline.core.dal.DoJDBCReturningWork
 import fr.proline.core.dal.tables.SelectQueryBuilder._
 import fr.proline.core.dal.tables.SelectQueryBuilder1
@@ -14,7 +14,7 @@ import fr.proline.core.om.provider.msi.IMsQueryProvider
 import fr.proline.repository.ProlineDatabaseType
 import fr.proline.core.dal.tables.SelectQueryBuilder2
 
-class SQLMsQueryProvider(val msiDbCtx: DatabaseConnectionContext) extends IMsQueryProvider {
+class SQLMsQueryProvider(val msiDbCtx: MsiDbConnectionContext) extends IMsQueryProvider {
   
   require( msiDbCtx.getProlineDatabaseType == ProlineDatabaseType.MSI, "MsiDb connection required")
   
@@ -22,7 +22,7 @@ class SQLMsQueryProvider(val msiDbCtx: DatabaseConnectionContext) extends IMsQue
   
   def getUnassignedMsQueries( msiSearchIds: Seq[Long] ): Array[MsQuery] = {
     
-    DoJDBCReturningWork.withEzDBC(msiDbCtx, { msiEzDBC =>
+    DoJDBCReturningWork.withEzDBC(msiDbCtx) { msiEzDBC =>
 
       val msQueryIdsSql = new SelectQueryBuilder2(MsiDbResultSetTable, MsiDbPeptideMatchTable).mkSelectQuery((t1,c1,t2,c2) => 
         List(t2.MS_QUERY_ID) -> "WHERE "~ t1.ID ~ " = " ~ t2.RESULT_SET_ID ~ " AND " ~ t1.MSI_SEARCH_ID ~ " IN (" ~ msiSearchIds.mkString(",") ~ ")"
@@ -36,14 +36,14 @@ class SQLMsQueryProvider(val msiDbCtx: DatabaseConnectionContext) extends IMsQue
       val msq = msiEzDBC.selectLongs(unmatchedMsQueryIdsSql)
       getMsQueries(msq)
 
-    }, false)
+    }
 
   }
 
   def getMsiSearchesMsQueries(msiSearchIds: Seq[Long]): Array[MsQuery] = {
     if( msiSearchIds == null || msiSearchIds.isEmpty ) return Array.empty[MsQuery]
     
-    DoJDBCReturningWork.withEzDBC(msiDbCtx, { msiEzDBC =>
+    DoJDBCReturningWork.withEzDBC(msiDbCtx) { msiEzDBC =>
       
       val msiSearchIdsAsStr = msiSearchIds.mkString(",")
       val msqQuery = new SelectQueryBuilder1(MsiDbMsQueryTable).mkSelectQuery( (t,c) =>
@@ -94,14 +94,14 @@ class SQLMsQueryProvider(val msiDbCtx: DatabaseConnectionContext) extends IMsQue
       }
   
       msQueries.toArray
-    }, false)    
+    }
 
   }
 
   def getMsQueries( msQueryIds: Seq[Long] ): Array[MsQuery] = {
     if( msQueryIds.isEmpty ) return Array()
     
-    DoJDBCReturningWork.withEzDBC(msiDbCtx, { msiEzDBC =>
+    DoJDBCReturningWork.withEzDBC(msiDbCtx) { msiEzDBC =>
 
       val msQueriesIdsAsStr = msQueryIds.mkString(",")
       val msqQuery = new SelectQueryBuilder1(MsiDbMsQueryTable).mkSelectQuery((t, c) =>
@@ -137,7 +137,7 @@ class SQLMsQueryProvider(val msiDbCtx: DatabaseConnectionContext) extends IMsQue
   
       msQueries.toArray
                
-    }, false) 
+    }
      
   }
 }

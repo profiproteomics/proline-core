@@ -2,7 +2,7 @@ package fr.proline.core.om.provider.msq.impl
 
 import fr.profi.util.collection._
 import fr.profi.util.primitives._
-import fr.proline.context.DatabaseConnectionContext
+import fr.proline.context._
 import fr.proline.core.dal.tables.SelectQueryBuilder._
 import fr.proline.core.dal.tables.msi.MsiDbMasterQuantComponentTable
 import fr.proline.core.dal.tables.msi.MsiDbObjectTreeTable
@@ -11,9 +11,9 @@ import fr.proline.core.om.provider.msi.impl.SQLLazyResultSummaryProvider
 import fr.proline.core.om.provider.msq.IQuantResultSummaryProvider
 
 class SQLLazyQuantResultSummaryProvider(
-  override val msiDbCtx: DatabaseConnectionContext,
+  override val msiDbCtx: MsiDbConnectionContext,
   override val psDbCtx: DatabaseConnectionContext,
-  override val udsDbCtx: DatabaseConnectionContext
+  override val udsDbCtx: UdsDbConnectionContext
 ) extends SQLLazyResultSummaryProvider(msiDbCtx,psDbCtx,udsDbCtx) {  
   
   protected val mqProtSetProvider = new SQLMasterQuantProteinSetProvider(msiDbCtx, psDbCtx)

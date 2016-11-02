@@ -3,7 +3,7 @@ package fr.proline.core.om.provider.msi.impl
 import scala.collection.mutable.HashMap
 import fr.profi.jdbc.easy._
 import fr.profi.util.primitives._
-import fr.proline.context.DatabaseConnectionContext
+import fr.proline.context.UdsDbConnectionContext
 import fr.proline.core.dal.DoJDBCReturningWork
 import fr.proline.core.dal.tables.SelectQueryBuilder._
 import fr.proline.core.dal.tables.SelectQueryBuilder1
@@ -15,7 +15,7 @@ import fr.proline.repository.ProlineDatabaseType
 import fr.proline.core.dal.tables.SelectQueryBuilder3
 import fr.proline.core.orm.uds.FragmentationSeries
 
-class SQLInstrumentConfigProvider(val udsDbCtx: DatabaseConnectionContext) extends IInstrumentConfigProvider {
+class SQLInstrumentConfigProvider(val udsDbCtx: UdsDbConnectionContext) extends IInstrumentConfigProvider {
   
   require( udsDbCtx.getProlineDatabaseType == ProlineDatabaseType.UDS, "UdsDb connection required")
   
@@ -29,7 +29,7 @@ class SQLInstrumentConfigProvider(val udsDbCtx: DatabaseConnectionContext) exten
   def getInstrumentConfigs(instConfigIds: Seq[Long]): Array[InstrumentConfig] = {
     if( instConfigIds.isEmpty ) return Array()
     
-    DoJDBCReturningWork.withEzDBC(udsDbCtx, { udsEzDBC =>
+    DoJDBCReturningWork.withEzDBC(udsDbCtx) { udsEzDBC =>
     
       val instIdByInstConfigId = new HashMap[Long, Long]
       InstrumentConfigBuilder.buildInstrumentConfigs(
@@ -38,15 +38,15 @@ class SQLInstrumentConfigProvider(val udsDbCtx: DatabaseConnectionContext) exten
         instIds => selectFragmentationSeriesRecords(udsEzDBC,instIds)
       )
       
-    })
+    }
   }
   
   def getInstruments(instIds: Seq[Long]): Array[Instrument] = {
     if( instIds.isEmpty ) return Array()
     
-    DoJDBCReturningWork.withEzDBC(udsDbCtx, { udsEzDBC =>
+    DoJDBCReturningWork.withEzDBC(udsDbCtx) { udsEzDBC =>
       InstrumentConfigBuilder.buildInstruments( selectInstrumentRecords(udsEzDBC,instIds) )    
-    })
+    }
   }
   
   /*def getInstrumentConfigs( instConfigIds: Seq[Long] ): Array[InstrumentConfig] = {

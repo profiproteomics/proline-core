@@ -145,7 +145,7 @@ class SQLPeptideProvider(psDbCtx: DatabaseConnectionContext) extends SQLPTMProvi
       cachedPeps = cachedPepIds.map(_peptideCache.get(_))
     } // End of synchronized block on _peptideCache
 
-    cachedPeps.toArray ++ DoJDBCReturningWork.withEzDBC(psDbCtx, { psEzDBC =>
+    cachedPeps.toArray ++ DoJDBCReturningWork.withEzDBC(psDbCtx) { psEzDBC =>
 
       val maxNbIters = psEzDBC.getInExpressionCountLimit
 
@@ -154,7 +154,7 @@ class SQLPeptideProvider(psDbCtx: DatabaseConnectionContext) extends SQLPTMProvi
       var modifiedPepIdSet = new scala.collection.mutable.HashSet[Long]
 
       // Iterate over groups of peptide ids
-      uncachedPepIds.grouped(maxNbIters).foreach(tmpPepIds => {
+      uncachedPepIds.grouped(maxNbIters).foreach { tmpPepIds =>
 
         val pepQuery = new SelectQueryBuilder1(PsDbPeptideTable).mkSelectQuery((t, c) =>
           List(t.*) -> "WHERE " ~ t.ID ~ " IN(" ~ tmpPepIds.mkString(",") ~ ")"
@@ -172,14 +172,14 @@ class SQLPeptideProvider(psDbCtx: DatabaseConnectionContext) extends SQLPTMProvi
           }
 
         }
-      })
+      }
 
       // Load peptide PTM map corresponding to the modified peptides
       val locatedPtmsByPepId = this.getLocatedPtmsByPepId(modifiedPepIdSet.toArray[Long])
 
       this._buildPeptides(pepRecords, locatedPtmsByPepId)
 
-    })
+    }
 
   }
 
@@ -200,7 +200,7 @@ class SQLPeptideProvider(psDbCtx: DatabaseConnectionContext) extends SQLPTMProvi
   def getPeptidesForSequences(peptideSeqs: Seq[String]): Array[Peptide] = {
     if (peptideSeqs.isEmpty) return Array()
 
-    DoJDBCReturningWork.withEzDBC(psDbCtx, { psEzDBC =>
+    DoJDBCReturningWork.withEzDBC(psDbCtx) { psEzDBC =>
 
       val maxNbIters = psEzDBC.getInExpressionCountLimit
 
@@ -209,7 +209,7 @@ class SQLPeptideProvider(psDbCtx: DatabaseConnectionContext) extends SQLPTMProvi
       var modifiedPepIdSet = new scala.collection.mutable.HashSet[Long]
 
       // Iterate over groups of peptide ids
-      peptideSeqs.grouped(maxNbIters).foreach(tmpPepSeqs => {
+      peptideSeqs.grouped(maxNbIters).foreach { tmpPepSeqs =>
 
         val quotedSeqs = tmpPepSeqs.map { "'" + _ + "'" }
 
@@ -230,7 +230,7 @@ class SQLPeptideProvider(psDbCtx: DatabaseConnectionContext) extends SQLPTMProvi
           }
 
         }
-      })
+      }
 
       // Load peptide PTM map corresponding to the modified peptides
       val locatedPtmsByPepId = this.getLocatedPtmsByPepId(modifiedPepIdSet.toArray[Long])
@@ -239,7 +239,7 @@ class SQLPeptideProvider(psDbCtx: DatabaseConnectionContext) extends SQLPTMProvi
 
       peptides
 
-    })
+    }
 
   }
 
@@ -320,7 +320,7 @@ class SQLPeptideProvider(psDbCtx: DatabaseConnectionContext) extends SQLPTMProvi
   def getPeptidesAsOptionsBySeqAndPtms(peptideSeqsAndPtms: Seq[(String, Array[LocatedPtm])]): Array[Option[Peptide]] = {
     if (peptideSeqsAndPtms.isEmpty) return Array()
     
-    DoJDBCReturningWork.withEzDBC(psDbCtx, { psEzDBC =>
+    DoJDBCReturningWork.withEzDBC(psDbCtx) { psEzDBC =>
 
       val maxNbIters = psEzDBC.getInExpressionCountLimit
 
@@ -370,7 +370,7 @@ class SQLPeptideProvider(psDbCtx: DatabaseConnectionContext) extends SQLPTMProvi
 
       peptidesAsOpt
 
-    })
+    }
 
   }
 

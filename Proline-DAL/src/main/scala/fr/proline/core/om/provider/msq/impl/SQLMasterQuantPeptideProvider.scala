@@ -4,7 +4,7 @@ import scala.collection.mutable.LongMap
 import fr.profi.jdbc.easy.EasyDBC
 import fr.profi.util.primitives._
 import fr.profi.util.serialization.ProfiJson
-import fr.proline.context.DatabaseConnectionContext
+import fr.proline.context._
 import fr.proline.core.dal.DoJDBCReturningWork
 import fr.proline.core.dal.tables.SelectQueryBuilder._
 import fr.proline.core.dal.tables.SelectQueryBuilder2
@@ -18,9 +18,9 @@ import fr.proline.core.orm.msi.ObjectTreeSchema.SchemaName
 import fr.proline.repository.ProlineDatabaseType
 
 class SQLMasterQuantPeptideProvider(
-  val msiDbCtx: DatabaseConnectionContext,
+  val msiDbCtx: MsiDbConnectionContext,
   val psDbCtx: DatabaseConnectionContext
-) {  
+) {
   require( msiDbCtx.getProlineDatabaseType() == ProlineDatabaseType.MSI, "msiDbCtx must be of type MSI")
   require( psDbCtx.getProlineDatabaseType() == ProlineDatabaseType.PS, "psDbCtx must be of type PS")
   
@@ -62,7 +62,7 @@ class SQLMasterQuantPeptideProvider(
   ): Array[MasterQuantPeptide] = {
     if( mqPepIds.isEmpty ) return Array()
     
-    DoJDBCReturningWork.withEzDBC(msiDbCtx, { msiEzDBC =>
+    DoJDBCReturningWork.withEzDBC(msiDbCtx) { msiEzDBC =>
     
       this.buildMasterQuantPeptides(
         this.selectMasterQuantPeptides(msiEzDBC, mqPepIds),
@@ -70,7 +70,7 @@ class SQLMasterQuantPeptideProvider(
         mqPepIonsByMQPepId
       )
 
-    })
+    }
     
   }
 
@@ -100,7 +100,7 @@ class SQLMasterQuantPeptideProvider(
   ): Array[MasterQuantPeptide] = {
     if( quantRsmIds.isEmpty ) return Array()
     
-    DoJDBCReturningWork.withEzDBC(msiDbCtx, { msiEzDBC =>
+    DoJDBCReturningWork.withEzDBC(msiDbCtx) { msiEzDBC =>
     
       this.buildMasterQuantPeptides(
         this.selectQuantResultSummariesMasterQuantPeptides(msiEzDBC, quantRsmIds),
@@ -108,7 +108,7 @@ class SQLMasterQuantPeptideProvider(
         mqPepIonsByMQPepId
       )
 
-    })
+    }
     
   }
   
