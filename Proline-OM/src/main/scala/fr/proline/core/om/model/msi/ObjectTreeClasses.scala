@@ -39,13 +39,13 @@ case class FragmentMatch(
   private def _parseLabelIfNotDone() {
     if (_ionSeries == null) {
       val FullLabelRegex = """(\w+\*?)\((\d+)\)([\w\+]*)""".r
-      FullLabelRegex.findAllIn(label).matchData.foreach {
-        m =>
-          this._ionSeries = m.group(1)
-          this._aaPosition = m.group(2).toInt
+      FullLabelRegex.findAllIn(label).matchData.foreach { m =>
+        // FIXME: why do we need to make this replacement here ?
+        this._ionSeries = m.group(1).replace("0", "-H2O").replace("*", "-NH3")
+        this._aaPosition = m.group(2).toInt
 
-          if (m.group(3).length > 0)
-            this._charge = m.group(3).length
+        if (m.group(3).length > 0)
+          this._charge = m.group(3).length
       }
     }
   }
@@ -98,6 +98,7 @@ case class TheoreticalFragmentSeries(
       val FragSeriesRegex = """(\w+\*?)([+]*).*""".r
       val FragSeriesRegex(ionSeries, chargeStr) = fragSeries
 
+      // FIXME: why do we need to make this replacement here ?
       this._ionSeries = ionSeries.replace("0", "-H2O").replace("*", "-NH3")
 
       if (chargeStr.length > 0)
