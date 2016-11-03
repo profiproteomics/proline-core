@@ -26,7 +26,8 @@ public class DQuantPeptideIon {
 	 
   	Long unmodifiedPeptideIonId;	  
   	Integer selectionLevel;
-
+  	Boolean isReliable;
+  	
   	 // Necessary Construtor for JSON parsing !
   		protected DQuantPeptideIon() {
   			super();
@@ -184,7 +185,14 @@ public class DQuantPeptideIon {
 			this.predictedElutionTime = predictedElutionTime;
 		}
 
-		
+		public Boolean getIsReliable() {
+			return isReliable;
+		}
+
+		public void setIsReliable(Boolean isReliable) {
+			this.isReliable = isReliable;
+		}
+  		
   		
 
   
