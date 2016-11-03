@@ -11,27 +11,6 @@ object BioSequenceAlphabet extends EnhancedEnum {
   val AA, RNA, DNA = Value
 }
 
-/*trait IBioSequence {
-  def id: Long
-  def alphabet: BioSequenceAlphabet.Value
-  def sequence: String // TODO: set as Option[String] ???
-  def length: Int
-  def crc64: String
-  def properties: Option[BioSequenceProperties]
-}
-
-case class NucleicAcidSequence(
-  val id: Long,
-  val sequence: String, // May be ""
-  val length: Int,
-  val crc64: String,
-  val alphabet: BioSequenceAlphabet.Value,
-  var properties: Option[BioSequenceProperties]
-) extends IBioSequence {
-  require( alphabet != BioSequenceAlphabet.AA.toString )
-}
-*/
-
 object BioSequence extends InMemoryIdGen
 
 case class BioSequence(
@@ -183,6 +162,10 @@ case class Protein(
 
 object ProteinMatch extends InMemoryIdGen
 
+/**
+ * Represents a Protein matched by an identified peptide. 
+ *
+ */
 case class ProteinMatch(
     
   // Required fields
@@ -227,7 +210,9 @@ case class ProteinMatch(
   
 }
 
-case class ProteinMatchProperties()
+case class ProteinMatchProperties(
+   @BeanProperty var observablePeptideCount: Int = 0
+)
 
 /*
 // TODO: change the API to use the ProteinSetItem case class ???
