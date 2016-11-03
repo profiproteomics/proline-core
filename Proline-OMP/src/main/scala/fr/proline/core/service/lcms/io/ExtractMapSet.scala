@@ -49,6 +49,8 @@ import fr.proline.core.om.storer.lcms.impl.SQLScanSequenceStorer
 import fr.proline.core.service.lcms.AlignMapSet
 import fr.proline.core.service.lcms.CreateMapSet
 import fr.proline.core.service.lcms.ILcMsService
+import java.util.Arrays
+import org.apache.commons.math3.stat.correlation.PearsonsCorrelation
 
 import rx.lang.scala.Observable
 import rx.lang.scala.JavaConversions.toJavaObservable
@@ -565,7 +567,8 @@ class ExtractMapSet(
               FeatureDetectorConfig(
                 msLevel = 1,
                 mzTolPPM = mozTolPPM,
-                minNbOverlappingIPs = 5
+                minNbOverlappingIPs = 5,
+                peakelFinderConfig = SmartPeakelFinderConfig(maxIntensityRelThresh = 0.75f)
               )
             )
             
@@ -955,6 +958,7 @@ class ExtractMapSet(
           evidenceMsLevel = 2
         )
         pf.isPredicted = true
+        pf.maxObservedIntensity = bestFt.apexIntensity
         
         val multiMatchedPeakelIds = ArrayBuffer.empty[Int]
         val conflictingPeptides = conflictingPeptidesMap.getOrElse((peptide, charge), null)
@@ -999,7 +1003,8 @@ class ExtractMapSet(
       val x2RawMap = if (putativeFtsByLcMsRun.contains(lcMsRun) == false) rawMap
       else {
 
-        val putativeFts = putativeFtsByLcMsRun(lcMsRun)
+        // retrieve putative Features sorted by decreasing intensity
+        val putativeFts = putativeFtsByLcMsRun(lcMsRun).sortWith(_.maxObservedIntensity > _.maxObservedIntensity) 
         val newLcmsFeatures = new ArrayBuffer[Feature]()
 
         this.logger.info(s"Searching for ${putativeFts.length} missing features in run id=${lcMsRun.id}...")
@@ -1160,11 +1165,13 @@ class ExtractMapSet(
       val mft = mftBuilder.toMasterFeature()
       require(mft.children.length <= lcMsRuns.length, "master feature contains more child features than maps")
       
-      // Deselect the master feature if one of its features is not reliable
-      val nonReliableFtsCount = mft.children.count(_.properties.flatMap(_.getIsReliable()).getOrElse(true) == false)
-      if (nonReliableFtsCount > 0) {
-        mft.selectionLevel = 0
-      }
+      // CBy : avoid this 
+
+// Deselect the master feature if one of its features is not reliable
+//      val nonReliableFtsCount = mft.children.count(_.properties.flatMap(_.getIsReliable()).getOrElse(true) == false)
+//      if (nonReliableFtsCount > 0) {
+//        mft.selectionLevel = 0
+//      }
       
       mft
     } toArray
@@ -1806,9 +1813,9 @@ class ExtractMapSet(
     val mozTolInDa = MsUtils.ppmToDa(peakelMz, ftMappingParams.mozTol)
     
     val peakelRt = peakel.getApexElutionTime
-    val peakelQuarterDuration = peakel.calcDuration / 4
-    val minRt = peakelRt - peakelQuarterDuration
-    val maxRt = peakelRt + peakelQuarterDuration
+    val peakelDurationTol = math.min(peakel.getApexElutionTime - peakel.getFirstElutionTime, peakel.getLastElutionTime - peakel.getApexElutionTime)
+    val minRt = peakelRt - peakelDurationTol
+    val maxRt = peakelRt + peakelDurationTol
     
     val pattern = IsotopePatternEstimator.getTheoreticalPattern(peakelMz, charge)
     val intensityScalingFactor = peakel.getApexIntensity / pattern.mzAbundancePairs(0)._2
@@ -1832,17 +1839,23 @@ class ExtractMapSet(
           minRt,
           maxRt
         )
-        
+
         if (foundPeakels.nonEmpty) {
-          val isotopePeakel = foundPeakels.minBy(peakel => math.abs(ipMoz - peakel.getMz))
+
+          val isotopePeakel = _findMatchingPeakel(peakel, foundPeakels)
+
           val expectedIntensity = pattern.mzAbundancePairs(isotopeIdx)._2 * intensityScalingFactor
-          
-          // Gentle constraint on the observed intensity: no more than 4 times the expected intensity
-          if (isotopePeakel.getApexIntensity() < 4 * expectedIntensity) {
-            isotopes += isotopePeakel
+          if (isotopePeakel.isDefined) {
+            // Gentle constraint on the observed intensity: no more than 4 times the expected intensity
+            if (isotopePeakel.get.getApexIntensity() < 4 * expectedIntensity) {
+              isotopes += isotopePeakel.get
+            } else {
+              // TODO: compute statistics of the observed ratios
+              logger.trace(s"Isotope intensity is too high: is ${isotopePeakel.get.getApexIntensity()} but expected $expectedIntensity")
+              break
+            }
           } else {
-            // TODO: compute statistics of the observed ratios
-            logger.trace(s"Isotope intensity is too high: is ${isotopePeakel.getApexIntensity()} but expected $expectedIntensity")
+            logger.trace("Isotope peakel not found")
             break
           }
         } else {
@@ -1852,6 +1865,52 @@ class ExtractMapSet(
     }
 
     isotopes.toArray
+  }
+  
+  private def _findMatchingPeakel(ref: MzDbPeakel, peakels : Array[MzDbPeakel]): Option[MzDbPeakel] = {
+    
+    val correlations = peakels.zipWithIndex.map{ p => 
+      (_computeCorrelation(ref,p._1)) -> p._2
+    }
+    val (correlation, index) = correlations.maxBy(_._1)
+    if (correlation > 0.6) {
+      Some(peakels(index))
+    } else { None }
+  }
+  
+  private def _computeCorrelation(p1: MzDbPeakel, p2: MzDbPeakel): Double = {
+        var p1Offset = 0
+        var p2Offset = 0
+
+        // not clean : some RT values can be missing in elutiontime array when intensity = 0
+        if (p1.getFirstElutionTime() < p2.getFirstElutionTime()) {
+            // search p2.firstElutionTime index in p1
+            val idx = Arrays.binarySearch(p1.getElutionTimes(), p2.getFirstElutionTime())
+            p2Offset = if (idx < 0)  ~idx  else  idx
+        } else {
+            // search p1.firstElutionTime in p2
+            val idx = Arrays.binarySearch(p2.getElutionTimes(), p1.getFirstElutionTime())
+            p1Offset = if (idx < 0)  ~idx else idx
+        }
+
+        val p1Values = p1.getIntensityValues()
+        val p2Values = p2.getIntensityValues()
+        val length = Math.max(p1Values.length+p1Offset, p2Values.length+p2Offset);
+
+        val y1 = Array.fill[Double](length)(0.0)
+        val y2 = Array.fill[Double](length)(0.0)
+        var k = 0
+        for (k <- 0 until length) {
+            if (k >= p1Offset && k < p1Values.length) {
+                y1(k) = p1Values(k-p1Offset);
+            }
+            if (k >= p2Offset && k < p2Values.length) {
+                y2(k) = p2Values(k-p2Offset);
+            }
+        }
+        
+        val pearson = new PearsonsCorrelation()
+        math.abs(pearson.correlation(y1, y2))
   }
   
   private def _extractProcessedMap(lcmsRun: LcMsRun, mzDbFile: File, mapNumber: Int, mapSetId: Long): ProcessedMap = {
@@ -2051,7 +2110,7 @@ class ExtractMapSet(
           )
 
           pf.isPredicted = true
-
+          
           // TODO: check the usage of these values
           pf.durations = mft.children.map(_.duration)
           pf.areas = mft.children.map(_.intensity)

@@ -41,6 +41,20 @@ case class MasterQuantPeptideProfile(
   if( ratios == null ) ratios = List()
 }
 
+
+/** Represents a Peptide quantitative properties across multiple quant channels (runs). 
+ * 
+ * This information is stored in Proline datastore in MSIdb.master_quant_component.serialized_properties. 
+ * An example can be extracted from the datastore by the following SQL Query : 
+ * {{{
+ * select * 
+ * from master_quant_component mqc
+ * where mqc.schema_name like '%peptide%' 
+ * limit 10	
+ * }}}
+ *
+ * @see MasterQuantPeptide
+ */
 case class MasterQuantPeptideProperties(
   @BeanProperty var discardingReason: Option[String] = None,
   
@@ -86,15 +100,25 @@ case class MasterQuantProteinSetProperties(
   var mqProtSetProfilesByGroupSetupNumber: HashMap[Int, Array[MasterQuantProteinSetProfile]] = null,
   //@BeanProperty var specificSampleId: Option[Long] = None, // defined if the protein has been seen in a single sample
   
+  //TODO : to be removed and replaced by selectionLevelBymasterQuantPeptideId
   @JsonDeserialize(contentAs = classOf[Array[Long]] )
   @BeanProperty var selectedMasterQuantPeptideIds: Option[Array[Long]] = None,
   
+  //TODO : to be removed and replaced by selectionLevelBymasterQuantPeptideIonId
   @JsonDeserialize(contentAs = classOf[Array[Long]] )
-  @BeanProperty var selectedMasterQuantPeptideIonIds: Option[Array[Long]] = None
+  @BeanProperty var selectedMasterQuantPeptideIonIds: Option[Array[Long]] = None,
+  
+  var mqPeptideSelLevelById: HashMap[Long,Int] = null,
+
+  var mqPeptideIonSelLevelById: HashMap[Long,Int] = null
+
 ) {
   
   if( mqProtSetProfilesByGroupSetupNumber == null ) mqProtSetProfilesByGroupSetupNumber = HashMap()
-  
+  if( mqPeptideSelLevelById == null ) mqPeptideSelLevelById = HashMap()
+  if( mqPeptideIonSelLevelById == null ) mqPeptideIonSelLevelById = HashMap()
+
+    
   def getMqProtSetProfilesByGroupSetupNumber(): Option[HashMap[Int, Array[MasterQuantProteinSetProfile]]] = {
     Option(mqProtSetProfilesByGroupSetupNumber)
   }
@@ -103,6 +127,22 @@ case class MasterQuantProteinSetProperties(
     mqProtSetProfilesByGroupSetupNumber = mqProtSetProfilesMap.orNull
   }
   
+  def getSelectionLevelBymasterQuantPeptideId(): Option[HashMap[Long, Int]] = {
+    Option(mqPeptideSelLevelById)
+  }
+  
+  def setSelectionLevelBymasterQuantPeptideId( selectionLevelMap: Option[HashMap[Long, Int]] ) = {
+    mqPeptideSelLevelById = selectionLevelMap.orNull
+  }
+  
+  def getSelectionLevelBymasterQuantPeptideIonId(): Option[HashMap[Long, Int]] = {
+    Option(mqPeptideIonSelLevelById)
+  }
+  
+  def setSelectionLevelBymasterQuantPeptideIonId( selectionLevelMap: Option[HashMap[Long, Int]] ) = {
+    mqPeptideIonSelLevelById = selectionLevelMap.orNull
+  }
+
 }
 
 

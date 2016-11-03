@@ -157,7 +157,14 @@ case class MasterQuantReporterIon(
   
 }
 
-
+/** Represents a PeptideIon quantitative data in a single quant channel (run).
+ *  
+ *  This information is stored in Proline datastore in MSIdb.master_quant_component.object_tree as a JSON 
+ *  string.
+ * 
+ * @see MasterQuantPeptideIon
+ *
+ */
 case class QuantPeptideIon(  
   val rawAbundance: Float,
   var abundance: Float,
@@ -215,6 +222,19 @@ case class QuantPeptideIon(
 
 object MasterQuantPeptideIon extends InMemoryIdGen
 
+/** Represents PeptideIon quantitative information across multiple quant channels (runs). 
+ * 
+ * This information is stored in Proline datastore in MSIdb.master_quant_component. An example 
+ * can be extracted from the datastore by the following SQL Query : 
+ * {{{
+ *  select * 
+ *  from master_quant_component mqc, object_tree ot
+ *  where mqc.schema_name like '%ion%' 
+ *    and mqc.object_tree_id = ot.id
+ *  limit 10	
+ * }}}
+ *
+ */
 case class MasterQuantPeptideIon(
   var id: Long,
   
@@ -274,7 +294,14 @@ case class MasterQuantPeptideIon(
   
 }
 
-
+/** Represents a Peptide quantitative data in a single quant channel (run).
+ *  
+ *  This information is stored in Proline datastore in MSIdb.master_quant_component.object_tree as a JSON 
+ *  string.
+ * 
+ * @see MasterQuantPeptide
+ *
+ */
 case class QuantPeptide(
   val rawAbundance: Float,
   var abundance: Float,
@@ -294,6 +321,19 @@ case class QuantPeptide(
 
 object MasterQuantPeptide extends InMemoryIdGen
 
+/** Represents Peptide quantitative information across multiple quant channels (runs). 
+ * 
+ * This information is stored in Proline datastore in MSIdb.master_quant_component. An example 
+ * can be extracted from the datastore by the following SQL Query : 
+ * {{{
+ *  select * 
+ *  from master_quant_component mqc, object_tree ot
+ *  where mqc.schema_name like '%peptide%' 
+ *    and mqc.object_tree_id = ot.id
+ *  limit 10	
+ * }}}
+ *
+ */
 case class MasterQuantPeptide(
   var id: Long, // important: master quant component id
   val peptideInstance: Option[PeptideInstance], // without label in the context of isotopic labeling
@@ -378,6 +418,14 @@ case class MasterQuantPeptide(
 
 }
 
+/** Represents a ProteinSet quantitative data in a single quant channel (run).
+ *  
+ *  This information is stored in Proline datastore in MSIdb.master_quant_component.object_tree as a JSON 
+ *  string.
+ * 
+ * @see MasterQuantProteinSet
+ *
+ */
 case class QuantProteinSet(
   val rawAbundance: Float,
   var abundance: Float,
@@ -409,6 +457,19 @@ case class QuantProteinSetProfileObs(
   var selectionLevel = 2
 }
 
+/** Represents a ProteinSet quantitative information across multiple quant channels (runs). 
+ * 
+ * This information is stored in Proline datastore in MSIdb.master_quant_component. An example 
+ * can be extracted from the datastore by the following SQL Query : 
+ * {{{
+ *  select * 
+ *  from master_quant_component mqc, object_tree ot
+ *  where mqc.schema_name like '%protein%' 
+ *    and mqc.object_tree_id = ot.id
+ *  limit 10	
+ * }}}
+ *
+ */
 case class MasterQuantProteinSet(
   val proteinSet: ProteinSet,
   var quantProteinSetMap: LongMap[QuantProteinSet], // QuantProteinSet by quant channel id

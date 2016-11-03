@@ -29,6 +29,53 @@ case class SimplifiedExperimentalDesign(
   }
 }
 
+case class ExperimentalDesignSetup(
+  val expDesign: ExperimentalDesign,
+  val groupSetupNumber: Int = 1, // CBy : dont know where the param comes from ??
+  val masterQCNumber: Int) {
+  
+  val groupSetup = expDesign.groupSetups(groupSetupNumber-1)
+  val sampleNumbersByGroupNumber = expDesign.getSampleNumbersByGroupNumber(groupSetupNumber)
+  
+  var minSamplesCountPerGroup = Int.MaxValue
+  for( (groupNumber, sampleNumbers) <- sampleNumbersByGroupNumber if sampleNumbers.length < minSamplesCountPerGroup ) {
+    minSamplesCountPerGroup = sampleNumbers.length
+  }
+  
+  val masterQC = expDesign.masterQuantChannels.find( _.number == masterQCNumber ).get
+  val quantChannels = masterQC.quantChannels
+  val qcIds = quantChannels.map( _.id )
+  val qcCount = qcIds.length
+  val qcIdxById = qcIds.zip( qcIds.indices ).toMap
+  val quantChannelsBySampleNumber = quantChannels.groupBy( _.sampleNumber )
+  val qcSampleNumbers = quantChannels.map(_.sampleNumber)
+  lazy val qcGroupNumbers = {
+    val sampleByNum = expDesign.biologicalSamples.map( s => s.number -> s ).toMap
+    
+    val gNumBySNum = (for( (gNum,sNums) <- sampleNumbersByGroupNumber; sNum <- sNums) yield sNum -> gNum).toMap
+
+    quantChannelsBySampleNumber.flatMap { case (sNum,qcs) =>
+      val gNum = gNumBySNum(sNum)
+      qcs.map { qc => gNum }
+    }
+  } toArray
+  val sampleCount = expDesign.biologicalSamples.length
+  val samplesQcCount = expDesign.biologicalSamples.map( s => quantChannelsBySampleNumber(s.number).length )
+
+  var minQCsCountPerSample = Int.MaxValue
+  for( (sampleNumber, quantChannels) <- quantChannelsBySampleNumber if quantChannels.length < minQCsCountPerSample ) {
+    minQCsCountPerSample = quantChannels.length
+  }
+  
+  val allSampleNumbers = expDesign.biologicalSamples.map(_.number)
+    
+    // Map quant channel indices by the sample number
+  val qcIndicesBySampleNum = ( allSampleNumbers ).map { sampleNum =>
+      sampleNum -> quantChannelsBySampleNumber(sampleNum).map( qc => qcIdxById(qc.id) )
+    } toMap
+    
+}
+
 /**
  * @param biologicalSamples
  * @param groupSetups

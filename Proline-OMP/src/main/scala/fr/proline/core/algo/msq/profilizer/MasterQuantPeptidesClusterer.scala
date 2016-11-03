@@ -19,7 +19,7 @@ case class MqPeptidesClustererConfig(
 )
 
 case class MasterQuantPeptidesCluster(
-  name: String,
+  name: String,  // depends on the clustering method used. ex :  ptm pettern = modified@loc ou unmodified  
   mqProteinSet: MasterQuantProteinSet,
   mqPeptides: Seq[MasterQuantPeptide]
 )
@@ -74,7 +74,7 @@ trait IMqPeptidesClusterer {
       }*/
       
       // Retrieve selected master quant peptides in this protein set
-      val selMqPepIdSet = masterQuantProtSet.properties.get.selectedMasterQuantPeptideIds.map(_.toSet).getOrElse(Set())
+      val selMqPepIdSet = masterQuantProtSet.properties.get.mqPeptideSelLevelById.filter(_._2 >= 2).keySet
       
       // Keep only selected master quant peptides
       val selectedMqPeps = masterQuantProtSet.masterQuantPeptides.filter { mqPep =>

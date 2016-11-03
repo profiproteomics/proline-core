@@ -28,6 +28,7 @@ import fr.proline.core.algo.lcms.FeatureSummarizer
 import fr.proline.core.algo.lcms.FeatureSummarizingMethod
 import fr.proline.core.algo.lcms.summarizing._
 import fr.proline.core.algo.msq.summarizing.BuildMasterQuantPeptide
+import scala.collection.mutable.LongMap
 
 // Factory for Proline-Cortex
 object QuantProfilesComputer {
@@ -111,11 +112,13 @@ class QuantProfilesComputer(
     )
     // Note that it is important to load the Result Set to have all required information
     val quantRSM = quantRsmProvider.getQuantResultSummary(quantRsmId, qcIds, loadResultSet = true).get
-    
+    logger.info("Before Feature summarizer mqPep with selection level == 0 : "+quantRSM.masterQuantPeptides.withFilter(_.selectionLevel == 0).map(_.id).length)
+
     // !!! STILL EXPERIMENTAL !!!
     val summarizeFeatures = false
     if( summarizeFeatures ) {
       
+      logger.warn("!!! STILL EXPERIMENTAL CODE FEATURE SUMMARIZER !!! ")
       // --- 1.2 Load the peakels --- //
       val qcByLcMsMapId = experimentalDesign.masterQuantChannels.head.quantChannels.map { qc =>
         qc.lcmsMapId.get -> qc
@@ -176,20 +179,93 @@ class QuantProfilesComputer(
             println(ftIntensities.toList)*/
           }
           
+          val nonReliableFtsCount =  masterFt.children.count( _.properties.flatMap(_.getIsReliable()).getOrElse(true) == false )
+            if (nonReliableFtsCount > 0) {
+              masterFt.selectionLevel = 0
+          }
+            
           val newQPepIonMap = for( (ftIntensity,qcId) <- ftIntensities.zip(ftQcIds) ) yield {
-            val qPepIon = qPepIonMap(qcId).copy( rawAbundance = ftIntensity, abundance = ftIntensity )
+//            val qPepIon = qPepIonMap(qcId).copy( rawAbundance = ftIntensity, abundance = ftIntensity )
+            val qPepIon = qPepIonMap(qcId).copy()
             qcId -> qPepIon
           }
           
           mqPepIon.quantPeptideIonMap = newQPepIonMap.toLongMap
+          mqPepIon.selectionLevel = masterFt.selectionLevel
         }
         
         // Re-build the master quant peptides
         val newMqPep = BuildMasterQuantPeptide(mqPepIons, mqPep.peptideInstance, mqPep.resultSummaryId)      
+        mqPep.selectionLevel = newMqPep.selectionLevel
+        mqPepIons.foreach { mqPepIon =>
+            mqPepIon.masterQuantPeptideId = mqPep.id
+        }
         mqPep.quantPeptideMap = newMqPep.quantPeptideMap
       }
-    }
+      
+      logger.info("After Feature summarizer mqPep with selection level == 0 : "+quantRSM.masterQuantPeptides.withFilter(_.selectionLevel == 0).map(_.id).length)
+      quantRSM.masterQuantPeptides
+      
+    } // end of summarizeFeatures
+
+    //
+    // Reset mq peptide selection level
+    //
+    quantRSM.masterQuantPeptides.foreach { mqPep => if (mqPep.selectionLevel == 1) mqPep.selectionLevel = 2 }
     
+    //
+    // Change mqPeptide selection level sharing peakels of mqPep sharing features
+    //
+    if (config.discardPeptidesSharingPeakels) {
+      
+      val qcByLcMsMapId = experimentalDesign.masterQuantChannels.head.quantChannels.map { qc => qc.lcmsMapId.get -> qc } toMap
+      val lcmsDbCtx = executionContext.getLCMSDbConnectionContext
+      val mapSetProvider = new SQLMapSetProvider(lcmsDbCtx = lcmsDbCtx)
+      val mapSet = mapSetProvider.getMapSet(udsMasterQuantChannel.getLcmsMapSetId, loadPeakels = true)
+      val masterFtById = mapSet.masterMap.features.view.map(ft => ft.id -> ft).toMap
+      
+      var mqPepIonIdsByFeatureId = LongMap[scala.collection.mutable.Set[Long]]()
+      quantRSM.masterQuantPeptides.flatMap(_.masterQuantPeptideIons).foreach { mqPepIon => 
+        val masterFt = masterFtById(mqPepIon.lcmsMasterFeatureId.get)
+        val childFts = masterFt.children.flatMap{ ft => if(ft.isCluster == false) Array(ft) else ft.subFeatures }
+        childFts.foreach { f => 
+          mqPepIonIdsByFeatureId.getOrElseUpdate(f.id, scala.collection.mutable.Set[Long]()) += mqPepIon.id
+        }
+      }
+      
+      val mqPepIonWithSharedFeatures = mqPepIonIdsByFeatureId.filter( _._2.size > 1).flatMap(_._2).toSet
+
+      for (mqPep <- quantRSM.masterQuantPeptides) {
+
+        val mqPepIons = mqPep.masterQuantPeptideIons
+        
+        for (mqPepIon <- mqPepIons) {
+          val qPepIonMap = mqPepIon.quantPeptideIonMap
+          val masterFt = masterFtById(mqPepIon.lcmsMasterFeatureId.get)
+          val sharedFtsCount = masterFt.children.count { ft =>
+            val mainFt = if (ft.isCluster == false) ft else ft.subFeatures.maxBy(_.intensity)
+            mainFt.getBasePeakel().getOrElse(mainFt.relations.peakelItems(0).getPeakel().get).featuresCount > 1
+          }
+
+          if ((sharedFtsCount > 0) || (mqPepIonWithSharedFeatures.contains(mqPepIon.id))) {
+//            logger.info("master feature deselected due to " + sharedFtsCount + " shared peakels over " + masterFt.children.length)
+            masterFt.selectionLevel = 1
+          }
+          
+          mqPepIon.selectionLevel = masterFt.selectionLevel
+        }
+
+        // Re-build the master quant peptides
+        val newMqPep = BuildMasterQuantPeptide(mqPepIons, mqPep.peptideInstance, mqPep.resultSummaryId)
+        mqPep.selectionLevel = newMqPep.selectionLevel
+        mqPepIons.foreach { mqPepIon =>
+          mqPepIon.masterQuantPeptideId = mqPep.id
+        }
+        mqPep.quantPeptideMap = newMqPep.quantPeptideMap
+      }
+
+      logger.info("After Feature summarizer mqPep with selection level < 2 : " + quantRSM.masterQuantPeptides.withFilter(_.selectionLevel < 2).map(_.id).length)
+    }
     // --- 2. Instantiate the profilizer --- //
     val profilizer = new Profilizer(
       expDesign = experimentalDesign,

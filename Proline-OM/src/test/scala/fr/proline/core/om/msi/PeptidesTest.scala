@@ -6,6 +6,7 @@ import org.junit.runner.RunWith
 import org.scalatest.junit.{ JUnitRunner, JUnitSuite }
 import fr.proline.core.om.model.msi._
 import com.typesafe.scalalogging.StrictLogging
+import fr.proline.core.util.DigestionUtils
 
 @Test
 class PeptidesTest extends JUnitSuite with StrictLogging {
@@ -76,6 +77,7 @@ class PeptidesTest extends JUnitSuite with StrictLogging {
 	  assertEquals(countMC("K.DAABKAKA._", lysc_aspn_dep, 2), 2) // K(5), K(7)
 
 	}
+	
 	private def countMC(fullSequence: String, enzyme: Enzyme, expectedMC: Int): Int = {
 	  val items = fullSequence.split('.')
 	  val beforeOpt: Option[Char] = if(items.head == "_") None else Some(items.head.charAt(0))
@@ -84,4 +86,31 @@ class PeptidesTest extends JUnitSuite with StrictLogging {
 	  //logger.debug("ABU "+beforeOpt.getOrElse("^")+"."+items(1)+"."+afterOpt.getOrElse("$")+" => "+mc+"/"+expectedMC+" missed cleavage(s) with "+enzyme.name + "[" + enzyme.enzymeCleavages.map(_.toString).mkString(" ") + " independant="+enzyme.isIndependant + " semiSpecific="+enzyme.isSemiSpecific + "]")
 	  mc
 	}
+
+  @Test 
+  def testDigestion() = {
+    // prepare enzymes cleavage sites
+	  val ecAspn = new EnzymeCleavage(id = -1, site = "N-term", residues = "BD", restrictiveResidues = Some(""))
+	  val ecTryp = new EnzymeCleavage(id = -2, site = "C-term", residues = "KR", restrictiveResidues = Some("P"))
+	  val ecLysc = new EnzymeCleavage(id = -3, site = "C-term", residues = "K", restrictiveResidues = Some("P"))
+	  // prepare enzymes
+	  val aspn = new Enzyme(id = -1, name = "Asp-N", enzymeCleavages = Array(ecAspn), isIndependant = false) // BD
+	  val trypsin = new Enzyme(id = -2, name = "Trypsin", enzymeCleavages = Array(ecTryp), isIndependant = false) // KR
+	  val lysc_aspn = new Enzyme(id = -3, name = "LysC+AspN", enzymeCleavages = Array(ecLysc, ecAspn), isIndependant = false) // KBD
+	  val lysc_aspn_dep = new Enzyme(id = -4, name = "LysC+AspN (ind)", enzymeCleavages = Array(ecLysc, ecAspn), isIndependant = true) // KBD
+	  
+    val albu = "MKWVTFISLLFLFSSAYSRGVFRRDAHKSEVAHRFKDLGEENFKALVLIAFAQYLQQCPFEDHVKLVNEVTEFAKTCVADESAENCDKSLHTLFGDKLCTVATLRETYGEMADCCAKQEPERNECFLQHKDDNPNLPRLVRPEVDVMCTAFHDNEETFLKKYLYEIARRHPYFYAPELLFFAKRYKAAFTECCQAADKAACLLPKLDELRDEGKASSAKQRLKCASLQKFGERAFKAWAVARLSQRFPKAEFAEVSKLVTDLTKVHTECCHGDLLECADDRADLAKYICENQDSISSKLKECCEKPLLEKSHCIAEVENDEMPADLPSLAADFVESKDVCKNYAEAKDVFLGMFLYEYARRHPDYSVVLLLRLAKTYETTLEKCCAAADPHECYAKVFDEFKPLVEEPQNLIKQNCELFEQLGEYKFQNALLVRYTKKVPQVSTPTLVEVSRNLGKVGSKCCKHPEAKRMPCAEDYLSVVLNQLCVLHEKTPVSDRVTKCCTESLVNRRPCFSALEVDETYVPKEFNAETFTFHADICTLSEKERQIKKQTALVELVKHKPKATKEQLKAVMDDFAAFVEKCCKADDKETCFAEEGKKLVAASQAALGL"
+    
+    var cl = DigestionUtils.getCleavagePositions(albu, trypsin)
+    logger.info(trypsin.name + " peptides Count = " + cl.length)
+    logger.info(trypsin.name + " peptides = " + cl.mkString(","))    
+    logger.info(trypsin.name + " observable = "+DigestionUtils.getObservablePeptidesCount(albu, trypsin))
+    
+    cl = DigestionUtils.getCleavagePositions(albu, aspn)
+    logger.info(aspn.name + " peptides Count = " + cl.length)
+
+    cl = DigestionUtils.getCleavagePositions(albu, lysc_aspn)
+    logger.info(lysc_aspn.name + " peptides Count = " + cl.length)
+
+  }
 }

@@ -218,12 +218,12 @@ object Ms2CountEntitiesSummarizer extends IMqPepAndProtEntitiesSummarizer with L
     for( mergedProtSet <- mergedRSM.proteinSets ) {
       val mergedPepSet = mergedProtSet.peptideSet
       
-      val selectedMQPepIds = new ArrayBuffer[Long]
+      val selectedMQPepIds = new HashMap[Long, Int]
 
       val ms2CountSumByQcId = new LongMap[Int]
       for( mergedPepInst <- mergedPepSet.getPeptideInstances ) {
         val mqp = mqPepByPepInstId( mergedPepInst.id )
-        if( mqp.selectionLevel >= 2 ) selectedMQPepIds += mqp.id
+        selectedMQPepIds += (mqp.id -> mqp.selectionLevel)
         
         for( (qcId,quantPep) <- mqp.quantPeptideMap ) {
           ms2CountSumByQcId.getOrElseUpdate(qcId,0)
@@ -243,7 +243,7 @@ object Ms2CountEntitiesSummarizer extends IMqPepAndProtEntitiesSummarizer with L
       }
       
       val mqProtSetProps = new MasterQuantProteinSetProperties()
-      mqProtSetProps.setSelectedMasterQuantPeptideIds( Some(selectedMQPepIds.toArray) )
+      mqProtSetProps.setSelectionLevelBymasterQuantPeptideId(Some(selectedMQPepIds) )
       
       val mqProteinSet = new MasterQuantProteinSet(
         proteinSet = mergedProtSet,

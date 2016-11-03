@@ -2,10 +2,10 @@ package fr.proline.core.algo.msq.summarizing
 
 import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.LongMap
-
 import fr.profi.util.collection._
 import fr.proline.core.om.model.msi.ResultSummary
 import fr.proline.core.om.model.msq._
+import scala.collection.mutable.HashMap
 
 /**
  * @author David Bouyssie
@@ -51,8 +51,8 @@ trait IMQProteinSetSummarizer {
       val mergedPepInsts = mergedProtSet.peptideSet.getPeptideInstances 
       
       val mergedPepInstsCount = mergedPepInsts.length
-      val selectedMQPepIds = new ArrayBuffer[Long](mergedPepInstsCount)
-      val selectedMQPepIonIds = new ArrayBuffer[Long](mergedPepInstsCount * 2)
+      val selectedMQPepIds = HashMap[Long, Int]()
+      val selectedMQPepIonIds = HashMap[Long, Int]()
       val mqPeps = new ArrayBuffer[MasterQuantPeptide](mergedPepInstsCount)
       val abundanceSumByQcId = new LongMap[Float](qcCount)
       val rawAbundanceSumByQcId = new LongMap[Float](qcCount)
@@ -68,8 +68,9 @@ trait IMQProteinSetSummarizer {
           val mqPep = mqPepOpt.get
           mqPeps += mqPep
           
+          selectedMQPepIds += (mqPep.id -> mqPep.selectionLevel)
+          
           if( mqPep.selectionLevel >= 2 ) {
-            selectedMQPepIds += mqPep.id
             
             for( (qcId,quantPep) <- mqPep.quantPeptideMap ) {
               
@@ -94,7 +95,7 @@ trait IMQProteinSetSummarizer {
             }
             
             for (mqPepIon <- mqPep.masterQuantPeptideIons) {
-              if (mqPepIon.selectionLevel >= 2) selectedMQPepIonIds += mqPepIon.id
+              selectedMQPepIonIds += (mqPepIon.id -> mqPepIon.selectionLevel)
             }
           }
         }
@@ -115,8 +116,8 @@ trait IMQProteinSetSummarizer {
       }
       
       val mqProtSetProps = new MasterQuantProteinSetProperties()
-      mqProtSetProps.setSelectedMasterQuantPeptideIds( Some(selectedMQPepIds.toArray) )
-      mqProtSetProps.setSelectedMasterQuantPeptideIonIds( Some(selectedMQPepIonIds.toArray) )
+      mqProtSetProps.setSelectionLevelBymasterQuantPeptideId(Some(selectedMQPepIds) )
+      mqProtSetProps.setSelectionLevelBymasterQuantPeptideIonId(Some(selectedMQPepIonIds) )
       
       val mqProteinSet = new MasterQuantProteinSet(
         proteinSet = mergedProtSet,

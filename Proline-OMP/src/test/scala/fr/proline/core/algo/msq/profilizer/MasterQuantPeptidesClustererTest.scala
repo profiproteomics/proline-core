@@ -8,6 +8,7 @@ import org.junit.Test
 import org.scalatest.Assertions._
 import fr.proline.core.om.model.msi._
 import fr.proline.core.om.model.msq._
+import scala.collection.breakOut
 
 @Test
 class MasterQuantPeptidesClustererTest {
@@ -140,7 +141,7 @@ class MasterQuantPeptidesClustererTest {
   }
   
   val masterQuantPeptides = peptides.map( buildMqPep(_) )
-  
+ 
   val masterQuantProtSet = MasterQuantProteinSet(
     proteinSet = ProteinSet(
       id = mqProtSetId,
@@ -161,7 +162,7 @@ class MasterQuantPeptidesClustererTest {
     masterQuantPeptides = masterQuantPeptides,
     
     selectionLevel = 2,
-    properties = Some(MasterQuantProteinSetProperties( selectedMasterQuantPeptideIds = Some(masterQuantPeptides.map(_.id)) ))
+    properties = Some(MasterQuantProteinSetProperties( mqPeptideSelLevelById = HashMap[Long, Int]() ++ masterQuantPeptides.map(mqp => (mqp.id -> 2)).toMap ))
   )
   
   @Test

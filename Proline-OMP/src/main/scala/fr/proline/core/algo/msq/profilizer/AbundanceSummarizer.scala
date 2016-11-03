@@ -17,10 +17,14 @@ object AbundanceSummarizer extends LazyLogging {
     val MEDIAN_BIOLOGICAL_PROFILE = Value // has no implementation here, should be called before
     val MEDIAN_PROFILE = Value
     val SUM = Value
+    val LFQ = Value
   }
   
-  private val EMPTY_MATRIX_MESSAGE = "abundanceMatrix is empty"
-  private def createNoImplemError(methodName: String) = new IllegalArgumentException(
+  val advancedMethods = List(Method.MEDIAN_BIOLOGICAL_PROFILE)
+  
+  val EMPTY_MATRIX_MESSAGE = "abundanceMatrix is empty"
+  
+  def createNoImplemError(methodName: String) = new IllegalArgumentException(
     s"No implementation corresponding to the $methodName method."
   )
   
@@ -45,6 +49,7 @@ object AbundanceSummarizer extends LazyLogging {
         throw createNoImplemError(Method.MEDIAN_BIOLOGICAL_PROFILE)
       }
       case Method.SUM => summarizeUsingSum(abundanceMatrix)
+      case Method.LFQ => LFQSummarizer.summarize(abundanceMatrix)
     }
     
   }
