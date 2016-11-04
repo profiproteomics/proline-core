@@ -279,7 +279,7 @@ object PeptideMatch extends InMemoryIdGen with LazyLogging {
     } else { // specific case : enzymes must be considered one by one
       
       // determine the enzyme cleavage to consider
-      val enzymeCleavages = DigestionUtils.getEnzymeCleavagesHintCount(sequence, residueBefore, residueAfter, enzyme)
+      val enzymeCleavages = DigestionUtils.getEnzymesCleavages(sequence, residueBefore, residueAfter, enzyme)
       
       // enzymeCleavages should contain only one item, more than one means ambiguity. In any case return max number of missed cleavages
       var maxMissedCleavages = 0

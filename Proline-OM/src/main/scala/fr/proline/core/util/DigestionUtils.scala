@@ -59,7 +59,7 @@ object DigestionUtils {
     missedCleavages.size
   }
 
-  def getEnzymeCleavagesHintCount(
+  def getEnzymesCleavages(
     sequence: String,
     residueBefore: Option[Char],
     residueAfter: Option[Char],
