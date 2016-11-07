@@ -272,7 +272,9 @@ class WeightedSpectralCountQuantifier(
 		    newChildsBuilder += parentID
 		    childIDs.foreach(childId =>{
 		    	if(tmpChildPerParentMap.contains(childId)){ // Current child was identified as a parent of original identification RSM.
-		    		val childList = tmpChildPerParentMap(childId) //Change Parent ref for these childs
+		    	  val childList = tmpChildPerParentMap.getOrElseUpdate(parentID, new ArrayBuffer[Long]()) // Get Child already associated to this parent
+		    		childList ++= tmpChildPerParentMap(childId) //Change Parent ref for these childs
+		    		
 		    		tmpChildPerParentMap.put(parentID, childList)
     				tmpChildPerParentMap.remove(childId)
 		    	} else {
@@ -862,7 +864,7 @@ class WeightedSpectralCountQuantifier(
           var protSetId = peptideSetForPM.getProteinSetId
           if (protSetId == 0) { //Subset. Not defined
             val currentIdRSM = entityCache.identResultSummaries.filter(_.id.equals(rsm.id))(0)
-            protSetId = foundProtSetOf(currentIdRSM, peptideSetForPM.id)
+            protSetId = searchProtSetOf(currentIdRSM, peptideSetForPM.id)
           }
 
           val quantProteinSet = new QuantProteinSet(
@@ -915,7 +917,7 @@ class WeightedSpectralCountQuantifier(
     return (mqPeptides.toArray, mqProtSets.toArray)
   }
 
-  private def foundProtSetOf(currentRSM: ResultSummary, pepSetId: Long): Long = {
+  private def searchProtSetOf(currentRSM: ResultSummary, pepSetId: Long): Long = {
     val pepSetIt = currentRSM.peptideSets.iterator
 
     while (pepSetIt.hasNext) {
@@ -924,12 +926,12 @@ class WeightedSpectralCountQuantifier(
         if (nextPepSet.getProteinSetId != 0) {
           return nextPepSet.getProteinSetId
         } else { //Search parent of parent ... 
-          return foundProtSetOf(currentRSM, nextPepSet.id)
+          return searchProtSetOf(currentRSM, nextPepSet.id)
         }
       }
     } //End go through pepSet
     0l
-  } // End foundProtSetOf method definition
+  } // End searchProtSetOf method definition
 
   private def createProtMatchesAccByPeptideSet(rsm: ResultSummary): Map[PeptideSet, Seq[(Long, String)]] = {
      val rs = rsm.resultSet.get
@@ -937,7 +939,8 @@ class WeightedSpectralCountQuantifier(
     val result = scala.collection.mutable.Map[PeptideSet, Seq[(Long, String)]]()
     val pepSetById = rsm.peptideSets.map(pepSet => pepSet.id -> pepSet).toMap
 
-    rsm.proteinSets.withFilter(_.isValidated).foreach(protSet => {
+//    rsm.proteinSets.withFilter(_.isValidated).foreach(protSet => {
+    rsm.proteinSets.foreach(protSet => { //VDS: no validation filter in case, proteinset seen in parent (RefRSM)
 
       //Do SameSet PeptideSet
       val seqBuilder = Seq.newBuilder[(Long, String)]
