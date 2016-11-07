@@ -119,9 +119,9 @@ public class Scoring implements Serializable {
 			"xtandem", "hyperscore",
 			"The hyperscore provided by X!Tandem for a peptide match."
 		),
-		MAXQUANT_SCORE(
-			"maxquant","score",
-			"The score provided by MaxQuant for a peptide match."
+		ANDROMEDA_SCORE(
+			"andromeda","score",
+			"The score provided by Andromeda for a peptide match."
 		)
 		;
 
