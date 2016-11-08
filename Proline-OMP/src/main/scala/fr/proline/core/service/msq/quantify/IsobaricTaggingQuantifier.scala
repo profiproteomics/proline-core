@@ -41,7 +41,7 @@ class IsobaricTaggingQuantifier(
   private val tagByQcId = masterQc.quantChannels.toLongMapWith { qc =>
     (qc.id, tagById(qc.quantLabelId.get))
   }
-  private val msnMozTolUnit = MassTolUnit.withName( quantConfig.extractionParams.mozTolUnit )
+  private val msnMozTolUnit = MassTolUnit.string2unit( quantConfig.extractionParams.mozTolUnit )
   private val msnMozTolInDaByTagId = quantMethod.quantLabels.toLongMapWith { tag =>
     (tag.id, calcMozTolInDalton(tag.reporterMz, quantConfig.extractionParams.mozTol, msnMozTolUnit) )
   }
