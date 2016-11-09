@@ -14,6 +14,7 @@ import fr.proline.core.om.model.msq._
 import fr.proline.core.om.model.msq.MasterQuantComponent
 import fr.proline.core.om.model.msq.MasterQuantComponent
 import fr.proline.core.om.model.msq.MasterQuantComponent
+import fr.proline.core.algo.msq.summarizing.BuildMasterQuantPeptide
 
 // TODO: recompute raw abundances from peakels
 // (smoothing methods, area VS apex intensity, first isotope vs max one vs isotope pattern fitting)
@@ -141,18 +142,32 @@ class Profilizer( expDesign: ExperimentalDesign, groupSetupNumber: Int = 1, mast
       require( config.oxidizedPeptideFilteringMethod.isDefined, "config.oxidizedPeptideFilteringMethod is empty")
       OxidizedPeptideFilterer.discardPeptides(masterQuantPeptides, config.oxidizedPeptideFilteringMethod.get)
     }
-    
+        
     // Keep master quant peptides passing all filters (i.e. have a selection level higher than 1)
-    //val( mqPepsAfterAllFilters, deselectedMqPeps ) = masterQuantPeptides.partition( _.selectionLevel >= 2 )
+    //
+    // val( mqPepsAfterAllFilters, deselectedMqPeps ) = masterQuantPeptides.partition( _.selectionLevel >= 2 )
+    //
     // FIXME: DBO => should we work only with filtered mqPeps ?
-    val mqPepsAfterAllFilters = masterQuantPeptides
+    // WARN: CBy => selectionLevel < 2 are kept, this means that normalization & inference are also done on deselected masterQuantComponents
     
+     val mqPepsAfterAllFilters = {
+        if (config.summarizingBasedOn.get == QuantComponentItem.QUANT_PEPTIDES.toString) {
+          masterQuantPeptides.asInstanceOf[Seq[MasterQuantComponent[QuantComponent]]]
+        } else {
+          masterQuantPeptides.flatMap(_.masterQuantPeptideIons).asInstanceOf[Seq[MasterQuantComponent[QuantComponent]]]
+        }
+      }  //was -> val mqPepsAfterAllFilters = masterQuantPeptides
+    
+    
+    //
     // Reset quant peptide abundance of deselected master quant peptides
     // DBO: is this useful ???
-    /*for( mqPep <- deselectedMqPeps; (qcid,qPep) <- mqPep.quantPeptideMap ) {
-      qPep.abundance = Float.NaN
-    }*/
-    
+    //
+    // for( mqPep <- deselectedMqPeps; (qcid,qPep) <- mqPep.quantPeptideMap ) {
+    //  qPep.abundance = Float.NaN
+    // }
+    //
+     
     // --- Compute the PSM count matrix ---
     val psmCountMatrix = mqPepsAfterAllFilters.map( _.getPepMatchesCountsForQuantChannels(expDesignSetup.qcIds) ).toArray
     
@@ -160,15 +175,18 @@ class Profilizer( expDesign: ExperimentalDesign, groupSetupNumber: Int = 1, mast
     val rawAbundanceMatrix = mqPepsAfterAllFilters.map( _.getRawAbundancesForQuantChannels(expDesignSetup.qcIds) ).toArray
     
     // --- Normalize the abundance matrix ---
-    val normalizedMatrix = if( config.peptideStatConfig.applyNormalization == false ) rawAbundanceMatrix
-    else AbundanceNormalizer.normalizeAbundances(rawAbundanceMatrix)
+    //
+    // TODO modify this to take into account PEPTIDE or ION
+    //
+    //
+    val normalizedMatrix = if( config.peptideStatConfig.applyNormalization == false ) rawAbundanceMatrix else AbundanceNormalizer.normalizeAbundances(rawAbundanceMatrix)
     
     require( normalizedMatrix.length == rawAbundanceMatrix.length, "error during normalization, some peptides were lost...")
-    //println( s"normalizedMatrix.length: ${normalizedMatrix.length}")
-    
+ 
     // Compute absolute error model and the filled matrix (only if config.peptideStatConfig.applyMissValInference == true)
     //
     val absoluteErrorModelOpt = this.computeAbsoluteErrorModel(normalizedMatrix)
+    
     val filledMatrix = this.inferMissingValues(
       normalizedMatrix,
       psmCountMatrix,
@@ -177,45 +195,78 @@ class Profilizer( expDesign: ExperimentalDesign, groupSetupNumber: Int = 1, mast
     )
     
     minAbundanceByQcIds = filledMatrix.transpose.map { abundanceCol =>
-      abundanceCol.filter( !isZeroOrNaN(_)).reduceLeft(_ min _)
+        abundanceCol.filter( !isZeroOrNaN(_)).reduceLeft(_ min _)
     }
-    
-    // Update master quant peptides abundances after normalization and missing values inference
+     
+    // Update master quant component abundances after normalization and missing values inference
     //
     
-    for( (mqPep, abundances) <- mqPepsAfterAllFilters.zip(filledMatrix) ) {
-      mqPep.setAbundancesForQuantChannels(abundances,expDesignSetup.qcIds)
+    for( (mqQuantComponent, abundances) <- mqPepsAfterAllFilters.zip(filledMatrix) ) {
+      mqQuantComponent.setAbundancesForQuantChannels(abundances,expDesignSetup.qcIds)
     }
+
+    if (config.summarizingBasedOn.get == QuantComponentItem.QUANT_PEPTIDE_IONS.toString) {
+      //
+      // if previous step is ION based, then update the associated mqPep Abundance values
+      //
+      for (mqPep <- masterQuantPeptides) {
+        val mqPepIons = mqPep.masterQuantPeptideIons
+        // Re-build the master quant peptides
+        val newMqPep = BuildMasterQuantPeptide(mqPepIons, mqPep.peptideInstance, mqPep.resultSummaryId)
+        val abundances = newMqPep.getAbundancesForQuantChannels(expDesignSetup.qcIds)
+        mqPep.setAbundancesForQuantChannels(abundances, expDesignSetup.qcIds)
+        // the next step is mandatory since BuildMasterQuantPeptide updates mqPepIons.masterQuantPeptideId to the new MasterQuantPeptide
+        mqPepIons.foreach { mqPepIon =>
+          mqPepIon.masterQuantPeptideId = mqPep.id
+        }
+      }
+    } else {
+      //
+      // if previous step is PEPTIDE based, then update the peptide ions abundance values to reset abundance to raw abundances
+      //
+      val masterQuantPeptideIons = masterQuantPeptides.flatMap(_.masterQuantPeptideIons)
+      for (mqPepIon <- masterQuantPeptideIons) {
+          mqPepIon.setAbundancesForQuantChannels(mqPepIon.getRawAbundancesForQuantChannels(expDesignSetup.qcIds), expDesignSetup.qcIds)
+      }
+      
+    }
+    
+    //
+    // Compute masterQuantPeptide ratios and profiles
+    //
     
     // Define some mappings
     val mqPepById = new HashMap[Long,MasterQuantPeptide]()
-    mqPepById.sizeHint(mqPepsAfterAllFilters.length)
+    mqPepById.sizeHint(masterQuantPeptides.length)
     val ratiosByMQPepId = new HashMap[Long,ArrayBuffer[Option[ComputedRatio]]]()
-    ratiosByMQPepId.sizeHint(mqPepsAfterAllFilters.length)
+    ratiosByMQPepId.sizeHint(masterQuantPeptides.length)
     
     // Compute these mappings
-    for( mqPep <- mqPepsAfterAllFilters ) {
+    for( mqPep <- masterQuantPeptides ) {
       mqPepById += mqPep.id -> mqPep
       ratiosByMQPepId += mqPep.id -> new ArrayBuffer[Option[ComputedRatio]]
     }
     
     val maxCv = config.peptideStatConfig.maxCv
     
+    val mqPeptideFilledMatrix = masterQuantPeptides.map( _.getAbundancesForQuantChannels(expDesignSetup.qcIds) ).toArray 
+    val mqPeptidePsmCountMatrix = masterQuantPeptides.map( _.getPepMatchesCountsForQuantChannels(expDesignSetup.qcIds) ).toArray
+    
     // Iterate over the ratio definitions
     for ( ratioDef <- expDesignSetup.groupSetup.ratioDefinitions ) {
 
       val ratios = computeRatios(
         ratioDef,
-        filledMatrix,
-        psmCountMatrix,
+        mqPeptideFilledMatrix,
+        mqPeptidePsmCountMatrix,
         absoluteErrorModelOpt,
         config.peptideStatConfig
       )
  
       for ( ratio <- ratios ) {
         val index = ratio.entityId.toInt
-        val masterQuantPep = mqPepsAfterAllFilters(index)
-        val abundances = filledMatrix(index)
+        val masterQuantPep = masterQuantPeptides(index)
+        val abundances = mqPeptideFilledMatrix(index)
         
         // Update master quant peptide abundances
         masterQuantPep.setAbundancesForQuantChannels(abundances,expDesignSetup.qcIds)
@@ -335,9 +386,13 @@ class Profilizer( expDesign: ExperimentalDesign, groupSetupNumber: Int = 1, mast
       
       // Summarize abundances of the current profile cluster
       val mqPepAbundanceMatrix = clusteredMqPeps.map( _.getAbundancesForQuantChannels(expDesignSetup.qcIds) ).toArray
-            
+      
+      if(mqPepsCluster.name == "sp|Q04491|SEC13_YEAST") {
+          println(mqPepsCluster.name + " abRow: " + mqPepAbundanceMatrix.mkString(","))
+      }
+      
       val abRow = this.summarizeMatrix(mqPepAbundanceMatrix, abSumMethod)
-      //println("abRow: " + abRow.mkString("\t"))
+      //println(mqPepsCluster.name + " abRow: " + abRow.mkString("\t"))
       abundanceMatrixBuffer += abRow
       
       // Summarize PSM counts of the current profile cluster

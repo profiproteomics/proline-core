@@ -34,8 +34,9 @@ trait MasterQuantComponent[A <: QuantComponent] extends Item {
   def id: Long
   
   protected def getQuantComponentMap(): LongMap[A]
-  protected def setQuantComponentMap(quantComponentMap: LongMap[A]): Unit
   
+  protected def setQuantComponentMap(quantComponentMap: LongMap[A]): Unit
+    
   protected def getMostAbundantQuantComponent(): A = {
     this.getQuantComponentMap.values.maxBy(_.abundance)
   }
@@ -71,6 +72,19 @@ trait MasterQuantComponent[A <: QuantComponent] extends Item {
     quantChannelIds map { quantChannelId => getQuantComponentAbundance(quantChannelId) } filter { ! _.isNaN }
   }
   
+  def setAbundancesForQuantChannels(abundances: Seq[Float], quantChannelIds: Seq[Long]) {
+    
+    val quantCompMap = this.getQuantComponentMap()
+    
+    for( (ab, qcId) <- abundances.zip( quantChannelIds ) ) {
+      if( quantCompMap.contains(qcId) ) {
+        quantCompMap(qcId).abundance = ab
+      } 
+    }
+    
+  }
+
+    
   protected def updateOrCreateComponentForQuantChannels(
     abundances: Seq[Float],
     quantChannelIds: Seq[Long],
@@ -86,8 +100,7 @@ trait MasterQuantComponent[A <: QuantComponent] extends Item {
         quantCompMap.put(qcId, buildQuantComponent(ab,qcId))
         //this.setQuantComponentMap(quantCompMap)
       }
-    }
-    
+    }    
   }
    
   def calcMeanAbundanceForQuantChannels( quantChannelIds: Array[Long] ): Float = {
@@ -143,6 +156,7 @@ case class MasterQuantReporterIon(
 ) extends MasterQuantComponent[QuantReporterIon] {
   
   def getQuantComponentMap() = quantReporterIonMap
+  
   def setQuantComponentMap(quantComponentMap: LongMap[QuantReporterIon]) = {
     this.quantReporterIonMap = quantComponentMap
   }
@@ -291,7 +305,7 @@ case class MasterQuantPeptideIon(
   def countDefinedRawAbundances(): Int = {
     quantPeptideIonMap.values.count( qPepIon => isZeroOrNaN(qPepIon.rawAbundance) == false )
   }
-  
+    
 }
 
 /** Represents a Peptide quantitative data in a single quant channel (run).
@@ -347,6 +361,7 @@ case class MasterQuantPeptide(
 ) extends MasterQuantComponent[QuantPeptide] {
   
   def getQuantComponentMap() = quantPeptideMap
+  
   def setQuantComponentMap(quantComponentMap: LongMap[QuantPeptide]) = {
     this.quantPeptideMap = quantComponentMap
   }
@@ -390,7 +405,7 @@ case class MasterQuantPeptide(
     this.getQuantComponentAbundance(quantChannelId)
   }
   
-  def setAbundancesForQuantChannels( abundances: Seq[Float], quantChannelIds: Seq[Long] ) {
+  override def setAbundancesForQuantChannels( abundances: Seq[Float], quantChannelIds: Seq[Long] ) {
     this.updateOrCreateComponentForQuantChannels(
       abundances,
       quantChannelIds,
@@ -574,7 +589,7 @@ case class MasterQuantProteinSet(
     quantCompMap
   }
   
-  def setAbundancesForQuantChannels( abundances: Seq[Float], quantChannelIds: Seq[Long] ) {
+  override def setAbundancesForQuantChannels( abundances: Seq[Float], quantChannelIds: Seq[Long] ) {
     this.updateOrCreateComponentForQuantChannels(
       abundances,
       quantChannelIds,
