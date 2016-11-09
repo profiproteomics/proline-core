@@ -29,6 +29,7 @@ import fr.proline.core.algo.lcms.FeatureSummarizingMethod
 import fr.proline.core.algo.lcms.summarizing._
 import fr.proline.core.algo.msq.summarizing.BuildMasterQuantPeptide
 import scala.collection.mutable.LongMap
+import fr.proline.core.algo.msq.config.profilizer.QuantComponentItem
 
 // Factory for Proline-Cortex
 object QuantProfilesComputer {
@@ -197,6 +198,7 @@ class QuantProfilesComputer(
         // Re-build the master quant peptides
         val newMqPep = BuildMasterQuantPeptide(mqPepIons, mqPep.peptideInstance, mqPep.resultSummaryId)      
         mqPep.selectionLevel = newMqPep.selectionLevel
+        // the next step is mandatory since BuildMasterQuantPeptide updates mqPepIons.masterQuantPeptideId to the new MasterQuantPeptide
         mqPepIons.foreach { mqPepIon =>
             mqPepIon.masterQuantPeptideId = mqPep.id
         }
@@ -258,6 +260,7 @@ class QuantProfilesComputer(
         // Re-build the master quant peptides
         val newMqPep = BuildMasterQuantPeptide(mqPepIons, mqPep.peptideInstance, mqPep.resultSummaryId)
         mqPep.selectionLevel = newMqPep.selectionLevel
+        // the next step is mandatory since BuildMasterQuantPeptide updates mqPepIons.masterQuantPeptideId to the new MasterQuantPeptide
         mqPepIons.foreach { mqPepIon =>
           mqPepIon.masterQuantPeptideId = mqPep.id
         }
@@ -308,6 +311,9 @@ class QuantProfilesComputer(
       val mqComponentUpdateQuery = "UPDATE master_quant_component SET selection_level = ?, serialized_properties = ? WHERE id = ?"
       val objTreeUpdateQuery = "UPDATE object_tree SET clob_data = ? " +
         "WHERE object_tree.id IN (SELECT object_tree_id FROM master_quant_component WHERE master_quant_component.id = ?)"
+       val objTreeIonUpdateQuery = "UPDATE object_tree SET clob_data = ? " +
+        "WHERE object_tree.id IN (SELECT master_quant_component.object_tree_id FROM master_quant_component,master_quant_peptide_ion  WHERE master_quant_component.id = master_quant_peptide_ion.master_quant_component_id AND master_quant_peptide_ion.id = ?)"
+      
       
       ezDBC.executeInBatch(mqComponentUpdateQuery) { mqComponentUpdateStmt =>
         ezDBC.executeInBatch(objTreeUpdateQuery) { objTreeUpdateStmt =>
@@ -334,6 +340,22 @@ class QuantProfilesComputer(
               mqPep.id
             )
           }
+
+          if (config.summarizingBasedOn.get == QuantComponentItem.QUANT_PEPTIDE_IONS.toString) {
+            
+            this.logger.info("Updating MasterQuantPeptideIons...")
+             ezDBC.executeInBatch(objTreeIonUpdateQuery) { objTreeIonUpdateStmt =>
+            for (mqPepIon <- quantRSM.masterQuantPeptideIons) {
+              // Retrieve quant peptides sorted by quant channel
+              val quantPeptideIonMap = mqPepIon.quantPeptideIonMap
+              val quantPeptideIons = qcIds.map { quantPeptideIonMap.getOrElse(_, null) }
+
+              // Update MasterQuantPeptides object tree
+              objTreeIonUpdateStmt.executeWith( ProfiJson.serialize(quantPeptideIons), mqPepIon.id)
+              }
+            }
+          }
+          
           
           this.logger.info("Updating MasterQuantProtSets...")
           
