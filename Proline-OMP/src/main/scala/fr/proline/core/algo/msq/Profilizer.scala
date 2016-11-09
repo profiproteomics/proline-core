@@ -205,11 +205,10 @@ class Profilizer( expDesign: ExperimentalDesign, groupSetupNumber: Int = 1, mast
       mqQuantComponent.setAbundancesForQuantChannels(abundances,expDesignSetup.qcIds)
     }
 
-    //
-    // if previous step is ION based, then update the associated mqPep Abundance values
-    //
-    if (config.summarizingBasedOn.get == QuantComponentItem.QUANT_PEPTIDE_IONS.toString) {
-
+     if (config.summarizingBasedOn.get == QuantComponentItem.QUANT_PEPTIDE_IONS.toString) {
+      //
+      // if previous step is ION based, then update the associated mqPep Abundance values
+      //
       for (mqPep <- masterQuantPeptides) {
         val mqPepIons = mqPep.masterQuantPeptideIons
         // Re-build the master quant peptides
@@ -221,6 +220,15 @@ class Profilizer( expDesign: ExperimentalDesign, groupSetupNumber: Int = 1, mast
           mqPepIon.masterQuantPeptideId = mqPep.id
         }
       }
+    } else {
+      //
+      // if previous step is PEPTIDE based, then update the peptide ions abundance values to reset abundance to raw abundances
+      //
+      val masterQuantPeptideIons = masterQuantPeptides.flatMap(_.masterQuantPeptideIons)
+      for (mqPepIon <- masterQuantPeptideIons) {
+          mqPepIon.setAbundancesForQuantChannels(mqPepIon.getRawAbundancesForQuantChannels(expDesignSetup.qcIds), expDesignSetup.qcIds)
+      }
+      
     }
     
     //

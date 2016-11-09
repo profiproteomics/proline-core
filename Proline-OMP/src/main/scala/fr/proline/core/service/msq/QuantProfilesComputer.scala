@@ -318,6 +318,20 @@ class QuantProfilesComputer(
       ezDBC.executeInBatch(mqComponentUpdateQuery) { mqComponentUpdateStmt =>
         ezDBC.executeInBatch(objTreeUpdateQuery) { objTreeUpdateStmt =>
       
+          
+          this.logger.info("Updating MasterQuantPeptideIons...")
+ 
+          ezDBC.executeInBatch(objTreeIonUpdateQuery) { objTreeIonUpdateStmt =>
+            for (mqPepIon <- quantRSM.masterQuantPeptideIons) {
+              // Retrieve quant peptides sorted by quant channel
+              val quantPeptideIonMap = mqPepIon.quantPeptideIonMap
+              val quantPeptideIons = qcIds.map { quantPeptideIonMap.getOrElse(_, null) }
+
+              // Update MasterQuantPeptides object tree
+              objTreeIonUpdateStmt.executeWith(ProfiJson.serialize(quantPeptideIons), mqPepIon.id)
+            }
+          }
+  
           this.logger.info("Updating MasterQuantPeptides...")
           
           // Iterate over MasterQuantPeptides 
@@ -340,22 +354,6 @@ class QuantProfilesComputer(
               mqPep.id
             )
           }
-
-          if (config.summarizingBasedOn.get == QuantComponentItem.QUANT_PEPTIDE_IONS.toString) {
-            
-            this.logger.info("Updating MasterQuantPeptideIons...")
-             ezDBC.executeInBatch(objTreeIonUpdateQuery) { objTreeIonUpdateStmt =>
-            for (mqPepIon <- quantRSM.masterQuantPeptideIons) {
-              // Retrieve quant peptides sorted by quant channel
-              val quantPeptideIonMap = mqPepIon.quantPeptideIonMap
-              val quantPeptideIons = qcIds.map { quantPeptideIonMap.getOrElse(_, null) }
-
-              // Update MasterQuantPeptides object tree
-              objTreeIonUpdateStmt.executeWith( ProfiJson.serialize(quantPeptideIons), mqPepIon.id)
-              }
-            }
-          }
-          
           
           this.logger.info("Updating MasterQuantProtSets...")
           
