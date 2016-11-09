@@ -89,6 +89,8 @@ class IsobaricTaggingQuantifier(
   
   protected def computeAndStoreQuantEntities(msiQuantRsm: MsiResultSummary, quantRsm : ResultSummary) {
     
+    logger.info("computing isobaric quant entities...")
+    
     // Quantify peptide ions if a label free quant config is provided
     val lfqConfigOpt = quantConfig.labelFreeQuantConfig
     
@@ -113,6 +115,8 @@ class IsobaricTaggingQuantifier(
       for(identRsm <- entityCache.identResultSummaries) {
         mqReporterIonsByIdentRsmId += identRsm.id -> _quantifyIdentRsm(identRsm).toArray
       }
+      
+      logger.info("computing label-free quant entities...")
       
       // Extract features from mzDB files
       val (pepByRunAndScanNbr, psmByRunAndScanNbr) = entityCache.getPepAndPsmByRunIdAndScanNumber(this.mergedResultSummary)
@@ -141,6 +145,8 @@ class IsobaricTaggingQuantifier(
       )
       
     }
+    
+    logger.info("summarizing quant entities...")
 
     val(mqPeptides,mqProtSets) = entitiesSummarizer.computeMasterQuantPeptidesAndProteinSets(
       this.masterQc,
@@ -228,6 +234,7 @@ class IsobaricTaggingQuantifier(
         val peaksInRange = mzIntPairs.filter(p => (p._1 > reporterMz - mozTolInDa) && (p._1 < reporterMz + mozTolInDa) )
         
         if( peaksInRange.nonEmpty ) {
+          
           val nearestPeak = peaksInRange.minBy(p => math.abs(reporterMz - p._1))
           
           val quantReporterIon = QuantReporterIon(

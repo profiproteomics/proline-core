@@ -272,8 +272,10 @@ class IsobaricTaggingWithLabelFreeEntitiesSummarizer(
       
       // Retrieve label-free quant peptides for this child RSM
       val lfQPepIons = lfQPepIonsByIdentRsmId(identRsmId)
-      val lfQPepIonByPepIdAndCharge = Map() ++ lfQPepIons.map { case (qPepIon,mqPep,charge) =>
-        (mqPep.id,charge) -> qPepIon
+      logger.debug(lfQPepIons.length + " peptide ions have been quantified using the label-free method")
+      
+      val lfQPepIonByPepIdAndCharge = Map() ++ lfQPepIons.withFilter(_._2.peptideInstance.isDefined).map { case (qPepIon,mqPep,charge) =>
+        (mqPep.peptideInstance.get.peptideId,charge) -> qPepIon
       }
       
       val rsmOpt = resultSummaries.find(_.id == identRsmId)
