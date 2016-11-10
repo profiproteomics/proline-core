@@ -82,22 +82,22 @@ case class ValidationResults( finalResult: ValidationResult, computedResults: Op
 
 object BuildPeptideMatchFilter {
   
-  def apply(filterParamStr: String): IPeptideMatchFilter = {    
+  def apply(filterParamStr: String): IPeptideMatchFilter = {
     this.apply( PepMatchFilterParams.withName(filterParamStr) )
   }
   
-  def apply(filterParamStr: String, thresholdValue: AnyVal): IPeptideMatchFilter = {    
+  def apply(filterParamStr: String, thresholdValue: AnyVal): IPeptideMatchFilter = {
     val filter = this.apply( filterParamStr )
     filter.setThresholdValue(thresholdValue)
     filter
   }
   
-  def apply(filterParam: PepMatchFilterParams.Param): IPeptideMatchFilter = {    
+  def apply(filterParam: PepMatchFilterParams.Param): IPeptideMatchFilter = {
     filterParam match {
       case PepMatchFilterParams.MASCOT_EVALUE => new MascotEValuePSMFilter()
       case PepMatchFilterParams.MASCOT_ADJUSTED_EVALUE => new MascotAdjustedEValuePSMFilter()
       case PepMatchFilterParams.PEPTIDE_SEQUENCE_LENGTH => new PepSeqLengthPSMFilter()
-      case PepMatchFilterParams.RANK => new RankPSMFilter()
+      case PepMatchFilterParams.RANK => new PrettyRankPSMFilter()
       case PepMatchFilterParams.SCORE => new ScorePSMFilter()
       case PepMatchFilterParams.SCORE_IT_PVALUE => new MascotPValuePSMFilter(useHomologyThreshold = false)
       case PepMatchFilterParams.SCORE_HT_PVALUE => new MascotPValuePSMFilter(useHomologyThreshold = true)
@@ -109,17 +109,17 @@ object BuildPeptideMatchFilter {
 
 object BuildOptimizablePeptideMatchFilter {
   
-  def apply(filterParamStr: String): IOptimizablePeptideMatchFilter = {    
+  def apply(filterParamStr: String): IOptimizablePeptideMatchFilter = {
     this.apply( PepMatchFilterParams.withName(filterParamStr) )
   }
   
-  def apply(filterParamStr: String, thresholdValue: AnyVal): IOptimizablePeptideMatchFilter = {    
+  def apply(filterParamStr: String, thresholdValue: AnyVal): IOptimizablePeptideMatchFilter = {
     val filter = this.apply( filterParamStr )
     filter.setThresholdValue(thresholdValue)
     filter
   }
   
-  def apply(filterParam: PepMatchFilterParams.Param): IOptimizablePeptideMatchFilter = {    
+  def apply(filterParam: PepMatchFilterParams.Param): IOptimizablePeptideMatchFilter = {
     filterParam match {
       case PepMatchFilterParams.MASCOT_EVALUE => new MascotEValuePSMFilter()
       case PepMatchFilterParams.MASCOT_ADJUSTED_EVALUE => new MascotAdjustedEValuePSMFilter()

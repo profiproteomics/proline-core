@@ -1,19 +1,19 @@
 package fr.proline.core.algo.msi.filtering.pepmatch
 
 import scala.collection.Seq
-import fr.proline.core.algo.msi.filtering.IPeptideMatchFilter
 import scala.collection.immutable.Map
-import fr.proline.core.om.model.msi.PeptideMatch
+
+import com.typesafe.scalalogging.LazyLogging
+
+import fr.profi.util.MathUtils
+import fr.proline.core.algo.msi.filtering.IFilterNeedingResultSet
+import fr.proline.core.algo.msi.filtering.IPeptideMatchFilter
 import fr.proline.core.algo.msi.filtering.PepMatchFilterParams
 import fr.proline.core.algo.msi.filtering.PeptideMatchFiltering
 import fr.proline.core.om.model.msi.IResultSetLike
-import fr.proline.core.om.model.msi.ResultSet
-import scala.collection.mutable.ArrayBuffer
+import fr.proline.core.om.model.msi.PeptideMatch
 import fr.proline.core.om.model.msi.ProteinMatch
-import scala.collection.mutable.HashMap
-import fr.proline.core.algo.msi.filtering.IFilterNeedingResultSet
-import com.typesafe.scalalogging.LazyLogging
-import fr.profi.util.MathUtils
+import fr.proline.core.om.model.msi.ResultSet
 
 class SinglePSMPerPrettyRankFilter(var targetRs: IResultSetLike = null) extends IPeptideMatchFilter with LazyLogging with IFilterNeedingResultSet {
 
@@ -31,10 +31,10 @@ class SinglePSMPerPrettyRankFilter(var targetRs: IResultSetLike = null) extends 
     if (!incrementalValidation) PeptideMatchFiltering.resetPepMatchValidationStatus(pepMatches)
 
     // Memorize peptide matches rank
-    val pepMatchRankMap = RankPSMFilter.getPeptideMatchesRankMap(pepMatches)
+    val pepMatchRankMap = PrettyRankPSMFilter.getPeptideMatchesRankMap(pepMatches)
 
     // Rerank peptide matches
-    RankPSMFilter.rerankPeptideMatches(pepMatches)
+    PrettyRankPSMFilter.rerankPeptideMatches(pepMatches)
 
     // Group peptide matches by MS query
     val pepMatchesByMsqId = pepMatches.filter(_.isValidated).groupBy(_.msQueryId)
@@ -42,42 +42,42 @@ class SinglePSMPerPrettyRankFilter(var targetRs: IResultSetLike = null) extends 
     //For each query find a unique PSM per rank. Used rules:
     // - PSM with best score
     // - if equality : PSM which identify ProtMatches with higher number of valid PSMs
-    
+
     var protMatchesByPepMatchId = ResultSet.getProteinMatchesByPeptideMatchId(targetRs)
     val decoyRsOpt = targetRs.getDecoyResultSet()
-    if( decoyRsOpt.isDefined ) {
+    if (decoyRsOpt.isDefined) {
       protMatchesByPepMatchId ++= ResultSet.getProteinMatchesByPeptideMatchId(decoyRsOpt.get)
-    } 
+    }
 
     // Filter query per query
     pepMatchesByMsqId.foreach(entry => {
       var psmsByRank = entry._2.groupBy(_.rank);
-         
+
       // Filter rank per rank
       psmsByRank.foreach(sameRankPSMs => {
         var bestRankPsm: PeptideMatch = null
         //For all PSMs of a specific rank select 1
-        	
+
         val currentRankPsms = sameRankPSMs._2
         if (currentRankPsms != null && !currentRankPsms.isEmpty) { // al least one PSM.
 
           if (currentRankPsms.size == 1) { //One PSM... choose it
             bestRankPsm = currentRankPsms(0)
-//            logger.debug("**** One PSM... choose it  "+bestRankPsm.peptide.sequence)
+            //            logger.debug("**** One PSM... choose it  "+bestRankPsm.peptide.sequence)
           } else { //more than one, choose using protein matches pepMatch count 
             currentRankPsms.foreach(currentPsm => {
               if (bestRankPsm == null) {
                 bestRankPsm = currentPsm
-//                logger.debug("**** more than One PSMs... Start with first "+bestRankPsm.peptide.sequence)
+                //                logger.debug("**** more than One PSMs... Start with first "+bestRankPsm.peptide.sequence)
               } else {
                 val protMatchesOpt = protMatchesByPepMatchId.get(currentPsm.id)
                 val bestPsmProtMatchesOpt = protMatchesByPepMatchId.get(bestRankPsm.id)
                 // filter using ProteinMatch nbrPeptideCount.
-                  if ( protMatchesOpt.isDefined &&
-                		  (bestPsmProtMatchesOpt.isEmpty
-                			  || ( getMaxNbrPepForProtMatches(protMatchesOpt.get) > getMaxNbrPepForProtMatches(bestPsmProtMatchesOpt.get) ))) 
-                    bestRankPsm = currentPsm
-//                  logger.debug("**** more than One PSMs... Found new best "+bestRankPsm.peptide.sequence)
+                if (protMatchesOpt.isDefined &&
+                  (bestPsmProtMatchesOpt.isEmpty
+                    || (getMaxNbrPepForProtMatches(protMatchesOpt.get) > getMaxNbrPepForProtMatches(bestPsmProtMatchesOpt.get))))
+                  bestRankPsm = currentPsm
+                //                  logger.debug("**** more than One PSMs... Found new best "+bestRankPsm.peptide.sequence)
               }
             }) //end go throughall equals psms
           } //End more than one PSM 
@@ -96,14 +96,14 @@ class SinglePSMPerPrettyRankFilter(var targetRs: IResultSetLike = null) extends 
 
   }
 
-  protected  def getMaxNbrPepForProtMatches(protMatches : Array[ProteinMatch]) : Int = {
-    var maxNbrPep:Int = 0
-  	protMatches.foreach(pm => {  	  
-  	    maxNbrPep =maxNbrPep.max(pm.peptideMatchesCount)
-  	})
-  	maxNbrPep
+  protected def getMaxNbrPepForProtMatches(protMatches: Array[ProteinMatch]): Int = {
+    var maxNbrPep: Int = 0
+    protMatches.foreach(pm => {
+      maxNbrPep = maxNbrPep.max(pm.peptideMatchesCount)
+    })
+    maxNbrPep
   }
-  
+
   protected def nearlyEqual(a: Float, b: Float): Boolean = {
     (a - b).abs < MathUtils.EPSILON_FLOAT
   }

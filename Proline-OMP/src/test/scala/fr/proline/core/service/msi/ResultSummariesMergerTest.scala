@@ -5,7 +5,7 @@ import org.junit.Test
 import com.typesafe.scalalogging.StrictLogging
 import fr.proline.context.IExecutionContext
 import fr.proline.core.algo.msi.filtering.IPeptideMatchFilter
-import fr.proline.core.algo.msi.filtering.pepmatch.RankPSMFilter
+import fr.proline.core.algo.msi.filtering.pepmatch.PrettyRankPSMFilter
 import fr.proline.core.algo.msi.validation.BasicTDAnalyzer
 import fr.proline.core.algo.msi.validation.TargetDecoyModes
 import fr.proline.core.dal._
@@ -140,7 +140,7 @@ class ResultSummariesMergerTest extends StrictLogging {
   private def validate(execContext: IExecutionContext, rs: ResultSet): ResultSummary = {
     /* PeptideMatch pre-filter on Rank */
     val seqBuilder = Seq.newBuilder[IPeptideMatchFilter]
-    seqBuilder += new RankPSMFilter(2) // Only 1, 2 ranks
+    seqBuilder += new PrettyRankPSMFilter(2) // Only 1, 2 ranks
 
     val rsValidator = new ResultSetValidator(
       execContext = execContext,

@@ -18,12 +18,12 @@ object PepMatchFilterParams extends Enumeration {
   val MASCOT_EVALUE = Value("MASCOT_EVALUE")
   val MASCOT_ADJUSTED_EVALUE = Value("MASCOT_ADJUSTED_EVALUE")
   val PEPTIDE_SEQUENCE_LENGTH = Value("PEP_SEQ_LENGTH")
-  val RANK = Value("RANK")
+  val RANK = Value("RANK") // TODO: rename pretty rank
   val SCORE = Value("SCORE")
   val SCORE_IT_PVALUE = Value("SCORE_IT_P-VALUE")
   val SCORE_HT_PVALUE = Value("SCORE_HT_P-VALUE")
   val SINGLE_PSM_PER_QUERY = Value("SINGLE_PSM_PER_QUERY")
-  val SINGLE_PSM_PER_RANK = Value("SINGLE_PSM_PER_RANK")
+  val SINGLE_PSM_PER_RANK = Value("SINGLE_PSM_PER_RANK")  // TODO: rename SINGLE_PSM_PER_PRETTY_RANK
 }
 
 object ProtSetFilterParams extends Enumeration {

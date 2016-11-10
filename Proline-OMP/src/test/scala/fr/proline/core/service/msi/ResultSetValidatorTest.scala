@@ -10,7 +10,7 @@ import fr.profi.util.primitives._
 import fr.proline.core.algo.msi.DbUnitResultFileLoading
 import fr.proline.core.algo.msi.InferenceMethod
 import fr.proline.core.algo.msi.filtering.{ IPeptideMatchFilter, FilterPropertyKeys, _ }
-import fr.proline.core.algo.msi.filtering.pepmatch.{ ScorePSMFilter, RankPSMFilter, _ }
+import fr.proline.core.algo.msi.filtering.pepmatch._
 import fr.proline.core.algo.msi.filtering.proteinset.{ ScoreProtSetFilter, SpecificPeptidesPSFilter }
 import fr.proline.core.algo.msi.scoring.PepSetScoring
 import fr.proline.core.algo.msi.validation.{ BasicTDAnalyzer, _ }
@@ -263,7 +263,7 @@ class ResultSetValidatorF136482Test extends StrictLogging {
 
     val seqBuilder = Seq.newBuilder[IPeptideMatchFilter]
     val maxRank = 1
-    seqBuilder += new RankPSMFilter(pepMatchMaxRank = maxRank)
+    seqBuilder += new PrettyRankPSMFilter(maxPrettyRank = maxRank)
     
     val rsValidation = new ResultSetValidator(
       execContext = executionContext,
@@ -359,7 +359,7 @@ class ResultSetValidatorF136482Test extends StrictLogging {
 
     val seqBuilder = Seq.newBuilder[IPeptideMatchFilter]
     val maxRank = 1
-    seqBuilder += new RankPSMFilter(pepMatchMaxRank = maxRank)
+    seqBuilder += new PrettyRankPSMFilter(maxPrettyRank = maxRank)
     
     val rsValidation = new ResultSetValidator(
       execContext = executionContext,
@@ -576,7 +576,7 @@ class ResultSetValidatorF136482Test extends StrictLogging {
   @Test
   def testRankAndScoreFDRValidation() {
 
-    val firstRankFilter = new RankPSMFilter(1)
+    val firstRankFilter = new PrettyRankPSMFilter(1)
     val valFilter = new ScorePSMFilter()
     // val testTDAnalyzer = Some(new CompetitionBasedTDAnalyzer(valFilter))
     val testTDAnalyzer = Some(new BasicTDAnalyzer(TargetDecoyModes.CONCATENATED))
@@ -666,7 +666,7 @@ class ResultSetValidatorF136482Test extends StrictLogging {
   def testPepMatchAndProtSetFDRValidation() {
     
     val tdMode = TargetDecoyModes.CONCATENATED
-    val firstRankFilter = new RankPSMFilter(1)
+    val firstRankFilter = new PrettyRankPSMFilter(1)
     val pepMatchValFilter = new ScorePSMFilter()
     //val testTDAnalyzer = Some(new CompetitionBasedTDAnalyzer(pepMatchValFilter))
     val testTDAnalyzer = Some(new BasicTDAnalyzer(tdMode))
@@ -1087,7 +1087,7 @@ class ResultSetValidatorF027737Test extends StrictLogging {
       execContext = executionContext,
       targetRs = targetRS,
       tdAnalyzer = tdAnalyzerOpt,
-      pepMatchPreFilters = Some(Seq(new RankPSMFilter(1))),
+      pepMatchPreFilters = Some(Seq(new PrettyRankPSMFilter(1))),
       pepMatchValidator = Some(fdrValidator),
       protSetFilters = None,
       protSetValidator = None,
@@ -1117,7 +1117,7 @@ class ResultSetValidatorF027737Test extends StrictLogging {
       execContext = executionContext,
       targetRs = targetRS,
       tdAnalyzer = tdAnalyzerOpt,
-      pepMatchPreFilters = Some(Seq(new RankPSMFilter(0))),
+      pepMatchPreFilters = Some(Seq(new PrettyRankPSMFilter(0))),
       pepMatchValidator = Some(fdrValidator),
       protSetFilters = None,
       protSetValidator = None,
