@@ -7,6 +7,7 @@ import com.typesafe.scalalogging.StrictLogging
 import fr.proline.core.algo.msi.filtering.pepmatch.ScorePSMFilter
 import fr.proline.core.algo.msi.validation.BasicTDAnalyzer
 import fr.proline.core.algo.msi.validation.TargetDecoyModes
+import fr.proline.core.dal.STR_F122817_Mascot_v2_3_TEST_CASE
 import fr.proline.core.om.model.msi.ResultSet
 import fr.proline.core.om.provider.msi.impl.SQLResultSummaryProvider
 import fr.proline.core.service.msi.ResultSetValidator

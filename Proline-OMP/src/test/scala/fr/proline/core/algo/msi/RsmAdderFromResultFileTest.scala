@@ -6,6 +6,7 @@ import org.junit.Test
 import com.typesafe.scalalogging.StrictLogging
 import fr.proline.core.algo.msi.inference.ParsimoniousProteinSetInferer
 import fr.proline.core.algo.msi.scoring._
+import fr.proline.core.dal.STR_F122817_Mascot_v2_3_TEST_CASE
 import fr.proline.core.om.model.msi.ResultSet
 import fr.proline.core.om.model.msi.ResultSummary
 

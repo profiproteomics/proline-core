@@ -7,7 +7,6 @@ import org.junit.{Assert, Test}
 import com.typesafe.scalalogging.StrictLogging
 
 import fr.profi.util.primitives._
-import fr.proline.core.algo.msi.DbUnitResultFileLoading
 import fr.proline.core.algo.msi.InferenceMethod
 import fr.proline.core.algo.msi.filtering.{ IPeptideMatchFilter, FilterPropertyKeys, _ }
 import fr.proline.core.algo.msi.filtering.pepmatch._
@@ -17,6 +16,7 @@ import fr.proline.core.algo.msi.validation.{ BasicTDAnalyzer, _ }
 import fr.proline.core.algo.msi.validation.pepmatch.TDPepMatchValidatorWithFDROptimization
 import fr.proline.core.algo.msi.validation.proteinset.ProtSetRulesValidatorWithFDROptimization
 import fr.proline.core.dal.AbstractEmptyDatastoreTestCase
+import fr.proline.core.dal.DbUnitResultFileLoading
 import fr.proline.core.dbunit._
 import fr.proline.core.om.model.msi.{ ResultSet, PeptideMatch, FilterDescriptor }
 import fr.proline.core.om.provider.msi._

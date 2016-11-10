@@ -8,7 +8,6 @@ import org.junit.Test
 import com.typesafe.scalalogging.StrictLogging
 
 import fr.profi.util.primitives.toInt
-import fr.proline.core.algo.msi.DbUnitResultFileLoading
 import fr.proline.core.algo.msi.filtering.FilterPropertyKeys
 import fr.proline.core.algo.msi.filtering.ProtSetFilterParams
 import fr.proline.core.algo.msi.filtering.pepmatch.ScorePSMFilter
@@ -18,14 +17,11 @@ import fr.proline.core.algo.msi.validation.BasicTDAnalyzer
 import fr.proline.core.algo.msi.validation.TargetDecoyModes
 import fr.proline.core.algo.msi.validation.proteinset.ProtSetRulesValidatorWithFDROptimization
 import fr.proline.core.dal.AbstractEmptyDatastoreTestCase
+import fr.proline.core.dal.DbUnitResultFileLoading
 import fr.proline.core.dbunit.STR_F136482_CTD
 import fr.proline.core.om.model.msi.FilterDescriptor
 import fr.proline.core.om.model.msi.ResultSet
 import fr.proline.repository.DriverType
-
-
-
-
 
 object RSMProtSetFiltererF136482Test extends AbstractEmptyDatastoreTestCase with DbUnitResultFileLoading with StrictLogging {
 
