@@ -243,7 +243,7 @@ object Ms2CountEntitiesSummarizer extends IMqPepAndProtEntitiesSummarizer with L
       }
       
       val mqProtSetProps = new MasterQuantProteinSetProperties()
-      mqProtSetProps.setSelectionLevelBymasterQuantPeptideId(Some(selectedMQPepIds) )
+      mqProtSetProps.setSelectionLevelByMqPeptideId(Some(selectedMQPepIds) )
       
       val mqProteinSet = new MasterQuantProteinSet(
         proteinSet = mergedProtSet,

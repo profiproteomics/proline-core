@@ -116,8 +116,8 @@ trait IMQProteinSetSummarizer {
       }
       
       val mqProtSetProps = new MasterQuantProteinSetProperties()
-      mqProtSetProps.setSelectionLevelBymasterQuantPeptideId(Some(selectedMQPepIds) )
-      mqProtSetProps.setSelectionLevelBymasterQuantPeptideIonId(Some(selectedMQPepIonIds) )
+      mqProtSetProps.setSelectionLevelByMqPeptideId(Some(selectedMQPepIds) )
+      mqProtSetProps.setSelectionLevelByMqPeptideIonId(Some(selectedMQPepIonIds) )
       
       val mqProteinSet = new MasterQuantProteinSet(
         proteinSet = mergedProtSet,

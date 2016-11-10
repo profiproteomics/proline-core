@@ -182,17 +182,17 @@ abstract class AbstractMasterQuantChannelQuantifier extends LazyLogging {
       val mqProtSetProps = mqProtSet.properties.getOrElse( MasterQuantProteinSetProperties() )
       
       // Update the selectionLevelBymasterQuantPeptideId properties
-      val selectionLevelMQPepTmpIdsOpt = mqProtSetProps.getSelectionLevelBymasterQuantPeptideId()
+      val selectionLevelMQPepTmpIdsOpt = mqProtSetProps.getSelectionLevelByMqPeptideId()
       if (selectionLevelMQPepTmpIdsOpt.isDefined) {
         val selectedMQPepIds = selectionLevelMQPepTmpIdsOpt.get.map{ case (k,v) => (mqPepIdByTmpId(k), v) }
-        mqProtSetProps.setSelectionLevelBymasterQuantPeptideId(Some(selectedMQPepIds))
+        mqProtSetProps.setSelectionLevelByMqPeptideId(Some(selectedMQPepIds))
       }
       
-      // Update the selectionLevelBymasterQuantPeptideIonId properties      
-      val selectionLevelMQPepIonTmpIdsOpt = mqProtSetProps.getSelectionLevelBymasterQuantPeptideIonId()
+      // Update the selectionLevelBymasterQuantPeptideIonId properties
+      val selectionLevelMQPepIonTmpIdsOpt = mqProtSetProps.getSelectionLevelByMqPeptideIonId()
       if (selectionLevelMQPepIonTmpIdsOpt.isDefined) {
         val selectedMQPepIonIds = selectionLevelMQPepIonTmpIdsOpt.get.map{ case (k,v) => (mqPepIonIdByTmpId(k), v) }
-        mqProtSetProps.setSelectionLevelBymasterQuantPeptideIonId(Some(selectedMQPepIonIds))
+        mqProtSetProps.setSelectionLevelByMqPeptideIonId(Some(selectedMQPepIonIds))
       }
       
     }

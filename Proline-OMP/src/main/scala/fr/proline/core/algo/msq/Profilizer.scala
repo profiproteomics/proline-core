@@ -335,7 +335,7 @@ class Profilizer( expDesign: ExperimentalDesign, groupSetupNumber: Int = 1, mast
     for( mqProtSet <- masterQuantProtSets ) {
       
       val selectionLevelMap: HashMap[Long, Int] = mqProtSet.masterQuantPeptides.map(a => a.id -> a.selectionLevel)(collection.breakOut)
-      val curSelectionLevelMap = mqProtSet.properties.get.getSelectionLevelBymasterQuantPeptideId.getOrElse(HashMap()).filter{case (k,v) => (v == 0) || (v == 3)}
+      val curSelectionLevelMap = mqProtSet.properties.get.getSelectionLevelByMqPeptideId().getOrElse(HashMap()).filter{case (k,v) => (v == 0) || (v == 3)}
       selectionLevelMap.transform((k,v) => curSelectionLevelMap.getOrElse(k, v))
       
       mqProtSet.properties.get.mqPeptideSelLevelById = selectionLevelMap
