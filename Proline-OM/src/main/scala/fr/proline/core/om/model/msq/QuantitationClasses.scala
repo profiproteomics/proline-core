@@ -36,7 +36,7 @@ trait MasterQuantComponent[A <: QuantComponent] extends Item {
   protected def getQuantComponentMap(): LongMap[A]
   
   protected def setQuantComponentMap(quantComponentMap: LongMap[A]): Unit
-    
+  
   protected def getMostAbundantQuantComponent(): A = {
     this.getQuantComponentMap.values.maxBy(_.abundance)
   }
@@ -72,18 +72,8 @@ trait MasterQuantComponent[A <: QuantComponent] extends Item {
     quantChannelIds map { quantChannelId => getQuantComponentAbundance(quantChannelId) } filter { ! _.isNaN }
   }
   
-  def setAbundancesForQuantChannels(abundances: Seq[Float], quantChannelIds: Seq[Long]) {
-    
-    val quantCompMap = this.getQuantComponentMap()
-    
-    for( (ab, qcId) <- abundances.zip( quantChannelIds ) ) {
-      if( quantCompMap.contains(qcId) ) {
-        quantCompMap(qcId).abundance = ab
-      } 
-    }
-    
-  }
-
+  
+  def setAbundancesForQuantChannels(abundances: Seq[Float], quantChannelIds: Seq[Long])
     
   protected def updateOrCreateComponentForQuantChannels(
     abundances: Seq[Float],
@@ -98,9 +88,8 @@ trait MasterQuantComponent[A <: QuantComponent] extends Item {
         quantCompMap(qcId).abundance = ab
       } else {
         quantCompMap.put(qcId, buildQuantComponent(ab,qcId))
-        //this.setQuantComponentMap(quantCompMap)
       }
-    }    
+    }
   }
    
   def calcMeanAbundanceForQuantChannels( quantChannelIds: Array[Long] ): Float = {
@@ -168,6 +157,20 @@ case class MasterQuantReporterIon(
   /*def getQuantReporterIonMap: Map[Int,QuantReporterIonProperties] = {
     this.properties.getQuantReporterIons.map { repIon => repIon.getQuantChannelId -> repIon } toMap
   }*/
+  
+  def setAbundancesForQuantChannels(abundances: Seq[Float], quantChannelIds: Seq[Long]) {
+    this.updateOrCreateComponentForQuantChannels(
+      abundances,
+      quantChannelIds,
+      (abundance,qcId) => QuantReporterIon(
+        moz = Double.NaN,
+        rawAbundance = Float.NaN,
+        abundance = abundance,
+        selectionLevel = 2,
+        quantChannelId = qcId
+      )
+    )
+  }
   
 }
 
@@ -278,7 +281,7 @@ case class MasterQuantPeptideIon(
     this.quantPeptideIonMap = quantComponentMap
   }
   
-  def getBestQuantPeptideIon: Option[QuantPeptideIon] = {
+  def getBestQuantPeptideIon(): Option[QuantPeptideIon] = {
     if( this.properties.isEmpty ) return None
     
     val bestQuantChannelId = this.properties.get.getBestQuantChannelId
@@ -304,6 +307,25 @@ case class MasterQuantPeptideIon(
   
   def countDefinedRawAbundances(): Int = {
     quantPeptideIonMap.values.count( qPepIon => isZeroOrNaN(qPepIon.rawAbundance) == false )
+  }
+  
+  def setAbundancesForQuantChannels( abundances: Seq[Float], quantChannelIds: Seq[Long] ) {
+    this.updateOrCreateComponentForQuantChannels(
+      abundances,
+      quantChannelIds,
+      (abundance,qcId) => QuantPeptideIon(
+        rawAbundance = Float.NaN,
+        abundance = abundance,
+        moz = Double.NaN,
+        elutionTime = Float.NaN,
+        duration = 0,
+        correctedElutionTime = Float.NaN,
+        scanNumber = 0,
+        peptideMatchesCount = 0,
+        ms2MatchingFrequency = None,
+        quantChannelId = qcId
+      )
+    )
   }
     
 }
@@ -405,7 +427,7 @@ case class MasterQuantPeptide(
     this.getQuantComponentAbundance(quantChannelId)
   }
   
-  override def setAbundancesForQuantChannels( abundances: Seq[Float], quantChannelIds: Seq[Long] ) {
+  def setAbundancesForQuantChannels( abundances: Seq[Float], quantChannelIds: Seq[Long] ) {
     this.updateOrCreateComponentForQuantChannels(
       abundances,
       quantChannelIds,
@@ -589,7 +611,7 @@ case class MasterQuantProteinSet(
     quantCompMap
   }
   
-  override def setAbundancesForQuantChannels( abundances: Seq[Float], quantChannelIds: Seq[Long] ) {
+  def setAbundancesForQuantChannels( abundances: Seq[Float], quantChannelIds: Seq[Long] ) {
     this.updateOrCreateComponentForQuantChannels(
       abundances,
       quantChannelIds,
