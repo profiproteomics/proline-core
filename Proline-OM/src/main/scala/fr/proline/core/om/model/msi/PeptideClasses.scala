@@ -311,14 +311,14 @@ object PeptideMatchScoreType extends Enumeration {
 
 }
 // Required by the Scala-Jackson-Module to handle Scala enumerations
-class PeptideMatchScoreTypeTypeRef extends TypeReference[PeptideMatchScoreType.type]
+class PeptideMatchScoreTypeJacksonRef extends TypeReference[PeptideMatchScoreType.type]
 
 case class PeptideMatch(
   // Required fields
   var id: Long,
   var rank: Int,
   val score: Float,
-  @(JsonScalaEnumeration @field)(classOf[PeptideMatchScoreTypeTypeRef])
+  @(JsonScalaEnumeration @field)(classOf[PeptideMatchScoreTypeJacksonRef])
   val scoreType: PeptideMatchScoreType.Value,
   val charge: Int,
   val deltaMoz: Float, // deltaMoz = expMoz - calcMoz
