@@ -27,21 +27,29 @@ object MsiSearchBuilder {
   protected val usedEnzCols = MsiDbUsedEnzymeColumns
   
   def selectRecords[T]( recordIds: Seq[Long], recordById: Map[Long,IValueContainer] ): ( (IValueContainer => Unit) => Unit ) = {
-    unitMapper: (IValueContainer => Unit) => recordIds.withFilter(recordById.contains(_)).map( id => recordById(id) ).foreach _
+    unitMapper: (IValueContainer => Unit) => {
+      recordIds.withFilter(recordById.contains(_)).foreach( id => unitMapper(recordById(id)) )
+    }
   }
   
   def selectGroupedRecords[T]( recordIds: Seq[Long], recordsById: Map[Long,Seq[IValueContainer]] ): ( (IValueContainer => Unit) => Unit ) = {
-    unitMapper: (IValueContainer => Unit) => recordIds.withFilter(recordsById.contains(_)).flatMap( id => recordsById(id) ).foreach _
+    unitMapper: (IValueContainer => Unit) => {
+      recordIds.withFilter(recordsById.contains(_)).flatMap( id => recordsById(id) ).foreach( unitMapper )
+    }
   }
   
   def selectAndMapRecords[T]( recordIds: Seq[Long], recordById: Map[Long,IValueContainer] ): ( (IValueContainer => T) => Seq[T] ) = {
-    mapper: (IValueContainer => T) => recordIds.withFilter(recordById.contains(_)).map( id => mapper(recordById(id)) )
+    mapper: (IValueContainer => T) => {
+      val s = recordIds.withFilter(recordById.contains(_)).map( id => mapper(recordById(id)) )
+      s
+    }
   }
   
   def selectAndMapGroupedRecords[T]( recordIds: Seq[Long], recordsById: Map[Long,Seq[IValueContainer]] ): ( (IValueContainer => T) => Seq[T] ) = {
     mapper: (IValueContainer => T) => recordIds.withFilter(recordsById.contains(_)).flatMap( id => recordsById(id).map(mapper(_) ) )
   }
   
+  // TODO: use LongMap instead of HashMap
   def buildMsiSearches(
     msiSearchRecords: Seq[IValueContainer],
     peaklistRecordById: Map[Long,IValueContainer],
@@ -56,7 +64,7 @@ object MsiSearchBuilder {
     enzymeCleavageRecordsByEnzymeId: Map[Long,IValueContainer],
     instConfigRecordById: Map[Long,IValueContainer],
     instrumentRecordById: Map[Long,IValueContainer],
-    fragmentationSerieById: Map[Long,IValueContainer],
+    fragmentationSeriesListByInstConfigId: Map[Long,Seq[IValueContainer]],
     ptmProvider: IPTMProvider
   ): Array[MSISearch] = {
     
@@ -74,7 +82,7 @@ object MsiSearchBuilder {
       { enzymeId: Long => selectAndMapRecords( Array(enzymeId), enzymeCleavageRecordsByEnzymeId ) },
       { instConfigIds: Array[Long] => selectAndMapRecords( instConfigIds, instConfigRecordById ) },
       { instIds: Array[Long] => selectAndMapRecords( instIds, instrumentRecordById ) },
-      { fragSeriesIds: Array[Long] => selectAndMapRecords( fragSeriesIds, fragmentationSerieById ) },
+      { instConfigIds: Array[Long] => selectAndMapGroupedRecords( instConfigIds, fragmentationSeriesListByInstConfigId ) },
       ptmProvider
     )
     
@@ -119,6 +127,7 @@ object MsiSearchBuilder {
 
     // Retrieve the search settings
     val distinctSearchSettingsIds = searchSettingsIdByMsiSearchId.values.toArray.distinct
+    
     val searchSettingsList = buildSearchSettingsList(
       eachSearchSettingsRecordSelector(distinctSearchSettingsIds),
       eachPMFSearchSettingsRecordSelector(distinctSearchSettingsIds),

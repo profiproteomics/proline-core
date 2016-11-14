@@ -108,7 +108,17 @@ object DbUnitDatasetParser {
     }
   }
   
-  def reverseRecordsId( recordsByTableName: Map[String,Seq[StringMap]] ) {
+  def reverseRecordsId(recordsByTableName: Map[String, Seq[StringMap]]) {
+    for ((tableName, records) <- recordsByTableName) {
+      for (record <- records) {
+        for ((k, v) <- record) {
+          if (k == "id" || k.endsWith("_id")) record(k) = ("-" + v)
+        }
+      }
+    }
+  }
+  
+  /*def reverseRecordsId( recordsByTableName: Map[String,Seq[StringMap]] ) {
     for( (tableName,records) <- recordsByTableName ) {
       tableName -> reverseRecordsId(records)
     }
@@ -120,7 +130,7 @@ object DbUnitDatasetParser {
         if( k == "id" || k.endsWith("_id") ) record(k) = ("-" + v)
       }
     }
-  }
+  }*/
   
   def getColNamesByTableName( dbType: ProlineDatabaseType ): Map[String,List[String]] =  {
     

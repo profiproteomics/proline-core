@@ -38,13 +38,12 @@ object JPAPtmDefinitionStorer extends IPtmDefinitionStorer with LazyLogging {
   private class JPAPtmDefinitionWriter(execCtx: IExecutionContext) extends LazyLogging {
 
     val PsPtmEvidencePrecursorType = fr.proline.core.orm.ps.PtmEvidence.Type.Precursor
-
-    // Make some requirements
+    
     require(execCtx != null, "execCtx must not be null")
-    require(execCtx.isJPA, "execCtx must be in JPA mode")
-
-    // Define some vars
+    
     val psDbCtx = execCtx.getPSDbConnectionContext()
+    require(psDbCtx.isJPA, "psDbCtx must be in JPA mode")
+    
     val psEM = psDbCtx.getEntityManager()
 
     // Retrieve the list of existing PTM classifications

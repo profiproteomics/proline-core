@@ -456,7 +456,7 @@ class SQLRsStorer(
     import fr.profi.util.primitives._
 
     // Synchronize some related objects with the UDSdb
-    DoJDBCWork.withEzDBC(context.getUDSDbConnectionContext, { udsEzDBC =>
+    DoJDBCWork.withEzDBC(context.getUDSDbConnectionContext, true) { udsEzDBC =>
       val enzymes = msiSearch.searchSettings.usedEnzymes
       for (enzyme <- enzymes) {
         udsEzDBC.selectAndProcess("SELECT id FROM enzyme WHERE name = ?", enzyme.name) { r =>
@@ -464,7 +464,7 @@ class SQLRsStorer(
         }
         require(enzyme.id > 0, "can't find an enzyme named '" + enzyme.name + "' in the UDS-DB")
       }
-    }, true)
+    }
 
     this.msiSearchWriter.get.insertMsiSearch(msiSearch, context)
   }
