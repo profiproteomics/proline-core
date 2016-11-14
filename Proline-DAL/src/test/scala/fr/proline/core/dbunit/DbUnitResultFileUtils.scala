@@ -10,11 +10,15 @@ import fr.proline.core.om.provider.msi.impl.{ SQLPeaklistSoftwareProvider => Msi
 import fr.proline.core.om.storer.msi.ResultFileStorer
 import fr.proline.core.om.storer.msi.RsStorer
 import fr.proline.core.om.storer.msi.impl.StorerContext
+import fr.proline.core.om.storer.ps.BuildPtmDefinitionStorer
 
 object DbUnitResultFileUtils {
   
   def importDbUnitResultFile( datasetLocation: DbUnitResultFileLocation, execCtx: IExecutionContext ): ResultSet =  {
+    // Load the result file
     val rf = this.loadDbUnitResultFile( datasetLocation )
+    
+    // Store result file
     this.storeDbUnitResultFile( rf, execCtx )
   }
   
@@ -37,10 +41,18 @@ object DbUnitResultFileUtils {
     dbUnitRF
   }
   
-  // TODO: put in Singleton Utils object
-  // TODO : remove code redundancy with class AbstractDbUnitResultFileTestCase
   def storeDbUnitResultFile( dbUnitResultFile: DbUnitResultFile, execCtx: IExecutionContext ): ResultSet =  {
     
+    // Store PTM definitions
+    val searchSettings = dbUnitResultFile.msiSearch.searchSettings
+    val ptmDefs = searchSettings.fixedPtmDefs ++ searchSettings.variablePtmDefs
+    
+    val psDbCtx = execCtx.getPSDbConnectionContext
+    psDbCtx.beginTransaction()
+    BuildPtmDefinitionStorer(psDbCtx).storePtmDefinitions(ptmDefs, execCtx)
+    psDbCtx.commitTransaction()
+    
+    // Retrieve the target result set
     val rs = dbUnitResultFile.getResultSet(wantDecoy = false)
     val msiSearch = rs.msiSearch.get
     
@@ -55,8 +67,10 @@ object DbUnitResultFileUtils {
     dbUnitResultFile.peaklistSoftware = Some(msiSearch.peakList.peaklistSoftware)
     dbUnitResultFile.instrumentConfig = Some(msiSearch.searchSettings.instrumentConfig)
     
+    val udsDbCtx = execCtx.getUDSDbConnectionContext
     val msiDbCtx = execCtx.getMSIDbConnectionContext
     
+    udsDbCtx.beginTransaction()
     msiDbCtx.beginTransaction()
     
     // TODO: do this in the ResultFileStorer
@@ -68,7 +82,7 @@ object DbUnitResultFileUtils {
       
       // Try to retrieve peaklist software from the MSidb
       val msiPklSoftOpt = msiPklSoftProvider.getPeaklistSoftware(pklSoft.id)
-      if (msiPklSoftOpt.isEmpty) {        
+      if (msiPklSoftOpt.isEmpty) {
         
         // Insert peaklist software in the MsiDb
         val peaklistInsertQuery = MsiDbPeaklistSoftwareTable.mkInsertQuery
@@ -83,7 +97,7 @@ object DbUnitResultFileUtils {
     }
     
     val storerContext = StorerContext(execCtx) // Use Object factory
-    val rsStorer = RsStorer(msiDbCtx)
+    val rsStorer = RsStorer(msiDbCtx, useJPA = false) // use SQL storer
     
     val storedRS = ResultFileStorer.storeResultFile(
       storerContext = storerContext,
@@ -97,6 +111,7 @@ object DbUnitResultFileUtils {
     )
     
     msiDbCtx.commitTransaction()
+    udsDbCtx.commitTransaction()
     
     storedRS
   }
