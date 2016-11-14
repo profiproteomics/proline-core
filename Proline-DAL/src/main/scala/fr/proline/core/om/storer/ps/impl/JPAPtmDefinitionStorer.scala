@@ -26,7 +26,7 @@ import fr.proline.core.util.ResidueUtils._
  *
  */
 object JPAPtmDefinitionStorer extends IPtmDefinitionStorer with LazyLogging {
-  
+
   /**
    * Instantiates the PtmDefinition writer and call the insertPtmDefinitions method.
    */
@@ -48,8 +48,8 @@ object JPAPtmDefinitionStorer extends IPtmDefinitionStorer with LazyLogging {
     val psEM = psDbCtx.getEntityManager()
 
     // Retrieve the list of existing PTM classifications
-    val allPtmClassifs = psEM.createQuery("SELECT e FROM fr.proline.core.orm.ps.PtmClassification e",classOf[PsPtmClassification]).getResultList().toList
-    val psPtmClassifByUpperName = Map() ++ allPtmClassifs.map( classif => classif.getName.toUpperCase() -> classif )
+    val allPtmClassifs = psEM.createQuery("SELECT e FROM fr.proline.core.orm.ps.PtmClassification e", classOf[PsPtmClassification]).getResultList().toList
+    val psPtmClassifByUpperName = Map() ++ allPtmClassifs.map(classif => classif.getName.toUpperCase() -> classif)
 
     /**
      * Persists or merges a sequence of PtmDefinition objects into PS Db.
@@ -71,12 +71,12 @@ object JPAPtmDefinitionStorer extends IPtmDefinitionStorer with LazyLogging {
      */
     def insertPtmDefinitions(ptmDefs: Seq[PtmDefinition]): Int = {
       require(ptmDefs != null, "ptmDefs must not be null")
-      
+
       var insertedPtmDefs = 0
 
       // Iterate over each provided PTM definition
-      for (ptmDef <- ptmDefs if ptmDef.id < 0 ) {
-        
+      for (ptmDef <- ptmDefs if ptmDef.id < 0) {
+
         val ptmShortName = ptmDef.names.shortName
 
         // Try to retrieve a PTM with the same short name and cache it if it exists
@@ -84,151 +84,150 @@ object JPAPtmDefinitionStorer extends IPtmDefinitionStorer with LazyLogging {
 
         // IF the PTM short name already exists in the database
         if (psPtm != null) {
-           
+
           // Retrieve the Precursor delta of the found PTM
           val psPtmPrecDelta = psPtm.getEvidences().toList.find(_.getType() == PsPtmEvidencePrecursorType).get
-          
+
           // Compare PS PTM evidence with found PTM evidence
           val precursorDelta = ptmDef.precursorDelta
           val ptmComposition = precursorDelta.composition
-       
-		  val precursorDeltaCompositionSorted = precursorDelta.composition.split(" ").sorted.mkString(" ")
-		  val psPtmPrecDeltaCompositionSorted = psPtmPrecDelta.getComposition.split(" ").sorted.mkString(" ")
-          
-      
-          if (nearlyEqual(psPtmPrecDelta.getMonoMass, precursorDelta.monoMass, 1E-5) == false ||
-              nearlyEqual(psPtmPrecDelta.getAverageMass, precursorDelta.averageMass, MathUtils.EPSILON_LOW_PRECISION) == false ||
-              precursorDeltaCompositionSorted != psPtmPrecDeltaCompositionSorted ) { 
-            throw new IllegalArgumentException("the provided PTM %s exists in the PSdb with different evidence properties".format(ptmShortName))
+
+          val precursorDeltaCompositionSorted = precursorDelta.composition.split(" ").sorted.mkString(" ")
+          val psPtmPrecDeltaCompositionSorted = psPtmPrecDelta.getComposition.split(" ").sorted.mkString(" ")
+
+          if (
+            nearlyEquals(psPtmPrecDelta.getMonoMass, precursorDelta.monoMass, 1E-5) == false ||
+            nearlyEquals(psPtmPrecDelta.getAverageMass, precursorDelta.averageMass, MathUtils.EPSILON_LOW_PRECISION) == false ||
+            precursorDeltaCompositionSorted != psPtmPrecDeltaCompositionSorted
+          ) {
+            throw new IllegalArgumentException(s"the provided PTM $ptmShortName exists in the PSdb with different evidence properties")
           }
 
           // Try to retrieve the PTM specificity matching the provided PTM definition
           val psPtmSpecifs = Option(psPtm.getSpecificities()).map(_.toSeq).getOrElse(Seq())
-          
+
           val psMatchingPtmSpecifOpt = psPtmSpecifs.find { psPtmSpecif =>
             psPtmSpecif.getLocation == ptmDef.location && characterToScalaChar(psPtmSpecif.getResidue) == ptmDef.residue
           }
 
-          
           // IF the PTM Precursor delta is identical but the specificity is new
           if (psMatchingPtmSpecifOpt.isEmpty) {
-         	 
-            val ptmSpecifLocation = if (ptmDef.residue != '\0') ptmDef.residue else ptmDef.location            
-            logger.info("Insert new PTM Specifity at location ("+ptmSpecifLocation+") for PTM "+ptmShortName)
-            
+
+            val ptmSpecifLocation = if (ptmDef.residue != '\0') ptmDef.residue else ptmDef.location
+            logger.info(s"Insert new PTM specifity at location '$ptmSpecifLocation' for PTM $ptmShortName")
+
             // Save a new specificity
-            val psPtmSpecificity = convertPtmDefinitionToPSPtmSpecificity(ptmDef,psPtm)
+            val psPtmSpecificity = convertPtmDefinitionToPSPtmSpecificity(ptmDef, psPtm)
             psPtm.addSpecificity(psPtmSpecificity)
-            psEM.persist( psPtmSpecificity )
-            
+            psEM.persist(psPtmSpecificity)
+
             // Update the provided PtmDefinition id
             ptmDef.id = psPtmSpecificity.getId()
-            
+
             // Increase the number of inserted PTM definitions
             insertedPtmDefs += 1
-          
-          // ELSE IF the PTM Precursor delta and the specificity are identical in the PSdb
+
+            // ELSE IF the PTM Precursor delta and the specificity are identical in the PSdb
           } else {
             // Update the provided PtmDefinition id
             ptmDef.id = psMatchingPtmSpecifOpt.get.getId()
           }
 
-        // IF the PTM short name doesn't exist in the database
+          // IF the PTM short name doesn't exist in the database
         } else {
- 
+
           // IF the PTM evidence is not fulfilled
-          if( ptmDef.isCompositionDefined == false ) {
+          if (ptmDef.isCompositionDefined == false) {
             throw new IllegalArgumentException("the PTM composition must be defined for insertion in the database")
           } else {
-            
-            logger.info("Insert new Ptm "+ptmShortName)
+
+            logger.info(s"Insert new PTM $ptmShortName")
             // Build and persist the precursor delta
             val ptmPrecDelta = ptmDef.precursorDelta
-            val psPtmPrecDelta = convertPtmEvidenceToPSPtmEvidence(ptmPrecDelta)              
+            val psPtmPrecDelta = convertPtmEvidenceToPSPtmEvidence(ptmPrecDelta)
             psEM.persist(psPtmPrecDelta)
-            
+
             // Build and persist a new PTM
             val psPtm = new PsPtm()
             psPtm.setShortName(ptmDef.names.shortName)
             psPtm.setFullName(ptmDef.names.fullName)
-            psPtm.setEvidences( setAsJavaSet(Set(psPtmPrecDelta)) )
-            
-            if( ptmDef.unimodId > 0 ) psPtm.setUnimodId(ptmDef.unimodId)
-               
+            psPtm.setEvidences(setAsJavaSet(Set(psPtmPrecDelta)))
+
+            if (ptmDef.unimodId > 0) psPtm.setUnimodId(ptmDef.unimodId)
+
             psEM.persist(psPtm)
-            
+
             psPtmPrecDelta.setPtm(psPtm)
             psEM.merge(psPtmPrecDelta)
-            
+
             // Build and persist the PTM specificity
-            val psPtmSpecif = convertPtmDefinitionToPSPtmSpecificity(ptmDef,psPtm)
+            val psPtmSpecif = convertPtmDefinitionToPSPtmSpecificity(ptmDef, psPtm)
             psEM.persist(psPtmSpecif)
-            
+
             // Update the provided PtmDefinition id
             ptmDef.id = psPtmSpecif.getId()
-            
+
             // Increase the number of inserted PTM definitions
             insertedPtmDefs += 1
           }
         }
-        
+
         // Synchronize the entity manager with the PSdb if we are inside a transaction
-        if( psDbCtx.isInTransaction() ) psEM.flush()
+        if (psDbCtx.isInTransaction()) psEM.flush()
       }
 
       insertedPtmDefs
     }
 
-    protected def convertPtmEvidenceToPSPtmEvidence(ptmEvidence: PtmEvidence): PsPtmEvidence = {      
-      
-      this.logger.info("Creating PTM evidence of type="+ptmEvidence.ionType.toString()+" and mass="+ptmEvidence.monoMass)
+    protected def convertPtmEvidenceToPSPtmEvidence(ptmEvidence: PtmEvidence): PsPtmEvidence = {
+
+      this.logger.info(s"Creating PTM evidence of type=${ptmEvidence.ionType} and mass=${ptmEvidence.monoMass}")
       val psPtmEvidence = new PsPtmEvidence()
-      psPtmEvidence.setType( PsPtmEvidence.Type.valueOf(ptmEvidence.ionType.toString()) )
+      psPtmEvidence.setType(PsPtmEvidence.Type.valueOf(ptmEvidence.ionType.toString()))
       psPtmEvidence.setIsRequired(ptmEvidence.isRequired)
       psPtmEvidence.setComposition(ptmEvidence.composition)
       psPtmEvidence.setMonoMass(ptmEvidence.monoMass)
       psPtmEvidence.setAverageMass(ptmEvidence.averageMass)
       psPtmEvidence
     }
-    
+
     protected def convertPtmDefinitionToPSPtmSpecificity(ptmDef: PtmDefinition, psPtm: PsPtm): PsPtmSpecificity = {
-      require( ptmDef.classification != null, "PTM classification must be defined" )
-      
+      require(ptmDef.classification != null, "PTM classification must be defined")
+
       // Retrieve the corresponding classification
       // TODO: create an enumeration of classifications
-      val psPtmClassif = psPtmClassifByUpperName( ptmDef.classification.toUpperCase()  )
-      
+      val psPtmClassif = psPtmClassifByUpperName(ptmDef.classification.toUpperCase())
+
       val psPtmSpecificity = new PsPtmSpecificity()
       psPtmSpecificity.setLocation(ptmDef.location)
       psPtmSpecificity.setResidue(scalaCharToCharacter(ptmDef.residue))
-      psPtmSpecificity.setClassification( psPtmClassif )
+      psPtmSpecificity.setClassification(psPtmClassif)
       psPtmSpecificity.setPtm(psPtm)
-      
+
       // Retrieve evidences belongings to the PTM specificity
-      val specificityEvidences = ptmDef.ptmEvidences.filter( ev => ev.ionType != IonTypes.Precursor )
-      val psSpecificityEvidences = specificityEvidences.map( ptmSpecif => {
+      val specificityEvidences = ptmDef.ptmEvidences.filter(ev => ev.ionType != IonTypes.Precursor)
+      val psSpecificityEvidences = specificityEvidences.map { ptmSpecif =>
         val convertedEvidence = convertPtmEvidenceToPSPtmEvidence(ptmSpecif)
         convertedEvidence.setPtm(psPtm)
         convertedEvidence.setSpecificity(psPtmSpecificity)
         convertedEvidence
-      })
-      psPtmSpecificity.setEvidences( setAsJavaSet(psSpecificityEvidences.toSet) )
-      
+      }
+      psPtmSpecificity.setEvidences(setAsJavaSet(psSpecificityEvidences.toSet))
+
       psPtmSpecificity
     }
-    
+
     // TODO: put in a repository
-    protected def findPtmEvidencesByComposition( composition: String ): List[PsPtmEvidence] = {
-      require( StringUtils.isNotEmpty(composition), "composition must not be an empty string" )
-      
-      val query = psEM.createQuery("FROM fr.proline.core.orm.ps.PtmEvidence WHERE composition = :composition",classOf[PsPtmEvidence])
+    protected def findPtmEvidencesByComposition(composition: String): List[PsPtmEvidence] = {
+      require(StringUtils.isNotEmpty(composition), "composition must not be an empty string")
+
+      val query = psEM.createQuery("FROM fr.proline.core.orm.ps.PtmEvidence WHERE composition = :composition", classOf[PsPtmEvidence])
       query.setParameter("composition", composition).getResultList().toList
     }
 
-    protected def nearlyEqual(a: Double, b: Double, epsilon : Double): Boolean = {
+    protected def nearlyEquals(a: Double, b: Double, epsilon: Double): Boolean = {
       (a - b).abs < epsilon
     }
-    
 
     /*
      * Here is a more robust solution but not usefull there
@@ -236,7 +235,7 @@ object JPAPtmDefinitionStorer extends IPtmDefinitionStorer with LazyLogging {
      *
      * TODO: put in Math Utils ???
      * 
-public static boolean nearlyEqual(float a, float b, float epsilon) {
+public static boolean nearlyEquals(float a, float b, float epsilon) {
     final float absA = Math.abs(a);
     final float absB = Math.abs(b);
     final float diff = Math.abs(a - b);
