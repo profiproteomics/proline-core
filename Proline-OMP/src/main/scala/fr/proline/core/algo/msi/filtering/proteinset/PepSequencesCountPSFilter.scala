@@ -30,13 +30,12 @@ class PepSequencesCountPSFilter(
 
   // IProteinSetFilter  methods   
   def filterProteinSets(protSets: Seq[ProteinSet], incrementalValidation: Boolean, traceability: Boolean): Unit = {
-
-    protSets.sortBy(_.peptideSet.score)
-
+    
     // Reset validation status if validation is not incremental
     if (!incrementalValidation) ProteinSetFiltering.resetProteinSetValidationStatus(protSets)
 
-    protSets.foreach(pSet => {
+    val sortedProtSets = protSets.sortBy(_.peptideSet.score)
+    sortedProtSets.foreach(pSet => {
 
       val pepSeq2PepInst = pSet.peptideSet.getPeptideInstances.groupBy(_.peptide.sequence)
       if (pepSeq2PepInst.size < minNbrSeq) {
