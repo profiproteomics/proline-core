@@ -30,14 +30,14 @@ class SpecificPeptidesPSFilter(
 
 
   // IProteinSetFilter  methods   
-  def filterProteinSets(protSets: Seq[ProteinSet], incrementalValidation: Boolean, traceability: Boolean): Unit = {
-
-    protSets.sortBy(_.peptideSet.score)
+  def filterProteinSets(protSets: Seq[ProteinSet], incrementalValidation: Boolean, traceability: Boolean): Unit = {   
 
     // Reset validation status if validation is not incremental
     if (!incrementalValidation) ProteinSetFiltering.resetProteinSetValidationStatus(protSets)
+    
+   val sortedProtSets = protSets.sortBy(_.peptideSet.score)
 
-    protSets.foreach(pSet => {
+    sortedProtSets.foreach(pSet => {
       var nbrPepSpecific = 0     
       pSet.peptideSet.getPeptideInstances.foreach(pInst => {
 		if(pInst.validatedProteinSetsCount <= 1){
@@ -47,6 +47,7 @@ class SpecificPeptidesPSFilter(
 
       if (nbrPepSpecific < minNbrPep) {
         pSet.isValidated = false
+        logger.info("INVALID PROT SET => "+pSet.toString())
         pSet.peptideSet.getPeptideInstances.foreach(pInst => {
           pInst.validatedProteinSetsCount = pInst.validatedProteinSetsCount-1
         })

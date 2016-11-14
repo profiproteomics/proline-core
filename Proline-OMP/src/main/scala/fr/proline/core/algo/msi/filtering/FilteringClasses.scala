@@ -8,6 +8,7 @@ import fr.profi.util.StringUtils
 import fr.profi.util.primitives.toDouble
 import fr.proline.core.om.model.msi.ResultSet
 import fr.proline.core.om.model.msi.ResultSummaryProperties
+import com.typesafe.scalalogging.LazyLogging
 
 object FilterPropertyKeys {
   final val THRESHOLD_VALUE = "threshold_value"
@@ -227,7 +228,7 @@ trait IProteinSetFilter extends IFilter {
 
 }
 
-trait IOptimizableProteinSetFilter extends IProteinSetFilter with IOptimizableFilter {
+trait IOptimizableProteinSetFilter extends IProteinSetFilter with IOptimizableFilter with LazyLogging  {
 
   /**
    * Returns the validity status of the protein set, considering the current filter.
