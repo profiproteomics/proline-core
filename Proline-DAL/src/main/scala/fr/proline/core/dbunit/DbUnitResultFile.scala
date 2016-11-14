@@ -352,14 +352,37 @@ class MsiDbDatasetParser(
   }
   
   private def parseMsiSearch(): MSISearch = {
-
+    
+    // Map fragmentation series by the instrument config id
+    // FIXME: only FragmentIonRequirement rules are considered in the InstrumentConfigBuilder => this should be fixed
+    val fragSeriesById = udsRecordByTableName( UdsDbFragmentationSeriesTable.name ).mapByLong(_.getLong("id"))
+    val fragSeriesIdByFragRuleId = udsRecordByTableName(
+      UdsDbFragmentationRuleTable.name
+    ).withFilter(_.contains("fragment_series_id")).toLongMapWith { fragRule =>
+      fragRule.getLong("id") -> fragRule.getLong("fragment_series_id")
+    }
+    
+    val fragSeriesByInstConfigId = new LongMap[ArrayBuffer[StringMap]]()
+    udsRecordByTableName( UdsDbInstrumentConfigFragmentationRuleMapTable.name ).foreach { mapping =>
+      val instConfigId = mapping.getLong("instrument_config_id")
+      val fragRuleId = mapping.getLong("fragmentation_rule_id")
+      val fragSeriesIdOpt = fragSeriesIdByFragRuleId.get(fragRuleId)
+      
+      if (fragSeriesIdOpt.isDefined) {
+        val fragSeriesId = fragSeriesIdOpt.get
+        val fragSeries = fragSeriesById(fragSeriesId)
+        fragSeriesByInstConfigId.getOrElseUpdate(instConfigId, new ArrayBuffer[StringMap]) += fragSeries
+      }
+      
+    }
+    
+    // TODO: use LongMap instead of HashMap
     val tmpMsiSearch = MsiSearchBuilder.buildMsiSearches(
       msiRecordByTableName( MsiDbMsiSearchTable.name ),
       msiRecordByTableName( MsiDbPeaklistTable.name ).map( p => p.getLong("id") -> p ).toMap,
       msiRecordByTableName( MsiDbPeaklistSoftwareTable.name ).map( p => p.getLong("id") -> p ).toMap,
       msiRecordByTableName( MsiDbSearchSettingsTable.name ).map( p => p.getLong("id") -> p ).toMap,
       msiRecordByTableName.getOrElse( MsiDbIonSearchTable.name,new ArrayBuffer() ).map( p => p.getLong("id") -> p ).toMap,
-      // FIXME: MSMS_SEARCH SETTINGS SEEMS TO BE NOT STORED FOR SOME RESULT FILES
       msiRecordByTableName.getOrElse( MsiDbMsmsSearchTable.name,new ArrayBuffer() ).map( p => p.getLong("id") -> p ).toMap,
       // FIXME: use the mapping between tables to fetch MsiDbSeqDatabaseTable records
       msiRecordByTableName( MsiDbSeqDatabaseTable.name ).toSeq.groupBy( _.getLong("id") ),
@@ -368,8 +391,8 @@ class MsiDbDatasetParser(
       udsRecordByTableName( UdsDbEnzymeTable.name ).map( p => p.getLong("id") -> p ).toMap,
       udsRecordByTableName( UdsDbEnzymeCleavageTable.name ).map( p => p.getLong("id") -> p ).toMap,
       udsRecordByTableName( UdsDbInstrumentConfigTable.name ).map( p => p.getLong("id") -> p ).toMap,
-      udsRecordByTableName( UdsDbInstrumentTable.name ).map( p => p.getLong("id") -> p ).toMap,      
-      udsRecordByTableName( UdsDbFragmentationSeriesTable.name ).map( p => p.getLong("id") -> p ).toMap,
+      udsRecordByTableName( UdsDbInstrumentTable.name ).map( p => p.getLong("id") -> p ).toMap,
+      fragSeriesByInstConfigId.toMap,
       psDbDatasetParser
     ).head
     
