@@ -1,11 +1,11 @@
 package fr.proline.core.om.builder
 
-import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.HashMap
 import fr.profi.util.primitives._
 import fr.profi.util.serialization._
 import fr.proline.core.dal.tables.uds._
 import fr.proline.core.om.model.msi._
+import scala.collection.mutable.ArrayBuffer
 
 /**
  * @author David Bouyssie
@@ -16,7 +16,6 @@ object InstrumentConfigBuilder {
   protected val instCols = UdsDbInstrumentColumns
   protected val instConfigCols = UdsDbInstrumentConfigColumns
   protected val fragSerieCols = UdsDbFragmentationSeriesColumns
-  private val ionSeriesByStr = Fragmentation.ionSeriesMapping
   
   def buildInstrumentConfigs(
     eachInstConfigRecord: (IValueContainer => InstrumentConfig) => Seq[InstrumentConfig],
@@ -42,12 +41,11 @@ object InstrumentConfigBuilder {
 
     for (instConfig <- instConfigs) {
       val fragRules = new ArrayBuffer[FragmentationRule]()
-      eachFragmentationSeriesSelector(Array(instConfig.id)) { r =>
-        val ionSeries = ionSeriesByStr(r.getString(fragSerieCols.NAME))
-        val fragIonType = new FragmentIonType(ionSeries = ionSeries)
-        fragRules += new FragmentIonRequirement(fragIonType.ionSeries.toString(), fragIonType)
-        fragIonType
-      }
+      eachFragmentationSeriesSelector(Array(instConfig.id)) { r => {
+        val serie = new FragmentIonType(r.getString(fragSerieCols.NAME))
+        fragRules += new FragmentIonRequirement(serie.ionSeries.toString(), serie)
+        serie
+      }}
       instConfig.fragmentationRules = Some(fragRules.toArray)
     }
     instConfigs.toArray
