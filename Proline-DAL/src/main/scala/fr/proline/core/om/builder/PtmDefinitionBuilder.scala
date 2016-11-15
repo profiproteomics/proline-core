@@ -75,21 +75,17 @@ object PtmDefinitionBuilder {
 
     for ( (pepId, pepPtmRecords) <- pepPtmRecordsByPepId ) {
 
-      var locatedPtms = new ArrayBuffer[LocatedPtm]
+      val locatedPtms = new ArrayBuffer[LocatedPtm]
       for (pepPtmRecord <- pepPtmRecords) {
 
         // Retrieve PTM definition
         val ptmSpecifId = pepPtmRecord.getLong(PepPtmCols.PTM_SPECIFICITY_ID)
 
-        // FIXME: remove this check when peptide_ptm insertion is fixed
-        if (ptmSpecifId > 0) {
-          val ptmDef = ptmDefinitionById(ptmSpecifId)
+        val ptmDef = ptmDefinitionById(ptmSpecifId)
 
-          // Build located PTM
-          val locatedPtm = LocatedPtm(ptmDef, pepPtmRecord.getInt(PepPtmCols.SEQ_POSITION))
-          locatedPtms += locatedPtm
-        }
-
+        // Build located PTM
+        val locatedPtm = LocatedPtm(ptmDef, pepPtmRecord.getInt(PepPtmCols.SEQ_POSITION))
+        locatedPtms += locatedPtm
       }
 
       locatedPtmLongMap.put(pepId, locatedPtms.toArray)
