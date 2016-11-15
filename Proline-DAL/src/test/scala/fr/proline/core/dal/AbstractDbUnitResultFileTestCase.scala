@@ -18,7 +18,7 @@ import fr.proline.repository.DriverType
 
 abstract class AbstractDbUnitResultFileTestCase extends AbstractEmptyDatastoreTestCase with DbUnitResultFileLoading {
   
-  val useJPA = false
+  val useJPA = true
   
   @BeforeClass
   @throws(classOf[Exception])
