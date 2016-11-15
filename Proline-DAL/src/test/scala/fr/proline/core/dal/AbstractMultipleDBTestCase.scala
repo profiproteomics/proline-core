@@ -80,7 +80,7 @@ class AbstractMultipleDBTestCase extends StrictLogging {
 
         if (msiDBTestCase != null) {
           logger.debug("Closing MSI Db TestCase")
-          // FIXME: this a workaround for the Mutliple DatabaseConnectors issue (H2 databases are kept between different tests)
+          // FIXME: this a workaround for the Multiple DatabaseConnectors issue (H2 databases are kept between different tests)
           // Sources:
           // - https://ahmadatwi.me/2016/05/23/using-h2-in-memory-to-test-your-dal/
           // - http://stackoverflow.com/questions/8523423/reset-embedded-h2-database-periodically
@@ -94,6 +94,11 @@ class AbstractMultipleDBTestCase extends StrictLogging {
 
         if (psDBTestCase != null) {
           logger.debug("Closing PS Db TestCase")
+          if (psDBTestCase.getConnector.isMemory) {
+            val connection = psDBTestCase.getConnector.getDataSource.getConnection
+            logger.warn("Removing all objects from in-memory PS Db")
+            connection.createStatement().execute("DROP ALL OBJECTS")
+          }
           psDBTestCase.tearDown()
         }
 
