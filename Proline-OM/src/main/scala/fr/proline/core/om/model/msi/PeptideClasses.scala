@@ -220,6 +220,9 @@ case class Peptide (
   // Requirements
   require( sequence != null, "sequence is null" )
   require( calculatedMass >= 0 )
+  if (isNotEmpty(ptmString)) {
+    require(isModified, s"PTMs can't be empty if ptmString is not empty ($ptmString)")
+  }
   
   def isModified(): Boolean = ptms != null && ptms.nonEmpty
   
