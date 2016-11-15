@@ -20,11 +20,12 @@ abstract class AbstractPepMatchRulesValidator extends IProteinSetValidator {
   protected def _validateProteinSets(
     proteinSets: Seq[ProteinSet],
     bestPepMatchesByPepSetId: Map[Long,Array[PeptideMatch]],
-    rules: Array[ValidationRule] ): Unit = {
+    rules: Array[ValidationRule]
+  ): Unit = {
     
     for( proteinSet <- proteinSets ) {
       
-      val bestPepMatches = bestPepMatchesByPepSetId(proteinSet.peptideSet.id)      
+      val bestPepMatches = bestPepMatchesByPepSetId(proteinSet.peptideSet.id)
       var isProteinSetValid = false
       
       for( rule <- rules ) {
@@ -41,6 +42,8 @@ abstract class AbstractPepMatchRulesValidator extends IProteinSetValidator {
       
     }
     
+    // Update validatedProteinSetsCount of peptide instances
+    ProteinSetFiltering.updateValidatedProteinSetsCount(proteinSets)
   }
   
 //  

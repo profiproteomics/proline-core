@@ -158,7 +158,10 @@ class ProtSetRulesValidatorWithFDROptimization(
     protSetFilterRule1.filterProteinSets(singlePepProtSets,true,true)
     
     // Validate protein sets identified with multiple peptides
-    protSetFilterRule2.filterProteinSets(multiPepProtSets,true,true)  
+    protSetFilterRule2.filterProteinSets(multiPepProtSets,true,true)
+    
+    // Update validatedProteinSetsCount of peptide instances
+    ProteinSetFiltering.updateValidatedProteinSetsCount(allProtSets)
     
     // Return validation results
     ValidationResults( expectedRocPoint, Some(rocPoints) )
@@ -265,7 +268,7 @@ class ProtSetRulesValidatorWithFDROptimization(
       )
       
       // Validate protein sets identified with multiple peptides
-      protSetFilterRule2.filterProteinSets(multiPepProtSets,true,true)      
+      protSetFilterRule2.filterProteinSets(multiPepProtSets,true,true)
     } else {
       // Else invalid all multi peptides protein sets
       multiPepProtSets.foreach(_.isValidated = false)
