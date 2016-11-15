@@ -1,9 +1,9 @@
-package fr.proline.core.algo.msi
+package fr.proline.core.dal
+
+import com.typesafe.scalalogging.StrictLogging
 
 import org.junit.AfterClass
 import org.junit.BeforeClass
-
-import com.typesafe.scalalogging.StrictLogging
 
 import fr.proline.context._
 import fr.proline.core.dal._
@@ -19,6 +19,7 @@ import fr.proline.core.om.provider.msi.impl.SQLPeptideProvider
 import fr.proline.core.om.provider.msi.impl.SQLResultSetProvider
 import fr.proline.repository.DriverType
 
+// TODO: move file from OMP
 abstract class AbstractResultSetTestCase extends AbstractMultipleDBTestCase with StrictLogging {
 
   // Define the interface to be implemented

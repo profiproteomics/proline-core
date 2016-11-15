@@ -6,8 +6,8 @@ import org.junit.Test
 
 import com.typesafe.scalalogging.StrictLogging
 
-import fr.proline.core.algo.msi.AbstractResultSummaryTestCase
 import fr.proline.core.algo.msq.spectralcount.PepInstanceFilteringLeafSCUpdater
+import fr.proline.core.dal.AbstractResultSummaryTestCase
 import fr.proline.core.dbunit.STR_F063442_F122817_MergedRSMs
 import fr.proline.core.om.model.msi.ResultSummary
 import fr.proline.repository.DriverType

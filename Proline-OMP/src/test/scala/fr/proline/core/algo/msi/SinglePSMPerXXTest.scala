@@ -1,16 +1,17 @@
 package fr.proline.core.algo.msi
 
-import org.junit.BeforeClass
-import org.junit.Test
 import com.typesafe.scalalogging.StrictLogging
-import fr.proline.core.dbunit.DbUnitSampleDataset
+
+import org.junit.Assert
+import org.junit.Test
+
+import fr.proline.core.algo.msi.filtering.pepmatch.SinglePSMPerPrettyRankFilter
+import fr.proline.core.algo.msi.filtering.pepmatch.SinglePSMPerQueryFilter
+import fr.proline.core.dal.AbstractResultSetTestCase
 import fr.proline.core.dbunit.GRE_F068213_M2_4_TD_EColi
-import fr.proline.repository.DriverType
 import fr.proline.core.om.provider.msi.impl.SQLPeptideMatchProvider
 import fr.proline.core.om.provider.msi.impl.SQLPeptideProvider
-import fr.proline.core.algo.msi.filtering.pepmatch.SinglePSMPerPrettyRankFilter
-import org.junit.Assert
-import fr.proline.core.algo.msi.filtering.pepmatch.SinglePSMPerQueryFilter
+import fr.proline.repository.DriverType
 
 object SinglePSMPerXXTest extends AbstractResultSetTestCase with StrictLogging {
   

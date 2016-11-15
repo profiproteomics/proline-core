@@ -1,24 +1,18 @@
-package fr.proline.core.algo.msi
+package fr.proline.core.dal
+
+import com.typesafe.scalalogging.StrictLogging
 
 import org.junit.AfterClass
 import org.junit.BeforeClass
-import com.typesafe.scalalogging.StrictLogging
+
 import fr.proline.context._
 import fr.proline.core.dal._
 import fr.proline.core.dbunit._
-import fr.proline.core.om.model.msi.ResultSet
-import fr.proline.core.om.provider.ProviderDecoratedExecutionContext
-import fr.proline.core.om.provider.msi.IPTMProvider
-import fr.proline.core.om.provider.msi.IPeptideProvider
-import fr.proline.core.om.provider.msi.IResultSetProvider
-import fr.proline.core.om.provider.msi.impl.ORMResultSetProvider
-import fr.proline.core.om.provider.msi.impl.SQLPTMProvider
-import fr.proline.core.om.provider.msi.impl.SQLPeptideProvider
-import fr.proline.core.om.provider.msi.impl.SQLResultSetProvider
-import fr.proline.repository.DriverType
-import fr.proline.core.om.provider.msi.impl.SQLResultSummaryProvider
 import fr.proline.core.om.provider.msi.IResultSummaryProvider
+import fr.proline.core.om.provider.msi.impl.SQLResultSummaryProvider
+import fr.proline.repository.DriverType
 
+// TODO: move file from OMP
 abstract class AbstractResultSummaryTestCase extends AbstractMultipleDBTestCase with StrictLogging {
 
   // Define the interface to be implemented
