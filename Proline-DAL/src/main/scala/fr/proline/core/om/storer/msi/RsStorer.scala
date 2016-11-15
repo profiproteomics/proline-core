@@ -125,7 +125,7 @@ object RsStorer {
   import fr.proline.core.om.storer.msi.impl.SQLRsWriter
   import fr.proline.repository.DriverType
 
-  def apply( msiDbCtx: DatabaseConnectionContext, useJPA: Boolean = true ): IRsStorer = {
+  def apply( msiDbCtx: DatabaseConnectionContext, useJPA: Boolean ): IRsStorer = {
     val plWriter = Some( PeaklistWriter(msiDbCtx.getDriverType ) )
     this.apply( msiDbCtx, plWriter, useJPA )
   }

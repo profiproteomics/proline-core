@@ -61,7 +61,7 @@ trait RsAdderFromResultStoring {
     executionContext.getMSIDbConnectionContext().tryInTransaction {
       
       val storerContext = StorerContext(executionContext) // Use Object factory
-      val rsStorer = RsStorer(storerContext.getMSIDbConnectionContext)
+      val rsStorer = RsStorer(storerContext.getMSIDbConnectionContext, useJPA = false)
       rsStorer.storeResultSet(builtRS, storerContext)
       
     }
