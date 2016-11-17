@@ -117,7 +117,8 @@ class SerializationSpec extends AbstractSerializationSpec {
         isNTerm = false,
         isCTerm = false
       )
-    )
+    ),
+    calculatedMass = 814.3806572
   )
   
   val pepMatchProperties = PeptideMatchProperties(
@@ -175,7 +176,7 @@ class SerializationSpec extends AbstractSerializationSpec {
       "A Peptide object without properties",
       profiDeserializer = None,
       peptide,
-      """{"id":-1,"sequence":"MENHIR","ptm_string":"1[O]","calculated_mass":814.3806572000001,"readable_ptm_string":"Oxidation (M1)"}"""
+      """{"id":-1,"sequence":"MENHIR","ptm_string":"1[O]","calculated_mass":814.3806572,"readable_ptm_string":"Oxidation (M1)"}"""
     ),
     SerializationSpecif(
       "A PeptideMatch object without properties",
