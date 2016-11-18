@@ -144,6 +144,10 @@ class PepMatchRulesValidatorWithFDROptimization(
     pepMatchFilterRule1.setThresholdValue( rocPointProps(ValidationPropertyKeys.RULE_1_THRESHOLD_VALUE).asInstanceOf[AnyVal] )
     pepMatchFilterRule2.setThresholdValue( rocPointProps(ValidationPropertyKeys.RULE_2_THRESHOLD_VALUE).asInstanceOf[AnyVal] )
     
+    // Update validatedProteinSetsCount of peptide instances
+    ProteinSetFiltering.updateValidatedProteinSetsCount(targetProtSets)
+    ProteinSetFiltering.updateValidatedProteinSetsCount(decoyProtSets)
+    
     // Validate results with the thresholds that provide the best results
     this._validateProteinSets( allProtSets, allPepMatchesByProtSetId, validationRules )    
     

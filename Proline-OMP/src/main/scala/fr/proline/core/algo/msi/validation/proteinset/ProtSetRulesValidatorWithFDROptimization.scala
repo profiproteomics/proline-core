@@ -161,7 +161,8 @@ class ProtSetRulesValidatorWithFDROptimization(
     protSetFilterRule2.filterProteinSets(multiPepProtSets,true,true)
     
     // Update validatedProteinSetsCount of peptide instances
-    ProteinSetFiltering.updateValidatedProteinSetsCount(allProtSets)
+    ProteinSetFiltering.updateValidatedProteinSetsCount(targetProtSets)
+    ProteinSetFiltering.updateValidatedProteinSetsCount(decoyProtSets)
     
     // Return validation results
     ValidationResults( expectedRocPoint, Some(rocPoints) )
@@ -275,6 +276,7 @@ class ProtSetRulesValidatorWithFDROptimization(
     }
     
     // --- Rule1: Remaining protein sets validation ---
+    // TODO: remove the non validated multi from one hits wonders
     val remainingTargetProtSets = singlePepTargetProtSets ++ multiPepTargetProtSets.filter(_.isValidated == false)
     val remainingDecoyProtSets = singlePepDecoyProtSets ++ multiPepDecoyProtSets.filter(_.isValidated == false)
     val remainingProtSets = remainingTargetProtSets ++ remainingDecoyProtSets

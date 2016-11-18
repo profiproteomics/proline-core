@@ -34,7 +34,8 @@ class BasicProtSetValidator( val validationFilter: IProteinSetFilter ) extends I
     validationFilter.filterProteinSets( allProtSets, true, true )
     
     // Update validatedProteinSetsCount of peptide instances
-    ProteinSetFiltering.updateValidatedProteinSetsCount(allProtSets)
+    ProteinSetFiltering.updateValidatedProteinSetsCount(targetProtSets)
+    decoyProtSets.map( ProteinSetFiltering.updateValidatedProteinSetsCount(_) )
     
     // Compute validation result
     val valResult = this.computeValidationResult(targetRsm, decoyRsm)

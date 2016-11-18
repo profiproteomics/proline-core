@@ -42,8 +42,6 @@ abstract class AbstractPepMatchRulesValidator extends IProteinSetValidator {
       
     }
     
-    // Update validatedProteinSetsCount of peptide instances
-    ProteinSetFiltering.updateValidatedProteinSetsCount(proteinSets)
   }
   
 //  

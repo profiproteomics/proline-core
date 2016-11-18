@@ -41,6 +41,10 @@ class PepMatchRulesValidator(
     // Validate results with the thresholds that provide the best results
     this._validateProteinSets( allProtSets, allBestValidPepMatchesByPepSetId, validationRules )
     
+    // Update validatedProteinSetsCount of peptide instances
+    ProteinSetFiltering.updateValidatedProteinSetsCount(targetProtSets)
+    decoyProtSets.map(ProteinSetFiltering.updateValidatedProteinSetsCount(_))
+    
     // Compute validation result
     val valResult = this.computeValidationResult(targetRsm, decoyRsm)
     
