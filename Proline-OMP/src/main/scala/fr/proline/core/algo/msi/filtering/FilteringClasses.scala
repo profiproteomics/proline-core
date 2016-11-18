@@ -207,6 +207,25 @@ object ProteinSetFiltering {
     protSets.foreach { ps => ps.isValidated = protSetValStatusMap(ps.id) }
   }
 
+    
+  // TODO: call this method in a trait common to all validators (need API refactoring)
+  def updateValidatedProteinSetsCount(protSets: Seq[ProteinSet]): Unit = {
+
+    // Map protein sets by peptide instance
+    val protSetsByPepInst = new HashMap[PeptideInstance, ArrayBuffer[ProteinSet]]
+    protSets.map { protSet =>
+      protSet.peptideSet.getPeptideInstances.foreach { pepInst =>
+        protSetsByPepInst.getOrElseUpdate(pepInst, new ArrayBuffer[ProteinSet]()) += protSet
+      }
+    }
+
+    // Update validatedProteinSetsCount
+    for ((pepInst, protSets) <- protSetsByPepInst) {
+      // TODO: is distinct needed ???
+      pepInst.validatedProteinSetsCount = protSets.distinct.count(_.isValidated)
+    }
+
+  }
 }
 
 trait IProteinSetFilter extends IFilter {
@@ -261,20 +280,6 @@ trait IOptimizableProteinSetFilter extends IProteinSetFilter with IOptimizableFi
 
     // Apply the filtering procedure
     protSets.filter(!isProteinSetValid(_)).foreach(_.isValidated = false)
-
-    // Map protein sets by peptide instance
-    val protSetsByPepInst = new HashMap[PeptideInstance, ArrayBuffer[ProteinSet]]
-    protSets.map { protSet =>
-      protSet.peptideSet.getPeptideInstances.foreach { pepInst =>
-        protSetsByPepInst.getOrElseUpdate(pepInst, new ArrayBuffer[ProteinSet]()) += protSet
-      }
-    }
-
-    // Update validatedProteinSetsCount
-    for ((pepInst, protSets) <- protSetsByPepInst) {
-      // TODO: is distinct needed ???
-      pepInst.validatedProteinSetsCount = protSets.distinct.count(_.isValidated)
-    }
 
   }
 

@@ -48,6 +48,9 @@ class ProtSetRulesValidator(
     // Validate protein sets identified with multiple peptides
     protSetFilterRule2.filterProteinSets(multiPepProtSets,true,true)
     
+    // Update validatedProteinSetsCount of peptide instances
+    ProteinSetFiltering.updateValidatedProteinSetsCount(allProtSets)
+    
     // Compute validation result
     val valResult = this.computeValidationResult(targetRsm, decoyRsm)
     
