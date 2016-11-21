@@ -1,14 +1,13 @@
 package fr.proline.core.algo.msi.validation.proteinset
 
-import com.fasterxml.jackson.annotation.JsonInclude
 import com.typesafe.scalalogging.LazyLogging
-
-import fr.proline.core.algo.msi.filtering.IProteinSetFilter
-import fr.proline.core.algo.msi.filtering.ProteinSetFiltering
-import fr.proline.core.algo.msi.validation.IProteinSetValidator
-import fr.proline.core.algo.msi.validation.TargetDecoyModes
-import fr.proline.core.algo.msi.validation.ValidationResults
+import scala.collection.mutable.ArrayBuffer
+import scala.collection.mutable.HashMap
+import fr.proline.core.algo.msi.validation._
 import fr.proline.core.om.model.msi.ResultSummary
+import fr.proline.core.om.model.msi.ProteinSet
+import fr.proline.core.om.model.msi.PeptideMatch
+import fr.proline.core.algo.msi.filtering._
 
 /**
  * This Validator will filter all ProteinSet from target and decoy using specified IProteinSetFilter
@@ -34,10 +33,6 @@ class BasicProtSetValidator( val validationFilter: IProteinSetFilter ) extends I
     
     // Filter protein sets
     validationFilter.filterProteinSets( allProtSets, true, true )
-    
-    // Update validatedProteinSetsCount of peptide instances
-    ProteinSetFiltering.updateValidatedProteinSetsCount(allProtSets)
-
     
     // Compute validation result
     val valResult = this.computeValidationResult(targetRsm, decoyRsm)

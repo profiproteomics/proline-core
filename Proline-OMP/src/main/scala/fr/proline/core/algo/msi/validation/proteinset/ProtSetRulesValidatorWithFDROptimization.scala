@@ -160,9 +160,6 @@ class ProtSetRulesValidatorWithFDROptimization(
     // Validate protein sets identified with multiple peptides
     protSetFilterRule2.filterProteinSets(multiPepProtSets,true,true)  
     
-    // Update validatedProteinSetsCount of peptide instances
-    ProteinSetFiltering.updateValidatedProteinSetsCount(allProtSets)
-
     // Return validation results
     ValidationResults( expectedRocPoint, Some(rocPoints) )
   }
