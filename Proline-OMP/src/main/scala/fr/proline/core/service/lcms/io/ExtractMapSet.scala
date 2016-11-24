@@ -483,6 +483,8 @@ class ExtractMapSet(
     mzDbFileByLcMsRunId: LongMap[File],
     mapSetId: Long
   ): (MapSet, AlignmentResult) = {
+    
+    val tempDir = new File(System.getProperty("java.io.tmpdir"))
 
     val intensityComputationMethod = ClusterIntensityComputation.withName(
       clusteringParams.intensityComputation.toUpperCase()
@@ -492,17 +494,28 @@ class ExtractMapSet(
     )
 
     val runsCount = lcMsRuns.length
+    
+    // Create some immutable maps => they don't need to be synchronized
+    val m_metricsByRunId = new LongMap[Metric](runsCount)
+    val m_peakelByMzDbPeakelIdByRunId = new LongMap[LongMap[Peakel]](runsCount) // contains only assigned peakels
+    val m_mzDbPeakelIdsByPeptideAndChargeByRunId = new LongMap[HashMap[(Peptide, Int), ArrayBuffer[Int]]](runsCount)
+    for (lcMsRun <- lcMsRuns)  {
+      m_metricsByRunId += lcMsRun.id -> new Metric("LCMSRun_"+lcMsRun.id)
+      m_peakelByMzDbPeakelIdByRunId += (lcMsRun.id, new LongMap[Peakel]())
+      m_mzDbPeakelIdsByPeptideAndChargeByRunId += (lcMsRun.id -> new HashMap[(Peptide, Int), ArrayBuffer[Int]]())
+    }
+    val metricsByRunId = m_metricsByRunId.toMap
+    val peakelByMzDbPeakelIdByRunId = m_peakelByMzDbPeakelIdByRunId.toMap
+    val mzDbPeakelIdsByPeptideAndChargeByRunId = m_mzDbPeakelIdsByPeptideAndChargeByRunId.toMap
+    
+    // Create some mutable maps => they need to be synchronized
     val peakelFileByRun = new HashMap[LcMsRun, File]()
-    val processedMapByRun = new HashMap[LcMsRun, ProcessedMap]()
-    val lcmsRunByProcMapId = new LongMap[LcMsRun](runsCount)
-    val featureTuples = new ArrayBuffer[(Feature, Peptide, LcMsRun)]()
-
-    val tempDir = new File(System.getProperty("java.io.tmpdir"))
-    val peakelByMzDbPeakelIdByRunId = new LongMap[LongMap[Peakel]](runsCount) // contains only assigned peakels  
-    val mzDbPeakelIdsByPeptideAndChargeByRunId = new LongMap[HashMap[(Peptide, Int), ArrayBuffer[Int]]](runsCount)
-    val conflictingPeptidesMap = new HashMap[(Peptide, Int), ArrayBuffer[Peptide]]()
-    val metricsByRunId = new LongMap[Metric](runsCount)
+    val peakelFileByRun_lock = new Object()
     val rTreeByRunId = new LongMap[RTree[java.lang.Long,geometry.Point]](runsCount)
+    val rTreeByRunId_lock = new Object()
+    val featureTuples = new ArrayBuffer[(Feature, Peptide, LcMsRun)]()
+    val featureTuples_lock = new Object() // not that conflictingPeptidesMap will be Guarded by the same lock
+    val conflictingPeptidesMap = new HashMap[(Peptide, Int), ArrayBuffer[Peptide]]()
     
     // Customize how many files we want to process in parallel
     val parLcMsRuns = lcMsRuns.par
@@ -525,16 +538,13 @@ class ExtractMapSet(
       val pepMatchesBySpecNumber = peptideMatchByRunIdAndScanNumber.flatMap(_.get(lcMsRun.id)).getOrElse(LongMap.empty[ArrayBuffer[PeptideMatch]])
 
       // Create a mapping avoiding the creation of duplicated peakels
-      val peakelByMzDbPeakelId = new LongMap[Peakel]()
-      peakelByMzDbPeakelIdByRunId(lcMsRun.id) = peakelByMzDbPeakelId
+      val peakelByMzDbPeakelId = peakelByMzDbPeakelIdByRunId(lcMsRun.id)
       
-      val mzDbPeakelIdsByPeptideAndCharge = new HashMap[(Peptide, Int), ArrayBuffer[Int]]()
-      mzDbPeakelIdsByPeptideAndChargeByRunId += (lcMsRun.id -> mzDbPeakelIdsByPeptideAndCharge)
+      val mzDbPeakelIdsByPeptideAndCharge = mzDbPeakelIdsByPeptideAndChargeByRunId(lcMsRun.id)
       
-      val runMetrics = new Metric("LCMSRun_"+lcMsRun.id)
-      metricsByRunId(lcMsRun.id) = runMetrics
+      val runMetrics = metricsByRunId(lcMsRun.id)
       
-      // Search for existing Peakel file 
+      // Search for existing Peakel file
       val existingPeakelFiles = tempDir.listFiles.filter(_.getName.startsWith(s"${lcMsRun.getRawFileName}-"))
       val needPeakelDetection = (quantConfig.useLastPeakelDetection == false || existingPeakelFiles.isEmpty)
       
@@ -551,7 +561,9 @@ class ExtractMapSet(
         this.logger.debug(s"Creating tmp file for run id=${lcMsRun.id} at: " + peakelFile)
 
         // Create a mapping between the TMP file and the LC-MS run
-        peakelFileByRun += lcMsRun -> peakelFile
+        peakelFileByRun_lock.synchronized {
+          peakelFileByRun += lcMsRun -> peakelFile
+        }
 
         val resultPromise = Promise[(Observable[Array[MzDbPeakel]],LongMap[Array[SpectrumHeader]])]
         
@@ -601,6 +613,11 @@ class ExtractMapSet(
             mzDb.close()
           }
           
+        } onFailure {
+          case t: Throwable => {
+            logger.info("Can't perform peakel detection",t)
+            throw t
+          }
         }
 
         val futureResult = resultPromise.future.map { case (observableRunSlicePeakels, ms2SpecHeadersByCycle) =>
@@ -645,7 +662,9 @@ class ExtractMapSet(
         
         // Peakel file already exists => reuse it ! 
         // Create a mapping between the TMP file and the LC-MS run
-        peakelFileByRun += lcMsRun -> existingPeakelFiles(0)
+        peakelFileByRun_lock.synchronized {
+          peakelFileByRun += lcMsRun -> existingPeakelFiles(0)
+        }
 
         // Open TMP SQLite file
         val peakelFileConnection = new SQLiteConnection(existingPeakelFiles(0))
@@ -747,7 +766,9 @@ class ExtractMapSet(
       val (peakelFile,rTree,peakelMatches) = Await.result(peakelRecordingFuture, Duration.Inf)
       
       this.logger.info(s"Created R*Tree contains ${rTree.size} peakel indices")
-      rTreeByRunId += lcMsRun.id -> rTree
+      rTreeByRunId_lock.synchronized {
+        rTreeByRunId += lcMsRun.id -> rTree
+      }
       
       this.logger.info("Total number of MS/MS matched peakels = "+ peakelMatches.length)
 
@@ -792,12 +813,14 @@ class ExtractMapSet(
   
             val peptides = sameChargePeakelMatches.map(_.peptide).distinct
             
-            for (peptide <- peptides) {
-              featureTuples += Tuple3(lcmsFt, peptide, lcMsRun)
-              mzDbPeakelIdsByPeptideAndCharge.getOrElseUpdate((peptide, charge), ArrayBuffer[Int]()) += peakel.id
-              if (peptides.length > 1) {
-                runMetrics.incr("conflicting peakels (associated with more than one peptide)")                
-                conflictingPeptidesMap.getOrElseUpdate((peptide, charge), ArrayBuffer[Peptide]()) ++=  peptides
+            featureTuples_lock.synchronized {
+              for (peptide <- peptides) {
+                featureTuples += Tuple3(lcmsFt, peptide, lcMsRun)
+                mzDbPeakelIdsByPeptideAndCharge.getOrElseUpdate((peptide, charge), ArrayBuffer[Int]()) += peakel.id
+                if (peptides.length > 1) {
+                  runMetrics.incr("conflicting peakels (associated with more than one peptide)")                
+                  conflictingPeptidesMap.getOrElseUpdate((peptide, charge), ArrayBuffer[Peptide]()) ++=  peptides
+                }
               }
             }
         
@@ -832,15 +855,21 @@ class ExtractMapSet(
         procFt.relations.processedMapId = processedMap.id
       }
 
-      lcmsRunByProcMapId += processedMap.id -> lcMsRun
-      processedMapByRun += lcMsRun -> processedMap
-      
       // Return the created processed map
       processedMap
     
     } // ends lcmsRun iteration loop
 
     val processedMaps = parProcessedMaps.toArray
+    
+    // Create some new mappings betwen LC-MS runs and the processed maps
+    val processedMapByRun = new HashMap[LcMsRun, ProcessedMap]()
+    val lcmsRunByProcMapId = new LongMap[LcMsRun](runsCount)
+    
+    for ( (lcMsRun,processedMap) <- lcMsRuns.zip(parProcessedMaps) ) {
+      lcmsRunByProcMapId += processedMap.id -> lcMsRun
+      processedMapByRun += lcMsRun -> processedMap
+    }
     
     this.logger.info("Creating new map set...")
 
@@ -962,7 +991,7 @@ class ExtractMapSet(
         
         val multiMatchedPeakelIds = ArrayBuffer.empty[Int]
         val conflictingPeptides = conflictingPeptidesMap.getOrElse((peptide, charge), null)
-        val mzDbPeakelIdsByPeptideAndCharge = mzDbPeakelIdsByPeptideAndChargeByRunId.getOrNull(lcMsRun.id)
+        val mzDbPeakelIdsByPeptideAndCharge = mzDbPeakelIdsByPeptideAndChargeByRunId.getOrElse(lcMsRun.id, null)
         
         if (conflictingPeptides != null && mzDbPeakelIdsByPeptideAndCharge != null) {
           for (conflictingPeptide <- conflictingPeptides) {
