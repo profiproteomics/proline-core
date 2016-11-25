@@ -46,7 +46,7 @@ object AbundanceSummarizerMethod extends EnhancedEnum {
   val MEDIAN_BIOLOGICAL_PROFILE = Value // has no implementation here, should be called before
   val MEDIAN_PROFILE = Value
   val SUM = Value
-  val LFQ = Value
+  val LFQ = Value // TODO: rename me MEDIAN_RATIO_FITTING
 }
 
 object QuantComponentItem extends EnhancedEnum {

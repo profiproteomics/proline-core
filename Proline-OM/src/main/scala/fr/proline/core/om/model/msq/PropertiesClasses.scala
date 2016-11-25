@@ -28,6 +28,7 @@ case class MasterQuantPeptideIonProperties(
   @BeanProperty var bestQuantChannelId: Option[Long] = None,
   
   // Key = QuantChannel ID ; Value = PeptideMatch ID
+  // TODO: use LongMap if possible
   @JsonDeserialize( keyAs = classOf[java.lang.Long], contentAs = classOf[java.lang.Long] )
   @BeanProperty var bestPeptideMatchIdMap: scala.collection.immutable.HashMap[Long,Long] = scala.collection.immutable.HashMap()
 ) {
@@ -61,6 +62,7 @@ case class MasterQuantPeptideProperties(
   @JsonDeserialize(contentAs = classOf[Array[Long]])
   @BeanProperty var mqProtSetIds: Option[Array[Long]] = None,
   
+  // TODO: use LongMap if possible
   @JsonDeserialize( keyAs = classOf[java.lang.Integer], contentAs = classOf[MasterQuantPeptideProfile] )
   private var mqPepProfileByGroupSetupNumber: HashMap[Int,MasterQuantPeptideProfile] = null
 ) {
@@ -96,21 +98,26 @@ case class MasterQuantProteinSetProfile(
  
 case class MasterQuantProteinSetProperties(
   
+  // TODO: use LongMap if possible
   @JsonDeserialize( keyAs = classOf[java.lang.Integer], contentAs = classOf[Array[MasterQuantProteinSetProfile]] )
   var mqProtSetProfilesByGroupSetupNumber: HashMap[Int, Array[MasterQuantProteinSetProfile]] = null,
   //@BeanProperty var specificSampleId: Option[Long] = None, // defined if the protein has been seen in a single sample
   
   //TODO : to be removed and replaced by selectionLevelBymasterQuantPeptideId
   @JsonDeserialize(contentAs = classOf[Array[Long]] )
+  @deprecated(message="Replaced by mqPeptideSelLevelById", since="1.1.0")
   @BeanProperty var selectedMasterQuantPeptideIds: Option[Array[Long]] = None,
   
   //TODO : to be removed and replaced by selectionLevelBymasterQuantPeptideIonId
   @JsonDeserialize(contentAs = classOf[Array[Long]] )
+  @deprecated(message="Replaced by mqPeptideIonSelLevelById", since="1.1.0")
   @BeanProperty var selectedMasterQuantPeptideIonIds: Option[Array[Long]] = None,
   
+  // TODO: use LongMap if possible
   @JsonDeserialize( keyAs = classOf[java.lang.Long], contentAs = classOf[java.lang.Integer] )
   var mqPeptideSelLevelById: HashMap[Long, Int] = null,
   
+  // TODO: use LongMap if possible
   @JsonDeserialize( keyAs = classOf[java.lang.Long], contentAs = classOf[java.lang.Integer] )
   var mqPeptideIonSelLevelById: HashMap[Long, Int] = null
 ) {

@@ -49,6 +49,7 @@ case class UnimodEntry(
 }
 
 // TODO: move Java enumerations like fr.proline.core.orm.ps.PtmEvidence.Type into Java-Commons-API ???
+// TODO: rename to PtmEvidenceType
 object IonTypes extends Enumeration {
   type IonType = Value
   val Precursor = Value("Precursor")
@@ -79,7 +80,8 @@ case class PtmEvidence(
   // FIXME: is this method working ?
   def ionType_(newIonType: IonTypes.IonType) = { newIonType }
 
-   def sameAs(that: Any) = that match {
+  // TODO: remove this method => it should not be useful here because we use a case class which already defines hashCode & equals
+  def sameAs(that: Any) = that match {
     case o : PtmEvidence => o.ionType==ionType && o.composition==composition && o.monoMass == monoMass && o.averageMass == averageMass && o.isRequired == isRequired
     case _ => false
   }

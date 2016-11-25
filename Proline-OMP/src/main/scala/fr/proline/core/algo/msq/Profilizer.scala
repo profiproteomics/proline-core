@@ -331,7 +331,7 @@ class Profilizer( expDesign: ExperimentalDesign, groupSetupNumber: Int = 1, mast
     } toMap
     val bgByQcIdx = expDesignSetup.quantChannels.map( qc => bgBySampleNum(qc.sampleNumber) )
     
-    // Compute the intersection of filtered masterQuantPeptides and selectionLevelBymasterQuantPeptideId
+    // Compute the intersection of filtered masterQuantPeptides and mqPeptideSelLevelById
     for( mqProtSet <- masterQuantProtSets ) {
       
       val selectionLevelMap: HashMap[Long, Int] = mqProtSet.masterQuantPeptides.map(a => a.id -> a.selectionLevel)(collection.breakOut)
