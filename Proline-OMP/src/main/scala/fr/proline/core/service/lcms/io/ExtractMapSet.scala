@@ -991,10 +991,10 @@ class ExtractMapSet(
         
         if (conflictingPeptides != null && mzDbPeakelIdsByPeptideAndCharge != null) {
           for (conflictingPeptide <- conflictingPeptides) {
-          	val mzDbPeakelIds = mzDbPeakelIdsByPeptideAndCharge.getOrElse((conflictingPeptide, charge), null)
-          	if (mzDbPeakelIds != null) {
-          	  multiMatchedPeakelIds ++= mzDbPeakelIds
-          	}
+            val mzDbPeakelIds = mzDbPeakelIdsByPeptideAndCharge.getOrElse((conflictingPeptide, charge), null)
+            if (mzDbPeakelIds != null) {
+              multiMatchedPeakelIds ++= mzDbPeakelIds
+            }
           }
         }
           
@@ -1717,7 +1717,7 @@ class ExtractMapSet(
     }
     if (ft.getPeakelsCount() > 2) {
        bestPattern = mzDbPatternPredictor.getBestExplanation(reader, sqliteConn, ft.getPeakel(2), ft.charge, mozTolInDa)
-    	 updateMetrics(bestPattern._2, "mzdb.prediction.thirdIsotope")
+       updateMetrics(bestPattern._2, "mzdb.prediction.thirdIsotope")
     }
     
     
@@ -1743,7 +1743,7 @@ class ExtractMapSet(
     }
     if (ft.getPeakelsCount() > 2) {
        bestPattern = PeakelsPatternPredictor.getBestExplanation(rTree, mozTolPPM, coelutingPeakels, ft.getPeakel(2), ft.charge, mozTolInDa)
-    	 updateMetrics(bestPattern._2, "peakels.predictor.thirdIsotope")
+       updateMetrics(bestPattern._2, "peakels.predictor.thirdIsotope")
     }
     } catch {
       case t: Throwable => logger.error("IP prediction fail", t)
@@ -1907,40 +1907,40 @@ class ExtractMapSet(
       Some(peakels(index))
     } else { None }
   }
-  
+
   private def _computeCorrelation(p1: MzDbPeakel, p2: MzDbPeakel): Double = {
-        var p1Offset = 0
-        var p2Offset = 0
+    var p1Offset = 0
+    var p2Offset = 0
 
-        // not clean : some RT values can be missing in elutiontime array when intensity = 0
-        if (p1.getFirstElutionTime() < p2.getFirstElutionTime()) {
-            // search p2.firstElutionTime index in p1
-            val idx = Arrays.binarySearch(p1.getElutionTimes(), p2.getFirstElutionTime())
-            p2Offset = if (idx < 0)  ~idx  else  idx
-        } else {
-            // search p1.firstElutionTime in p2
-            val idx = Arrays.binarySearch(p2.getElutionTimes(), p1.getFirstElutionTime())
-            p1Offset = if (idx < 0)  ~idx else idx
-        }
+    // not clean : some RT values can be missing in elutiontime array when intensity = 0
+    if (p1.getFirstElutionTime() < p2.getFirstElutionTime()) {
+      // search p2.firstElutionTime index in p1
+      val idx = Arrays.binarySearch(p1.getElutionTimes(), p2.getFirstElutionTime())
+      p2Offset = if (idx < 0) ~idx else idx
+    } else {
+      // search p1.firstElutionTime in p2
+      val idx = Arrays.binarySearch(p2.getElutionTimes(), p1.getFirstElutionTime())
+      p1Offset = if (idx < 0) ~idx else idx
+    }
 
-        val p1Values = p1.getIntensityValues()
-        val p2Values = p2.getIntensityValues()
-        val length = Math.max(p1Values.length+p1Offset, p2Values.length+p2Offset);
+    val p1Values = p1.getIntensityValues()
+    val p2Values = p2.getIntensityValues()
+    val length = Math.max(p1Values.length + p1Offset, p2Values.length + p2Offset);
 
-        val y1 = Array.fill[Double](length)(0.0)
-        val y2 = Array.fill[Double](length)(0.0)
-        var k = 0
-        for (k <- 0 until length) {
-            if (k >= p1Offset && k < p1Values.length) {
-                y1(k) = p1Values(k-p1Offset);
-            }
-            if (k >= p2Offset && k < p2Values.length) {
-                y2(k) = p2Values(k-p2Offset);
-            }
-        }
-        
-        val pearson = new PearsonsCorrelation()
-        math.abs(pearson.correlation(y1, y2))
+    val y1 = Array.fill[Double](length)(0.0)
+    val y2 = Array.fill[Double](length)(0.0)
+    var k = 0
+    for (k <- 0 until length) {
+      if (k >= p1Offset && k < p1Values.length) {
+        y1(k) = p1Values(k - p1Offset);
+      }
+      if (k >= p2Offset && k < p2Values.length) {
+        y2(k) = p2Values(k - p2Offset);
+      }
+    }
+
+    val pearson = new PearsonsCorrelation()
+    math.abs(pearson.correlation(y1, y2))
   }
   
   private def _extractProcessedMap(lcmsRun: LcMsRun, mzDbFile: File, mapNumber: Int, mapSetId: Long): ProcessedMap = {
