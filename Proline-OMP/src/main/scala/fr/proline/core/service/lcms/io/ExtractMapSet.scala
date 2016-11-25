@@ -666,21 +666,17 @@ class ExtractMapSet(
           peakelFileByRun += lcMsRun -> existingPeakelFiles(0)
         }
 
-        // Open TMP SQLite file
-        val peakelFileConnection = new SQLiteConnection(existingPeakelFiles(0))
-        peakelFileConnection.openReadonly()
-        
         val mzDb = new MzDbReader(mzDbFile, true)
         
         try {
-          val observablePeakels = _streamPeakels(peakelFileConnection)
+          val peakelFile = existingPeakelFiles(0)
+          val observablePeakels = _streamPeakels(peakelFile)
           val ms2SpectrumHeadersByCycle = mzDb.getMs2SpectrumHeaders().groupByLong(_.getCycle.toInt)
           
           Future.successful( (existingPeakelFiles(0), observablePeakels, ms2SpectrumHeadersByCycle) )
           
         } finally {
           mzDb.close()
-          peakelFileConnection.dispose()
         }
         
       }
@@ -1640,10 +1636,14 @@ class ExtractMapSet(
 
   // TODO: move to MzDbReader when peakels are stored in the MzDbFile
   private def _streamPeakels(
-    sqliteConn: SQLiteConnection
+    peakelFile: File
   ): Observable[Array[MzDbPeakel]] = {
 
     Observable[Array[MzDbPeakel]] { subscriber =>
+      
+      // Open TMP SQLite file
+      val sqliteConn = new SQLiteConnection(peakelFile)
+      sqliteConn.openReadonly()
       
       val peakelSqlQuery = "SELECT id, peaks, left_hwhm_mean, left_hwhm_cv, " +
         "right_hwhm_mean, right_hwhm_cv FROM peakel;"
@@ -1679,6 +1679,7 @@ class ExtractMapSet(
       } finally {
         // Release resources
         peakelStmt.dispose()
+        sqliteConn.dispose()
       }
     }
 
