@@ -3,8 +3,6 @@ package fr.proline.core.service.lcms.io
 import scala.collection.mutable.ArrayBuffer
 
 import com.almworks.sqlite4java.SQLiteConnection
-import com.github.davidmoten.rtree.RTree
-import com.github.davidmoten.rtree.geometry
 
 import fr.profi.ms.model.TheoreticalIsotopePattern
 import fr.profi.mzdb.MzDbReader
@@ -14,25 +12,31 @@ import fr.profi.mzdb.model.SpectrumData
 
 trait IIsotopicPatternPredictor {
 
-  def isMatchReliable(spectrumData: SpectrumData, ppm: Float, moz: Double, charge: Int, mozTolInDa: Double): Boolean = {
+  def isMatchReliable(
+    spectrumData: SpectrumData,
+    ppm: Float,
+    moz: Double,
+    charge: Int,
+    mozTolInDa: Double
+  ): Boolean = {
 
     val putativePatterns = IsotopicPatternScorer.calcIsotopicPatternHypotheses(spectrumData, moz, ppm)
     val bestPattern = putativePatterns.head
 
-    (bestPattern._2.charge == charge && (math.abs(bestPattern._2.monoMz - moz) <= mozTolInDa))
-
+    bestPattern._2.charge == charge && math.abs(bestPattern._2.monoMz - moz) <= mozTolInDa
   }
 
 }
 
-object mzDbPatternPredictor extends IIsotopicPatternPredictor {
+object MzDbPatternPredictor extends IIsotopicPatternPredictor {
 
   def getBestExplanation(
     reader: MzDbReader,
     sqliteConn: SQLiteConnection,
     peakel: Peakel,
     charge: Int,
-    mozTolInDa: Double): (Double, TheoreticalIsotopePattern) = {
+    mozTolInDa: Double
+  ): (Double, TheoreticalIsotopePattern) = {
 
     val apexMz = peakel.getApexMz
     val apexRt = peakel.getApexElutionTime
@@ -46,8 +50,15 @@ object mzDbPatternPredictor extends IIsotopicPatternPredictor {
 
     val sliceOpt = slices.find(_.getHeader.getSpectrumId == peakel.getApexSpectrumId)
 
-    val ppm = if (peakel.getLeftHwhmMean == 0) (1e6 * mozTolInDa / peakel.getApexMz()).toFloat else (1e6 * peakel.getLeftHwhmMean / apexMz).toFloat
-    val putativePatterns = IsotopicPatternScorer.calcIsotopicPatternHypotheses(sliceOpt.get.getData(), peakel.getApexMz(), ppm)
+    val ppmTol = if (peakel.getLeftHwhmMean == 0) (1e6 * mozTolInDa / peakel.getApexMz()).toFloat
+    else (1e6 * peakel.getLeftHwhmMean / apexMz).toFloat
+    
+    val putativePatterns = IsotopicPatternScorer.calcIsotopicPatternHypotheses(
+      sliceOpt.get.getData(),
+      peakel.getApexMz(),
+      ppmTol
+    )
+    
     putativePatterns.head
   }
 
@@ -56,7 +67,8 @@ object mzDbPatternPredictor extends IIsotopicPatternPredictor {
     sqliteConn: SQLiteConnection,
     matchingPeakels: Array[Peakel],
     charge: Int,
-    mozTolInDa: Double): ArrayBuffer[(Peakel, Boolean)] = {
+    mozTolInDa: Double
+  ): ArrayBuffer[(Peakel, Boolean)] = {
 
     val filteredPeakels = new ArrayBuffer[(Peakel, Boolean)](matchingPeakels.length)
 
@@ -89,12 +101,12 @@ object mzDbPatternPredictor extends IIsotopicPatternPredictor {
 object PeakelsPatternPredictor extends IIsotopicPatternPredictor {
 
   def getBestExplanation(
-    rTree: RTree[java.lang.Long, geometry.Point],
     mozTolPPM: Float,
-    coelutingPeakels: Array[Peakel],
+    coelutingPeakels: Seq[Peakel],
     peakel: Peakel,
     charge: Int,
-    mozTolInDa: Double): (Double, TheoreticalIsotopePattern) = {
+    mozTolInDa: Double
+  ): (Double, TheoreticalIsotopePattern) = {
 
     val matchingSpectrumId = peakel.getApexSpectrumId()
     val coelutingPeakelsCount = coelutingPeakels.length
@@ -124,12 +136,12 @@ object PeakelsPatternPredictor extends IIsotopicPatternPredictor {
   }
 
   def assessReliability(
-    rTree: RTree[java.lang.Long, geometry.Point],
     mozTolPPM: Float,
-    coelutingPeakels: Array[Peakel],
-    matchingPeakels: Array[Peakel],
+    coelutingPeakels: Seq[Peakel],
+    matchingPeakels: Seq[Peakel],
     charge: Int,
-    mozTolInDa: Double): ArrayBuffer[(Peakel, Boolean)] = {
+    mozTolInDa: Double
+  ): ArrayBuffer[(Peakel, Boolean)] = {
 
     val filteredPeakels = new ArrayBuffer[(Peakel, Boolean)](matchingPeakels.length)
 
@@ -169,8 +181,6 @@ object PeakelsPatternPredictor extends IIsotopicPatternPredictor {
     }
 
     filteredPeakels
-
   }
 
 }
-
