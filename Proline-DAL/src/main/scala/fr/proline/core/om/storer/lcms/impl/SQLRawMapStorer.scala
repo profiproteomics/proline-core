@@ -13,7 +13,11 @@ import fr.proline.core.dal.tables.lcms._
 import fr.proline.core.om.model.lcms._
 import fr.proline.core.om.storer.lcms._
 
-class SQLRawMapStorer(val lcmsDbCtx: LcMsDbConnectionContext, val featureWriter: IFeatureWriter) extends IRawMapStorer {
+class SQLRawMapStorer(
+  val lcmsDbCtx: LcMsDbConnectionContext,
+  val featureWriter: IFeatureWriter,
+  val peakelWriter: Option[IPeakelWriter] = None
+) extends IRawMapStorer {
 
   def storeRawMap(rawMap: RawMap, storePeakels: Boolean = false): Unit = {
 
@@ -38,11 +42,13 @@ class SQLRawMapStorer(val lcmsDbCtx: LcMsDbConnectionContext, val featureWriter:
       )
 
       // Insert features
-      val flattenedFeatures = featureWriter.insertFeatures(rawMap)
+      val flattenedFeatures = featureWriter.insertFeatures(rawMap.features, rawMap.id)
 
       // Store peakels if requested
-      if( storePeakels ) {
-        featureWriter.insertPeakels(rawMap, flattenedFeatures)
+      if (storePeakels) {
+        require( rawMap.peakels.isDefined, "the raw map must contain peakels" )
+        peakelWriter.get.insertPeakels(rawMap.peakels.get, rawMap.id)
+        featureWriter.linkFeaturesToPeakels(flattenedFeatures, rawMap.id)
       }
 
     }

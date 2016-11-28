@@ -2,6 +2,8 @@ package fr.proline.core.om.storer.lcms.impl
 
 import scala.collection.mutable.ArrayBuffer
 
+import com.typesafe.scalalogging.StrictLogging
+
 import fr.profi.jdbc.PreparedStatementWrapper
 import fr.profi.jdbc.easy._
 import fr.profi.mzdb.model.PeakelDataMatrix
@@ -13,20 +15,20 @@ import fr.proline.core.dal.tables.lcms._
 import fr.proline.core.om.model.lcms._
 import fr.proline.core.om.storer.lcms.IFeatureWriter
 
-class SQLFeatureWriter(lcmsDbCtx: LcMsDbConnectionContext) extends IFeatureWriter {
+class SQLFeatureWriter(lcmsDbCtx: LcMsDbConnectionContext) extends IFeatureWriter with StrictLogging {
 
-  def insertFeatures(rawMap: RawMap): ArrayBuffer[Feature] = {
+  def insertFeatures(features: Seq[Feature], rawMapId: Long): Seq[Feature] = {
     
-    val newRawMapId = rawMap.id
+    val newRawMapId = rawMapId
     
-    val flattenedFeatures = new ArrayBuffer[Feature](rawMap.features.length)
+    val flattenedFeatures = new ArrayBuffer[Feature](features.length)
     
     DoJDBCWork.withEzDBC(lcmsDbCtx) { ezDBC =>
     
       ezDBC.executePrepared(LcmsDbFeatureTable.mkInsertQuery( (t,c) => c.filter(_ != t.ID)), true) { featureInsertStmt =>
     
         // Loop over features to import them        
-        for (ft <- rawMap.features) {
+        for (ft <- features) {
           
           // Update feature raw map id
           ft.relations.rawMapId = newRawMapId
@@ -53,7 +55,7 @@ class SQLFeatureWriter(lcmsDbCtx: LcMsDbConnectionContext) extends IFeatureWrite
     
       // Link the features to overlapping features
       ezDBC.executeInBatch(LcmsDbFeatureOverlapMappingTable.mkInsertQuery) { statement =>
-        rawMap.features.foreach { ft =>
+        features.foreach { ft =>
           if (ft.overlappingFeatures != null) {
             for (olpFt <- ft.overlappingFeatures) {
               statement.executeWith(ft.id, olpFt.id, newRawMapId)
@@ -113,47 +115,13 @@ class SQLFeatureWriter(lcmsDbCtx: LcMsDbConnectionContext) extends IFeatureWrite
     stmt.generatedLong
   }
   
-  def insertPeakels(rawMap: RawMap, features: Seq[Feature]): Unit = {
-    
-    val newRawMapId = rawMap.id
+  def linkFeaturesToPeakels(features: Seq[Feature], rawMapId: Long): Unit = {
     
     DoJDBCWork.withEzDBC(lcmsDbCtx) { ezDBC =>
-    
-      // Insert peakels
-      ezDBC.executePrepared(LcmsDbPeakelTable.mkInsertQuery( (t,c) => c.filter(_ != t.ID)), true) { peakelInsertStmt =>
-        
-        for( peakels <- rawMap.peakels; peakel <- peakels ) {
-          
-          // Update peakel raw map id
-          peakel.rawMapId = newRawMapId
-          
-          // Serialize the peakel data matrix
-          val peakelAsBytes = PeakelDataMatrix.pack(peakel.dataMatrix)
-          
-          peakelInsertStmt.executeWith(
-            peakel.moz,
-            peakel.elutionTime,
-            peakel.apexIntensity,
-            peakel.area,
-            peakel.duration,
-            0f, // peakel.fwhm,
-            peakel.isOverlapping,
-            peakel.featuresCount,
-            peakel.dataMatrix.peaksCount,
-            peakelAsBytes,
-            peakel.properties.map( ProfiJson.serialize(_) ),
-            peakel.firstScanId,
-            peakel.lastScanId,
-            peakel.apexScanId,
-            peakel.rawMapId
-          )
-          
-          // Update peakel id
-          peakel.id = peakelInsertStmt.generatedLong
-        }
-        
-      }
       
+      // Link features to peakels
+      logger.info(s"Linking features to peakels...")
+    
       // Link features to peakels
       ezDBC.executeInBatch(LcmsDbFeaturePeakelItemTable.mkInsertQuery) { statement =>
         for (
@@ -166,7 +134,7 @@ class SQLFeatureWriter(lcmsDbCtx: LcMsDbConnectionContext) extends IFeatureWrite
             peakelItem.isotopeIndex,
             peakelItem.isBasePeakel,
             peakelItem.properties.map(ProfiJson.serialize(_)),
-            newRawMapId
+            rawMapId
           )
         }
       }

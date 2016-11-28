@@ -11,9 +11,15 @@ import fr.proline.repository.DriverType
 
 trait IFeatureWriter {
   
-  def insertFeatures(rawMap: RawMap): Seq[Feature]
+  def insertFeatures(features: Seq[Feature], rawMapId: Long): Seq[Feature]
   
-  def insertPeakels(rawMap: RawMap, features: Seq[Feature])
+  def linkFeaturesToPeakels(features: Seq[Feature], rawMapId: Long): Unit
+  
+}
+
+trait IPeakelWriter {
+  
+  def insertPeakels(peakels: Seq[Peakel], rawMapId: Long)
   
 }
 
@@ -45,21 +51,23 @@ object FeatureWriter {
   }
 }
 
+object PeakelWriter {
+  
+  def apply( lcmsDbCtx: LcMsDbConnectionContext ): IPeakelWriter = {
+    lcmsDbCtx.getDriverType match {
+      case DriverType.POSTGRESQL => new PgPeakelWriter(lcmsDbCtx)
+      case _ => new SQLPeakelWriter(lcmsDbCtx)
+    }
+  }
+}
+
 /** A factory object for implementations of the IRunMapStorer trait */
 object RawMapStorer {
   
   def apply( lcmsDbCtx: LcMsDbConnectionContext ): IRawMapStorer = {
     
-    new SQLRawMapStorer(lcmsDbCtx, FeatureWriter(lcmsDbCtx) )
-    
-    /*if( lcmsDbCtx.isJPA ) new JPARunMapStorer(lcmsDbCtx)
-    else {
-      lcmsDbCtx.getDriverType match {
-        //case DriverType.POSTGRESQL => new PgRunMapStorer(lcmsDbCtx)
-        case _ => new SQLRunMapStorer(lcmsDbCtx)
-      }
-    }*/
-    
+    val peakelWriter = PeakelWriter(lcmsDbCtx)
+    new SQLRawMapStorer(lcmsDbCtx, FeatureWriter(lcmsDbCtx), Some(peakelWriter) )
   }
 }
 
