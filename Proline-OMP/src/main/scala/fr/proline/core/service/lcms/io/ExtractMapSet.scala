@@ -47,9 +47,7 @@ import fr.proline.core.om.model.lcms._
 import fr.proline.core.om.model.lcms.{ Feature => LcMsFeature }
 import fr.proline.core.om.model.msi.{ Peptide, PeptideMatch }
 import fr.proline.core.om.provider.lcms.impl.SQLScanSequenceProvider
-import fr.proline.core.om.storer.lcms.MasterMapStorer
-import fr.proline.core.om.storer.lcms.ProcessedMapStorer
-import fr.proline.core.om.storer.lcms.RawMapStorer
+import fr.proline.core.om.storer.lcms._
 import fr.proline.core.om.storer.lcms.impl.SQLScanSequenceStorer
 import fr.proline.core.service.lcms.AlignMapSet
 import fr.proline.core.service.lcms.CreateMapSet
@@ -60,11 +58,12 @@ import rx.lang.scala.JavaConversions.toJavaObservable
 import rx.lang.scala.JavaConversions.toScalaObservable
 import rx.lang.scala.schedulers
 
+
 /**
  * @author David Bouyssie
  *
  */
-object ExtracMapSet {
+object ExtractMapSet {
   val threadCount = new java.util.concurrent.atomic.AtomicInteger()
   val terminatedThreadCount = new java.util.concurrent.atomic.AtomicInteger()
   
@@ -73,9 +72,18 @@ object ExtracMapSet {
   val threadFactory = new java.util.concurrent.ThreadFactory {
 
     def newThread(r: Runnable): Thread = {
-      val threadName = s"ExtractMapSet-RTree-Thread-${ExtracMapSet.threadCount.incrementAndGet()}"
+      val threadName = s"ExtractMapSet-RTree-Thread-${ExtractMapSet.threadCount.incrementAndGet()}"
       new Thread(r, threadName)
     }
+  }
+  
+  private var tempDir = new File(System.getProperty("java.io.tmpdir"))
+  
+  // Synchronized method used to change the temp directory
+  def setTempDirectory(tempDirectory: File) = this.synchronized {
+    require( tempDir.isDirectory(), "tempDir must be a directory")
+    
+    tempDir = tempDirectory
   }
 }
 
@@ -106,6 +114,7 @@ class ExtractMapSet(
 
   // Instantiate a raw map storer and a map aligner
   protected val rawMapStorer = RawMapStorer(lcmsDbCtx)
+  protected val peakelWriter = PeakelWriter(lcmsDbCtx)
   protected val mapAligner = LcmsMapAligner(methodName = alnMethodName)
 
   // FIXME: generate new id and store the pps
@@ -404,7 +413,7 @@ class ExtractMapSet(
     
     // update the map ids in the alnResult
     val finalMapAlnSets = new ArrayBuffer[MapAlignmentSet]
-    for(alnSet <-alnResult.mapAlnSets){
+    for (alnSet <-alnResult.mapAlnSets) {
       val finalRefMapId = procMapIdByTmpId.get(alnSet.refMapId).get
       val finalTargetMapId = procMapIdByTmpId.get(alnSet.targetMapId).get
       val finalMapAlignments = new ArrayBuffer[MapAlignment]
@@ -503,7 +512,6 @@ class ExtractMapSet(
   ): (MapSet, AlignmentResult) = {
     
     val ISOTOPE_PATTERN_HALF_MZ_WINDOW = 5
-    val tempDir = new File(System.getProperty("java.io.tmpdir"))
 
     val intensityComputationMethod = ClusterIntensityComputation.withName(
       clusteringParams.intensityComputation.toUpperCase()
@@ -542,7 +550,7 @@ class ExtractMapSet(
     val parLcMsRuns = lcMsRuns.par
     parLcMsRuns.tasksupport = new ForkJoinTaskSupport(forkJoinPool)
     
-    val computationThreadPool = Executors.newFixedThreadPool( affectedCoresCount, ExtracMapSet.threadFactory ) 
+    val computationThreadPool = Executors.newFixedThreadPool( affectedCoresCount, ExtractMapSet.threadFactory ) 
     implicit val rxCompScheduler = rx.lang.scala.JavaConversions.javaSchedulerToScalaScheduler(
       rx.schedulers.Schedulers.from(computationThreadPool)
     )
@@ -571,7 +579,7 @@ class ExtractMapSet(
         val runMetrics = metricsByRunId(lcMsRun.id)
         
         // Search for existing Peakel file
-        val existingPeakelFiles = tempDir.listFiles.filter(_.getName.startsWith(s"${lcMsRun.getRawFileName}-"))
+        val existingPeakelFiles = ExtractMapSet.tempDir.listFiles.filter(_.getName.startsWith(s"${lcMsRun.getRawFileName}-"))
         val needPeakelDetection = (quantConfig.useLastPeakelDetection == false || existingPeakelFiles.isEmpty)
         
         val futurePeakelDetectionResult = if (needPeakelDetection) {
@@ -1236,7 +1244,7 @@ class ExtractMapSet(
           }
         }
   
-        // Store the raw map
+        // Store the raw map (we assume here that peakels have been previously stored)
         logger.info("Storing the raw map...")
         rawMapStorer.storeRawMap(x2RawMap, storePeakels = true)
           
@@ -1372,9 +1380,9 @@ class ExtractMapSet(
       if (forkJoinPool.isShutdown() == false ) forkJoinPool.shutdownNow()
       
       // Update terminatedThreadCount and reset the ThreadCount
-      val terminatedThreadCount = ExtracMapSet.terminatedThreadCount.addAndGet(affectedCoresCount)
-      if (terminatedThreadCount == ExtracMapSet.threadCount) {
-        ExtracMapSet.threadCount.set(0)
+      val terminatedThreadCount = ExtractMapSet.terminatedThreadCount.addAndGet(affectedCoresCount)
+      if (terminatedThreadCount == ExtractMapSet.threadCount) {
+        ExtractMapSet.threadCount.set(0)
       }
       
     }
