@@ -32,9 +32,9 @@ private[msi] object PgRsWriter extends AbstractSQLRsWriter() {
 
   private val peptideTableCols = MsiDbPeptideTable.columnsAsStrList.mkString(",")
   private val readablePtmTableCols = MsiDbPeptideReadablePtmStringTable.columnsAsStrList.mkString(",")
-  private val pepMatchTableCols = MsiDbPeptideMatchTable.columnsAsStrList.filter(_ != "id").mkString(",")
+  private val pepMatchTableColsWithoutPK = MsiDbPeptideMatchTable.columnsAsStrList.filter(_ != "id").mkString(",")
   private val pepMatchRelTableCols = MsiDbPeptideMatchRelationTable.columnsAsStrList.mkString(",")
-  private val protMatchTableCols = MsiDbProteinMatchTable.columnsAsStrList.filter(_ != "id").mkString(",")
+  private val protMatchTableColsWithoutPK = MsiDbProteinMatchTable.columnsAsStrList.filter(_ != "id").mkString(",")
   private val seqMatchTableCols = MsiDbSequenceMatchTable.columnsAsStrList.mkString(",")
 
   //"SELECT ms_query_id, peptide_id, id FROM peptide_match WHERE result_set_id = " + rsId
@@ -55,25 +55,27 @@ private[msi] object PgRsWriter extends AbstractSQLRsWriter() {
       
       val bulkCopyManager = PostgresUtils.getCopyManager(msiCon)
   
+      /*
       // Create TMP table
       val tmpPeptideTableName = "tmp_peptide_" + (scala.math.random * 1000000).toInt
       logger.info("creating temporary table '" + tmpPeptideTableName + "'...")
   
       val stmt = msiCon.createStatement()
       stmt.executeUpdate("CREATE TEMP TABLE " + tmpPeptideTableName + " (LIKE peptide) ON COMMIT DROP")
+      */
   
       // Bulk insert of peptides
       logger.info("BULK insert of peptides")
   
-      val pgBulkLoader = bulkCopyManager.copyIn("COPY " + tmpPeptideTableName + " ( " + peptideTableCols + " ) FROM STDIN")
-  
-      //val newPeptides = new ArrayBuffer[Peptide](0)
+      //val pgBulkLoader = bulkCopyManager.copyIn("COPY " + tmpPeptideTableName + " ( " + peptideTableCols + " ) FROM STDIN")
+      val pgBulkLoader = bulkCopyManager.copyIn(s"COPY ${MsiDbPeptideTable.name} ($peptideTableCols) FROM STDIN")
   
       // Iterate over peptides
       for (peptide <- peptides) {
   
         val ptmString = if (peptide.ptmString != null) peptide.ptmString else ""
-        val peptideValues = List(peptide.id,
+        val peptideValues = List(
+          peptide.id,
           peptide.sequence,
           ptmString,
           peptide.calculatedMass,
@@ -88,11 +90,11 @@ private[msi] object PgRsWriter extends AbstractSQLRsWriter() {
       // End of BULK copy
       val nbInsertedRecords = pgBulkLoader.endCopy()
   
-      // Move TMP table content to MAIN table
+      /*// Move TMP table content to MAIN table
       logger.info("move TMP table " + tmpPeptideTableName + " into MAIN peptide table")
       stmt.executeUpdate("INSERT into peptide (" + peptideTableCols + ") " +
         "SELECT " + peptideTableCols + " FROM " + tmpPeptideTableName
-      )
+      )*/
     }
     
   }
@@ -111,17 +113,22 @@ private[msi] object PgRsWriter extends AbstractSQLRsWriter() {
       val bulkCopyManager = PostgresUtils.getCopyManager(msiCon)
       val rsId = rs.id
   
+      /*
       // Create TMP table
       val tmpReadblePtmTableName = "tmp_peptide_readable_ptm_string_" + (scala.math.random * 1000000).toInt
       logger.info("creating temporary table '" + tmpReadblePtmTableName + "'...")
       
       val stmt = msiCon.createStatement()
       stmt.executeUpdate("CREATE TEMP TABLE " + tmpReadblePtmTableName + " (LIKE peptide_readable_ptm_string) ON COMMIT DROP")
+      */
       
       // Bulk insert of readable ptm strings
       logger.info("BULK insert of readable ptm strings")
       
-      val pgBulkLoader = bulkCopyManager.copyIn("COPY " + tmpReadblePtmTableName + " ( " + readablePtmTableCols + " ) FROM STDIN")
+      //val pgBulkLoader = bulkCopyManager.copyIn("COPY " + tmpReadblePtmTableName + " ( " + readablePtmTableCols + " ) FROM STDIN")
+      val pgBulkLoader = bulkCopyManager.copyIn(
+        s"COPY ${MsiDbPeptideReadablePtmStringTable.name} ($readablePtmTableCols) FROM STDIN"
+      )
       
       // Iterate over peptides
       for (peptide <- rs.peptides; if StringUtils.isNotEmpty(peptide.readablePtmString)) {
@@ -140,11 +147,12 @@ private[msi] object PgRsWriter extends AbstractSQLRsWriter() {
       // End of BULK copy
       val nbInsertedRecords = pgBulkLoader.endCopy()
       
+      /*
       // Move TMP table content to MAIN table
       logger.info("move TMP table " + tmpReadblePtmTableName + " into MAIN peptide_readable_ptm_string table")
       stmt.executeUpdate("INSERT into peptide_readable_ptm_string (" + readablePtmTableCols + ") " +
         "SELECT " + readablePtmTableCols + " FROM " + tmpReadblePtmTableName
-      )
+      )*/
       
       nbInsertedRecords.toInt
       
@@ -156,6 +164,7 @@ private[msi] object PgRsWriter extends AbstractSQLRsWriter() {
     DoJDBCReturningWork.withEzDBC(msiDbCtx, true) { msiEzDBC =>
       
       val msiCon = msiEzDBC.connection
+      val bulkCopyManager = PostgresUtils.getCopyManager(msiCon)
       val scoringIdByType = new MsiDbHelper(msiDbCtx).getScoringIdByType
       
       // Retrieve some vars
@@ -164,24 +173,27 @@ private[msi] object PgRsWriter extends AbstractSQLRsWriter() {
   
       logger.debug("Number of peptideMatches to write :"+peptideMatches.length)
       
+      /*
       // Create TMP table
       val tmpPepMatchTableName = "tmp_peptide_match_" + (scala.math.random * 1000000).toInt
       logger.info("creating temporary table '" + tmpPepMatchTableName + "'...")
   
       val stmt = msiCon.createStatement()
       stmt.executeUpdate("CREATE TEMP TABLE " + tmpPepMatchTableName + " (LIKE peptide_match) ON COMMIT DROP")
+      */
   
       // Bulk insert of peptide matches
       logger.info("BULK insert of peptide matches")
-  
-      val bulkCopyManager = PostgresUtils.getCopyManager(msiCon)
-  
-      val pgBulkLoader = bulkCopyManager.copyIn("COPY " + tmpPepMatchTableName + " ( id, " + pepMatchTableCols + " ) FROM STDIN")
+
+      //val pgBulkLoader = bulkCopyManager.copyIn("COPY " + tmpPepMatchTableName + " ( id, " + pepMatchTableColsWithoutPK + " ) FROM STDIN")
+      val pgBulkLoader = bulkCopyManager.copyIn(
+        s"COPY ${MsiDbPeptideMatchTable.name} ($pepMatchTableColsWithoutPK) FROM STDIN"
+      )
   
       // Iterate over peptide matches to store them
       for (peptideMatch <- peptideMatches) {
         
-        val scoreType = peptideMatch.scoreType  
+        val scoreType = peptideMatch.scoreType
         val scoringId = scoringIdByType.get(scoreType.toString)
         require(scoringId.isDefined, "can't find a scoring id for the score type '" + scoreType + "'")
         
@@ -195,7 +207,7 @@ private[msi] object PgRsWriter extends AbstractSQLRsWriter() {
 
         // Build a row containing peptide match values
         val pepMatchValues = List(
-          peptideMatch.id,
+          //peptideMatch.id,
           pmCharge,
           msQuery.moz,
           peptideMatch.score,
@@ -223,11 +235,11 @@ private[msi] object PgRsWriter extends AbstractSQLRsWriter() {
       // End of BULK copy
       val nbInsertedPepMatches = pgBulkLoader.endCopy()
 
-      // Move TMP table content to MAIN table
+      /*// Move TMP table content to MAIN table
       logger.info("move TMP table " + tmpPepMatchTableName + " into MAIN peptide_match table. # of tmp pepMatches: "+nbInsertedPepMatches)
-      val insertedPepMatched = stmt.executeUpdate("INSERT into peptide_match (" + pepMatchTableCols + ") " +
-        "SELECT " + pepMatchTableCols + " FROM " + tmpPepMatchTableName)
-      
+      val insertedPepMatched = stmt.executeUpdate("INSERT into peptide_match (" + pepMatchTableColsWithoutPK + ") " +
+        "SELECT " + pepMatchTableColsWithoutPK + " FROM " + tmpPepMatchTableName)
+      */
       
       // Retrieve generated peptide match ids
       val pepMatchIdByKey = msiEzDBC.select( pepMatchUniqueFKsQuery, rsId) { r =>
@@ -241,15 +253,16 @@ private[msi] object PgRsWriter extends AbstractSQLRsWriter() {
       this._linkPeptideMatchesToChildren(peptideMatches, bulkCopyManager)
   
       nbInsertedPepMatches.toInt
-      
     }
     
   }
 
   private def _linkPeptideMatchesToChildren(peptideMatches: Seq[PeptideMatch], bulkCopyManager: CopyManager): Unit = {
 
-    val pgBulkLoader = bulkCopyManager.copyIn("COPY peptide_match_relation ( " + pepMatchRelTableCols + " ) FROM STDIN")
-
+    val pgBulkLoader = bulkCopyManager.copyIn(
+      s"COPY ${MsiDbPeptideMatchRelationTable.name} ($pepMatchRelTableCols) FROM STDIN"
+    )
+    
     // Iterate over peptide matches to store them
     for (
       peptideMatch <- peptideMatches;
@@ -271,7 +284,8 @@ private[msi] object PgRsWriter extends AbstractSQLRsWriter() {
 
     // End of BULK copy
     val nbInsertedRecords = pgBulkLoader.endCopy()
-    logger.info("BULK insert of {} peptide match relations", nbInsertedRecords.asInstanceOf[AnyRef])
+    
+    logger.info(s"BULK insert of $nbInsertedRecords peptide match relations has been done !")
   }
 
   override def insertRsProteinMatches(rs: ResultSet, msiDbCtx: DatabaseConnectionContext): Int = {
@@ -279,6 +293,7 @@ private[msi] object PgRsWriter extends AbstractSQLRsWriter() {
     DoJDBCReturningWork.withEzDBC(msiDbCtx, true) { msiEzDBC =>
       
       val msiCon = msiEzDBC.connection
+      val bulkCopyManager = PostgresUtils.getCopyManager(msiCon)
       
       // TODO: retrieve this only once
       val scoringIdByType = new MsiDbHelper(msiDbCtx).getScoringIdByType
@@ -287,18 +302,22 @@ private[msi] object PgRsWriter extends AbstractSQLRsWriter() {
       val rsId = rs.id
       val proteinMatches = rs.proteinMatches
   
+      /*
       // Create TMP table
       val tmpProtMatchTableName = "tmp_protein_match_" + (scala.math.random * 1000000).toInt
       logger.info("creating temporary table '" + tmpProtMatchTableName + "'...")
   
       val stmt = msiCon.createStatement()
       stmt.executeUpdate("CREATE TEMP TABLE " + tmpProtMatchTableName + " (LIKE protein_match) ON COMMIT DROP")
+      */
   
       // Bulk insert of protein matches
       logger.info("BULK insert of protein matches")
   
-      val bulkCopyManager = PostgresUtils.getCopyManager(msiCon)
-      val pgBulkLoader = bulkCopyManager.copyIn("COPY " + tmpProtMatchTableName + " ( id, " + protMatchTableCols + " ) FROM STDIN")
+      //val pgBulkLoader = bulkCopyManager.copyIn("COPY " + tmpProtMatchTableName + " ( id, " + protMatchTableColsWithoutPK + " ) FROM STDIN")
+      val pgBulkLoader = bulkCopyManager.copyIn(
+        s"COPY ${MsiDbProteinMatchTable.name} ($protMatchTableColsWithoutPK) FROM STDIN"
+      )
   
       // Iterate over protein matches to store them
       for (proteinMatch <- proteinMatches) {
@@ -312,7 +331,7 @@ private[msi] object PgRsWriter extends AbstractSQLRsWriter() {
         
         // Build a row containing protein match values
         val protMatchValues = List(
-          proteinMatch.id,
+          //proteinMatch.id,
           proteinMatch.accession,
           proteinMatch.description,
           Option(proteinMatch.geneName),
@@ -332,19 +351,19 @@ private[msi] object PgRsWriter extends AbstractSQLRsWriter() {
         // Store protein match
         val protMatchBytes = encodeRecordForPgCopy(protMatchValues)
         pgBulkLoader.writeToCopy(protMatchBytes, 0, protMatchBytes.length)
-  
       }
   
       // End of BULK copy
       val nbInsertedProtMatches = pgBulkLoader.endCopy()
   
       // Move TMP table content to MAIN table
-      logger.info("move TMP table " + tmpProtMatchTableName + " into MAIN protein_match table")
-      stmt.executeUpdate("INSERT into protein_match (" + protMatchTableCols + ") " +
-        "SELECT " + protMatchTableCols + " FROM " + tmpProtMatchTableName)
+      /*logger.info("move TMP table " + tmpProtMatchTableName + " into MAIN protein_match table")
+      stmt.executeUpdate("INSERT into protein_match (" + protMatchTableColsWithoutPK + ") " +
+        "SELECT " + protMatchTableColsWithoutPK + " FROM " + tmpProtMatchTableName)
+      */
   
       // Retrieve generated protein match ids and update protein matches ids
-      msiEzDBC.select( protMatchUniqueFKQuery, rsId) { r =>
+      msiEzDBC.select(protMatchUniqueFKQuery, rsId) { r =>
         val accession = r.nextString
         val id = toLong(r.nextAny)
         proteinMatches.filter(pm => {pm.accession.equals(accession) && pm.id < 0}).head.id = id
@@ -355,7 +374,6 @@ private[msi] object PgRsWriter extends AbstractSQLRsWriter() {
       this.linkProteinMatchesToSeqDatabases(rs,msiEzDBC,proteinMatches)
       
       nbInsertedProtMatches.toInt
-      
     }
     
   }
@@ -371,19 +389,20 @@ private[msi] object PgRsWriter extends AbstractSQLRsWriter() {
       val isDecoy = rs.isDecoy
       val proteinMatches = rs.proteinMatches
   
-      // Retrieve primary db connection    
-  
+      /*
       // Create TMP table
       val tmpSeqMatchTableName = "tmp_sequence_match_" + (scala.math.random * 1000000).toInt
       logger.info("creating temporary table '" + tmpSeqMatchTableName + "'...")
   
       val stmt = msiCon.createStatement()
       stmt.executeUpdate("CREATE TEMP TABLE " + tmpSeqMatchTableName + " (LIKE sequence_match) ON COMMIT DROP")
+      */
       
       // Bulk insert of sequence matches
       logger.info("BULK insert of sequence matches")
       
-      val pgBulkLoader = bulkCopyManager.copyIn("COPY " + tmpSeqMatchTableName + " ( " + seqMatchTableCols + " ) FROM STDIN")
+      //val pgBulkLoader = bulkCopyManager.copyIn("COPY " + tmpSeqMatchTableName + " ( " + seqMatchTableCols + " ) FROM STDIN")
+      val pgBulkLoader = bulkCopyManager.copyIn(s"COPY ${MsiDbSequenceMatchTable.name} ($seqMatchTableCols) FROM STDIN")
       
       // Iterate over protein matches
       for (proteinMatch <- proteinMatches) {
@@ -415,12 +434,12 @@ private[msi] object PgRsWriter extends AbstractSQLRsWriter() {
       val nbInsertedRecords = pgBulkLoader.endCopy()
   
       // Move TMP table content to MAIN table
-      logger.info("move TMP table " + tmpSeqMatchTableName + " into MAIN sequence_match table")
+      /*logger.info("move TMP table " + tmpSeqMatchTableName + " into MAIN sequence_match table")
       stmt.executeUpdate("INSERT into sequence_match (" + seqMatchTableCols + ") " +
         "SELECT " + seqMatchTableCols + " FROM " + tmpSeqMatchTableName)
+      */
   
       nbInsertedRecords.toInt
-      
     }
     
   }
