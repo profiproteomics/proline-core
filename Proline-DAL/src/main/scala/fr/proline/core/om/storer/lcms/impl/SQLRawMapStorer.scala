@@ -19,7 +19,7 @@ class SQLRawMapStorer(
   val peakelWriter: Option[IPeakelWriter] = None
 ) extends IRawMapStorer {
 
-  def storeRawMap(rawMap: RawMap, storePeakels: Boolean = false): Unit = {
+  def storeRawMap(rawMap: RawMap, storeFeatures: Boolean = true, storePeakels: Boolean = false): Unit = {
 
     DoJDBCWork.withEzDBC(lcmsDbCtx) { ezDBC =>
 
@@ -41,21 +41,24 @@ class SQLRawMapStorer(
         peakelFittingModelId
       )
 
-      // Insert features
-      val flattenedFeatures = featureWriter.insertFeatures(rawMap.features, rawMap.id)
-
-      // Store peakels if requested
+      // Insert peakels if requested
       if (storePeakels) {
         require( rawMap.peakels.isDefined, "the raw map must contain peakels" )
         peakelWriter.get.insertPeakels(rawMap.peakels.get, rawMap.id)
+      }
+      
+      // Insert features if requested
+      if (storeFeatures) {
+        val flattenedFeatures = featureWriter.insertFeatures(rawMap.features, rawMap.id)
+        
+        // Link features to peakels
         featureWriter.linkFeaturesToPeakels(flattenedFeatures, rawMap.id)
       }
-
     }
 
     ()
   }
-
+  
   protected def insertMap(ezDBC: EasyDBC, lcmsMap: ILcMsMap, modificationTimestamp: java.util.Date): Long = {
 
     // FIXME: scoring should not be null

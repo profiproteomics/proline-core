@@ -126,6 +126,7 @@ class SQLFeatureWriter(lcmsDbCtx: LcMsDbConnectionContext) extends IFeatureWrite
       ezDBC.executeInBatch(LcmsDbFeaturePeakelItemTable.mkInsertQuery) { statement =>
         for (
           ft <- features;
+          if ft.relations.peakelItems != null;
           peakelItem <- ft.relations.peakelItems
         ) {
           statement.executeWith(

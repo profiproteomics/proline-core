@@ -27,7 +27,7 @@ trait IRawMapStorer {
   
   def featureWriter: IFeatureWriter
   
-  def storeRawMap( rawMap: RawMap, storePeakels: Boolean = false ): Unit
+  def storeRawMap( rawMap: RawMap, storeFeatures: Boolean = true, storePeakels: Boolean = false ): Unit
   
 }
 
