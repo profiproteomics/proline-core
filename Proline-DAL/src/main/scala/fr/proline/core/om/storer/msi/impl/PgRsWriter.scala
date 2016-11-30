@@ -243,9 +243,8 @@ private[msi] object PgRsWriter extends AbstractSQLRsWriter() {
       
       // Retrieve generated peptide match ids
       val pepMatchIdByKey = msiEzDBC.select( pepMatchUniqueFKsQuery, rsId) { r =>
-          (toLong(r.nextAny) + "%" + toLong(r.nextAny) -> toLong(r.nextAny))
-        } toMap
-             
+        (r.nextLong + "%" + r.nextLong -> r.nextLong)
+      } toMap
         
       // Iterate over peptide matches to update them
       peptideMatches.foreach { pepMatch => pepMatch.id = pepMatchIdByKey(pepMatch.msQuery.id + "%" + pepMatch.peptide.id) }
@@ -319,8 +318,13 @@ private[msi] object PgRsWriter extends AbstractSQLRsWriter() {
         s"COPY ${MsiDbProteinMatchTable.name} ($protMatchTableColsWithoutPK) FROM STDIN"
       )
   
-      // Iterate over protein matches to store them
+      // Map protein matches by their accession
+      val proteinMatchByAcc = new HashMap[String,ProteinMatch]()
+      proteinMatchByAcc.sizeHint(proteinMatches.length)
+      
+      // Iterate protein matches to store them
       for (proteinMatch <- proteinMatches) {
+        proteinMatchByAcc.put(proteinMatch.accession, proteinMatch)
   
         val scoreType = proteinMatch.scoreType  
         val scoringId = scoringIdByType.get(scoreType)
@@ -361,12 +365,10 @@ private[msi] object PgRsWriter extends AbstractSQLRsWriter() {
       stmt.executeUpdate("INSERT into protein_match (" + protMatchTableColsWithoutPK + ") " +
         "SELECT " + protMatchTableColsWithoutPK + " FROM " + tmpProtMatchTableName)
       */
-  
+      
       // Retrieve generated protein match ids and update protein matches ids
       msiEzDBC.select(protMatchUniqueFKQuery, rsId) { r =>
-        val accession = r.nextString
-        val id = toLong(r.nextAny)
-        proteinMatches.filter(pm => {pm.accession.equals(accession) && pm.id < 0}).head.id = id
+        proteinMatchByAcc(r.nextString).id = r.nextLong
       }
       
       // Link protein matches to seq databases
