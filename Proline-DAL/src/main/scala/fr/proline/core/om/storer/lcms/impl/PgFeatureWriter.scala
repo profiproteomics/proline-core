@@ -51,20 +51,22 @@ class PgFeatureWriter(lcmsDbCtx: LcMsDbConnectionContext) extends IFeatureWriter
     DoJDBCWork.withConnection(lcmsDbCtx) { con =>
       
       val bulkCopyManager = PostgresUtils.getCopyManager(con)
-
-      // Create TMP table
+      val lcmsEzDBC = ProlineEzDBC(con, lcmsDbCtx.getDriverType)
+      
+      /*// Create TMP table
       val tmpFeatureTableName = "tmp_feature_" + (scala.math.random * 1000000).toInt
       logger.info(s"creating temporary table '$tmpFeatureTableName'...")
       
       val lcmsEzDBC = ProlineEzDBC(con, lcmsDbCtx.getDriverType)
       lcmsEzDBC.execute(
         s"CREATE TEMP TABLE $tmpFeatureTableName (LIKE ${LcmsDbFeatureTable.name}) ON COMMIT DROP"
-      )
+      )*/
 
       // Bulk insert of features
       logger.info("BULK insert of features")
       
-      val pgBulkLoader = bulkCopyManager.copyIn(s"COPY $tmpFeatureTableName ( $allFeatureTableCols ) FROM STDIN")
+      //val pgBulkLoader = bulkCopyManager.copyIn(s"COPY $tmpFeatureTableName ( $allFeatureTableCols ) FROM STDIN")
+      val pgBulkLoader = bulkCopyManager.copyIn(s"COPY ${LcmsDbFeatureTable.name} ($featureTableColsWithoutPK) FROM STDIN")
       
       // Iterate over the raw map features to store them
       for (ft <- rawMap.features) {
@@ -91,14 +93,15 @@ class PgFeatureWriter(lcmsDbCtx: LcMsDbConnectionContext) extends IFeatureWriter
       
       // End of BULK copy
       val nbInsertedFeatures = pgBulkLoader.endCopy()
+      logger.info(s"BULK insert of $nbInsertedFeatures features completed !")
       
-      // Move TMP table content to MAIN table
+      /*// Move TMP table content to MAIN table
       logger.info(s"move TMP table $tmpFeatureTableName into MAIN ${LcmsDbFeatureTable.name} table")
       
       lcmsEzDBC.execute(
         s"INSERT INTO ${LcmsDbFeatureTable.name} ($featureTableColsWithoutPK) " +
         s"SELECT $featureTableColsWithoutPK FROM $tmpFeatureTableName"
-      )
+      )*/
 
       // Retrieve generated feature ids
       logger.info(s"Retrieving generated feature ids...")
@@ -157,7 +160,7 @@ class PgFeatureWriter(lcmsDbCtx: LcMsDbConnectionContext) extends IFeatureWriter
     
     // Build a row containing feature values
     val featureValues = List(
-      ft.id,
+      //ft.id,
       ft.moz,
       ft.charge,
       ft.elutionTime,
@@ -248,20 +251,21 @@ class PgFeatureWriter(lcmsDbCtx: LcMsDbConnectionContext) extends IFeatureWriter
     DoJDBCWork.withConnection(lcmsDbCtx) { con =>
       
       val bulkCopyManager = PostgresUtils.getCopyManager(con)
+      val lcmsEzDBC = ProlineEzDBC(con, lcmsDbCtx.getDriverType)
 
       // Create TMP table
-      val tmpPeakelTableName = "tmp_peakel_" + (scala.math.random * 1000000).toInt
+      /*val tmpPeakelTableName = "tmp_peakel_" + (scala.math.random * 1000000).toInt
       logger.info(s"creating temporary table '$tmpPeakelTableName'...")
       
-      val lcmsEzDBC = ProlineEzDBC(con, lcmsDbCtx.getDriverType)
       lcmsEzDBC.execute(
         s"CREATE TEMP TABLE $tmpPeakelTableName (LIKE ${LcmsDbPeakelTable.name}) ON COMMIT DROP"
-      )
+      )*/
 
       // Bulk insert of features
       logger.info("BULK insert of peakels")
       
-      val pgBulkLoader = bulkCopyManager.copyIn(s"COPY $tmpPeakelTableName ( $allPeakelTableCols ) FROM STDIN")
+//      val pgBulkLoader = bulkCopyManager.copyIn(s"COPY $tmpPeakelTableName ( $allPeakelTableCols ) FROM STDIN")
+      val pgBulkLoader = bulkCopyManager.copyIn(s"COPY ${LcmsDbPeakelTable.name} ( $peakelTableColsWithoutPK ) FROM STDIN")
       
       // Iterate over the raw map peakels to store them
       val peakels = rawMap.peakels.get
@@ -281,13 +285,13 @@ class PgFeatureWriter(lcmsDbCtx: LcMsDbConnectionContext) extends IFeatureWriter
       
       logger.info(s"BULK insert of $nbInsertedPeakels peakels completed !")
 
-      // Move TMP table content to MAIN table
+      /*// Move TMP table content to MAIN table
       logger.info(s"move TMP table $tmpPeakelTableName into MAIN ${LcmsDbPeakelTable.name} table")
       
       lcmsEzDBC.execute(
         s"INSERT INTO ${LcmsDbPeakelTable.name} ($peakelTableColsWithoutPK) " +
         s"SELECT $peakelTableColsWithoutPK FROM $tmpPeakelTableName"
-      )
+      )*/
 
       // Retrieve generated peakel ids
       logger.info(s"Retrieving generated peakel ids...")
@@ -336,7 +340,7 @@ class PgFeatureWriter(lcmsDbCtx: LcMsDbConnectionContext) extends IFeatureWriter
     val peakelAsBytes = PeakelDataMatrix.pack(peakel.dataMatrix)
     
     val peakelValues = List(
-      peakel.id,
+      //peakel.id,
       peakel.moz,
       peakel.elutionTime,
       peakel.apexIntensity,

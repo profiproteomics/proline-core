@@ -20,28 +20,29 @@ import fr.profi.util.primitives._
  */
 object PgPeaklistWriter extends AbstractSQLPeaklistWriter with LazyLogging {
   
-  import org.postgresql.core.Utils
+  private val spectrumTableColsWithoutPK = MsiDbSpectrumTable.columnsAsStrList.filter(_ != "id").mkString(",")
  
   override def insertSpectra(peaklistId: Long, peaklistContainer: IPeaklistContainer, context: StorerContext): StorerContext = {
 
-    DoJDBCWork.withConnection(context.getMSIDbConnectionContext, { con =>
+    DoJDBCWork.withConnection(context.getMSIDbConnectionContext) { con =>
 
       val bulkCopyManager = PostgresUtils.getCopyManager(con)
+      val msiEzDBC = ProlineEzDBC(con, context.getMSIDbConnectionContext.getDriverType)
 
+      /*
       // Create TMP table
       val tmpSpectrumTableName = "tmp_spectrum_" + (scala.math.random * 1000000).toInt
       logger.info(s"creating temporary table '$tmpSpectrumTableName'...")
       
-      val msiEzDBC = ProlineEzDBC(con, context.getMSIDbConnectionContext.getDriverType)
       msiEzDBC.execute(
         s"CREATE TEMP TABLE $tmpSpectrumTableName (LIKE ${MsiDbSpectrumTable.name}) ON COMMIT DROP"
-      )
+      )*/
 
       // Bulk insert of spectra
       logger.info("BULK insert of spectra")
       
-      val allSpectrumTableCols = MsiDbSpectrumTable.columnsAsStrList.mkString(",")
-      val pgBulkLoader = bulkCopyManager.copyIn(s"COPY $tmpSpectrumTableName ( $allSpectrumTableCols ) FROM STDIN")
+      //val pgBulkLoader = bulkCopyManager.copyIn(s"COPY $tmpSpectrumTableName ( $allSpectrumTableCols ) FROM STDIN")
+      val pgBulkLoader = bulkCopyManager.copyIn(s"COPY ${MsiDbSpectrumTable.name} ($spectrumTableColsWithoutPK) FROM STDIN")
       
       var spectrumIdx = 0
       
@@ -69,7 +70,7 @@ object PgPeaklistWriter extends AbstractSQLPeaklistWriter with LazyLogging {
         
         // Build a row containing spectrum values
         val spectrumValues = List(
-          spectrum.id,
+          //spectrum.id,
           spectrumIdx,
           escapeStringForPgCopy(spectrum.title),
           spectrum.precursorMoz,
@@ -99,14 +100,14 @@ object PgPeaklistWriter extends AbstractSQLPeaklistWriter with LazyLogging {
       // End of BULK copy
       val nbInsertedSpectra = pgBulkLoader.endCopy()
 
-      // Move TMP table content to MAIN table
+      /*// Move TMP table content to MAIN table
       logger.info(s"move TMP table $tmpSpectrumTableName into MAIN spectrum table")
       
       val spectrumTableColsWithoutPK = MsiDbSpectrumTable.columnsAsStrList.filter(_ != "id").mkString(",")      
       msiEzDBC.execute(
         s"INSERT into spectrum ($spectrumTableColsWithoutPK) " +
         s"SELECT $spectrumTableColsWithoutPK FROM $tmpSpectrumTableName"
-      )
+      )*/
 
       // Retrieve generated spectrum ids
       val spectrumIdByTitle = msiEzDBC.select(
@@ -115,7 +116,7 @@ object PgPeaklistWriter extends AbstractSQLPeaklistWriter with LazyLogging {
 
       context.spectrumIdByTitle = spectrumIdByTitle
 
-    }, true) // End of jdbcWork
+    }// End of jdbcWork
 
     context
   }

@@ -20,34 +20,33 @@ import fr.profi.util.primitives._
 
 object PgMsiSearchWriter extends AbstractSQLMsiSearchWriter() with LazyLogging {
 
-  // val connection = msiDb.ezDBC.connection
-  // val bulkCopyManager = new CopyManager( msiDb.ezDBC.connection.asInstanceOf[BaseConnection] )
-  
   private val msqIdQuery = new SelectQueryBuilder1(MsiDbMsQueryTable).mkSelectQuery( (t,c) => 
     List(t.INITIAL_ID,t.ID) -> "WHERE "~ t.MSI_SEARCH_ID ~" = ?"
   )
+  private val msQueryTableColsWithoutPK = MsiDbMsQueryTable.columnsAsStrList.filter(_ != "id").mkString(",")
 
   override def insertMsQueries(msiSearchId: Long, msQueries: Seq[MsQuery], context: StorerContext): StorerContext = {
 
-    DoJDBCWork.withEzDBC( context.getMSIDbConnectionContext, { msiEzDBC =>
+    DoJDBCWork.withEzDBC(context.getMSIDbConnectionContext) { msiEzDBC =>
       
       val con = msiEzDBC.connection
 
+      /*
       // Create TMP table
       val tmpMsQueryTableName = "tmp_ms_query_" + (scala.math.random * 1000000).toInt
       logger.info("creating temporary table '" + tmpMsQueryTableName + "'...")
 
       val stmt = con.createStatement()
       stmt.executeUpdate("CREATE TEMP TABLE " + tmpMsQueryTableName + " (LIKE ms_query) ON COMMIT DROP")
+      */
 
       // Bulk insert of MS queries
       logger.info("BULK insert of MS queries")
 
-      val msQueryTableCols = MsiDbMsQueryTable.columnsAsStrList.filter(_ != "id").mkString(",")
-
       val bulkCopyManager =  PostgresUtils.getCopyManager(con)
-      val pgBulkLoader = bulkCopyManager.copyIn("COPY " + tmpMsQueryTableName + " ( id, " + msQueryTableCols + " ) FROM STDIN")
-
+      //val pgBulkLoader = bulkCopyManager.copyIn("COPY " + tmpMsQueryTableName + " ( id, " + msQueryTableCols + " ) FROM STDIN")
+      val pgBulkLoader = bulkCopyManager.copyIn(s"COPY ${MsiDbMsQueryTable.name} ($msQueryTableColsWithoutPK) FROM STDIN")
+      
       for (msQuery <- msQueries) {
 
         msQuery.msLevel match {
@@ -72,10 +71,11 @@ object PgMsiSearchWriter extends AbstractSQLMsiSearchWriter() with LazyLogging {
       // End of BULK copy
       val nbInsertedMsQueries = pgBulkLoader.endCopy()
 
-      // Move TMP table content to MAIN table
+      /*// Move TMP table content to MAIN table
       logger.info("move TMP table " + tmpMsQueryTableName + " into MAIN ms_query table")
       stmt.executeUpdate("INSERT into ms_query (" + msQueryTableCols + ") " +
         "SELECT " + msQueryTableCols + " FROM " + tmpMsQueryTableName)
+      */
 
       // Retrieve generated spectrum ids
       val msQueryIdByInitialId = msiEzDBC.select(msqIdQuery, msiSearchId) { r =>
@@ -85,7 +85,7 @@ object PgMsiSearchWriter extends AbstractSQLMsiSearchWriter() with LazyLogging {
       // Iterate over MS queries to update them
       msQueries.foreach { msQuery => msQuery.id = msQueryIdByInitialId(msQuery.initialId) }
 
-    }, true) // End of jdbcWork
+    } // End of jdbcWork
 
     context
   }
@@ -97,7 +97,7 @@ object PgMsiSearchWriter extends AbstractSQLMsiSearchWriter() with LazyLogging {
 
     // Build a row containing MS queries values
     val msQueryValues = List(
-      msQuery.id,
+      //msQuery.id,
       msQuery.initialId,
       msQuery.charge,
       msQuery.moz,
