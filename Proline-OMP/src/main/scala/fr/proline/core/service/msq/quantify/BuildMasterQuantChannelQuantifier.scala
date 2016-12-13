@@ -13,7 +13,8 @@ object BuildMasterQuantChannelQuantifier {
     udsMasterQuantChannel: MasterQuantitationChannel,
     experimentalDesign: ExperimentalDesign,
     quantMethod: IQuantMethod,
-    quantConfig: IQuantConfig
+    quantConfig: IQuantConfig,
+    nbrXICFileInParallel: Option[Int] = None 
   ): AbstractMasterQuantChannelQuantifier = {
     
     quantConfig match {
@@ -31,7 +32,8 @@ object BuildMasterQuantChannelQuantifier {
           executionContext = executionContext,
           experimentalDesign = experimentalDesign,
           udsMasterQuantChannel = udsMasterQuantChannel,
-          quantConfig = lfQuantConfig
+          quantConfig = lfQuantConfig,
+          nbrXICFileInParallel = nbrXICFileInParallel
         )
       }
       case scConfig: SpectralCountConfig => {

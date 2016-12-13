@@ -67,7 +67,8 @@ class ExtractMapSet(
   val lcMsRuns: Seq[LcMsRun],
   val quantConfig: ILcMsQuantConfig,
   val peptideByRunIdAndScanNumber: Option[LongMap[LongMap[Peptide]]] = None, // sequence data may or may not be provided
-  val peptideMatchByRunIdAndScanNumber: Option[LongMap[LongMap[ArrayBuffer[PeptideMatch]]]] = None
+  val peptideMatchByRunIdAndScanNumber: Option[LongMap[LongMap[ArrayBuffer[PeptideMatch]]]] = None,
+  val nbrXICFileInParallel: Option[Int] = None 
 ) extends ILcMsService with LazyLogging {
 
   // Do some requirements
@@ -518,9 +519,11 @@ class ExtractMapSet(
     val conflictingPeptidesMap = new HashMap[(Peptide, Int), ArrayBuffer[Peptide]]()
     
     // Customize how many files we want to process in parallel
+    val nbrForkJoinPool = if(nbrXICFileInParallel.isDefined) nbrXICFileInParallel.get else 2
+    this.logger.debug(s"Running _detectMapSetFromPeakels using ${nbrForkJoinPool} parallel processes" )
     val parLcMsRuns = lcMsRuns.par
     parLcMsRuns.tasksupport = new ForkJoinTaskSupport(
-      new scala.concurrent.forkjoin.ForkJoinPool(2)
+      new scala.concurrent.forkjoin.ForkJoinPool(nbrForkJoinPool)
     )
     
     var mapNumber = 0

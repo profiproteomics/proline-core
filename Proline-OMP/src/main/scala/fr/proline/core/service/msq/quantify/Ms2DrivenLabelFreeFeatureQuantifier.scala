@@ -30,7 +30,8 @@ class Ms2DrivenLabelFreeFeatureQuantifier(
   val executionContext: IExecutionContext,
   val udsMasterQuantChannel: MasterQuantitationChannel,
   val experimentalDesign: ExperimentalDesign,
-  val quantConfig: LabelFreeQuantConfig
+  val quantConfig: LabelFreeQuantConfig,
+  val nbrXICFileInParallel: Option[Int] 
 ) extends AbstractLabelFreeFeatureQuantifier {
   
   // Extract the LC-MS map set
@@ -43,7 +44,8 @@ class Ms2DrivenLabelFreeFeatureQuantifier(
       this.entityCache.getLcMsRuns(),
       quantConfig,
       Some(pepByRunAndScanNbr),
-      Some(psmByRunAndScanNbr)
+      Some(psmByRunAndScanNbr),
+      nbrXICFileInParallel
     )
     mapSetExtractor.run()
     mapSetExtractor.extractedMapSet
