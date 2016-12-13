@@ -25,45 +25,8 @@ object WeightedSCQuantifierTest extends AbstractResultSummaryTestCase with Stric
   val dbUnitResultFile = STR_F063442_F122817_MergedRSMs
   val targetRSMId: Long = 33L
   val useJPA = true
-
-  /*
-  // Define the interface to be implemented
-  val driverType = DriverType.H2
-  val fileName = "STR_F063442_F122817_MergedRSMs"
-  val targetRSMId: Long = 33
-
-  var executionContext: IExecutionContext = null
-
-  @Before
-  @throws(classOf[Exception])
-  def setUp() = {
-
-    logger.info("Initializing DBs")
-    super.initDBsDBManagement(driverType)
-
-    //Load Data
-    pdiDBTestCase.loadDataSet("/dbunit/datasets/pdi/Proteins_Dataset.xml")
-    psDBTestCase.loadDataSet("/dbunit_samples/" + fileName + "/ps-db.xml")
-    msiDBTestCase.loadDataSet("/dbunit_samples/" + fileName + "/msi-db.xml")
-    udsDBTestCase.loadDataSet("/dbunit_samples/" + fileName + "/uds-db.xml")
-
-    logger.info("PDI, PS, MSI and UDS dbs succesfully initialized !")
-
-    val execContext = buildJPAContext()
-    executionContext = execContext
-  }
-
-  @After
-  override def tearDown() {
-    if (executionContext != null) executionContext.closeAll()
-    super.tearDown()
-  }
-
-  def buildJPAContext() = {
-    val executionContext = ContextFactory.buildExecutionContext(dsConnectorFactoryForTest, 1, true) // Full JPA
-
-    executionContext
-  }*/
+  val targetDSId= 5L
+ 
   
 }
   
@@ -78,7 +41,7 @@ class WeightedSCQuantifierTest extends StrictLogging {
   def quantifyRSMSC() {
 
     val weightRefRSMIds = Seq(33L)
-    val spCountCfg = new SpectralCountConfig(parentRSMId = Some(targetRSMId), parentDSId = None, weightRefRSMIds=weightRefRSMIds)
+    val spCountCfg = new SpectralCountConfig(parentRSMId = Some(targetRSMId), parentDSId = Some(WeightedSCQuantifierTest.targetDSId), weightRefRSMIds=weightRefRSMIds)
 
     val udsEm = executionContext.getUDSDbConnectionContext.getEntityManager
     udsEm.getTransaction().begin()
@@ -200,6 +163,7 @@ class WeightedSCQuantifierTest extends StrictLogging {
     //    logger.debug("  wsCalculator RESULT  "+wsCalculator.getResultAsJSON)
 
   }
+
 
 }
 
