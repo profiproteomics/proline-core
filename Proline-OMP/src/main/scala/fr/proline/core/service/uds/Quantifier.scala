@@ -35,7 +35,8 @@ class Quantifier(
   projectId: Long,
   methodId: Long,
   experimentalDesign: ExperimentalDesign,
-  quantConfigAsMap: java.util.Map[String,Object]
+  quantConfigAsMap: java.util.Map[String,Object],
+  nbrXICFileInParallel: Option[Int] = None //Number of files to process in parallel
 ) extends IService with LazyLogging {
   
   private var _hasInitiatedExecContext: Boolean = false
@@ -121,7 +122,7 @@ class Quantifier(
         case LABEL_FREE => {
           abundanceUnit match {
             case AbundanceUnit.FEATURE_INTENSITY => {
-              quantifyLabelFreeMasterQC(udsMasterQuantChannels, deserialize[LabelFreeQuantConfig](quantConfigAsStr))
+              quantifyLabelFreeMasterQC(udsMasterQuantChannels, deserialize[LabelFreeQuantConfig](quantConfigAsStr), nbrXICFileInParallel)
             }
             case AbundanceUnit.SPECTRAL_COUNTS => {}
           }
@@ -176,7 +177,8 @@ class Quantifier(
   
   protected def quantifyLabelFreeMasterQC(
     udsMasterQuantChannels: List[UdsMasterQuantChannel],
-    lfQuantConfig: LabelFreeQuantConfig
+    lfQuantConfig: LabelFreeQuantConfig,
+    nbrXICFileInParallel: Option[Int] = None 
   ) {
     
     // Quantify each master quant channel
@@ -189,7 +191,8 @@ class Quantifier(
         udsMasterQuantChannel,
         experimentalDesign,
         LabelFreeQuantMethod,
-        lfQuantConfig
+        lfQuantConfig, 
+        nbrXICFileInParallel
       ).quantify()
 
     }
