@@ -35,7 +35,8 @@ class ResultFileImporter(
   peaklistSoftwareId: Long,
   importerProperties: Map[String, Any],
   acDecoyRegex: Option[util.matching.Regex] = None,
-  saveSpectrumMatch: Boolean = false
+  saveSpectrumMatch: Boolean = false,
+  useJpaStorer: Boolean = false // use of SQLRsStorer by default
 ) extends IService with LazyLogging {
 
   private var targetResultSetId: Long = 0L
@@ -59,7 +60,7 @@ class ResultFileImporter(
 
     val msiDbCtx = executionContext.getMSIDbConnectionContext
     var storerContext: StorerContext = null
-    val rsStorer = RsStorer(msiDbCtx, useJPA = false) // force the use of SQLRsStorer
+    val rsStorer = RsStorer(msiDbCtx, useJPA = useJpaStorer)
     var localMSITransaction: Boolean = false
     var msiTransacOk: Boolean = false
 
