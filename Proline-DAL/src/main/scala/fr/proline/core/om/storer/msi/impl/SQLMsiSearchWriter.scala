@@ -22,7 +22,7 @@ abstract class AbstractSQLMsiSearchWriter extends IMsiSearchWriter with LazyLogg
 
     val ss = msiSearch.searchSettings
 
-    DoJDBCWork.withEzDBC( context.getMSIDbConnectionContext, { msiEzDBC =>
+    DoJDBCWork.withEzDBC(context.getMSIDbConnectionContext) { msiEzDBC =>
 
       // Insert sequence databases
       // TODO : If seqDb does not exist in PDI do not create it !!
@@ -43,7 +43,7 @@ abstract class AbstractSQLMsiSearchWriter extends IMsiSearchWriter with LazyLogg
       // Store MS queries
       //this.storeMsQueries( msiSearch, msQueries, context )
 
-    }, true)
+    }
 
     msiSearch.id
   }
@@ -52,7 +52,7 @@ abstract class AbstractSQLMsiSearchWriter extends IMsiSearchWriter with LazyLogg
     
     val msQueryInsertQuery = MsiDbMsQueryTable.mkInsertQuery( (col,colsList) => colsList.filter(_ != col.ID) )
     
-    DoJDBCWork.withEzDBC( context.getMSIDbConnectionContext, { msiEzDBC =>
+    DoJDBCWork.withEzDBC(context.getMSIDbConnectionContext) { msiEzDBC =>
 
       msiEzDBC.executePrepared(msQueryInsertQuery, true) { stmt =>
 
@@ -79,7 +79,7 @@ abstract class AbstractSQLMsiSearchWriter extends IMsiSearchWriter with LazyLogg
 
         }
       }
-    }, true )
+    }
 
     context
   }
@@ -107,7 +107,7 @@ abstract class AbstractSQLMsiSearchWriter extends IMsiSearchWriter with LazyLogg
 
     require(instrumentConfig.id > 0, "instrument configuration must have a strictly positive identifier")
 
-    DoJDBCWork.withEzDBC( context.getMSIDbConnectionContext, { msiEzDBC =>
+    DoJDBCWork.withEzDBC(context.getMSIDbConnectionContext) { msiEzDBC =>
       
       // Check if the instrument config exists in the MSIdb
       val count = msiEzDBC.selectInt("SELECT count(*) FROM instrument_config WHERE id=" + instrumentConfig.id)
@@ -123,7 +123,7 @@ abstract class AbstractSQLMsiSearchWriter extends IMsiSearchWriter with LazyLogg
         }
       }
 
-    }, true )
+    }
 
   }
 

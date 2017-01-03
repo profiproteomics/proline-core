@@ -30,7 +30,7 @@ abstract class AbstractSQLPeaklistWriter extends IPeaklistWriter with LazyLoggin
 
     require(peaklist != null, "peaklist is null")
 
-    DoJDBCWork.withEzDBC( context.getMSIDbConnectionContext, { msiEzDBC =>
+    DoJDBCWork.withEzDBC(context.getMSIDbConnectionContext) { msiEzDBC =>
 
       val peaklistInsertQuery = MsiDbPeaklistTable.mkInsertQuery{ (c,colsList) => 
         colsList.filter( _ != c.ID)
@@ -50,7 +50,7 @@ abstract class AbstractSQLPeaklistWriter extends IPeaklistWriter with LazyLoggin
         peaklist.id = stmt.generatedLong
       }
 
-    },true)
+    }
 
     peaklist.id
   }
@@ -59,7 +59,7 @@ abstract class AbstractSQLPeaklistWriter extends IPeaklistWriter with LazyLoggin
     
     logger.info("storing spectra...")
 
-    DoJDBCWork.withEzDBC( context.getMSIDbConnectionContext, { msiEzDBC =>
+    DoJDBCWork.withEzDBC( context.getMSIDbConnectionContext) { msiEzDBC =>
       
       val spectrumInsertQuery = MsiDbSpectrumTable.mkInsertQuery{ (c,colsList) => 
         colsList.filter( _ != c.ID)
@@ -83,7 +83,7 @@ abstract class AbstractSQLPeaklistWriter extends IPeaklistWriter with LazyLoggin
       // TODO: use id cache
       context.spectrumIdByTitle = spectrumIdByTitle.result()
       
-    },true)
+    }
 
     context
   }

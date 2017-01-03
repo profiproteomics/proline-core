@@ -71,7 +71,7 @@ class SQLRsStorer(
 
     val msiDb = context.getMSIDbConnectionContext
 
-    DoJDBCWork.withEzDBC(context.getMSIDbConnectionContext, true) { msiEzDBC =>
+    DoJDBCWork.withEzDBC(context.getMSIDbConnectionContext) { msiEzDBC =>
 
       // Define some vars
       val isDecoy = resultSet.isDecoy
@@ -456,7 +456,7 @@ class SQLRsStorer(
     import fr.profi.util.primitives._
 
     // Synchronize some related objects with the UDSdb
-    DoJDBCWork.withEzDBC(context.getUDSDbConnectionContext, true) { udsEzDBC =>
+    DoJDBCWork.withEzDBC(context.getUDSDbConnectionContext) { udsEzDBC =>
       val enzymes = msiSearch.searchSettings.usedEnzymes
       for (enzyme <- enzymes) {
         udsEzDBC.selectAndProcess("SELECT id FROM enzyme WHERE name = ?", enzyme.name) { r =>

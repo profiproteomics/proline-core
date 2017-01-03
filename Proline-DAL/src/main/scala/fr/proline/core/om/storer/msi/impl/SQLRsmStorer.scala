@@ -143,7 +143,7 @@ private[msi] class SQLRsmStorer() extends IRsmStorer {
           } //END for each pepInst
         }
       
-    DoJDBCWork.withEzDBC(execCtx.getMSIDbConnectionContext, { msiEzDBC =>
+    DoJDBCWork.withEzDBC(execCtx.getMSIDbConnectionContext) { msiEzDBC =>
       
       // Insert peptide instances
       msiEzDBC.executePrepared(pepInstInsertQuery, true) { stmt =>
@@ -175,7 +175,7 @@ private[msi] class SQLRsmStorer() extends IRsmStorer {
           }
         }
       }
-    }) // End of JDBC work
+    } // End of JDBC work
     
     rsm.peptideInstances.length
   }
