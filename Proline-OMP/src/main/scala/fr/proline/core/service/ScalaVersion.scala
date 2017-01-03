@@ -6,6 +6,6 @@ class Version extends IVersion {
 
   override val getModuleName = "Proline-OMP"
 
-  override val getVersion = "1.0.0-SNAPSHOT_2016-11-03T13:56:51Z_CB205360"
+  override val getVersion = "1.0.0_2017-01-03T10:33:03Z_VD225637"
 
 }
