@@ -63,8 +63,7 @@ class SQLMasterMapStorer(
       }
       
       // Insert extra master map features data into to processed map feature items
-      this.insertProcessedMapFeatureItems( ezDBC, masterMap )
-    
+      this.featureWriter.insertProcessedMapFeatureItems( masterMap )
     }
   
   }

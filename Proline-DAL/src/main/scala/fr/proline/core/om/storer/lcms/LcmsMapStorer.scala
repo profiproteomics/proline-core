@@ -11,9 +11,11 @@ import fr.proline.repository.DriverType
 
 trait IFeatureWriter {
   
-  def insertFeatures(features: Seq[Feature], rawMapId: Long): Seq[Feature]
+  def insertFeatures(features: Seq[Feature], rawMapId: Long, linkToPeakels: Boolean): Seq[Feature]
   
   def linkFeaturesToPeakels(features: Seq[Feature], rawMapId: Long): Unit
+  
+  def insertProcessedMapFeatureItems(processedMap: ProcessedMap): Unit
   
 }
 
@@ -26,6 +28,8 @@ trait IPeakelWriter {
 trait IRawMapStorer {
   
   def featureWriter: IFeatureWriter
+  
+  def peakelWriter: Option[IPeakelWriter]
   
   def storeRawMap( rawMap: RawMap, storeFeatures: Boolean = true, storePeakels: Boolean = false ): Unit
   

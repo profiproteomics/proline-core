@@ -49,10 +49,7 @@ class SQLRawMapStorer(
       
       // Insert features if requested
       if (storeFeatures) {
-        val flattenedFeatures = featureWriter.insertFeatures(rawMap.features, rawMap.id)
-        
-        // Link features to peakels
-        featureWriter.linkFeaturesToPeakels(flattenedFeatures, rawMap.id)
+        featureWriter.insertFeatures(rawMap.features, rawMap.id, linkToPeakels = storePeakels)
       }
     }
 

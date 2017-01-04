@@ -23,8 +23,6 @@ import fr.proline.core.om.model.lcms._
 import fr.proline.core.om.storer.lcms.IPeakelWriter
 import fr.proline.repository.util.PostgresUtils
 
-//import rx.lang.scala.Observable
-
 object PgConstants {
   val DOUBLE_PRECISION = 1e-11 // note: this is the precision we observe when using PgCopy (maybe toString is involved)
 }
@@ -35,7 +33,7 @@ class PgPeakelWriter(lcmsDbCtx: LcMsDbConnectionContext) extends IPeakelWriter w
   private val peakelTableColsWithoutPK = LcmsDbPeakelTable.columnsAsStrList.filter(_ != "id").mkString(",")
   
   def insertPeakels(peakels: Seq[Peakel], rawMapId: Long) {
-    val newIdByTmpId = this.insertPeakelStream( peakels.foreach _, rawMapId, peakels.length )
+    val newIdByTmpId = this.insertPeakelStream( peakels.foreach _, Some(rawMapId), peakels.length).head._2
     
     // Update peakel ids
     for (peakel <- peakels) {
@@ -43,12 +41,8 @@ class PgPeakelWriter(lcmsDbCtx: LcMsDbConnectionContext) extends IPeakelWriter w
     }
   }
   
-  /*def insertPeakelFlow(peakelFlow: Observable[Peakel], rawMapId: Long): LongMap[Long] = {
-    val peakelStream = peakelFlow.toBlocking.toIterable
-    this.insertPeakelStream( peakelStream.foreach _, rawMapId )
-  }*/
-  
-  def insertPeakelStream(forEachPeakel: (Peakel => Unit) => Unit, rawMapId: Long, sizeHint: Int = 10): LongMap[Long] = {
+  // This method is able to stream the insertion of peakels coming from different raw maps
+  def insertPeakelStream(forEachPeakel: (Peakel => Unit) => Unit, rawMapId: Option[Long], sizeHint: Int = 10): LongMap[LongMap[Long]] = {
     
     DoJDBCReturningWork.withConnection(lcmsDbCtx) { con =>
       
@@ -72,13 +66,32 @@ class PgPeakelWriter(lcmsDbCtx: LcMsDbConnectionContext) extends IPeakelWriter w
       // Iterate the peakels to store them
       val peakelMozList = new ArrayBuffer[Double](sizeHint)
       val tmpPeakelIds = new ArrayBuffer[Long](sizeHint)
+      val oldRawMapIdByNewRawMapId = new LongMap[Long]()
+      val peakelsCountByRawMapId = new LongMap[Int]()
+      
+      var peakelsCount = 0
+      
       forEachPeakel { peakel =>
+        peakelsCount += 1
         
-        tmpPeakelIds += peakel.id
-        peakelMozList += peakel.moz
+        val oldRawMapId = peakel.rawMapId
         
         // Update peakel raw map id
-        peakel.rawMapId = rawMapId
+        if (rawMapId.isDefined) {
+          peakel.rawMapId = rawMapId.get
+        }
+        
+        val newRawMapId = peakel.rawMapId
+        require( newRawMapId > 0, "peakel.rawMapId must be greater than zero")
+        oldRawMapIdByNewRawMapId.put(oldRawMapId, newRawMapId)
+        
+        if (peakelsCountByRawMapId.contains(newRawMapId) == false) {
+          peakelsCountByRawMapId.put(newRawMapId, 0)
+        }
+        peakelsCountByRawMapId(newRawMapId) += 1
+        
+        peakelMozList += peakel.moz
+        tmpPeakelIds += peakel.id
         
         this.insertPeakelUsingCopyManager(peakel, pgBulkLoader)
       }
@@ -99,24 +112,35 @@ class PgPeakelWriter(lcmsDbCtx: LcMsDbConnectionContext) extends IPeakelWriter w
       // Retrieve generated peakel ids
       logger.info(s"Retrieving generated peakel ids...")
       
-      val idMzPairs = lcmsEzDBC.select(
-        s"SELECT id, moz FROM ${LcmsDbPeakelTable.name} WHERE map_id = $rawMapId"
-      ) { r => Tuple2( r.nextLong, r.nextDouble ) }
+      val peakelTuples = new Array[(Long,Double, Long)](peakelsCount)
+      val rawMapIds = oldRawMapIdByNewRawMapId.keys
+      val whereClause = rawMapIds.map(id => s"map_id=$id").mkString(" OR ")
       
-      val peakelsCount = peakelMozList.length
+      var idMzPairIdx = 0
+      lcmsEzDBC.selectAndProcess(
+        s"SELECT id, moz, map_id FROM ${LcmsDbPeakelTable.name} WHERE $whereClause"
+      ) { r =>
+        peakelTuples(idMzPairIdx) = (r.nextLong, r.nextDouble, r.nextLong)
+        idMzPairIdx += 1
+      }
+      
       assert(
-        idMzPairs.length == peakelsCount,
-        s"invalid number of retrieved peakel ids: got ${idMzPairs.length} but expected $peakelsCount"
+        idMzPairIdx == peakelsCount,
+        s"invalid number of retrieved peakel ids: got $idMzPairIdx but expected $peakelsCount"
       )
       
-      val sortedIdMzPairs = idMzPairs.sortBy(_._1)
+      // Sort peakelTuples to be sure to iterate peakels in insertion order
+      val sortedPeakelTuples = peakelTuples.sortBy(_._1)
       
       // Map new peakel ids by old one
-      val peakelIdByTmpId = new LongMap[Long](tmpPeakelIds.length)
+      val peakelIdByTmpIdByRawMapId = for ((rawMapId,peakelsCount) <- peakelsCountByRawMapId) yield {
+        (rawMapId, new LongMap[Long](peakelsCount) )
+      }
+      
       var peakelIdx = 0
       while( peakelIdx < peakelsCount ) {
         val peakelMoz = peakelMozList(peakelIdx)
-        val (newId,loadedMoz) = sortedIdMzPairs(peakelIdx)
+        val (newPeakelId,loadedMoz,rawMapId) = sortedPeakelTuples(peakelIdx)
         
         // Check we retrieved records in the same order
         assert(
@@ -125,16 +149,15 @@ class PgPeakelWriter(lcmsDbCtx: LcMsDbConnectionContext) extends IPeakelWriter w
         )
         
         val tmpPeakelId = tmpPeakelIds(peakelIdx)
-        peakelIdByTmpId.put(tmpPeakelId,newId)
+        peakelIdByTmpIdByRawMapId(rawMapId).put(tmpPeakelId,newPeakelId)
         
         peakelIdx += 1
       }
     
-      peakelIdByTmpId
+      peakelIdByTmpIdByRawMapId
     }
   }
   
-
   @inline
   protected def insertPeakelUsingCopyManager(peakel: Peakel, pgBulkLoader: CopyIn): Unit = {
     

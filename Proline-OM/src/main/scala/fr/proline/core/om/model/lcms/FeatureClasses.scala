@@ -72,7 +72,27 @@ case class Peakel(
   //require( peaks != null && peaks.isEmpty == false, "some peaks must be provided" )
   //require( peaks.count( _ == null ) == 0, "all peaks must be defined" )
   
-  lazy val apexIndex = dataMatrix.intensityValues.zipWithIndex.maxBy(_._1)._2
+  // TODO: create a trait to share this method with MzDbPeakel ?
+  val apexIndex: Int = {
+    
+    val peaksCount = dataMatrix.peaksCount
+    val intensityValues = dataMatrix.intensityValues
+    var maxIntensity = 0f
+    var apexIdx = 0
+    
+    var idx = 0
+    while (idx < peaksCount) {
+      val intensity = intensityValues(idx)
+      if (intensity > maxIntensity) {
+        maxIntensity = intensity
+        apexIdx = idx
+      }
+      idx += 1
+    }
+    
+    apexIdx
+  }
+  
   def apexIntensity: Float = dataMatrix.intensityValues(apexIndex)
   
   def firstScanId = dataMatrix.spectrumIds(0)
@@ -373,11 +393,14 @@ case class FeatureProperties(
   //@BeanProperty var peakelsRatios: Option[Array[Float]] = None,
   
   @JsonDeserialize(contentAs = classOf[java.lang.Boolean] )
+  // TODO: add to feature table ?
   @BeanProperty var isReliable: Option[Boolean] = None,
   
   @JsonDeserialize(contentAs = classOf[java.lang.Float] )
+  // TODO: rename to interferenceCorrelation
   @BeanProperty var overlapCorrelation: Option[Float] = None,
   
+  // TODO: rename to interferanceFactor
   @JsonDeserialize(contentAs = classOf[java.lang.Float] )
   @BeanProperty var overlapFactor: Option[Float] = None
 )
