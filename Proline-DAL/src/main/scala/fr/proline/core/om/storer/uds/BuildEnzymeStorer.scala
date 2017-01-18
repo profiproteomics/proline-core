@@ -2,7 +2,7 @@ package fr.proline.core.om.storer.uds
 
 import fr.proline.context.IExecutionContext
 import fr.proline.context.DatabaseConnectionContext
-import fr.proline.core.om.model.msi.Enzyme
+import fr.profi.chemistry.model.Enzyme
 import fr.proline.core.om.storer.uds.impl.JPAEnzymeStorer
 import fr.proline.repository.ProlineDatabaseType
 

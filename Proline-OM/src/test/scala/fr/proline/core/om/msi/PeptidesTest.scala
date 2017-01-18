@@ -2,11 +2,16 @@ package fr.proline.core.om.msi
 
 import org.junit._
 import org.junit.Assert._
-import org.junit.runner.RunWith
-import org.scalatest.junit.{ JUnitRunner, JUnitSuite }
-import fr.proline.core.om.model.msi._
+import org.scalatest.junit.JUnitRunner
+import org.scalatest.junit.JUnitSuite
+
 import com.typesafe.scalalogging.StrictLogging
-import fr.proline.core.util.DigestionUtils
+
+import fr.profi.chemistry.algo.DigestionUtils
+import fr.proline.core.om.model.msi._
+import fr.profi.chemistry.model.Enzyme
+import fr.profi.chemistry.model.EnzymeCleavage
+
 
 @Test
 class PeptidesTest extends JUnitSuite with StrictLogging {

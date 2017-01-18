@@ -12,7 +12,18 @@ import fr.proline.core.om.provider.msi.ResultFileProviderRegistry
 import fr.proline.core.om.storer.ps.BuildPtmDefinitionStorer
 import fr.proline.core.om.storer.uds.BuildEnzymeStorer
 import fr.proline.core.om.model.msi.PtmDefinition
-import fr.proline.core.om.model.msi.Enzyme
+import fr.proline.core.om.provider.msi.IResultFileProvider
+import fr.proline.core.om.provider.msi.ResultFileProviderRegistry
+import fr.proline.core.om.provider.ProviderDecoratedExecutionContext
+import fr.proline.core.om.storer.uds.BuildEnzymeStorer
+import fr.proline.core.om.storer.ps.BuildPtmDefinitionStorer
+import fr.profi.chemistry.model.Enzyme
+import fr.proline.core.om.provider.msi.IResultFileProvider
+import fr.proline.core.om.provider.msi.ResultFileProviderRegistry
+import fr.proline.core.om.provider.ProviderDecoratedExecutionContext
+import fr.proline.core.om.storer.uds.BuildEnzymeStorer
+import fr.proline.core.om.storer.ps.BuildPtmDefinitionStorer
+
 
 class ResultFileCertifier(
   executionContext: IExecutionContext,

@@ -81,9 +81,11 @@ class PgFeatureWriter(lcmsDbCtx: LcMsDbConnectionContext) extends IFeatureWriter
         }
       }
       
-      // End of BULK copy
+      // End of BULK copy"
       val nbInsertedFeatures = pgBulkLoader.endCopy()
       
+      logger.info(s"BULK insert of $nbInsertedFeatures features completed !")
+
       /*// Move TMP table content to MAIN table
       logger.info(s"move TMP table $tmpFeatureTableName into MAIN ${LcmsDbFeatureTable.name} table")
       

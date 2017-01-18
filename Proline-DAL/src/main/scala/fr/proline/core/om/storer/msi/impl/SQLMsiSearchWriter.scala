@@ -1,9 +1,7 @@
 package fr.proline.core.om.storer.msi.impl
 
 import java.sql.Connection
-
 import com.typesafe.scalalogging.LazyLogging
-
 import fr.profi.jdbc.easy._
 import fr.profi.jdbc.PreparedStatementWrapper
 import fr.profi.util.serialization.ProfiJson
@@ -13,6 +11,7 @@ import fr.profi.util.sql._
 import fr.proline.core.om.model.msi._
 import fr.proline.core.om.storer.msi.IMsiSearchWriter
 import fr.profi.util.primitives._
+import fr.profi.chemistry.model.Enzyme
 
 object SQLMsiSearchWriter extends AbstractSQLMsiSearchWriter
 

@@ -21,6 +21,7 @@ import fr.proline.core.dal.tables.SelectQueryBuilder1
 import fr.proline.core.dal.tables.msi.MsiDbProteinMatchSeqDatabaseMapTable
 import fr.proline.core.dal.tables.SelectQueryBuilder._
 import fr.profi.util.primitives._
+import fr.profi.chemistry.model.Enzyme
 
 class ORMResultSetProvider(val msiDbCtx: DatabaseConnectionContext,
                            val psDbCtx: DatabaseConnectionContext,

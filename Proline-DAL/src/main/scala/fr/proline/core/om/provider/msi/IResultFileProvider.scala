@@ -5,7 +5,7 @@ import fr.proline.core.om.model.msi.IResultFile
 import fr.proline.core.om.provider.ProviderDecoratedExecutionContext
 import fr.proline.core.om.model.msi.PtmDefinition
 //import fr.proline.core.om.provider.msi.impl.ResultFileProviderContext
-import fr.proline.core.om.model.msi.Enzyme
+import fr.profi.chemistry.model.Enzyme
 
 trait IResultFileVerifier {
    // returns PtmDefinitions referenced by the specified file

@@ -8,6 +8,9 @@ import fr.proline.core.dal.tables.msi._
 import fr.proline.core.dal.tables.uds._
 import fr.proline.core.om.model.msi._
 import fr.proline.core.om.provider.msi.IPTMProvider
+import fr.profi.chemistry.model.Enzyme
+import fr.profi.chemistry.model.EnzymeCleavage
+
 
 /**
  * @author David Bouyssie

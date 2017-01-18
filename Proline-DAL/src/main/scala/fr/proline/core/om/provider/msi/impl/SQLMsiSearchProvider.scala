@@ -2,7 +2,6 @@ package fr.proline.core.om.provider.msi.impl
 
 import scala.collection.mutable.HashMap
 import scala.collection.mutable.ArrayBuffer
-
 import fr.profi.jdbc.easy.EasyDBC
 import fr.profi.util.primitives._
 import fr.profi.util.sql.StringOrBoolAsBool._
@@ -19,6 +18,8 @@ import fr.proline.core.om.builder.PeaklistBuilder._
 import fr.proline.core.om.model.msi._
 import fr.proline.core.om.provider.msi.IMSISearchProvider
 import fr.proline.repository.ProlineDatabaseType
+import fr.profi.chemistry.model.Enzyme
+import fr.profi.chemistry.model.EnzymeCleavage
 
 class SQLMsiSearchProvider(
   val udsDbCtx: UdsDbConnectionContext,

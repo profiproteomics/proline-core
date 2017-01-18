@@ -2,17 +2,29 @@ package fr.proline.core.util.generator.msi
 
 import java.text.SimpleDateFormat
 import java.util.Date
-
 import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.HashSet
-
-//import com.fasterxml.jackson.annotation.JsonInclude
 import com.typesafe.scalalogging.StrictLogging
-
-import fr.proline.core.om.model.msi._
-import fr.profi.util.primitives._
-import fr.profi.util.random._
 import fr.profi.util.ms.massToMoz
+import fr.profi.util.primitives.toInt
+import fr.profi.util.random.randomInt
+import fr.proline.core.om.model.msi.Activation
+import fr.proline.core.om.model.msi.Instrument
+import fr.proline.core.om.model.msi.InstrumentConfig
+import fr.proline.core.om.model.msi.MSISearch
+import fr.proline.core.om.model.msi.Ms2Query
+import fr.proline.core.om.model.msi.Peaklist
+import fr.proline.core.om.model.msi.PeaklistSoftware
+import fr.proline.core.om.model.msi.Peptide
+import fr.proline.core.om.model.msi.PeptideMatch
+import fr.proline.core.om.model.msi.PeptideMatchScoreType
+import fr.proline.core.om.model.msi.Protein
+import fr.proline.core.om.model.msi.ProteinMatch
+import fr.proline.core.om.model.msi.ResultSet
+import fr.proline.core.om.model.msi.SearchSettings
+import fr.proline.core.om.model.msi.SeqDatabase
+import fr.proline.core.om.model.msi.SequenceMatch
+import fr.profi.chemistry.model.Enzyme
 
 /**
  * Utility class to generate a faked ResultSet.

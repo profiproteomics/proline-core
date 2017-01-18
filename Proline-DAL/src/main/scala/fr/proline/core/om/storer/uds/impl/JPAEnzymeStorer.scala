@@ -2,7 +2,7 @@ package fr.proline.core.om.storer.uds.impl
 
 import com.typesafe.scalalogging.LazyLogging
 import fr.proline.context.IExecutionContext
-import fr.proline.core.om.model.msi.Enzyme
+import fr.profi.chemistry.model.Enzyme
 import fr.proline.core.om.storer.uds.IEnzymeStorer
 import fr.proline.core.orm.uds.repository.UdsEnzymeRepository
 import fr.proline.core.orm.uds.{

@@ -4,6 +4,10 @@ import fr.profi.util.primitives._
 import fr.profi.util.serialization._
 import fr.proline.core.dal.tables.uds._
 import fr.proline.core.om.model.msi._
+import fr.profi.chemistry.model.Enzyme
+import fr.profi.chemistry.model.EnzymeCleavage
+import fr.profi.chemistry.model.EnzymeProperties
+
 
 /**
  * @author David Bouyssie

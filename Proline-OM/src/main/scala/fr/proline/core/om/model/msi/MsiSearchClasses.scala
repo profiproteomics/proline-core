@@ -1,9 +1,8 @@
 package fr.proline.core.om.model.msi
- 
-import java.util.Date
-import scala.beans.BeanProperty
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize
 
+import java.util.Date
+
+import fr.profi.chemistry.model.Enzyme
 import fr.profi.util.misc.InMemoryIdGen
   
 object MSISearch extends InMemoryIdGen
@@ -77,53 +76,6 @@ case class PMFSearchSettings(
   val minProteinMass: Option[Double] = None,
   val proteinPI: Option[Float] = None
 )
-
-object Enzyme extends InMemoryIdGen
-
-case class Enzyme(
-    
-  // Required fields
-  var id: Long,
-  val name: String,
-  val enzymeCleavages: Array[EnzymeCleavage] = Array(),
-  val cleavageRegexp: Option[String] = None,
-  val isIndependant: Boolean = false,
-  val isSemiSpecific: Boolean = false,
-  val properties: Option[EnzymeProperties] = None
-  
-) {
-  
-  def this( name: String ) = {
-    this( Enzyme.generateNewId, name)
-  }
-
-}
-
-case class EnzymeProperties(
-  @BeanProperty var ctermGain: Option[String] = None,
-  @BeanProperty var ntermGain: Option[String] = None,
-  @BeanProperty var minDistance: Option[Int] = None,
-  @BeanProperty var maxMissedCleavages: Option[Int] = None
-)
-
-object EnzymeCleavage extends InMemoryIdGen
-
-case class EnzymeCleavage(
-    
-  // Required fields
-  var id: Long,
-  val site: String,
-  val residues: String,
-  val restrictiveResidues: Option[String] = None
-
-) {
-  override def toString: String = {
-    if(restrictiveResidues.isDefined && !restrictiveResidues.get.isEmpty())
-      site + ":" + residues + "/" + restrictiveResidues.get
-    else
-      site + ":" + residues
-  }
-}
 
 object SeqDatabase extends InMemoryIdGen
 

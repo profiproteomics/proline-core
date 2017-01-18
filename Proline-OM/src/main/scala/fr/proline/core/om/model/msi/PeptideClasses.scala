@@ -14,7 +14,8 @@ import com.typesafe.scalalogging.LazyLogging
 import fr.profi.util.StringUtils.isNotEmpty
 import fr.profi.util.misc.InMemoryIdGen
 import fr.profi.util.ms.massToMoz
-import fr.proline.core.util.DigestionUtils
+import fr.profi.chemistry.model.Enzyme
+import fr.profi.chemistry.algo.DigestionUtils
 
 object Peptide extends InMemoryIdGen with LazyLogging {
   
