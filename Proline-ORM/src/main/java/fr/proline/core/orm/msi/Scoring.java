@@ -82,7 +82,10 @@ public class Scoring implements Serializable {
     // TODO: change the hibernate definition of the class Scoring to use this enum ???
     // TODO: create a Java projects where we can share enumerations between OM and ORM ???
 	public enum Type {
-
+		ANDROMEDA_SCORE(
+			"andromeda", "score",
+			"The score provided by Andromeda for a peptide match."
+		),
 		MASCOT_IONS_SCORE(
 			"mascot", "ions score",
 			"The score provided for each Mascot peptide."
@@ -101,29 +104,28 @@ public class Scoring implements Serializable {
 		),
 		OMSSA_EVALUE(
 			"omssa", "expect value",
-			"The -log(E-value) provided by OMSSA for a peptide match."
+			"The -log10(E-value) provided by OMSSA for a peptide match."
 		),
 		COMET_EVALUE_LOG_SCALED(
 			"comet", "evalue log scaled",
-			"The -log(expectation value) provided by Comet for a peptide match."
+			"The -log10(expectation value) provided by Comet for a peptide match."
 		),
 		MSGF_EVALUE_LOG_SCALED(
 			"msgf", "evalue log scaled",
-			"The -log(EValue) provided by MS-GF for a peptide match."
+			"The -log10(EValue) provided by MS-GF for a peptide match."
+		),
+		PERCOLATOR_PEP_LOG_SCALED(
+			"percolator", "pep log scaled",
+			"The -10 * log10(PEP) provided by Percolator for a peptide match."
 		),
 		SEQUEST_EXPECT_LOG_SCALED(
 			"sequest", "expect log scaled",
-			"The -log(expect) provided by Sequest for a peptide match."
+			"The -log10(expect) provided by Sequest for a peptide match."
 		),
 		XTANDEM_HYPERSCORE(
 			"xtandem", "hyperscore",
 			"The hyperscore provided by X!Tandem for a peptide match."
-		),
-		ANDROMEDA_SCORE(
-			"andromeda","score",
-			"The score provided by Andromeda for a peptide match."
-		)
-		;
+		);
 
 		private final String m_searchEngine;
 		private final String m_name;
