@@ -1,20 +1,11 @@
 package fr.proline.core.algo.lcms
 
-import scala.collection.mutable.ArrayBuffer
-import fr.proline.core.om.model.lcms._
-import fr.profi.util.ms.calcMozTolInDalton
-    
-trait IFeatureMapper {
+object FeatureMapper {
   
-   def computePairwiseFtMapping ( map1Features: Seq[Feature],
-                                 map2Features: Seq[Feature],
-                                 methodParams: FeatureMappingParams,
-                                 isChargeTolerant: Boolean = false ): Map[Long,Seq[Feature]]
-}
-
-object FeatureMapper extends IFeatureMapper {
+  import scala.collection.mutable.ArrayBuffer
+  import fr.proline.core.om.model.lcms._
+  import fr.profi.util.ms.calcMozTolInDalton
   
- 
   def computePairwiseFtMapping ( map1Features: Seq[Feature],
                                  map2Features: Seq[Feature],
                                  methodParams: FeatureMappingParams,
@@ -106,14 +97,4 @@ object FeatureMapper extends IFeatureMapper {
     ftMapping.toMap
   }
 
-}
-
-class PSMFeatureMapper extends IFeatureMapper {
-  
-  def computePairwiseFtMapping ( map1Features: Seq[Feature],
-                                 map2Features: Seq[Feature],
-                                 methodParams: FeatureMappingParams,
-                                 isChargeTolerant: Boolean = false ): Map[Long,Seq[Feature]]=  {
-    null
-  }
 }
