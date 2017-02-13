@@ -1,8 +1,11 @@
 package fr.proline.core.om.builder
 
-import com.typesafe.scalalogging.LazyLogging
 import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.HashSet
+import scala.collection.mutable.LongMap
+
+import com.typesafe.scalalogging.LazyLogging
+
 import fr.profi.util.primitives._
 import fr.profi.util.serialization._
 import fr.proline.core.dal.tables.msi._
@@ -22,14 +25,14 @@ object ProteinMatchBuilder extends LazyLogging {
     protMatchRecordSelector: (IValueContainer => Unit) => Unit,
     protMatchDbMapRecordSelector: (IValueContainer => Unit) => Unit,
     seqMatchRecords: Array[AnyMap],
-    scoreTypeById: Map[Long,String]
+    scoreTypeById: LongMap[String]
   ): Array[ProteinMatch] = {
     
     // Group seq match records by protein match id
     val seqMatchRecordsByProtMatchId = seqMatchRecords.groupBy( _.getLong(SeqMatchCols.PROTEIN_MATCH_ID) )
   
     // --- Execute SQL query to laod and map sequence database ids of each protein match ---
-    val seqDbIdsByProtMatchId = new collection.mutable.HashMap[Long, ArrayBuffer[Long]]     
+    val seqDbIdsByProtMatchId = new collection.mutable.LongMap[ArrayBuffer[Long]]     
     protMatchDbMapRecordSelector { r =>
       val proteinMatchId = r.getLong(ProtMatchSeqDbMapCols.PROTEIN_MATCH_ID)
       val seqDatabaseId = r.getLong(ProtMatchSeqDbMapCols.SEQ_DATABASE_ID)
@@ -81,7 +84,7 @@ object ProteinMatchBuilder extends LazyLogging {
     protMatchRecord: IValueContainer,
     seqMatches: Array[SequenceMatch],
     seqDbIds: Array[Long],
-    scoreTypeById: Map[Long,String]
+    scoreTypeById: LongMap[String]
   ): ProteinMatch = {
     
     // Build protein match object

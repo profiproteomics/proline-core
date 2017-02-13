@@ -1,5 +1,7 @@
 package fr.proline.core.om.builder
 
+import scala.collection.mutable.LongMap
+
 import fr.profi.util.primitives._
 import fr.profi.util.serialization._
 import fr.proline.core.dal.tables.msi._
@@ -22,7 +24,7 @@ object PeptideSetBuilder {
     pepSetItemRecords: Seq[IValueContainer],
     pepInstances: Seq[PeptideInstance],
     pepSetProtMatchMapRecords: Seq[IValueContainer],
-    scoreTypeById: Map[Long,String]
+    scoreTypeById: LongMap[String]
   ): Array[PeptideSet] = {
     
     // Map peptide instance by their id

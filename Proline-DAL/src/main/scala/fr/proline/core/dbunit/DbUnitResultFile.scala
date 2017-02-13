@@ -337,14 +337,14 @@ class MsiDbDatasetParser(
   // Load the dataset as records
   val msiRecordByTableName = DbUnitDatasetParser.parseAndFixDataset( msiDatasetInputStream )
   private val udsRecordByTableName = DbUnitDatasetParser.parseAndFixDataset( udsDatasetInputStream )
-  val scoreTypeById: Map[Long,String] = {
+  val scoreTypeById: LongMap[String] = {
     val ScoringCols = MsiDbScoringColumns
     val scoringRecords = msiRecordByTableName( MsiDbScoringTable.name )
     
-    scoringRecords.map { r =>
+    scoringRecords.toLongMapWith { r =>
       val scoreType = r(ScoringCols.SEARCH_ENGINE) + ':' + r(ScoringCols.NAME)
       r.getLong(ScoringCols.ID) -> scoreType
-    } toMap
+    }
   }
   
   val msiSearch = parseMsiSearch()
@@ -498,16 +498,16 @@ class MsiDbDatasetParser(
     val isValidatedContent = false
     
     // Build some mappings
-    val pepMatchesByRsId = this.peptideMatches.groupBy(_.resultSetId)
-    val protMatchesByRsId = this.proteinMatches.groupBy(_.resultSetId)
+    val pepMatchesByRsId = this.peptideMatches.groupByLong(_.resultSetId)
+    val protMatchesByRsId = this.proteinMatches.groupByLong(_.resultSetId)
     
     for( rsRecord <- rsRecords ) yield {
       
       ResultSetBuilder.buildResultSet(
         rsRecord,
         isValidatedContent,
-        Map( msiSearch.id -> msiSearch ),
-        Map(),
+        LongMap( msiSearch.id -> msiSearch ),
+        LongMap(),
         protMatchesByRsId,
         pepMatchesByRsId
       )

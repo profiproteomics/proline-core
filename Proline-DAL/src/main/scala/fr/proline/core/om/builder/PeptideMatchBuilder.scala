@@ -1,5 +1,8 @@
 package fr.proline.core.om.builder
 
+import scala.collection.mutable.LongMap
+
+import fr.profi.util.collection._
 import fr.profi.util.primitives._
 import fr.profi.util.serialization._
 import fr.proline.core.dal.tables.msi._
@@ -17,7 +20,7 @@ object PeptideMatchBuilder {
   def buildPeptideMatches(
     pmRecords: Seq[IValueContainer],
     msQueries: Array[MsQuery],
-    scoreTypeById: Map[Long,String],
+    scoreTypeById: LongMap[String],
     peptideProvider: IPeptideProvider
   ): Array[PeptideMatch] = {
 
@@ -26,8 +29,8 @@ object PeptideMatchBuilder {
     val peptides = peptideProvider.getPeptides(uniqPepIds)
 
     // Map peptides by their id
-    val peptideById = Map() ++ peptides.map { pep => (pep.id -> pep) }
-    val msQueryById = Map() ++ msQueries.map { msq => (msq.id -> msq) }
+    val peptideById = peptides.mapByLong( _.id )
+    val msQueryById = msQueries.mapByLong( _.id )
 
     // Load peptide matches
     val pepMatches = new Array[PeptideMatch](pmRecords.length)
@@ -48,18 +51,16 @@ object PeptideMatchBuilder {
   
   def buildPeptideMatch(
     pepMatchRecord: IValueContainer,
-    peptideById: Map[Long,Peptide],
-    msQueryById: Map[Long,MsQuery],
-    scoreTypeById: Map[Long,String]
+    peptideById: LongMap[Peptide],
+    msQueryById: LongMap[MsQuery],
+    scoreTypeById: LongMap[String]
   ): PeptideMatch = {
     
     // Retrieve the corresponding peptide
     val pepId = pepMatchRecord.getLong(PepMatchCols.PEPTIDE_ID)
-    if ( peptideById.contains(pepId) == false ) {
-      throw new Exception("undefined peptide with id ='" + pepId + "' ")
-    }
-    val peptide = peptideById(pepId)
-
+    val peptideOpt = peptideById.get(pepId)
+    require( peptideOpt.isDefined, s"undefined peptide with id ='$pepId'" )
+    
     // Retrieve the corresponding MS query
     val msQueryOpt = msQueryById.get(pepMatchRecord.getLong(PepMatchCols.MS_QUERY_ID))
 
@@ -78,10 +79,10 @@ object PeptideMatchBuilder {
       charge = pepMatchRecord.getInt(PepMatchCols.CHARGE),
       deltaMoz = toFloat( pepMatchRecord.getAny(PepMatchCols.DELTA_MOZ) ),
       isDecoy = pepMatchRecord.getBoolean(PepMatchCols.IS_DECOY),
-      peptide = peptide,
+      peptide = peptideOpt.get,
       missedCleavage = pepMatchRecord.getInt(PepMatchCols.MISSED_CLEAVAGE),
       fragmentMatchesCount = pepMatchRecord.getInt(PepMatchCols.FRAGMENT_MATCH_COUNT),
-      msQuery = msQueryOpt.getOrElse(null),
+      msQuery = msQueryOpt.orNull,
       resultSetId = pepMatchRecord.getLong(PepMatchCols.RESULT_SET_ID),
       cdPrettyRank = pepMatchRecord.getIntOrElse(PepMatchCols.CD_PRETTY_RANK,0),
       sdPrettyRank = pepMatchRecord.getIntOrElse(PepMatchCols.SD_PRETTY_RANK,0),

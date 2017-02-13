@@ -1,5 +1,7 @@
 package fr.proline.core.om.builder
 
+import scala.collection.mutable.LongMap
+
 import fr.profi.util.bytes._
 import fr.profi.util.primitives._
 import fr.profi.util.serialization._
@@ -17,10 +19,10 @@ object ResultSetBuilder {
   def buildResultSet(
     record: IValueContainer,
     isValidatedContent: Boolean,
-    msiSearchById: Map[Long,MSISearch],
-    msiSearchIdsByParentRsId: Map[Long,Set[Long]],
-    protMatchesByRsId: Map[Long,Array[ProteinMatch]],
-    pepMatchesByRsId: Map[Long,Array[PeptideMatch]]
+    msiSearchById: LongMap[MSISearch],
+    msiSearchIdsByParentRsId: LongMap[Set[Long]],
+    protMatchesByRsId: LongMap[Array[ProteinMatch]],
+    pepMatchesByRsId: LongMap[Array[PeptideMatch]]
   ): ResultSet = {
     
     val r = record
