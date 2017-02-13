@@ -1,5 +1,7 @@
 package fr.proline.core.om.provider.msi.impl
 
+import scala.collection.mutable.ArrayBuffer
+
 import fr.profi.util.primitives._
 import fr.proline.context._
 import fr.proline.core.dal.DoJDBCReturningWork
@@ -83,7 +85,7 @@ class SQLPeptideMatchProvider(
     DoJDBCReturningWork.withEzDBC(msiDbCtx) { msiEzDBC =>
       
       val sqlPepMatchFilter = pepMatchFilter.map( _pepMatchFilterToSQLCondition(_) ).getOrElse("")
-    
+      
       val sqlQuery = new SelectQueryBuilder1(MsiDbPeptideMatchTable).mkSelectQuery( (t,c) =>
         List(t.*) -> "WHERE ("~ rsIds.map(id => "" ~ t.RESULT_SET_ID ~ s"=$id").mkString(" OR ") ~")"~ sqlPepMatchFilter
       )
@@ -122,7 +124,11 @@ class SQLPeptideMatchProvider(
   }
   
   private def _pepMatchFilterToSQLCondition(pepMatchFilter: PeptideMatchFilter): String = {
-    " AND " + PepMatchCols.RANK + " <= " + pepMatchFilter.maxRank
+    val filters = new StringBuilder()
+    for (maxRank <- pepMatchFilter.maxRank) filters ++= " AND " + PepMatchCols.RANK + " <= " + maxRank
+    for (minScore <- pepMatchFilter.minScore) filters ++= " AND " + PepMatchCols.SCORE + " >= " + minScore
+    
+    filters.result()
   }
 
   private def _loadResulSetMsQueries( rsIds: Array[Long], pmRecords: Seq[IValueContainer] ): Array[MsQuery] = {

@@ -1,11 +1,12 @@
 package fr.proline.core.om.provider.msi.impl
 
+import scala.collection.mutable.ArrayBuffer
+import scala.collection.mutable.LongMap
+
 import com.typesafe.scalalogging.LazyLogging
 
-import scala.collection.mutable.ArrayBuffer
-
+import fr.profi.util.collection._
 import fr.profi.util.serialization.ProfiJson
-import fr.profi.util.misc.MapIfNotNull
 import fr.proline.context._
 import fr.proline.core.dal.DoJDBCReturningWork
 import fr.proline.core.dal.tables.msi.MsiDbResultSetTable
@@ -44,18 +45,18 @@ trait SQLResultSetLoader extends LazyLogging {
     import fr.profi.util.primitives._
 
     // Build some maps
-    val pepMatchesByRsId = pepMatches.groupBy(_.resultSetId)
-    val protMatchesByRsId = protMatches.groupBy(_.resultSetId)
+    val pepMatchesByRsId = pepMatches.groupByLong(_.resultSetId)
+    val protMatchesByRsId = protMatches.groupByLong(_.resultSetId)
 
     // Instantiate a MSIdb helper
     val msiDbHelper = new MsiDbHelper(msiDbCtx)
     val msiSearchIdsByParentRsId = msiDbHelper.getMsiSearchIdsByParentResultSetId(rsIds)
     val msiSearchIds = msiSearchIdsByParentRsId.flatMap(_._2).toArray.distinct
 
-    var msiSearchById = Map.empty[Long, fr.proline.core.om.model.msi.MSISearch]
-    if (udsDbCtx != null && msiSearchIds != null && !msiSearchIds.isEmpty) {
+    val msiSearchById = if (msiSearchIds.isEmpty) LongMap.empty[MSISearch]
+    else {
       val msiSearches = new SQLMsiSearchProvider(udsDbCtx, msiDbCtx, psDbCtx).getMSISearches(msiSearchIds)
-      msiSearchById = Map() ++ msiSearches.map(ms => ms.id -> ms)
+      msiSearches.mapByLong(_.id)
     }
 
     // Execute SQL query to load result sets
@@ -124,7 +125,9 @@ class SQLResultSetProvider(
     val start = System.currentTimeMillis()
     logger.info(s"Start loading ${rsIds.length} result set(s)")
 
-    val pepMatchFilter = resultSetFilter.map(rsf => new PeptideMatchFilter(maxRank = rsf.maxPeptideMatchRank))
+    val pepMatchFilter = resultSetFilter.map(rsf => 
+      new PeptideMatchFilter(maxRank = rsf.maxPeptideMatchRank, minScore = rsf.minPeptideMatchScore)
+    )
 
     // Load peptide matches
     val pepMatchProvider = new SQLPeptideMatchProvider(msiDbCtx, psDbCtx)

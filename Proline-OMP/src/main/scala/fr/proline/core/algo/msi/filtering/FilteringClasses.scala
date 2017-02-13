@@ -49,7 +49,7 @@ trait IFilterConfig {
 
   def toFilterDescriptor(): FilterDescriptor = {
     // FIXME: remove .asInstanceOf[Map[String,AnyRef]] when Jacks supports scala.Any deserialization
-    new FilterDescriptor(filterParameter, Some(filterDescription), Some(getFilterProperties.asInstanceOf[Map[String,AnyRef]]))
+    new FilterDescriptor(filterParameter, Some(filterDescription), Some(getFilterProperties))
   }
 }
 
