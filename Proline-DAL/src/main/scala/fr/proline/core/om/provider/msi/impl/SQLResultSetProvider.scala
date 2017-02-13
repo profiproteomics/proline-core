@@ -126,7 +126,7 @@ class SQLResultSetProvider(
     logger.info(s"Start loading ${rsIds.length} result set(s)")
 
     val pepMatchFilter = resultSetFilter.map(rsf => 
-      new PeptideMatchFilter(maxRank = rsf.maxPeptideMatchRank, minScore = rsf.minPeptideMatchScore)
+      new PeptideMatchFilter(maxPrettyRank = rsf.maxPeptideMatchPrettyRank, minScore = rsf.minPeptideMatchScore)
     )
 
     // Load peptide matches

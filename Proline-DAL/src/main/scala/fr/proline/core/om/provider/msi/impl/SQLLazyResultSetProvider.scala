@@ -150,7 +150,7 @@ class SQLLazyResultSetProvider(
     logger.info(s"Start loading ${rsIds.length} lazy result set(s)")
 
     val pepMatchFilterOpt = resultSetFilter.map( rsf => 
-      new PeptideMatchFilter(maxRank = rsf.maxPeptideMatchRank, minScore = rsf.minPeptideMatchScore)
+      new PeptideMatchFilter(maxPrettyRank = rsf.maxPeptideMatchPrettyRank, minScore = rsf.minPeptideMatchScore)
     )
 
     // Lazy loading of peptide matches

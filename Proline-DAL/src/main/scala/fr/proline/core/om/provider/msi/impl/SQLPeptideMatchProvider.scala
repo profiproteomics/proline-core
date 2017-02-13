@@ -125,7 +125,7 @@ class SQLPeptideMatchProvider(
   
   private def _pepMatchFilterToSQLCondition(pepMatchFilter: PeptideMatchFilter): String = {
     val filters = new StringBuilder()
-    for (maxRank <- pepMatchFilter.maxRank) filters ++= " AND " + PepMatchCols.RANK + " <= " + maxRank
+    for (maxPrettyRank <- pepMatchFilter.maxPrettyRank) filters ++= " AND " + PepMatchCols.SD_PRETTY_RANK + " <= " + maxPrettyRank
     for (minScore <- pepMatchFilter.minScore) filters ++= " AND " + PepMatchCols.SCORE + " >= " + minScore
     
     filters.result()

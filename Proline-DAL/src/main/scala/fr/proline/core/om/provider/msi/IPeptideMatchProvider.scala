@@ -4,7 +4,7 @@ import fr.proline.core.om.model.msi.PeptideMatch
 import fr.proline.context.DatabaseConnectionContext
 
 case class PeptideMatchFilter(
-  val maxRank: Option[Int] = None,
+  val maxPrettyRank: Option[Int] = None,
   val minScore: Option[Float] = None
 )
 

@@ -4,7 +4,7 @@ import fr.proline.core.om.model.msi.ResultSet
 import fr.proline.context.DatabaseConnectionContext
 
 case class ResultSetFilter(
-  val maxPeptideMatchRank: Option[Int] = None,
+  val maxPeptideMatchPrettyRank: Option[Int] = None,
   val minPeptideMatchScore: Option[Float] = None
 )
 
