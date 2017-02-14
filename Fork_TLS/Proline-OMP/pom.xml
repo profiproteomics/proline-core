@@ -1,0 +1,162 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <parent>
+    <artifactId>Proline-Core</artifactId>
+    <groupId>fr.proline</groupId>
+    <version>1.1.0-SNAPSHOT</version>
+  </parent>
+
+  <artifactId>Proline-OMP</artifactId>
+
+  <name>${project.artifactId}</name>
+
+  <properties>
+    <version.path>${basedir}/src/main/scala/fr/proline/core/service</version.path>
+  </properties>
+
+  <dependencies>
+
+    <!-- "Proline" modules -->
+    <dependency>
+      <groupId>fr.proline</groupId>
+      <artifactId>Proline-OM</artifactId>
+      <!-- Version inherited from parent POM -->
+    </dependency>
+    <dependency>
+      <groupId>fr.proline</groupId>
+      <artifactId>Proline-DAL</artifactId>
+      <!-- Version inherited from parent POM -->
+    </dependency>
+    
+    <!-- mzdb-access -->
+    <dependency>
+      <groupId>fr.profi</groupId>
+      <artifactId>mzdb-access</artifactId>
+      <!-- Version inherited from ProFI-Pom -->
+    </dependency>
+
+    <!-- mzdb-processing -->
+    <dependency>
+      <groupId>fr.profi</groupId>
+      <artifactId>mzdb-processing</artifactId>
+      <!-- Version inherited from ProFI-Pom -->
+    </dependency>
+    
+    <!-- R*Tree library -->
+    <dependency>
+      <groupId>com.github.davidmoten</groupId>
+      <artifactId>rtree</artifactId>
+      <version>0.8-RC10</version>
+    </dependency>
+    <dependency>
+      <groupId>com.github.davidmoten</groupId>
+      <artifactId>guava-mini</artifactId>
+      <version>0.1</version>
+    </dependency>
+    <dependency>
+      <groupId>com.github.davidmoten</groupId>
+      <artifactId>rxjava-extras</artifactId>
+      <version>0.7.9.22</version>
+    </dependency>
+
+    <!-- Scala common utilities -->
+	<dependency>
+      <groupId>fr.proline.util</groupId>
+      <artifactId>ProFI-Commons-Scala</artifactId>
+      <!-- Version inherited from parent POM -->
+    </dependency>
+    
+    <!-- Scala -->
+    <dependency>
+      <groupId>org.scala-lang</groupId>
+      <artifactId>scala-library</artifactId>
+      <!-- Version inherited from ProFI-Pom ${scala.version} -->
+    </dependency>
+
+    <dependency>
+      <groupId>com.typesafe.scala-logging</groupId>
+      <artifactId>scala-logging_${scala.version}</artifactId>
+      <!-- Version inherited from ProFI-Pom ${scala.version} -->
+    </dependency>
+
+    <dependency>
+      <groupId>org.apache.commons</groupId>
+      <artifactId>commons-math3</artifactId>
+      <!-- Version inherited from ProFI-Pom -->
+    </dependency>
+
+    <!-- Test -->
+    <dependency>
+      <groupId>org.scalatest</groupId>
+      <artifactId>scalatest_${scala.version}</artifactId>
+      <!-- Version inherited from ProFI-Pom -->
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.dbunit</groupId>
+      <artifactId>dbunit</artifactId>
+      <!-- Version inherited from ProFI-Pom -->
+      <scope>test</scope>
+    </dependency>
+
+    <dependency>
+      <groupId>fr.proline</groupId>
+      <artifactId>Proline-Databases</artifactId>
+      <!-- Version inherited from parent POM --> 
+      <type>test-jar</type>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>fr.proline</groupId>
+      <artifactId>Proline-OM</artifactId>
+      <!-- Version inherited from parent POM -->
+      <type>test-jar</type>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>fr.proline</groupId>
+      <artifactId>Proline-DAL</artifactId>
+      <!-- Version inherited from parent POM -->
+      <type>test-jar</type>
+      <scope>test</scope>
+    </dependency>
+
+
+  </dependencies>
+
+  <build>
+
+    <plugins>
+    
+      <!-- Scala build -->
+      <plugin>
+        <groupId>net.alchim31.maven</groupId>
+        <artifactId>scala-maven-plugin</artifactId>
+        <!-- Version and configuration inherited from ProFI-Pom -->
+      </plugin>
+      
+      <!-- Used to replace strings in text files (generate Version.java and Version.scala from templates) -->
+      <plugin>
+        <groupId>com.google.code.maven-replacer-plugin</groupId>
+        <artifactId>replacer</artifactId>
+        <!-- Version inherited from ProFI-Pom -->
+
+        <executions>
+          <execution>
+            <id>scala-version-generation</id>
+            <phase>generate-sources</phase>
+            <!-- Execution and configuration inherited from ProFI-Pom -->
+            <configuration>
+              <skip>false</skip>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+
+    </plugins>
+
+  </build>
+
+</project>

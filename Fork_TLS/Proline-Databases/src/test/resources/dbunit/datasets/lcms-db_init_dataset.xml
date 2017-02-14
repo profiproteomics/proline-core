@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<!DOCTYPE dataset SYSTEM "../lcms-dataset.dtd">
+<dataset>
+  <FEATURE_SCORING ID="1" NAME="no scoring" DESCRIPTION=""/>
+  <PEAKEL_FITTING_MODEL ID="1" NAME="no fitting"/>
+  <PEAK_PICKING_SOFTWARE ID="1" NAME="unknown peak picker" VERSION="unknown" ALGORITHM="unknown"/>
+</dataset>

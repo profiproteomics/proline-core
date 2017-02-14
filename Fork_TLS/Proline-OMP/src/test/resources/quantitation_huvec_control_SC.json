@@ -1,0 +1,61 @@
+{
+    "biological_samples" : [
+      {
+        "name" : "control1"
+      },
+      {
+        "name" : "control2"
+      },
+      {
+        "name" : "control3"
+      }
+    ],
+    "group_setups" : [{
+      "name" : "HUVEC controls",
+      "ratio_definitions" : [
+        {
+          "numerator_group_number" : 2,
+          "denominator_group_number" : 1
+        }
+      ],
+      "biological_groups" : [
+        {
+          "sample_numbers" : [
+            1
+          ],
+          "name" : "control1"
+        },
+        {
+          "sample_numbers" : [
+            2
+          ],
+          "name" : "control2"
+        },
+        {
+          "sample_numbers" : [
+            3
+          ],
+          "name" : "control3"
+        }
+      ]
+    }],
+    "master_quant_channels" : [
+      {
+        "name": "stackings SC",
+        "quant_channels" : [
+          {
+            "ident_result_summary_id" : 2,
+            "sample_number" : 1
+          },
+          {
+            "ident_result_summary_id" : 4,
+            "sample_number" : 2
+          },
+          {
+            "ident_result_summary_id" : 6,
+            "sample_number" : 3
+          }
+        ]
+      }
+    ]
+  }
