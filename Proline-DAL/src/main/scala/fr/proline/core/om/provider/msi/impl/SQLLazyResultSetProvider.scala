@@ -121,14 +121,14 @@ trait SQLLazyResultSetLoader extends LazyLogging {
 
     // Execute SQL query to load result sets
     val rsQuery = new SelectQueryBuilder1(MsiDbResultSetTable).mkSelectQuery((t, c) =>
-      List(t.*) -> "WHERE " ~ t.ID ~ " IN(" ~ rsIds.mkString(",") ~ ")"
+      List(t.*) -> "WHERE "~ t.ID ~" IN ("~ rsIds.mkString(",") ~") ORDER BY "~ t.ID
     )
 
-    DoJDBCReturningWork.withEzDBC(msiDbCtx, { msiEzDBC =>
-      msiEzDBC.select(rsQuery) { record =>                
+    DoJDBCReturningWork.withEzDBC(msiDbCtx) { msiEzDBC =>
+      msiEzDBC.select(rsQuery) { record =>
         ResultSetDescriptorBuilder.buildResultSetDescriptor(record)
       }
-    }) toArray
+    } toArray
 
   }
 

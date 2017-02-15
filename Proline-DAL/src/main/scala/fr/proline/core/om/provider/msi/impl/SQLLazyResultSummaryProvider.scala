@@ -163,7 +163,7 @@ class SQLLazyResultSummaryProvider(
       List(t1.*,t2.TYPE) -> "WHERE "~ t1.ID ~" IN("~ rsmIds.mkString(",") ~") AND "~ t1.RESULT_SET_ID ~"="~ t2.ID
     )*/
     val rsmQuery = new SelectQueryBuilder1(MsiDbResultSummaryTable).mkSelectQuery( (t1,c1) =>
-      List(t1.*) -> "WHERE "~ t1.ID ~" IN ("~ rsmIds.mkString(",") ~") "
+      List(t1.*) -> "WHERE "~ t1.ID ~" IN ("~ rsmIds.mkString(",") ~") ORDER BY "~ t1.ID
     )
 
     DoJDBCReturningWork.withEzDBC(msiDbCtx) { msiEzDBC =>
