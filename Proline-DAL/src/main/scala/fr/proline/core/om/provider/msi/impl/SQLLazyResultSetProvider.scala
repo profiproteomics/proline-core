@@ -1,6 +1,8 @@
 package fr.proline.core.om.provider.msi.impl
 
 import com.typesafe.scalalogging.LazyLogging
+
+import fr.profi.util.collection._
 import fr.proline.context._
 import fr.proline.core.dal.DoJDBCReturningWork
 import fr.proline.core.dal.tables.SelectQueryBuilder._
@@ -121,15 +123,16 @@ trait SQLLazyResultSetLoader extends LazyLogging {
 
     // Execute SQL query to load result sets
     val rsQuery = new SelectQueryBuilder1(MsiDbResultSetTable).mkSelectQuery((t, c) =>
-      List(t.*) -> "WHERE "~ t.ID ~" IN ("~ rsIds.mkString(",") ~") ORDER BY "~ t.ID
+      List(t.*) -> "WHERE "~ t.ID ~" IN ("~ rsIds.mkString(",") ~")"
     )
 
-    DoJDBCReturningWork.withEzDBC(msiDbCtx) { msiEzDBC =>
+    val rsDescById = DoJDBCReturningWork.withEzDBC(msiDbCtx) { msiEzDBC =>
       msiEzDBC.select(rsQuery) { record =>
         ResultSetDescriptorBuilder.buildResultSetDescriptor(record)
       }
-    } toArray
-
+    } mapByLong(_.id)
+    
+    rsIds.toArray.withFilter(rsDescById.contains(_)).map( rsDescById(_) )
   }
 
 }

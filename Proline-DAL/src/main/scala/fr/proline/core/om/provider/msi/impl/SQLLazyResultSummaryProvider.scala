@@ -1,5 +1,6 @@
 package fr.proline.core.om.provider.msi.impl
 
+import fr.profi.util.collection._
 import fr.profi.util.misc.MapIfNotNull
 import fr.profi.util.serialization.ProfiJson
 import fr.proline.context._
@@ -163,10 +164,10 @@ class SQLLazyResultSummaryProvider(
       List(t1.*,t2.TYPE) -> "WHERE "~ t1.ID ~" IN("~ rsmIds.mkString(",") ~") AND "~ t1.RESULT_SET_ID ~"="~ t2.ID
     )*/
     val rsmQuery = new SelectQueryBuilder1(MsiDbResultSummaryTable).mkSelectQuery( (t1,c1) =>
-      List(t1.*) -> "WHERE "~ t1.ID ~" IN ("~ rsmIds.mkString(",") ~") ORDER BY "~ t1.ID
+      List(t1.*) -> "WHERE "~ t1.ID ~" IN ("~ rsmIds.mkString(",") ~")"
     )
 
-    DoJDBCReturningWork.withEzDBC(msiDbCtx) { msiEzDBC =>
+    val rsmDescById = DoJDBCReturningWork.withEzDBC(msiDbCtx) { msiEzDBC =>
     
       msiEzDBC.select(rsmQuery) { r =>
         
@@ -185,7 +186,9 @@ class SQLLazyResultSummaryProvider(
         )
       }
       
-    } toArray
+    } mapByLong(_.id)
+    
+    rsmIds.toArray.withFilter(rsmDescById.contains(_)).map( rsmDescById(_) )
   }
   
   /**
