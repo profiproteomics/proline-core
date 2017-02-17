@@ -59,7 +59,8 @@ object ResetIdsRsmDuplicator extends IRsmDuplicator with LazyLogging {
 
     for (masterPepInstance <- masterPepInstances) {
 
-      val peptideId = masterPepInstance.peptide.id
+      val peptide = masterPepInstance.peptide
+      val peptideId = peptide.id
       val masterPepInstPepMatchIds = masterPepInstance.getPeptideMatchIds
       assert(masterPepInstPepMatchIds.length == 1, "peptide matches have not been correctly merged")
 
@@ -80,7 +81,7 @@ object ResetIdsRsmDuplicator extends IRsmDuplicator with LazyLogging {
       msiMasterPepMatch.setMissedCleavage(bestParentPepMatch.missedCleavage)
       msiMasterPepMatch.setFragmentMatchCount(bestParentPepMatch.fragmentMatchesCount)
       msiMasterPepMatch.setIsDecoy(false)
-      msiMasterPepMatch.setPeptideId(bestParentPepMatch.peptide.id)
+      msiMasterPepMatch.setPeptideId(peptideId)
 
       // FIXME: retrieve the right scoring_id
       msiMasterPepMatch.setScoringId(1)
@@ -108,7 +109,8 @@ object ResetIdsRsmDuplicator extends IRsmDuplicator with LazyLogging {
       // Update the best parent peptide match id
       bestParentPepMatch.id = masterPepMatchId //VDS FIXME !!! CHANGE MERGE RSM !!!! 
 
-      //Retrieve ORM Peptide 
+      // Retrieve ORM Peptide
+      // TODO: DBO => avoid this because this is particularly slow
       val msiPep = msiEm.find(classOf[MsiPeptide], peptideId)
 
       val msiMasterPepInstance = new MsiPeptideInstance()
@@ -149,16 +151,16 @@ object ResetIdsRsmDuplicator extends IRsmDuplicator with LazyLogging {
       msiEm.persist(msiPepInstMatch)
 
       // PeptideReadablePTMString
-      if (masterPepInstance.peptide.readablePtmString != null && !masterPepInstance.peptide.readablePtmString.isEmpty()) {
+      if (peptide.readablePtmString != null && !peptide.readablePtmString.isEmpty()) {
         val msiPeptideReadablePtmStringPK = new MsiPeptideReadablePtmStringPK()
-        msiPeptideReadablePtmStringPK.setPeptideId(masterPepInstance.peptide.id)
+        msiPeptideReadablePtmStringPK.setPeptideId(peptideId)
         msiPeptideReadablePtmStringPK.setResultSetId(emptyRS.getId())
 
         val msiPeptideReadablePtmString = new MsiPeptideReadablePtmString()
         msiPeptideReadablePtmString.setId(msiPeptideReadablePtmStringPK)
         msiPeptideReadablePtmString.setResultSet(emptyRS)
         msiPeptideReadablePtmString.setPeptide(msiPep)
-        msiPeptideReadablePtmString.setReadablePtmString(masterPepInstance.peptide.readablePtmString)
+        msiPeptideReadablePtmString.setReadablePtmString(peptide.readablePtmString)
 
         // Save PeptideReadablePTMString
         msiEm.persist(msiPeptideReadablePtmString)
