@@ -55,6 +55,7 @@ trait SQLResultSetLoader extends LazyLogging {
 
     val msiSearchById = if (msiSearchIds.isEmpty) LongMap.empty[MSISearch]
     else {
+      require(udsDbCtx != null, "An UDSdb context must be provided")
       val msiSearches = new SQLMsiSearchProvider(udsDbCtx, msiDbCtx, psDbCtx).getMSISearches(msiSearchIds)
       msiSearches.mapByLong(_.id)
     }

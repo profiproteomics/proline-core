@@ -77,7 +77,8 @@ class SQLResultSummaryProvider(
         
         var rsAsOpt = Option.empty[ResultSet]
         if (loadResultSet) {
-    
+          require(udsDbCtx != null, "An UDSdb context must be provided")
+          
           val pepMatches = pepMatchProvider.getResultSummaryPeptideMatches(rsmId)
           val pepMatchById = pepMatches.view.map( p => p.id -> p ).toMap
           val protMatches = protMatchProvider.getResultSummariesProteinMatches(Array(rsmId))
