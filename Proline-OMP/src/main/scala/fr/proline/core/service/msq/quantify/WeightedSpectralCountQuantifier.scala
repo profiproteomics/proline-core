@@ -714,7 +714,7 @@ class WeightedSpectralCountQuantifier(
       this.logger.debug("Read Merged RSM with ID " + quantConfig.parentRSMId.get)
 
       // Instantiate a RSM provider
-      val rsmProvider = new SQLResultSummaryProvider(msiDbCtx = msiDbCtx, psDbCtx = psDbCtx, udsDbCtx = null)
+      val rsmProvider = new SQLResultSummaryProvider(msiDbCtx = msiDbCtx, psDbCtx = psDbCtx, udsDbCtx = udsDbCtx)
       val idfRSM = rsmProvider.getResultSummary(quantConfig.parentRSMId.get, true).get
 
       // FIXME: it should not be stored here but rather in the dedicated object tree
