@@ -104,9 +104,9 @@ class MasterQuantChannelEntityCache(
     this.logger.info("loading result summaries...")
 
     // Instantiate a RSM provider
-    val rsmProvider = new SQLResultSummaryProvider(msiDbCtx, psDbCtx)
+    val rsmProvider = new SQLResultSummaryProvider(msiDbCtx, psDbCtx,udsDbCtx)
     rsmProvider.getResultSummaries( identRsmIds, true)
-      
+    
   }
 
   // Retrieve corresponding peaklist ids
