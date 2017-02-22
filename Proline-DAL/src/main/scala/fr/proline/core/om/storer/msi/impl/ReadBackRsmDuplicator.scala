@@ -32,6 +32,8 @@ import javax.persistence.EntityManager
 import fr.proline.core.om.provider.msi.IResultSummaryProvider
 import fr.proline.core.om.storer.msi.IRsmDuplicator
 import fr.proline.core.om.provider.msi.IResultSummaryProvider
+import fr.proline.core.orm.msi.ProteinMatchSeqDatabaseMap
+import fr.proline.core.orm.msi.ProteinMatchSeqDatabaseMapPK
 
 
 
@@ -226,7 +228,19 @@ class ReadBackRsmDuplicator(rsmProvider : IResultSummaryProvider) extends IRsmDu
         mergedProtMatchIdByMasterId += msiMasterProtMatchId -> mergedProtMatch.id
 
         // TODO: map protein_match to seq_databases
+        val seqDBsIds = mergedProtMatch.seqDatabaseIds
+        for( seqDbId <- seqDBsIds) {
+          
+          // Link master protein match to master peptide set
+          val msiProteinMatchSeqDatabaseMapPK = new ProteinMatchSeqDatabaseMapPK()
+          msiProteinMatchSeqDatabaseMapPK.setProteinMatchId(msiMasterProtMatchId)
+          msiProteinMatchSeqDatabaseMapPK.setSeqDatabaseId(seqDbId)
 
+          val msiProteinMatchSeqDatabaseMap = new ProteinMatchSeqDatabaseMap()
+          msiProteinMatchSeqDatabaseMap.setId(msiProteinMatchSeqDatabaseMapPK)
+          msiProteinMatchSeqDatabaseMap.setResultSetId(emptyRS)
+          msiEm.persist(msiProteinMatchSeqDatabaseMap)
+        }
         msiMasterProtMatch
       }
 

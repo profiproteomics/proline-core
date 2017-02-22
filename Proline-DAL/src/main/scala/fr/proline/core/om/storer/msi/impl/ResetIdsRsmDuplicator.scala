@@ -1,9 +1,7 @@
 package fr.proline.core.om.storer.msi.impl
 import scala.collection.mutable.HashMap
 import scala.collection.mutable.HashSet
-
 import com.typesafe.scalalogging.LazyLogging
-
 import fr.profi.util.serialization.ProfiJson
 import fr.proline.core.om.model.msi.ResultSummary
 import fr.proline.core.om.storer.msi.IRsmDuplicator
@@ -31,6 +29,8 @@ import fr.proline.core.orm.msi.{ Scoring => MsiScoring }
 import fr.proline.core.orm.msi.{ SequenceMatch => MsiSequenceMatch }
 import fr.proline.core.util.ResidueUtils.scalaCharToCharacter
 import javax.persistence.EntityManager
+import fr.proline.core.orm.msi.ProteinMatchSeqDatabaseMapPK
+import fr.proline.core.orm.msi.ProteinMatchSeqDatabaseMap
 
 object ResetIdsRsmDuplicator extends IRsmDuplicator with LazyLogging {
   
@@ -232,8 +232,23 @@ object ResetIdsRsmDuplicator extends IRsmDuplicator with LazyLogging {
         // Update master protein match id
         masterProtMatch.id = masterProtMatchId
 
-        // TODO: map protein_match to seq_databases
+        // map protein_match to seq_databases
+        val seqDBsIds = masterProtMatch.seqDatabaseIds
+        for( seqDbId <- seqDBsIds) {
+          
+          // Link master protein match to master peptide set
+          val msiProteinMatchSeqDatabaseMapPK = new ProteinMatchSeqDatabaseMapPK()
+          msiProteinMatchSeqDatabaseMapPK.setProteinMatchId(masterProtMatchId)
+          msiProteinMatchSeqDatabaseMapPK.setSeqDatabaseId(seqDbId)
 
+          val msiProteinMatchSeqDatabaseMap = new ProteinMatchSeqDatabaseMap()
+          msiProteinMatchSeqDatabaseMap.setId(msiProteinMatchSeqDatabaseMapPK)
+          msiProteinMatchSeqDatabaseMap.setResultSetId(emptyRS)
+          msiEm.persist(msiProteinMatchSeqDatabaseMap)
+        }
+        
+        
+        
         msiMasterProtMatch
       }
 
