@@ -1,6 +1,5 @@
 package fr.proline.core.orm.msi.dto;
 
-import fr.proline.core.orm.msi.PeptideSet;
 import java.util.HashMap;
 
 public class DProteinMatch {
@@ -14,7 +13,7 @@ public class DProteinMatch {
     private DBioSequence m_bioSequence;
     private boolean m_bioSequenceSet = false;
     
-    private HashMap<Long, PeptideSet> peptideSetMap = null;
+    private HashMap<Long, DPeptideSet> peptideSetMap = null;
     
     private DPeptideMatch[] m_peptideMatches;
     private long[] m_peptideMatchesId;
@@ -29,7 +28,7 @@ public class DProteinMatch {
         m_description = description;
     }
     
-    public DProteinMatch(long id, String accession,  Float score, int peptideCount, long resultSetId, String description, PeptideSet peptideSet) {
+    public DProteinMatch(long id, String accession,  Float score, int peptideCount, long resultSetId, String description, long peptideSetId, Float peptideSetScore, int sequenceCount, int peptideSetPeptideCount, int peptideMatchCount, long resultSummaryId) {
         m_id = id;
         m_accession = accession;
         m_score = score;
@@ -37,6 +36,7 @@ public class DProteinMatch {
         m_resultSetId = resultSetId;
         m_description = description;
         
+        DPeptideSet peptideSet = new DPeptideSet(peptideSetId, peptideSetScore, sequenceCount, peptideSetPeptideCount, peptideMatchCount, resultSummaryId);
         setPeptideSet(peptideSet.getResultSummaryId(), peptideSet);
     }
     
@@ -106,7 +106,7 @@ public class DProteinMatch {
     
     
     
-    public PeptideSet getPeptideSet(Long resultSummaryId) {
+    public DPeptideSet getPeptideSet(Long resultSummaryId) {
         if (peptideSetMap == null) {
             return null;
         }
@@ -115,9 +115,9 @@ public class DProteinMatch {
 
 
 
-    final public void setPeptideSet(Long resultSummaryId, PeptideSet peptideSet) {
+    final public void setPeptideSet(Long resultSummaryId, DPeptideSet peptideSet) {
         if (peptideSetMap == null) {
-            peptideSetMap = new HashMap<Long, PeptideSet>();
+            peptideSetMap = new HashMap<Long, DPeptideSet>();
         }
         peptideSetMap.put(resultSummaryId, peptideSet);
     }

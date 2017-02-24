@@ -75,8 +75,6 @@ public class PeptideSet implements Serializable {
 
     // Transient Variables not saved in database
     @Transient
-    private DPeptideInstance[] dpeptideInstances = null; 
-    @Transient
     private Map<String, Object> serializedPropertiesMap;
     
     public PeptideSet() {
@@ -179,18 +177,6 @@ public class PeptideSet implements Serializable {
 	this.proteinMatches = proteinMatches;
     }
 
-    /**
-     * Get of Transient peptideInstances, Must be set by the user first.
-     * 
-     * @return
-     */
-    public DPeptideInstance[] getTransientDPeptideInstances() {
-	return dpeptideInstances;
-    }
-
-    public void setTransientDPeptideInstances(DPeptideInstance[] dpeptideInstances) {
-	this.dpeptideInstances = dpeptideInstances;
-    }
 
 	@SuppressWarnings("unchecked")
 	public Map<String, Object> getSerializedPropertiesAsMap() throws Exception {
