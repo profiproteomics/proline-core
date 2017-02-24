@@ -30,6 +30,7 @@ class ResultFileCertifier(
   resultIdentFilesByFormat: Map[String, Array[File]],
   importProperties: Map[String, Any]
 ) extends IService with LazyLogging {
+  
   override protected def beforeInterruption = {
     // Release database connections
     //this.logger.info("releasing database connections before service interruption...")
@@ -41,17 +42,19 @@ class ResultFileCertifier(
     val udsDbCtx = executionContext.getUDSDbConnectionContext()
     
     for ((fileType, files) <- resultIdentFilesByFormat) {
+      
       // Get Right ResultFile provider
       val rfProvider: Option[IResultFileProvider] = ResultFileProviderRegistry.get(fileType)
       require(rfProvider.isDefined, "No ResultFileProvider for specified identification file format "+fileType)
 
       // X!Tandem needs to connect to the database to search PTMs and enzymes
+      //VDS FIXME specific format code should not be here ... maybe  pass the provider to all IResultFileProvider
       if(fileType.equals("xtandem.xml")) {
-        val parserContext = ProviderDecoratedExecutionContext(executionContext) // Use Object factory
-        
+        val parserContext = ProviderDecoratedExecutionContext(executionContext) // Use Object factory       
         rfProvider.get.setParserContext(parserContext)
 //        rfProvider.get.setXtandemFile()
       }
+      
       val storer = BuildPtmDefinitionStorer(executionContext.getPSDbConnectionContext)
       val udsStorer = BuildEnzymeStorer(executionContext.getUDSDbConnectionContext())
 
