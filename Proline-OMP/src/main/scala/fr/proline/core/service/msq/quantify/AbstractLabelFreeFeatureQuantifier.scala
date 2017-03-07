@@ -1,40 +1,18 @@
 package fr.proline.core.service.msq.quantify
 
-import javax.persistence.EntityManager
-import scala.collection.JavaConversions.collectionAsScalaIterable
-import scala.collection.mutable.ArrayBuffer
-import scala.collection.mutable.HashMap
-import scala.collection.mutable.LongMap
 import com.typesafe.scalalogging.LazyLogging
-import fr.profi.jdbc.easy._
-import fr.profi.mzdb.MzDbReader
-import fr.profi.util.collection._
-import fr.profi.util.serialization.ProfiJson
-import fr.proline.context._
-import fr.proline.core.algo.lcms._
-import fr.proline.core.algo.msq.config._
+import fr.proline.context.MsiDbConnectionContext
+import fr.proline.core.algo.msq.config.ILabelFreeQuantConfig
 import fr.proline.core.algo.msq.summarizing.LabelFreeEntitiesSummarizer
-import fr.proline.core.dal.DoJDBCReturningWork
-import fr.proline.core.dal.DoJDBCWork
-import fr.proline.core.dal.tables.SelectQueryBuilder._
-import fr.proline.core.dal.tables.SelectQueryBuilder1
-import fr.proline.core.dal.tables.lcms.LcmsDbFeatureMs2EventTable
-import fr.proline.core.dal.tables.lcms.LcmsDbRawMapTable
-import fr.proline.core.dal.tables.lcms.LcmsDbScanTable
-import fr.proline.core.dal.tables.msi.MsiDbSpectrumTable
 import fr.proline.core.om.model.lcms.MapSet
 import fr.proline.core.om.model.msi.ResultSummary
-import fr.proline.core.om.model.msi.Spectrum
-import fr.proline.core.om.model.msq._
-import fr.proline.core.om.provider.lcms.impl.SQLScanSequenceProvider
-import fr.proline.core.om.provider.msi.impl.SQLSpectrumProvider
-import fr.proline.core.orm.msi.{ObjectTree => MsiObjectTree, ResultSummary => MsiResultSummary}
+import fr.proline.core.om.model.msq.ExperimentalDesign
 import fr.proline.core.orm.msi.ObjectTreeSchema.SchemaName
+import fr.proline.core.orm.msi.{ ResultSet => MsiResultSet }
+import fr.proline.core.orm.msi.{ ResultSummary => MsiResultSummary }
 import fr.proline.core.orm.msi.repository.ObjectTreeSchemaRepository
-import fr.profi.util.primitives._
 import fr.proline.core.om.provider.msi.impl.SQLResultSummaryProvider
-import fr.proline.core.om.storer.msi.impl.ResetIdsRsmDuplicator
-import fr.proline.core.om.storer.msi.impl.ReadBackRsmDuplicator
+import fr.proline.core.om.storer.msi.impl.RsmDuplicator
 
 abstract class AbstractLabelFreeFeatureQuantifier extends AbstractMasterQuantChannelQuantifier with LazyLogging {
   
@@ -62,18 +40,15 @@ abstract class AbstractLabelFreeFeatureQuantifier extends AbstractMasterQuantCha
     // Update quant result summary id of the master quant channel
     udsMasterQuantChannel.setQuantResultSummaryId(quantRsmId)
     udsEm.persist(udsMasterQuantChannel)
-
-    // Store master quant result summary
-    //this.storeMasterQuantResultSummary(this.mergedResultSummary, msiQuantRSM, msiQuantResultSet)
-    // Store master quant result summary
-    val quantRSM = if(!isMergedRsmProvided) {
-        
-        ResetIdsRsmDuplicator.cloneAndStoreRSM(this.mergedResultSummary, msiQuantRSM, msiQuantResultSet, msiEm) 
-      } else {
-        val rsmProvider = new SQLResultSummaryProvider(msiDbCtx, psDbCtx, udsDbCtx)
-        val rsmDuplicator = new ReadBackRsmDuplicator(rsmProvider)
-        rsmDuplicator.cloneAndStoreRSM(this.mergedResultSummary, msiQuantRSM, msiQuantResultSet, msiEm) 
-    }
+    
+    // get cloned and stored master quant result summary
+    val rsmProvider = new SQLResultSummaryProvider(msiDbCtx, psDbCtx, udsDbCtx)
+    val rsmDuplicator =  new RsmDuplicator(rsmProvider)  
+    val quantRSM = if(!isMergedRsmProvided) {        
+    	rsmDuplicator.cloneAndStoreRSM(this.mergedResultSummary, msiQuantRSM, msiQuantResultSet, true, msiEm) 
+      } else {       
+        rsmDuplicator.cloneAndStoreRSM(this.mergedResultSummary, msiQuantRSM, msiQuantResultSet, false, msiEm) 
+      }
     
     // Compute and store quant entities (MQ Peptides, MQ ProteinSets)
     this.computeAndStoreQuantEntities(msiQuantRSM, quantRSM)
@@ -83,7 +58,7 @@ abstract class AbstractLabelFreeFeatureQuantifier extends AbstractMasterQuantCha
 
     ()
   }
-  
+    
   protected def computeAndStoreQuantEntities(msiQuantRSM: MsiResultSummary, quantRSM: ResultSummary) {
     
     val ms2ScanNumbersByFtId = {

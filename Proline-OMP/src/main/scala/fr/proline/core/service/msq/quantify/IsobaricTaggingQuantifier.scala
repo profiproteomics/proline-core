@@ -2,9 +2,7 @@ package fr.proline.core.service.msq.quantify
 
 import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.LongMap
-
 import com.typesafe.scalalogging.LazyLogging
-
 import fr.profi.util.collection._
 import fr.profi.util.ms._
 import fr.profi.util.serialization.ProfiJson
@@ -26,6 +24,7 @@ import fr.proline.core.orm.msi.ObjectTreeSchema.SchemaName
 import fr.proline.core.orm.msi.repository.ObjectTreeSchemaRepository
 import fr.proline.core.orm.uds.MasterQuantitationChannel
 import fr.proline.core.service.lcms.io.ExtractMapSet
+import fr.proline.core.om.storer.msi.impl.RsmDuplicator
 
 class IsobaricTaggingQuantifier(
   val executionContext: IExecutionContext,
@@ -68,16 +67,18 @@ class IsobaricTaggingQuantifier(
     udsEm.persist(udsMasterQuantChannel)
 
     // Store master quant result summary
-    val quantRsm = if (!isMergedRsmProvided) {
-      ResetIdsRsmDuplicator.cloneAndStoreRSM(this.mergedResultSummary, msiQuantRsm, msiQuantResultSet, msiEm)
-    } else {
-      val rsmProvider = new SQLResultSummaryProvider(msiDbCtx, psDbCtx, udsDbCtx)
-      val rsmDuplicator = new ReadBackRsmDuplicator(rsmProvider)
-      rsmDuplicator.cloneAndStoreRSM(this.mergedResultSummary, msiQuantRsm, msiQuantResultSet, msiEm)
+    // get cloned and stored master quant result summary
+    val rsmProvider = new SQLResultSummaryProvider(msiDbCtx, psDbCtx, udsDbCtx)
+    val rsmDuplicator =  new RsmDuplicator(rsmProvider)  
+    val quantRSM = if(!isMergedRsmProvided) {        
+    	rsmDuplicator.cloneAndStoreRSM(this.mergedResultSummary, msiQuantRsm, msiQuantResultSet, true, msiEm) 
+    } else {       
+      rsmDuplicator.cloneAndStoreRSM(this.mergedResultSummary, msiQuantRsm, msiQuantResultSet, false, msiEm) 
     }
     
+    
     // Compute and store quant entities (MQ Peptides, MQ ProteinSets)
-    this.computeAndStoreQuantEntities(msiQuantRsm, quantRsm)
+    this.computeAndStoreQuantEntities(msiQuantRsm, quantRSM)
     
     // Flush the entity manager to perform the update on the master quant peptides
     msiEm.flush()
@@ -86,6 +87,8 @@ class IsobaricTaggingQuantifier(
 
     ()
   }
+  
+
   
   protected def computeAndStoreQuantEntities(msiQuantRsm: MsiResultSummary, quantRsm : ResultSummary) {
     

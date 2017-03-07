@@ -1,29 +1,24 @@
 package fr.proline.core.service.msq.quantify
 
-import javax.persistence.EntityManager
 import scala.collection.JavaConversions.collectionAsScalaIterable
-import scala.collection.mutable.ArrayBuffer
-import scala.collection.mutable.HashMap
-import fr.profi.util.primitives._
-import fr.profi.jdbc.easy._
+
 import fr.profi.util.serialization.ProfiJson
-import fr.proline.context._
 import fr.proline.context.IExecutionContext
-import fr.proline.core.algo.msq.config._
-import fr.proline.core.dal.DoJDBCReturningWork
-import fr.proline.core.dal.tables.SelectQueryBuilder1
-import fr.proline.core.dal.tables.SelectQueryBuilder._
-import fr.proline.core.dal.tables.msi.MsiDbSpectrumTable
+import fr.proline.context.MsiDbConnectionContext
+import fr.proline.core.algo.msq.config.LabelFreeQuantConfig
 import fr.proline.core.om.model.lcms.MapSet
-import fr.proline.core.om.model.msi.{Peptide, PeptideMatch}
+import fr.proline.core.om.model.msi.ResultSummary
 import fr.proline.core.om.model.msq.ExperimentalDesign
+import fr.proline.core.om.model.msq.MasterQuantChannelProperties
+import fr.proline.core.om.provider.msi.impl.SQLResultSummaryProvider
+import fr.proline.core.om.storer.msi.impl.ReadBackRsmDuplicator
+import fr.proline.core.om.storer.msi.impl.ResetIdsRsmDuplicator
+import fr.proline.core.om.storer.msi.impl.RsmDuplicator
+import fr.proline.core.orm.msi.{ ResultSet => MsiResultSet }
+import fr.proline.core.orm.msi.{ ResultSummary => MsiResultSummary }
 import fr.proline.core.orm.uds.MasterQuantitationChannel
 import fr.proline.core.service.lcms.io.ExtractMapSet
-import fr.proline.context.DatabaseConnectionContext
-import fr.proline.core.om.model.msi.ResultSummary
-import fr.proline.core.om.provider.msi.impl.SQLResultSummaryProvider
-import fr.proline.core.om.model.msq.SpectralCountProperties
-import fr.proline.core.om.model.msq.MasterQuantChannelProperties
+
 
 
 class Ms2DrivenLabelFreeFeatureQuantifier(
@@ -48,6 +43,7 @@ class Ms2DrivenLabelFreeFeatureQuantifier(
     mapSetExtractor.run()
     mapSetExtractor.extractedMapSet
   }
+  
   
   // Add processings specific to the MS2 driven strategy here
   override protected def quantifyMasterChannel(): Unit = {
