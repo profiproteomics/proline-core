@@ -32,10 +32,14 @@ import javax.persistence.EntityManager
 import fr.proline.core.orm.msi.ProteinMatchSeqDatabaseMapPK
 import fr.proline.core.orm.msi.ProteinMatchSeqDatabaseMap
 
+
+/**
+ * Should not be used any more : RsmDuplicator with  eraseSourceIds: Boolean = true should be the same !
+ */
 object ResetIdsRsmDuplicator extends IRsmDuplicator with LazyLogging {
   
  
-   override def cloneAndStoreRSM(sourceRSM: ResultSummary, emptyRSM: MsiResultSummary, emptyRS: MsiResultSet, msiEm: EntityManager): ResultSummary = {
+   override def cloneAndStoreRSM(sourceRSM: ResultSummary, emptyRSM: MsiResultSummary, emptyRS: MsiResultSet, eraseSourceIds: Boolean,  msiEm: EntityManager): ResultSummary = {
 
     val msiMasterPepInstById = new HashMap[Long, MsiPeptideInstance]
 

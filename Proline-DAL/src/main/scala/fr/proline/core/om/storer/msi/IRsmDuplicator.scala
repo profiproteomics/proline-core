@@ -35,9 +35,19 @@ import fr.proline.core.om.model.msi.LazyResultSummary
 trait IRsmDuplicator {
 
   /**
-   * Clone source ResultSummary objects and attach them to empty RSM/TS
+   * Clone source ResultSummary objects and attach them to empty RSM/RS
+   * 
    */
-  def cloneAndStoreRSM(sourceRSM: ResultSummary, emptyRSM: MsiResultSummary, emptyRS: MsiResultSet, msiEm: EntityManager): ResultSummary
+    /**
+     * Clone source ResultSummary objects and attach them to empty RSM/RS
+     *  
+     * @param sourceRSM : Merged ResultSummary to clone
+     * @param emptyRSM : Empty ORM ResultSummary that will be filled with sourceRSM clone objects
+     * @param emptyRS : Empty ORM ResultSet that will be filled with sourceRSM's ResultSet clone objec
+     * @param eraseSourceIds : if true, sourceRSM data ids (RSM, ProtreinMatch ...) will be erased with new ORM ResultSummary ids 
+     * @param msiEm EntityManager for MsiDB
+     */
+  def cloneAndStoreRSM(sourceRSM: ResultSummary, emptyRSM: MsiResultSummary, emptyRS: MsiResultSet, eraseSourceIds : Boolean, msiEm: EntityManager): ResultSummary
   
 
 }
