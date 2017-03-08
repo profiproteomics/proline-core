@@ -199,46 +199,43 @@ object SetClusterer {
     setClusters.toArray
   }
   
-  private def getAllKeysHavingRelatedValues[K,V](
+  @scala.annotation.tailrec
+  private def getAllKeysHavingRelatedValues[K, V](
     valuesByKey: Map[K, Set[V]],
     keysByValue: Map[V, Seq[K]],
     valuesToSearch: Set[V],
     searchedValues: collection.mutable.HashSet[V],
-    clusterizedKeys: collection.mutable.HashSet[K]
+    foundKeys: collection.mutable.HashSet[K]
   ): Unit = {
-    
-    // Iterate over values to initialize the search across the reversed map
-    for( value <- valuesToSearch ) {
-      if( ! searchedValues.contains( value ) ) {
-        
-        // Set the value status as searched
-        searchedValues += value
-        
-        // Retrieve keys having this value
-        val keysForThisValue = keysByValue.get(value)
-        if( keysForThisValue.isEmpty ) {
-          throw new Exception("undefined keys for value '"+ value +"'")
-        }
-        
-        // Iterate over related keys to retrieve their corresponding values
-        for( key <- keysForThisValue.get ) {
-          if( ! clusterizedKeys.contains(key) ) {
-            clusterizedKeys += key
-            
-            // Retrieve the values having this key by recursive call to the method
-            val relatedValues = valuesByKey(key)
-            this.getAllKeysHavingRelatedValues(
-              valuesByKey,
-              keysByValue,
-              relatedValues,
-              searchedValues,
-              clusterizedKeys
-            )
-          }
-        }
+    if (valuesToSearch.isEmpty) return // break recursion if no more value to search
+
+    val relatedValues = new ArrayBuffer[V](100)
+
+    // Iterate values to initialize the search across the reversed map
+    for (value <- valuesToSearch; if !searchedValues.contains(value)) {
+
+      // Set the value status as searched
+      searchedValues += value
+
+      // Retrieve keys having this value
+      val keysForThisValueOpt = keysByValue.get(value)
+      assert(keysForThisValueOpt.isDefined, s"undefined keys for value '$value'")
+
+      // Iterate related keys to retrieve their corresponding values
+      for (key <- keysForThisValueOpt.get; if !foundKeys.contains(key)) {
+        foundKeys += key
+
+        relatedValues ++= valuesByKey(key)
       }
     }
-    
+
+    this.getAllKeysHavingRelatedValues(
+      valuesByKey,
+      keysByValue,
+      relatedValues.toSet,
+      searchedValues,
+      foundKeys
+    )
   }
   
   private def stringifySortedList( values: List[Any] ): String = {
