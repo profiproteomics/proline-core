@@ -8,8 +8,10 @@ import fr.profi.jdbc.PreparedStatementWrapper
 import fr.profi.jdbc.easy._
 import fr.profi.util.serialization.ProfiJson
 import fr.proline.core.dal.DoJDBCWork
+import fr.proline.core.dal.DoJDBCReturningWork
 import fr.proline.core.dal.tables.msi.MsiDbPeaklistTable
 import fr.proline.core.dal.tables.msi.MsiDbSpectrumTable
+import fr.proline.core.dal.tables.uds.UdsDbRawFileTable
 import fr.proline.core.om.model.msi.IPeaklistContainer
 import fr.proline.core.om.model.msi.Peaklist
 import fr.proline.core.om.model.msi.Spectrum
@@ -21,14 +23,26 @@ object SQLPeaklistWriter extends AbstractSQLPeaklistWriter
 
 abstract class AbstractSQLPeaklistWriter extends IPeaklistWriter with LazyLogging {
 
-  val compressionAlgo = "none" //none | lzma | xz | snappy => TODO: create an enumeration near to the Peaklist class
+  private val compressionAlgo = "none" //none | lzma | xz | snappy => TODO: create an enumeration near to the Peaklist class
+  private val rawFileIdCol = UdsDbRawFileTable.columns.IDENTIFIER
 
   //protected val doubleFormatter = newDecimalFormat("#.######")
   //protected val floatFormatter = newDecimalFormat("#.##")
   
   def insertPeaklist(peaklist: Peaklist, context: StorerContext): Long = {
-
     require(peaklist != null, "peaklist is null")
+
+    // Check if raw file is registered in the UDSdb
+    val rawFileIdentifier = peaklist.rawFileIdentifier
+    val isRawFileRegistered = DoJDBCReturningWork.withEzDBC(context.getUDSDbConnectionContext) { udsEzDBC =>
+      val sqlQuery = s"SELECT count($rawFileIdCol) FROM ${UdsDbRawFileTable.name} WHERE $rawFileIdCol = '${rawFileIdentifier}'"
+      val rawFileCount = udsEzDBC.selectInt(sqlQuery)
+      rawFileCount == 1
+    }
+    val rawFileIdentOpt = if (isRawFileRegistered) Some(rawFileIdentifier) else None
+    this.logger.info(
+      s"Peaklist raw file $isRawFileRegistered ${if (isRawFileRegistered) "is" else "is not"} registered in the UDSdb !"
+    )
 
     DoJDBCWork.withEzDBC(context.getMSIDbConnectionContext) { msiEzDBC =>
 
@@ -40,7 +54,7 @@ abstract class AbstractSQLPeaklistWriter extends IPeaklistWriter with LazyLoggin
         stmt.executeWith(
           peaklist.fileType,
           peaklist.path,
-          peaklist.rawFileIdentifier,
+          rawFileIdentOpt,
           peaklist.msLevel,
           compressionAlgo,
           peaklist.properties.map(ProfiJson.serialize(_)),
@@ -131,31 +145,6 @@ abstract class AbstractSQLPeaklistWriter extends IPeaklistWriter with LazyLoggin
     spectrum.id = stmt.generatedLong
 
   }
-
-  // TODO: is this really useful ???
-  /*def rollBackInfo(peaklistId: Int, context: StorerContext) = {
-
-    require (peaklistId > 0, "peaklist must first be persisted in the MSIdb")
-    
-    val jdbcWork = new JDBCWork() {
-
-      override def execute(con: Connection) {
-        val stmt = con.createStatement()
-
-        // Retrieve generated protein match ids
-        //val specIds = context.msiDB.selectInts("SELECT id FROM spectrum WHERE spectrum.peaklist_id = "+peaklistId)
-        //stmt.executeUpdate("DELETE FROM spectrum WHERE spectrum.id IN ("+specIds.mkString(",")+")" )
-
-        stmt.executeUpdate("DELETE FROM spectrum WHERE peaklist_id = " + peaklistId)
-        stmt.executeUpdate("DELETE FROM peaklist WHERE peaklist.id = " + peaklistId)
-
-        stmt.close()
-      }
-
-    } // End of jdbcWork anonymous inner class
-
-    context.getMSIDbConnectionContext.doWork(jdbcWork, true)
-  }*/
 
 }
 
