@@ -57,8 +57,8 @@ object PgPeaklistWriter extends AbstractSQLPeaklistWriter with LazyLogging {
         val lastCycle = if (spectrum.lastCycle > 0) Some(spectrum.lastCycle) else None
         val firstScan = if (spectrum.firstScan > 0) Some(spectrum.firstScan) else None
         val lastScan = if (spectrum.lastScan > 0) Some(spectrum.lastScan) else None
-        val firstTime = if (spectrum.firstTime > 0) Some(spectrum.firstTime) else None
-        val lastTime = if (spectrum.lastTime > 0) Some(spectrum.lastTime) else None
+        val firstTime = if (spectrum.firstTime >= 0) Some(spectrum.firstTime) else None
+        val lastTime = if (spectrum.lastTime >= 0) Some(spectrum.lastTime) else None
 
         // moz and intensity lists are formatted as numbers separated by spaces      
         //val mozList = spectrum.mozList.getOrElse( Array.empty[Double] ).map { m => this.doubleFormatter.format( m ) } mkString ( " " )

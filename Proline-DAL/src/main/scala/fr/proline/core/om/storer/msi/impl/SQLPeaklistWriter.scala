@@ -96,8 +96,8 @@ abstract class AbstractSQLPeaklistWriter extends IPeaklistWriter with LazyLoggin
     val lastCycle = if (spectrum.lastCycle > 0) Some(spectrum.lastCycle) else Option.empty[Int]
     val firstScan = if (spectrum.firstScan > 0) Some(spectrum.firstScan) else Option.empty[Int]
     val lastScan = if (spectrum.lastScan > 0) Some(spectrum.lastScan) else Option.empty[Int]
-    val firstTime = if (spectrum.firstTime > 0) Some(spectrum.firstTime) else Option.empty[Float]
-    val lastTime = if (spectrum.lastTime > 0) Some(spectrum.lastTime) else Option.empty[Float]
+    val firstTime = if (spectrum.firstTime >= 0) Some(spectrum.firstTime) else Option.empty[Float]
+    val lastTime = if (spectrum.lastTime >= 0) Some(spectrum.lastTime) else Option.empty[Float]
 
     // moz and intensity lists are formatted as numbers separated by spaces
     //val mozList = spectrum.mozList.getOrElse(Array.empty[Double]).map { m => this.doubleFormatter.format( m ) } mkString(" ")
