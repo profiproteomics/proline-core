@@ -1047,7 +1047,7 @@ class ExtractMapSet(
       
     } finally {
       
-      println("Closing ExtractMapSet thread pools...")
+      this.logger.debug("Closing ExtractMapSet thread pools...")
       
       // Shutdown the thread pools
       if (computationThreadPool.isShutdown() == false ) computationThreadPool.shutdownNow()
@@ -1059,7 +1059,7 @@ class ExtractMapSet(
         ExtractMapSet.threadCount.set(0)
       }
       
-      println("ExtractMapSet thread pools have been closed!")
+      this.logger.debug("ExtractMapSet thread pools have been closed!")
     }
     
   }
