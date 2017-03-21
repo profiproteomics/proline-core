@@ -36,7 +36,7 @@ object PeakPickingSoftware extends InMemoryIdGen
 case class PeakPickingSoftware(
     
   // Required fields
-  val id: Long,
+  var id: Long,
   val name: String,
   val version: String,
   val algorithm: String,

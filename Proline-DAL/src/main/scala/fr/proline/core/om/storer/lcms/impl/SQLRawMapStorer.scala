@@ -10,6 +10,8 @@ import fr.profi.util.serialization.ProfiJson
 import fr.proline.context.LcMsDbConnectionContext
 import fr.proline.core.dal.DoJDBCWork
 import fr.proline.core.dal.tables.lcms._
+import fr.proline.core.dal.tables.SelectQueryBuilder1
+import fr.proline.core.dal.tables.SelectQueryBuilder._
 import fr.proline.core.om.model.lcms._
 import fr.proline.core.om.storer.lcms._
 
@@ -32,12 +34,17 @@ class SQLRawMapStorer(
       // Store the related run map
       val peakPickingSoftwareId = rawMap.peakPickingSoftware.id
       val peakelFittingModelId = rawMap.peakelFittingModel.map(_.id)
+      
+      if (peakPickingSoftwareId < 1) {
+        val newPpsId = this.getOrInsertPeakPickingSoftware(ezDBC, rawMap.peakPickingSoftware)
+        rawMap.peakPickingSoftware.id = newPpsId
+      }
 
       ezDBC.execute(
         LcmsDbRawMapTable.mkInsertQuery,
         newRawMapId,
         rawMap.runId,
-        peakPickingSoftwareId,
+        rawMap.peakPickingSoftware.id,
         peakelFittingModelId
       )
 
@@ -62,7 +69,6 @@ class SQLRawMapStorer(
     val ftScoringId = lcmsMap.featureScoring.map(_.id).getOrElse(1L)
     val lcmsMapType = if (lcmsMap.isProcessed) 1 else 0
     
-    var newMapId = 0L
     ezDBC.executePrepared(LcmsDbMapTable.mkInsertQuery( (t,c) => c.filter(_ != t.ID)), true) { statement =>
       val mapDesc = if (lcmsMap.description == null) None else Some(lcmsMap.description)
 
@@ -76,11 +82,36 @@ class SQLRawMapStorer(
         ftScoringId
       )
 
-      newMapId = statement.generatedLong
+      statement.generatedLong
     }
 
-    newMapId
-
+  }
+  
+  protected def getOrInsertPeakPickingSoftware(ezDBC: EasyDBC, pps: PeakPickingSoftware): Long = {
+    
+    val ppsIdQuery = new SelectQueryBuilder1(LcmsDbPeakPickingSoftwareTable).mkSelectQuery( (t,c) =>
+      List(t.ID) -> "WHERE "~ t.NAME ~" = '"~ pps.name ~"' AND "~ t.VERSION ~" = '"~ pps.version ~"'"
+    )
+    
+    val idOpt = ezDBC.selectHeadOption(ppsIdQuery) { _.nextLong }
+    
+    if (idOpt.isDefined) idOpt.get
+    else {
+      val sqlQuery = LcmsDbPeakPickingSoftwareTable.mkInsertQuery( (t,c) => c.filter(_ != t.ID))
+      
+      ezDBC.executePrepared(sqlQuery, true) { statement =>
+  
+        statement.executeWith(
+          pps.name,
+          pps.version,
+          pps.algorithm,
+          pps.properties.map( ProfiJson.serialize(_) )
+        )
+        
+        statement.generatedLong
+      }
+    }
+    
   }
 
 }

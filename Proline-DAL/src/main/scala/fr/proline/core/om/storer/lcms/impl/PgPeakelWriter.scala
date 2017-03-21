@@ -71,29 +71,37 @@ class PgPeakelWriter(lcmsDbCtx: LcMsDbConnectionContext) extends IPeakelWriter w
       
       var peakelsCount = 0
       
-      forEachPeakel { peakel =>
-        peakelsCount += 1
-        
-        val oldRawMapId = peakel.rawMapId
-        
-        // Update peakel raw map id
-        if (rawMapId.isDefined) {
-          peakel.rawMapId = rawMapId.get
+      try {
+        forEachPeakel { peakel =>
+          peakelsCount += 1
+          
+          val oldRawMapId = peakel.rawMapId
+          
+          // Update peakel raw map id
+          if (rawMapId.isDefined) {
+            peakel.rawMapId = rawMapId.get
+          }
+          
+          val newRawMapId = peakel.rawMapId
+          require( newRawMapId > 0, "peakel.rawMapId must be greater than zero")
+          oldRawMapIdByNewRawMapId.put(oldRawMapId, newRawMapId)
+          
+          if (peakelsCountByRawMapId.contains(newRawMapId) == false) {
+            peakelsCountByRawMapId.put(newRawMapId, 0)
+          }
+          peakelsCountByRawMapId(newRawMapId) += 1
+          
+          peakelMozList += peakel.moz
+          tmpPeakelIds += peakel.id
+          
+          this.insertPeakelUsingCopyManager(peakel, pgBulkLoader)
         }
-        
-        val newRawMapId = peakel.rawMapId
-        require( newRawMapId > 0, "peakel.rawMapId must be greater than zero")
-        oldRawMapIdByNewRawMapId.put(oldRawMapId, newRawMapId)
-        
-        if (peakelsCountByRawMapId.contains(newRawMapId) == false) {
-          peakelsCountByRawMapId.put(newRawMapId, 0)
+      } catch {
+        case t: Throwable => {
+          pgBulkLoader.cancelCopy()
+          logger.error("Error during peakel iteration, Postgres BULK INSERT has been cancelled!")
+          throw t
         }
-        peakelsCountByRawMapId(newRawMapId) += 1
-        
-        peakelMozList += peakel.moz
-        tmpPeakelIds += peakel.id
-        
-        this.insertPeakelUsingCopyManager(peakel, pgBulkLoader)
       }
       
       // End of BULK copy
