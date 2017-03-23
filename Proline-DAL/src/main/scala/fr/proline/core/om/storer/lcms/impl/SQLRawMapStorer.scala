@@ -2,6 +2,8 @@ package fr.proline.core.om.storer.lcms.impl
 
 import scala.collection.mutable.ArrayBuffer
 
+import com.typesafe.scalalogging.LazyLogging
+
 import fr.profi.jdbc.PreparedStatementWrapper
 import fr.profi.jdbc.easy._
 import fr.profi.mzdb.model.PeakelDataMatrix
@@ -19,7 +21,7 @@ class SQLRawMapStorer(
   val lcmsDbCtx: LcMsDbConnectionContext,
   val featureWriter: IFeatureWriter,
   val peakelWriter: Option[IPeakelWriter] = None
-) extends IRawMapStorer {
+) extends IRawMapStorer with LazyLogging {
 
   def storeRawMap(rawMap: RawMap, storeFeatures: Boolean = true, storePeakels: Boolean = false): Unit = {
 
@@ -97,6 +99,18 @@ class SQLRawMapStorer(
     
     if (idOpt.isDefined) idOpt.get
     else {
+      
+      // *** BEGIN OF WORKAROUND FOR CORRUPTED PG SEQUENCE *** //
+      // TODO: remove me when issues #16445 is fixed
+      if (lcmsDbCtx.getDriverType == fr.proline.repository.DriverType.POSTGRESQL) {
+        try {
+        	ezDBC.execute("SELECT setval('peak_picking_software_id_seq', (SELECT MAX(id) FROM peak_picking_software))")
+        } catch {
+          case t: Throwable => logger.error("Can't fix the sequence 'peak_picking_software_id_seq'", t)
+        }
+      }
+      // *** END OF WORKAROUND FOR CORRUPTED PG SEQUENCE *** //
+      
       val sqlQuery = LcmsDbPeakPickingSoftwareTable.mkInsertQuery( (t,c) => c.filter(_ != t.ID))
       
       ezDBC.executePrepared(sqlQuery, true) { statement =>
