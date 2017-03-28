@@ -181,7 +181,7 @@ class IsobaricTaggingQuantifier(
       this.logger.debug("Read Merged RSM with ID " + identRsmId)
 
       // Instantiate a RSM provider
-      val rsmProvider = new SQLResultSummaryProvider(msiDbCtx = msiDbCtx, psDbCtx = psDbCtx, udsDbCtx = null)
+      val rsmProvider = new SQLResultSummaryProvider(msiDbCtx = msiDbCtx, psDbCtx = psDbCtx, udsDbCtx = udsDbCtx)
       val identRsm = rsmProvider.getResultSummary(identRsmId,true).get
 
       // FIXME: it should not be stored here but directly into the MasterQuantChannel table
