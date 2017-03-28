@@ -51,6 +51,12 @@ class RsmDuplicator(rsmProvider: IResultSummaryProvider) extends IRsmDuplicator 
     val sourcePepInstances = sourceRSM.peptideInstances
     val sourcePepMatchById = sourceRSM.resultSet.get.getPeptideMatchById
 
+    // Get Default Scoring : Mascot Standard
+    //VDS FIXME which default ?!
+    MsiScoring.Type.MASCOT_STANDARD_SCORE.toString()
+    val defaultScoringId =  ScoringRepository.getScoringIdForType(msiEm,MsiScoring.Type.MASCOT_STANDARD_SCORE.toString())
+
+    
     // Iterate over merged peptide instances to create quant peptide instances
     this.logger.info("cloning master quant peptide instances... (" + sourcePepInstances.size + ")")
 
@@ -82,13 +88,12 @@ class RsmDuplicator(rsmProvider: IResultSummaryProvider) extends IRsmDuplicator 
 
       // retrieve the right scoring_id
       val scoreType = mergedPepMatch.scoreType.toString()
-      var msiScoring = ScoringRepository.getScoringIdForType(msiEm, scoreType)
-      //VDS FIXME which default ?!
-      if (msiScoring == null) {
-        msiScoring =  1
+      var msiScoringId = ScoringRepository.getScoringIdForType(msiEm, scoreType)
+      if (msiScoringId == null) {
+        msiScoringId =  defaultScoringId
       }
-      msiMasterPepMatch.setScoringId(msiScoring)
-
+      msiMasterPepMatch.setScoringId(msiScoringId)
+ 
       // FIXME: change the ORM to allow these mappings
       //msiMasterPepMatch.setBestPeptideMatchId(bestPepMatch.id) 
       //msiMasterPepMatch.setMsQueryId(bestPepMatch.msQueryId)
@@ -220,10 +225,9 @@ class RsmDuplicator(rsmProvider: IResultSummaryProvider) extends IRsmDuplicator 
 
         // retrieve the right scoring_id
         val scoreType = mergedProtMatch.scoreType
-        var msiScoring = ScoringRepository.getScoringIdForType(msiEm, scoreType)
-        //VDS FIXME which default ?!
-        if (msiScoring == null) {
-          msiScoring = 1
+        var msiProtMatchScoringId = ScoringRepository.getScoringIdForType(msiEm, scoreType)
+        if (msiProtMatchScoringId == null) {
+          msiProtMatchScoringId = defaultScoringId
         }
              
         
@@ -239,7 +243,7 @@ class RsmDuplicator(rsmProvider: IResultSummaryProvider) extends IRsmDuplicator 
         msiMasterProtMatch.setIsLastBioSequence(mergedProtMatch.isLastBioSequence)
         msiMasterProtMatch.setTaxonId(mergedProtMatch.taxonId)
         if (mergedProtMatch.getProteinId > 0) msiMasterProtMatch.setBioSequenceId(mergedProtMatch.getProteinId)
-        msiMasterProtMatch.setScoringId(msiScoring)
+        msiMasterProtMatch.setScoringId(msiProtMatchScoringId)
         msiMasterProtMatch.setResultSet(emptyRS)
         msiEm.persist(msiMasterProtMatch)
 
@@ -344,11 +348,13 @@ class RsmDuplicator(rsmProvider: IResultSummaryProvider) extends IRsmDuplicator 
         val samesetItems = sourcePeptideSet.items
 
         val scoreType = sourcePeptideSet.scoreType
-        var msiScoring = ScoringRepository.findScoringForType(msiEm, scoreType)
+        var msiPepSetScoringId = ScoringRepository.getScoringIdForType(msiEm, scoreType)
         //VDS FIXME which default ?!
-        if (msiScoring == null) {
-          msiScoring = msiEm.find(classOf[MsiScoring], 1)
+        if (msiPepSetScoringId == null) {
+          msiPepSetScoringId = defaultScoringId
         }
+        val msiPepScoring = new MsiScoring()
+        msiPepScoring.setId(msiPepSetScoringId)
 
         // Store master peptide set
         val msiMasterPeptideSet = new MsiPeptideSet()
@@ -358,7 +364,7 @@ class RsmDuplicator(rsmProvider: IResultSummaryProvider) extends IRsmDuplicator 
         msiMasterPeptideSet.setSequenceCount(sourcePeptideSet.sequencesCount)
         msiMasterPeptideSet.setProteinSet(msiMasterProteinSet)
         msiMasterPeptideSet.setScore(sourcePeptideSet.score)
-        msiMasterPeptideSet.setScoring(msiScoring)
+        msiMasterPeptideSet.setScoring(msiPepScoring)
         msiMasterPeptideSet.setResultSummaryId(quantRsmId)
         msiEm.persist(msiMasterPeptideSet)
 
@@ -469,7 +475,7 @@ class RsmDuplicator(rsmProvider: IResultSummaryProvider) extends IRsmDuplicator 
         }
       }
     }
-
+    this.logger.info("END storing quantified peptide sets and protein sets...")
     msiEm.flush()
     //VDS CHANGE MERGE RSM !!!!
     // Update sourceRSM id
