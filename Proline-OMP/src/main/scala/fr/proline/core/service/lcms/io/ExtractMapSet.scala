@@ -130,7 +130,7 @@ class ExtractMapSet(
   protected val pps = new PeakPickingSoftware(
     id = -1,
     name = "Proline",
-    version = "1.1.0", // TODO: retrieve the version of OMP dynamically
+    version = new fr.proline.core.service.Version().getVersion.split("-").head,
     algorithm = "ExtractMapSet"
   )
 
