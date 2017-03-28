@@ -19,8 +19,16 @@ import fr.proline.core.om.provider.msi.IResultSummaryProvider
 class SQLResultSummaryProvider(
   val msiDbCtx: MsiDbConnectionContext,
   val psDbCtx: DatabaseConnectionContext,
-  val udsDbCtx: UdsDbConnectionContext = null
+  val udsDbCtx: UdsDbConnectionContext
 ) extends SQLResultSetLoader with IResultSummaryProvider {
+  
+  @deprecated("Use the primary constructor instead","1.1.0")
+  def this(
+    msiDbCtx: MsiDbConnectionContext,
+    psDbCtx: DatabaseConnectionContext
+  ) = {
+    this(msiDbCtx,psDbCtx,null)
+  }
 
   // Instantiate a MSIdb helper
   val msiDbHelper = new MsiDbHelper(msiDbCtx)
