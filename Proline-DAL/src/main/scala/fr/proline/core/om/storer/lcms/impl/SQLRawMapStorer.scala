@@ -104,7 +104,9 @@ class SQLRawMapStorer(
       // TODO: remove me when issues #16445 is fixed
       if (lcmsDbCtx.getDriverType == fr.proline.repository.DriverType.POSTGRESQL) {
         try {
-        	ezDBC.execute("SELECT setval('peak_picking_software_id_seq', (SELECT MAX(id) FROM peak_picking_software))")
+          ezDBC.selectAndProcess("SELECT setval('peak_picking_software_id_seq', (SELECT MAX(id) FROM peak_picking_software))") { r =>
+           logger.debug("New 'peak_picking_software_id_seq' value is: " + r.nextLong)
+          }
         } catch {
           case t: Throwable => logger.error("Can't fix the sequence 'peak_picking_software_id_seq'", t)
         }
