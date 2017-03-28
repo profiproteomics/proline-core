@@ -492,7 +492,7 @@ class WeightedSpectralCountQuantifier(
 	  this.logger.info("loading result summaries...")
 
     // Instantiate a RSM provider
-    val rsmProvider = new SQLResultSummaryProvider(msiDbCtx, psDbCtx)
+    val rsmProvider = new SQLResultSummaryProvider(msiDbCtx, psDbCtx, udsDbCtx)
     val newlyLoadedRSMs = rsmProvider.getResultSummaries(notLoadedRSMIds, true)
     
     for (rsm <- newlyLoadedRSMs) {

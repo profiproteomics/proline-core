@@ -81,7 +81,7 @@ class Ms2DrivenLabelFreeFeatureQuantifier(
       this.logger.debug("Read Merged RSM with ID " + pRsmId)
 
       // Instantiate a Lazy RSM provider
-      val rsmProvider = new SQLResultSummaryProvider(msiDbCtx = msiDbCtx, psDbCtx = psDbCtx)
+      val rsmProvider = new SQLResultSummaryProvider(msiDbCtx = msiDbCtx, psDbCtx = psDbCtx, udsDbCtx = udsDbCtx)
       val identRsmOpt = rsmProvider.getResultSummary(pRsmId, true)
         
       require( identRsmOpt.isDefined, "can't load the result summary with id=" + pRsmId)
