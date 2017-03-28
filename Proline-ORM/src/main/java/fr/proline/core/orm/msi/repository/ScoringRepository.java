@@ -66,57 +66,57 @@ public final class ScoringRepository {
     }
 
     /**
-     * Retrives a cached Scoring.Id by given <code>scoreType</code>.
-     * 
-     * @param scoreType
-     *            Score type (in domain model) is <code>Scoring.searchEngine + ':' + Scoring.name</code> (must
-     *            be a non empty <code>String</code>).
-     * @return Scoring.Id or <code>null</code> if not found
-     */
-    public static Long getScoringIdForType(final EntityManager msiEm, final String scoreType) {
+	 * Retrieves a cached Scoring.Id by given <code>scoreType</code>.
+	 * 
+	 * @param scoreType
+	 *            Score type (in domain model) is <code>Scoring.searchEngine + ':' + Scoring.name</code> (must
+	 *            be a non empty <code>String</code>).
+	 * @return Scoring.Id or <code>null</code> if not found
+	 */
+	public static Long getScoringIdForType(final EntityManager msiEm, final String scoreType) {
 
-	JPAUtils.checkEntityManager(msiEm);
+		JPAUtils.checkEntityManager(msiEm);
 
-	if (StringUtils.isEmpty(scoreType)) {
-	    throw new IllegalArgumentException("Invalid scoreType");
+		if (StringUtils.isEmpty(scoreType)) {
+			throw new IllegalArgumentException("Invalid scoreType");
+		}
+
+		Long result = null;
+
+		synchronized (CACHE_LOCK) {
+			result = SCORING_IDS_CACHE.get(scoreType);
+
+			if (result == null) {
+
+				final Scoring foundScoring = findScoringForType(msiEm, scoreType);
+				if (foundScoring != null) {
+					result = Long.valueOf(foundScoring.getId());
+
+					if (result != null) {
+						/* Cache Scoring Id */
+						SCORING_IDS_CACHE.put(scoreType, result);
+
+						final String searchEngine = foundScoring.getSearchEngine();
+						final String name = foundScoring.getName();
+
+						/* Cache scoreType String */
+						if ((searchEngine != null) && (name != null)) {
+							SCORE_TYPES_CACHE.put(result, searchEngine + ':' + name);
+						}
+
+					} // End if (foundScoring.id is not null)
+
+				} // End if (foundScoring is not null)
+
+			} // End if (scoreType is not in SCORING_IDS_CACHE)
+
+		} // End of synchronized block on CACHE_LOCK
+
+		return result;
 	}
 
-	Long result = null;
-
-	synchronized (CACHE_LOCK) {
-	    result = SCORING_IDS_CACHE.get(scoreType);
-
-	    if (result == null) {
-
-		final Scoring foundScoring = findScoringForType(msiEm, scoreType);
-		if (foundScoring != null) {
-		    result = Long.valueOf(foundScoring.getId());
-
-		    if (result != null) {
-			/* Cache Scoring Id */
-			SCORING_IDS_CACHE.put(scoreType, result);
-
-			final String searchEngine = foundScoring.getSearchEngine();
-			final String name = foundScoring.getName();
-
-			/* Cache scoreType String */
-			if ((searchEngine != null) && (name != null)) {
-			    SCORE_TYPES_CACHE.put(result, searchEngine + ':' + name);
-			}
-
-		    } // End if (foundScoring.id is not null)
-
-		} // End if (foundScoring is not null)
-
-	    } // End if (scoreType is not in SCORING_IDS_CACHE)
-
-	} // End of synchronized block on CACHE_LOCK
-
-	return result;
-    }
-
     /**
-     * Retrives a cached <code>scoreType</code> by given <code>Scoring.id</code>.
+     * Retrieves a cached <code>scoreType</code> by given <code>Scoring.id</code>.
      * 
      * @param scoringId
      *            Primary key of <code>Scoring</code> Msi Entity.
