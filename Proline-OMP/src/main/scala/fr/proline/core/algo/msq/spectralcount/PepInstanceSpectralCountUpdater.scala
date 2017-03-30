@@ -1,29 +1,23 @@
 package fr.proline.core.algo.msq.spectralcount
 
+import java.sql.Connection
+
+import scala.collection.mutable.HashMap
+
+import com.typesafe.scalalogging.LazyLogging
+
 import fr.proline.context.IExecutionContext
 import fr.proline.core.algo.msi.filtering.IPeptideMatchFilter
-import fr.proline.core.om.model.msi.ResultSet
-import fr.proline.core.om.model.msi.LazyResultSet
-import scala.collection.mutable.HashMap
-import fr.proline.core.om.model.msi.PeptideMatch
-import com.typesafe.scalalogging.LazyLogging
-import fr.proline.core.om.model.msi.ResultSummary
-import fr.proline.core.om.model.msi.LazyResultSummary
 import fr.proline.core.algo.msi.filtering.ResultSummaryFilterBuilder
-import fr.proline.repository.util.JDBCWork
-import java.sql.Connection
-import fr.proline.core.algo.msi.filtering.IPeptideMatchFilter
-import scala.collection.JavaConversions.collectionAsScalaIterable
-import java.util.HashSet
+import fr.proline.core.om.model.msi.IResultSummaryLike
+import fr.proline.core.om.model.msi.LazyResultSet
+import fr.proline.core.om.model.msi.LazyResultSummary
+import fr.proline.core.om.model.msi.PeptideInstance
+import fr.proline.core.om.model.msi.ResultSummary
 import fr.proline.core.om.provider.ProviderDecoratedExecutionContext
 import fr.proline.core.om.provider.msi.IResultSetProvider
-import fr.proline.core.om.provider.msi.impl.SQLResultSummaryProvider
-import fr.proline.core.om.provider.msi.IResultSummaryProvider
-import fr.proline.core.om.model.msi.PeptideInstance
-import scala.collection.mutable.ArrayBuffer
 import fr.proline.core.om.provider.msi.impl.SQLLazyResultSummaryProvider
-import fr.proline.core.om.model.msi.IResultSummaryLike
-import fr.proline.core.om.model.msi.LazyResultSummary
+import fr.proline.repository.util.JDBCWork
 //import scala.collection.JavaConverters.asJavaCollectionConverter
 
 trait IPepInstanceSpectralCountUpdater {
