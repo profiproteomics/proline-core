@@ -56,6 +56,7 @@ import fr.proline.core.om.storer.lcms.impl.SQLScanSequenceStorer
 import fr.proline.core.service.lcms.AlignMapSet
 import fr.proline.core.service.lcms.CreateMapSet
 import fr.proline.core.service.lcms.ILcMsService
+import fr.proline.core.util.CoreConfig
 
 import rx.lang.scala.Observable
 import rx.lang.scala.JavaConversions.toJavaObservable
@@ -72,7 +73,8 @@ import rx.exceptions.Exceptions
  */
 object ExtractMapSet {
   val ISOTOPE_PATTERN_HALF_MZ_WINDOW = 5
-  val MZDB_MAX_PARALLELISM = 2 // Defines how many mzDB files we want to process in parallel
+  //VDS : Use specified config value though CoreConfig
+//  val MZDB_MAX_PARALLELISM = 2 // Defines how many mzDB files we want to process in parallel
 
   val threadCount = new java.util.concurrent.atomic.AtomicInteger()
   val terminatedThreadCount = new java.util.concurrent.atomic.AtomicInteger()
@@ -618,9 +620,9 @@ class ExtractMapSet(
       mapSetId
     )
     // Customize how many files we want to process in parallel
-    val forkJoinPool = new scala.concurrent.forkjoin.ForkJoinPool(ExtractMapSet.MZDB_MAX_PARALLELISM)
+    val forkJoinPool = new scala.concurrent.forkjoin.ForkJoinPool(CoreConfig.mzdbMaxParallelism)
     val computationThreadPool = Executors.newFixedThreadPool(
-      ExtractMapSet.MZDB_MAX_PARALLELISM,
+      CoreConfig.mzdbMaxParallelism,
       ExtractMapSet.threadFactory
     )
     implicit val rxCompScheduler = rx.lang.scala.JavaConversions.javaSchedulerToScalaScheduler(
@@ -1054,7 +1056,7 @@ class ExtractMapSet(
       if (forkJoinPool.isShutdown() == false ) forkJoinPool.shutdownNow()
       
       // Update terminatedThreadCount and reset the ThreadCount
-      val terminatedThreadCount = ExtractMapSet.terminatedThreadCount.addAndGet(ExtractMapSet.MZDB_MAX_PARALLELISM)
+      val terminatedThreadCount = ExtractMapSet.terminatedThreadCount.addAndGet(CoreConfig.mzdbMaxParallelism)
       if (terminatedThreadCount == ExtractMapSet.threadCount) {
         ExtractMapSet.threadCount.set(0)
       }
@@ -1172,7 +1174,7 @@ class ExtractMapSet(
     val peakelIdByMzDbPeakelIdByRunId = entityCache.peakelIdByMzDbPeakelIdByRunId
     val mzDbPeakelIdsByPeptideAndChargeByRunId = entityCache.mzDbPeakelIdsByPeptideAndChargeByRunId
     
-    val groupedParLcMsRuns = lcMsRuns.grouped(ExtractMapSet.MZDB_MAX_PARALLELISM).map(_.par).toList
+    val groupedParLcMsRuns = lcMsRuns.grouped(CoreConfig.mzdbMaxParallelism).map(_.par).toList
     
     val parProcessedMaps = for (parLcMsRuns <- groupedParLcMsRuns; lcMsRun <- parLcMsRuns) yield {
       
