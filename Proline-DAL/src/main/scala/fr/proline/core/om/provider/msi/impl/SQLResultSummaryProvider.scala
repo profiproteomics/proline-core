@@ -22,13 +22,6 @@ class SQLResultSummaryProvider(
   val udsDbCtx: UdsDbConnectionContext
 ) extends SQLResultSetLoader with IResultSummaryProvider {
   
-  @deprecated("Use the primary constructor instead","1.1.0")
-  def this(
-    msiDbCtx: MsiDbConnectionContext,
-    psDbCtx: DatabaseConnectionContext
-  ) = {
-    this(msiDbCtx,psDbCtx,null)
-  }
 
   // Instantiate a MSIdb helper
   val msiDbHelper = new MsiDbHelper(msiDbCtx)
