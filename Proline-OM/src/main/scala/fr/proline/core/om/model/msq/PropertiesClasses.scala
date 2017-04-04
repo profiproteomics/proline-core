@@ -57,6 +57,7 @@ case class MasterQuantPeptideProfile(
  * @see MasterQuantPeptide
  */
 case class MasterQuantPeptideProperties(
+  // TODO: move to peptide ion level
   @BeanProperty var discardingReason: Option[String] = None,
   
   @JsonDeserialize(contentAs = classOf[Array[Long]])
@@ -103,15 +104,15 @@ case class MasterQuantProteinSetProperties(
   var mqProtSetProfilesByGroupSetupNumber: HashMap[Int, Array[MasterQuantProteinSetProfile]] = null,
   //@BeanProperty var specificSampleId: Option[Long] = None, // defined if the protein has been seen in a single sample
   
-  //TODO : to be removed and replaced by selectionLevelBymasterQuantPeptideId
+  //TODO: to be removed and replaced by mqPeptideSelLevelById
   @JsonDeserialize(contentAs = classOf[Array[Long]] )
   @deprecated(message="Replaced by mqPeptideSelLevelById", since="1.1.0")
-  @BeanProperty var selectedMasterQuantPeptideIds: Option[Array[Long]] = None,
+  protected var selectedMasterQuantPeptideIds: Option[Array[Long]] = None,
   
-  //TODO : to be removed and replaced by selectionLevelBymasterQuantPeptideIonId
+  //TODO: to be removed and replaced by mqPeptideIonSelLevelById
   @JsonDeserialize(contentAs = classOf[Array[Long]] )
   @deprecated(message="Replaced by mqPeptideIonSelLevelById", since="1.1.0")
-  @BeanProperty var selectedMasterQuantPeptideIonIds: Option[Array[Long]] = None,
+  protected var selectedMasterQuantPeptideIonIds: Option[Array[Long]] = None,
   
   // TODO: use LongMap if possible
   @JsonDeserialize( keyAs = classOf[java.lang.Long], contentAs = classOf[java.lang.Integer] )
