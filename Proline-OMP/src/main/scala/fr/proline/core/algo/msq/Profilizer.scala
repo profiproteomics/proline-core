@@ -15,6 +15,7 @@ import fr.proline.core.om.model.msq.MasterQuantComponent
 import fr.proline.core.om.model.msq.MasterQuantComponent
 import fr.proline.core.om.model.msq.MasterQuantComponent
 import fr.proline.core.algo.msq.summarizing.BuildMasterQuantPeptide
+import fr.proline.core.om.model.SelectionLevel
 
 // TODO: recompute raw abundances from peakels
 // (smoothing methods, area VS apex intensity, first isotope vs max one vs isotope pattern fitting)
@@ -335,8 +336,18 @@ class Profilizer( expDesign: ExperimentalDesign, groupSetupNumber: Int = 1, mast
     for( mqProtSet <- masterQuantProtSets ) {
       
       val selectionLevelMap: HashMap[Long, Int] = mqProtSet.masterQuantPeptides.map(a => a.id -> a.selectionLevel)(collection.breakOut)
-      val curSelectionLevelMap = mqProtSet.properties.get.getSelectionLevelByMqPeptideId().getOrElse(HashMap()).filter{case (k,v) => (v == 0) || (v == 3)}
-      selectionLevelMap.transform((k,v) => curSelectionLevelMap.getOrElse(k, v))
+      val curSelectionLevelMap = mqProtSet.properties.get.getSelectionLevelByMqPeptideId().getOrElse(HashMap())
+      selectionLevelMap.transform((k,datasetSelectionLevel) => 
+          if (SelectionLevel.isSetManually(datasetSelectionLevel)) { datasetSelectionLevel } else { 
+            val protSelectionLevel = curSelectionLevelMap(k)
+            val newSelectionLevel = if (SelectionLevel.isSetManually(protSelectionLevel)) {
+              protSelectionLevel
+            } else {
+              datasetSelectionLevel
+            }
+            newSelectionLevel
+          }
+        )
       
       mqProtSet.properties.get.mqPeptideSelLevelById = selectionLevelMap
     }
