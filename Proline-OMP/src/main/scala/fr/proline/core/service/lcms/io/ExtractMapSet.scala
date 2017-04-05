@@ -171,8 +171,8 @@ class ExtractMapSet(
     val (finalMapSet, alnResult) = if (quantConfig.detectPeakels) {
       // TODO: move in a specific class implem (DetectMapSet)
       this._detectMapSetFromPeakels(lcMsRuns, mzDbFileByLcMsRunId, tmpMapSetId)
-      // Old way of map set creation (individual map extraction)
     } else {
+      // Old way of map set creation (individual map extraction)
       // TODO: move in a specific class implem (ExtractMapSet)
       this._extractMapSet(lcMsRuns, mzDbFileByLcMsRunId, tmpMapSetId)
     }
@@ -601,7 +601,7 @@ class ExtractMapSet(
     }
   }
     
-  private def _detectMapSetFromPeakels(
+private def _detectMapSetFromPeakels(
     lcMsRuns: Seq[LcMsRun],
     mzDbFileByLcMsRunId: LongMap[File],
     mapSetId: Long
@@ -918,7 +918,7 @@ class ExtractMapSet(
         
         (tmpMapSet,x2RawMaps)
       } // End of Future
-      
+          
       var mapSetDetectionExceptionOpt = Option.empty[Throwable]
       mapSetDetectionFuture.onFailure { case t: Throwable =>
         
@@ -960,8 +960,14 @@ class ExtractMapSet(
       // Insert the peakel stream
       val peakelIdByTmpIdByRawMapId = peakelWriter.asInstanceOf[PgPeakelWriter].insertPeakelStream(forEachPeakel, None)
       
+      
+      /**
+       * 
+       * We are now returning to the MAIN thread
+       *
+       * */
+
       // Synchronize map set detection operations
-      // We are now returning to the main thread
       val (tmpMapSet,x2RawMaps) = Await.result(mapSetDetectionFuture, Duration.Inf)
       
       // Update feature peakel item IDs
