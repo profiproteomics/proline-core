@@ -55,7 +55,7 @@ public class Dataset implements Serializable {
     private static final long serialVersionUID = 1L;
 
     public enum DatasetType {
-	IDENTIFICATION, QUANTITATION, AGGREGATE, TRASH
+	IDENTIFICATION, QUANTITATION, AGGREGATE, TRASH, QUANTITATION_FOLDER, IDENTIFICATION_FOLDER
     };
 
     @Id
