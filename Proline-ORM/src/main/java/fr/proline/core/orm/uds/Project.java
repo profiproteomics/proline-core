@@ -30,7 +30,7 @@ import javax.persistence.Transient;
 	@NamedQuery(name = "findProjectsByMembership", query = "Select p from Project p, ProjectUserAccountMap p2u, UserAccount u where u.id=:id and p2u.userAccount=u and p2u member OF p.projectUserAccountMap"),
 	@NamedQuery(name = "findProjectsByOwner", query = "Select p from Project p where p.owner.id=:id"),
 	@NamedQuery(name = "findAllProjectIds", query = "select p.id from fr.proline.core.orm.uds.Project p order by p.id") ,
-	@NamedQuery(name = "findAllActiveProjectIds", query = "select p.id from fr.proline.core.orm.uds.Project p WHERE p.serializedProperties is not null and p.serializedProperties NOT LIKE '%\"is_coverage_updated\":true%'") })
+	@NamedQuery(name = "findAllActiveProjectIds", query = "select p.id from fr.proline.core.orm.uds.Project p WHERE ( (p.serializedProperties is null) OR (p.serializedProperties is not null and p.serializedProperties NOT LIKE '%\"is_active\":false%'))") })
 
 public class Project implements Serializable {
 

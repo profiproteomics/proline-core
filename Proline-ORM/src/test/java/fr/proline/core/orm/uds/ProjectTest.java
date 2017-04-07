@@ -149,7 +149,6 @@ public class ProjectTest extends DatabaseTestCase {
 		List<Long> pActiveIds = ProjectRepository.findAllActiveProjectIds(udsEm);
 		assertNotNull(pActiveIds);
 		assertTrue(pActiveIds.size() == 1);
-
 	}
 
 	@Test
