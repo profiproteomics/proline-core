@@ -13,8 +13,6 @@ import scala.collection.mutable.LongMap
 import scala.collection.parallel._
 import scala.concurrent._
 import scala.concurrent.duration.Duration
-import scala.concurrent.forkjoin.ForkJoinPool
-import scala.concurrent.ExecutionContext.Implicits.global
 import scala.util.control.Breaks._
 
 import com.almworks.sqlite4java.SQLiteConnection
@@ -56,7 +54,6 @@ import fr.proline.core.om.storer.lcms.impl.SQLScanSequenceStorer
 import fr.proline.core.service.lcms.AlignMapSet
 import fr.proline.core.service.lcms.CreateMapSet
 import fr.proline.core.service.lcms.ILcMsService
-import fr.proline.core.util.CoreConfig
 
 import rx.lang.scala.Observable
 import rx.lang.scala.JavaConversions.toJavaObservable
@@ -72,21 +69,18 @@ import rx.exceptions.Exceptions
  *
  */
 object ExtractMapSet {
-  val ISOTOPE_PATTERN_HALF_MZ_WINDOW = 5
-  //VDS : Use specified config value though CoreConfig
-//  val MZDB_MAX_PARALLELISM = 2 // Defines how many mzDB files we want to process in parallel
-
-  val threadCount = new java.util.concurrent.atomic.AtomicInteger()
-  val terminatedThreadCount = new java.util.concurrent.atomic.AtomicInteger()
   
-  // Create a custom ThreadFactory to customize the name of threads in the pool
-  // TODO: do the same thing in mzDB-processing
-  val threadFactory = new java.util.concurrent.ThreadFactory {
+  val ISOTOPE_PATTERN_HALF_MZ_WINDOW = 5
+  val RUN_SLICE_MAX_PARALLELISM = { // Defines how many run slices we want to process in parallel
+    val nbProcessors = Runtime.getRuntime().availableProcessors()
+    Some( math.max( 1, (nbProcessors / 2).toInt ) )
+  }
 
-    def newThread(r: Runnable): Thread = {
-      val threadName = s"ExtractMapSet-RTree-Thread-${ExtractMapSet.threadCount.incrementAndGet()}"
-      new Thread(r, threadName)
-    }
+  private var mzdbMaxParallelism = 2 // Defines how many mzDB files we want to process in parallel
+  
+  // Synchronized method used to change the mzDB maximum parallelism value
+  def setMzdbMaxParallelism(maxParallelism: Int) = this.synchronized {
+    mzdbMaxParallelism = maxParallelism
   }
   
   private var tempDir = new File(System.getProperty("java.io.tmpdir"))
@@ -96,6 +90,19 @@ object ExtractMapSet {
     require( tempDir.isDirectory(), "tempDir must be a directory")
     
     tempDir = tempDirectory
+  }
+  
+  protected val threadCount = new java.util.concurrent.atomic.AtomicInteger()
+  protected val terminatedThreadCount = new java.util.concurrent.atomic.AtomicInteger()
+  
+  // Create a custom ThreadFactory to customize the name of threads in the pool
+  // TODO: do the same thing in mzDB-processing
+  protected val rtreeThreadFactory = new java.util.concurrent.ThreadFactory {
+
+    def newThread(r: Runnable): Thread = {
+      val threadName = s"ExtractMapSet-RTree-Thread-${ExtractMapSet.threadCount.incrementAndGet()}"
+      new Thread(r, threadName)
+    }
   }
 }
 
@@ -171,8 +178,8 @@ class ExtractMapSet(
     val (finalMapSet, alnResult) = if (quantConfig.detectPeakels) {
       // TODO: move in a specific class implem (DetectMapSet)
       this._detectMapSetFromPeakels(lcMsRuns, mzDbFileByLcMsRunId, tmpMapSetId)
-    } else {
       // Old way of map set creation (individual map extraction)
+    } else {
       // TODO: move in a specific class implem (ExtractMapSet)
       this._extractMapSet(lcMsRuns, mzDbFileByLcMsRunId, tmpMapSetId)
     }
@@ -601,7 +608,7 @@ class ExtractMapSet(
     }
   }
     
-private def _detectMapSetFromPeakels(
+  private def _detectMapSetFromPeakels(
     lcMsRuns: Seq[LcMsRun],
     mzDbFileByLcMsRunId: LongMap[File],
     mapSetId: Long
@@ -615,17 +622,24 @@ private def _detectMapSetFromPeakels(
     )
 
     val detectorEntityCache = new LcMsMapDetectorEntityCache(
-      lcMsRuns: Seq[LcMsRun],
-      mzDbFileByLcMsRunId: LongMap[File],
+      lcMsRuns,
+      mzDbFileByLcMsRunId,
       mapSetId
     )
     // Customize how many files we want to process in parallel
-    val forkJoinPool = new scala.concurrent.forkjoin.ForkJoinPool(CoreConfig.mzdbMaxParallelism)
-    val computationThreadPool = Executors.newFixedThreadPool(
-      CoreConfig.mzdbMaxParallelism,
-      ExtractMapSet.threadFactory
+    // We need one thread for the whole map set detection put 2 threads per mzDB file
+    val ioThreadPool = Executors.newFixedThreadPool(
+      1 + ExtractMapSet.mzdbMaxParallelism * 2,
+      Executors.defaultThreadFactory()
     )
-    implicit val rxCompScheduler = rx.lang.scala.JavaConversions.javaSchedulerToScalaScheduler(
+    implicit val ioExecCtx = ExecutionContext.fromExecutor(ioThreadPool)
+    
+    // Customize a thread pool for R*Tree computation
+    val computationThreadPool = Executors.newFixedThreadPool(
+      ExtractMapSet.mzdbMaxParallelism,
+      ExtractMapSet.rtreeThreadFactory
+    )
+    val rxCompScheduler = rx.lang.scala.JavaConversions.javaSchedulerToScalaScheduler(
       rx.schedulers.Schedulers.from(computationThreadPool)
     )
     
@@ -665,7 +679,7 @@ private def _detectMapSetFromPeakels(
       val publishedPeakelQueue = new LinkedBlockingQueue[Option[Peakel]]()
       var isLastPublishedPeakel = false
       
-      val mapSetDetectionFuture = Future {
+      val mapSetDetectionFuture = Future { // TODO: why do we need a future here ?
         
         // Observe the peakel publisher in a separate thread
         peakelPublisher.subscribe({ case (peakel,rawMapId) =>
@@ -682,7 +696,7 @@ private def _detectMapSetFromPeakels(
         })
         
         logger.info("Detecting LC-MS maps...")
-        val processedMaps = this._detectMapsFromPeakels(rawMaps, detectorEntityCache, peakelPublisher, forkJoinPool, rxCompScheduler)
+        val processedMaps = this._detectMapsFromPeakels(rawMaps, detectorEntityCache, peakelPublisher, rxCompScheduler)
         
         // Create some new mappings between LC-MS runs and the processed maps
         val processedMapByRunId = new LongMap[ProcessedMap]()
@@ -918,7 +932,7 @@ private def _detectMapSetFromPeakels(
         
         (tmpMapSet,x2RawMaps)
       } // End of Future
-          
+      
       var mapSetDetectionExceptionOpt = Option.empty[Throwable]
       mapSetDetectionFuture.onFailure { case t: Throwable =>
         
@@ -960,13 +974,10 @@ private def _detectMapSetFromPeakels(
       // Insert the peakel stream
       val peakelIdByTmpIdByRawMapId = peakelWriter.asInstanceOf[PgPeakelWriter].insertPeakelStream(forEachPeakel, None)
       
-      
       /**
-       * 
-       * We are now returning to the MAIN thread
+       * We are now returning to the MAIN thread :)
        *
        * */
-
       // Synchronize map set detection operations
       val (tmpMapSet,x2RawMaps) = Await.result(mapSetDetectionFuture, Duration.Inf)
       
@@ -1058,11 +1069,11 @@ private def _detectMapSetFromPeakels(
       this.logger.debug("Closing ExtractMapSet thread pools...")
       
       // Shutdown the thread pools
+      if (ioThreadPool.isShutdown() == false ) ioThreadPool.shutdownNow()
       if (computationThreadPool.isShutdown() == false ) computationThreadPool.shutdownNow()
-      if (forkJoinPool.isShutdown() == false ) forkJoinPool.shutdownNow()
       
       // Update terminatedThreadCount and reset the ThreadCount
-      val terminatedThreadCount = ExtractMapSet.terminatedThreadCount.addAndGet(CoreConfig.mzdbMaxParallelism)
+      val terminatedThreadCount = ExtractMapSet.terminatedThreadCount.addAndGet(ExtractMapSet.mzdbMaxParallelism)
       if (terminatedThreadCount == ExtractMapSet.threadCount) {
         ExtractMapSet.threadCount.set(0)
       }
@@ -1168,9 +1179,8 @@ private def _detectMapSetFromPeakels(
     rawMaps: Seq[RawMap],
     entityCache: LcMsMapDetectorEntityCache,
     peakelPublisher: Subject[(Peakel,Long)],
-    forkJoinPool: ForkJoinPool,
     rxCompScheduler: Scheduler
-  ): Array[ProcessedMap] = {
+  )(implicit execCtx: ExecutionContext): Array[ProcessedMap] = {
     
     val rawMapByRunId = rawMaps.mapByLong(_.runId)
     val lcMsRuns = entityCache.lcMsRuns
@@ -1180,7 +1190,8 @@ private def _detectMapSetFromPeakels(
     val peakelIdByMzDbPeakelIdByRunId = entityCache.peakelIdByMzDbPeakelIdByRunId
     val mzDbPeakelIdsByPeptideAndChargeByRunId = entityCache.mzDbPeakelIdsByPeptideAndChargeByRunId
     
-    val groupedParLcMsRuns = lcMsRuns.grouped(CoreConfig.mzdbMaxParallelism).map(_.par).toList
+    // FIXME: sort lcMsRuns by number when the number value is correctly set
+    val groupedParLcMsRuns = lcMsRuns.sortBy(_.id).grouped(ExtractMapSet.mzdbMaxParallelism).map(_.par).toList
     
     val parProcessedMaps = for (parLcMsRuns <- groupedParLcMsRuns; lcMsRun <- parLcMsRuns) yield {
       
@@ -1211,7 +1222,7 @@ private def _detectMapSetFromPeakels(
       val needPeakelDetection = (quantConfig.useLastPeakelDetection == false || existingPeakelFiles.isEmpty)
       
       val futurePeakelDetectionResult = if (needPeakelDetection) {
-
+        
         // Remove TMP files if they exist
         existingPeakelFiles.foreach(_.delete())
         
@@ -1225,7 +1236,7 @@ private def _detectMapSetFromPeakels(
         // Create a mapping between the TMP file and the LC-MS run
         entityCache.addPeakelFile(lcMsRunId, peakelFile)
 
-        val resultPromise = Promise[(Observable[Array[MzDbPeakel]],LongMap[Array[SpectrumHeader]])]
+        val resultPromise = Promise[(Observable[(Int,Array[MzDbPeakel])],LongMap[Array[SpectrumHeader]])]
         
         Future {
           this.logger.info(s"Detecting peakels in raw MS survey for run id=$lcMsRunId...")
@@ -1245,10 +1256,11 @@ private def _detectMapSetFromPeakels(
             )
             
             // Launch the peakel detection
-            val onDetectedPeakels = { observablePeakels: Observable[Array[MzDbPeakel]] =>
+            val onDetectedPeakels = { observablePeakels: Observable[(Int,Array[MzDbPeakel])] =>
               resultPromise.success(observablePeakels,mzdbFtDetector.ms2SpectrumHeadersByCycle)
             }
-            mzdbFtDetector.detectPeakelsAsync( mzDb.getLcMsRunSliceIterator(), onDetectedPeakels )
+            val nParRunSlices = ExtractMapSet.RUN_SLICE_MAX_PARALLELISM
+            mzdbFtDetector.detectPeakelsAsync( mzDb.getLcMsRunSliceIterator(), onDetectedPeakels, nParRunSlices )
             
             // Used to simulate the old behavior
             /*val observablePeakels = Observable[Array[MzDbPeakel]] { subscriber =>
@@ -1303,9 +1315,9 @@ private def _detectMapSetFromPeakels(
               // Open TMP SQLite file
               lazy val peakelFileConnection = _initPeakelStore(peakelFile)
               
-              observableRunSlicePeakels.observeOn(rxIOScheduler).subscribe({ peakels =>
+              observableRunSlicePeakels.observeOn(rxIOScheduler).subscribe({ case (rsId,peakels) =>
                 
-                logger.trace("Storing run slice peakels...")
+                logger.trace(s"Storing ${peakels.length} peakels for run slice #$rsId and run #${lcMsRun.id}...")
                 
                 // Store peakels in SQLite file
                 this._storePeakelsInPeakelDB(peakelFileConnection, peakels, lcMsRun.scanSequence.get)
@@ -1316,6 +1328,7 @@ private def _detectMapSetFromPeakels(
                 subscriber.onError(e)
               }, { () =>
                 tryOrPropagateError {
+                  logger.debug("All run slices have been analyzed to generate the peakelDB: "+ peakelFile.getName)
                   peakelFileConnection.dispose()
                   subscriber.onCompleted()
                 }
