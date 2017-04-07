@@ -1,19 +1,26 @@
 package fr.proline.core.service.msi
 
-import javax.persistence.EntityManager
+import scala.annotation.migration
 import com.typesafe.scalalogging.LazyLogging
-import fr.profi.util.regex.RegexUtils._
-import fr.profi.util.primitives._
 import fr.proline.api.service.IService
 import fr.proline.context.IExecutionContext
 import fr.proline.context.MsiDbConnectionContext
-import fr.proline.core.dal._
-import fr.proline.core.dal.context._
+import fr.proline.core.dal.DoJDBCReturningWork
+import fr.proline.core.dal.DoJDBCWork
+import fr.proline.core.dal.tables.SelectQueryBuilder.any2ClauseAdd
+import fr.proline.core.dal.tables.SelectQueryBuilder1
 import fr.proline.core.dal.tables.msi.MsiDbSpectrumTable
+import fr.proline.core.om.model.msi.SpectrumTitleFields
 import fr.proline.core.om.model.msi.SpectrumTitleFields.RAW_FILE_IDENTIFIER
 import fr.proline.core.om.model.msi.SpectrumTitleParsingRule
+import javax.persistence.EntityManager
 import fr.proline.core.orm.uds.{ PeaklistSoftware => UdsPeaklistSoftware }
 import fr.proline.core.orm.uds.{ SpectrumTitleParsingRule => UdsSpectrumTitleParsingRule }
+import fr.proline.core.om.model.msi.SpectrumProperties
+import fr.profi.util.serialization.ProfiJson
+import fr.proline.core.dal.tables.msi.MsiDbPeaklistSoftwareTable
+import fr.proline.core.dal.tables.uds.UdsDbPeaklistSoftwareTable
+import fr.profi.util.StringUtils
 
 object SpectraParamsUpdater extends LazyLogging {
   
@@ -63,14 +70,17 @@ class SpectraParamsUpdater(
     val udsDbCtx = execCtx.getUDSDbConnectionContext()
     val udsEM = execCtx.getUDSDbConnectionContext().getEntityManager()
     
-    val peaklistSoftId = DoJDBCReturningWork.withEzDBC(udsDbCtx) { udsEzDBC =>
-      udsEzDBC.selectLong("SELECT id FROM peaklist_software WHERE spec_title_parsing_rule_id = " + specTitleRuleId)
+    val getPeaklistSoftwareQuery = new SelectQueryBuilder1(UdsDbPeaklistSoftwareTable).mkSelectQuery( (t,c) =>
+					List(t.ID) -> "WHERE "~ t.SPEC_TITLE_PARSING_RULE_ID ~" = "~ specTitleRuleId)
+					
+    val peaklistSoftId = DoJDBCReturningWork.withEzDBC(udsDbCtx) { udsEzDBC =>      
+      udsEzDBC.selectLong(getPeaklistSoftwareQuery)
     }
-    this.logger.debug("Peaklist software ID = " + peaklistSoftId)
+    this.logger.debug("Peaklist software ID used = " + peaklistSoftId)
     
     // Retrieve the specTitleParsingRule
     val udsSpecTitleParsingRule = udsEM.find(classOf[UdsSpectrumTitleParsingRule], specTitleRuleId) 
-    require(udsSpecTitleParsingRule != null, "no spectrum title parsing rule in UDSdb with ID=" + specTitleRuleId)
+    require(udsSpecTitleParsingRule != null, "no spectrum title parsing rule in UDSdb with ID=" + specTitleRuleId)   
     
     val parsingRule = new SpectrumTitleParsingRule(
       id = specTitleRuleId,
@@ -88,26 +98,41 @@ class SpectraParamsUpdater(
     // Do JDBC work in a managed transaction (rolled back if necessary)*
     DoJDBCWork.tryTransactionWithEzDBC(msiDbCtx) { ezDBC =>
       
-      val sqlQuery = "SELECT id, title FROM spectrum WHERE peaklist_id = " + peaklistId
-      this.logger.debug(s"Executing SQL query: $sqlQuery")
+      val sqlQuery = new SelectQueryBuilder1(MsiDbSpectrumTable).mkSelectQuery( (t,c) =>
+					List(t.ID,t.TITLE, t.SERIALIZED_PROPERTIES) -> "WHERE "~ t.PEAKLIST_ID~" = "~ peaklistId)
       
       ezDBC.selectAndProcess( sqlQuery ) { r =>
         
         val spectrumId = r.nextLong
         val spectrumTitle = r.nextString
-
+        val spectrumSerializedProperties = r.nextString      
+      
         val extractedAttrs = parsingRule.parseTitle(spectrumTitle)
+        val fullExtractAttrs = collection.mutable.Map() ++ extractedAttrs
+        for(nextSpectrumField <- SpectrumTitleFields.values){
+          //Go through all Field to reset unparsed field
+          if(!extractedAttrs.contains(nextSpectrumField)) {
+            fullExtractAttrs.put(nextSpectrumField, null)
+            if( (SpectrumTitleFields.LAST_TIME.equals(nextSpectrumField) || SpectrumTitleFields.FIRST_TIME.equals(nextSpectrumField))
+                  && StringUtils.isNotEmpty(spectrumSerializedProperties) ) {
+               //For First_Time, set to RT if none specified 
+               val spectrumProperties  = ProfiJson.deserialize[SpectrumProperties](spectrumSerializedProperties)
+               logger.trace(" USE RT"+ spectrumSerializedProperties+" for spectrum "+spectrumId)
+               if(spectrumProperties.rtInSeconds.isDefined){
+                 fullExtractAttrs.put(nextSpectrumField, (spectrumProperties.rtInSeconds.get/60.0f).toString())
+               }
+            }
+          }
+        }
         
-        // Update spectrum if attributes have been extracted
-        if( extractedAttrs.size > 0 ) {
-          val attrsToUpdate = extractedAttrs.withFilter(_._1 != RAW_FILE_IDENTIFIER).map { case (k,v) =>
+         // Update spectrum with attributes that have been extracted or null if none found
+          val attrsToUpdate = fullExtractAttrs.withFilter(_._1 != RAW_FILE_IDENTIFIER).map { case (k,v) =>
             k.toString().toLowerCase() + "=" + v
           }
+          
           ezDBC.execute( "UPDATE spectrum SET " + attrsToUpdate.mkString(",") + " WHERE id = " + spectrumId )
           updatedSpectraCount += 1
-        } else {
-          this.logger.trace(s"Can't use parsing rule #$specTitleRuleId to parse information from spectrum title: #$spectrumTitle ")
-        }
+
         
         ()
       }
