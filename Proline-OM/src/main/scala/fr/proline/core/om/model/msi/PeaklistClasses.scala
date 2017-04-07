@@ -4,6 +4,7 @@ import scala.beans.BeanProperty
 import scala.collection.mutable.HashMap
 import com.typesafe.scalalogging.LazyLogging
 import fr.profi.util.misc.InMemoryIdGen
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize
 
 object Peaklist extends InMemoryIdGen
 
@@ -64,7 +65,10 @@ case class Spectrum (
   var properties: Option[SpectrumProperties] = None
 )
 
-case class SpectrumProperties()
+case class SpectrumProperties(
+   @JsonDeserialize(contentAs = classOf[java.lang.Float] )
+   @BeanProperty var rtInSeconds: Option[Float] = None
+)
 
 object SpectrumTitleFields extends Enumeration {
   val RAW_FILE_IDENTIFIER = Value("RAW_FILE_IDENTIFIER")
