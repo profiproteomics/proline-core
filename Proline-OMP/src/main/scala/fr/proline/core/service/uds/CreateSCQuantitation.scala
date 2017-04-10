@@ -164,6 +164,7 @@ class CreateSCQuantitation(
         
         // Retrieve some vars
         val sampleNum = quantChannel.sampleNumber
+        val quantChannelName = quantChannel.name
         val udsBioSample = udsBioSampleByNum(sampleNum)
         
         // Retrieve replicate number and increment it
@@ -239,7 +240,7 @@ class CreateSCQuantitation(
 
         val udsQuantChannel = new UdsQuantChannel()
         udsQuantChannel.setNumber(quantChannelNum)
-        udsQuantChannel.setName("")
+        udsQuantChannel.setName(quantChannelName)
         udsQuantChannel.setContextKey(contextKey)
         udsQuantChannel.setIdentResultSummaryId(quantChannel.identResultSummaryId)
         udsQuantChannel.setSampleReplicate(udsSampleReplicateByKey(contextKey))
