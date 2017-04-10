@@ -827,9 +827,11 @@ class WeightedSpectralCountQuantifier(
     val result = scala.collection.mutable.Map[PeptideSet, Seq[(Long, String)]]()
     val pepSetById = rsm.peptideSets.map(pepSet => pepSet.id -> pepSet).toMap
 
-    rsm.proteinSets.withFilter(_.isValidated).foreach(protSet => {
-//    rsm.proteinSets.foreach(protSet => { //TODO : Revoir correction voulu ! ticket #14394 VDS: no validation filter in case, proteinset seen in parent (RefRSM)
-
+//    rsm.proteinSets.withFilter(_.isValidated).foreach(protSet => {
+    // VDS ticket #14394: Don't filter valid proteins any more!  
+    rsm.proteinSets.foreach(protSet => { 
+    
+      
       //Do SameSet PeptideSet
       val seqBuilder = Seq.newBuilder[(Long, String)]
       protSet.peptideSet.proteinMatchIds.foreach(pmId => {
