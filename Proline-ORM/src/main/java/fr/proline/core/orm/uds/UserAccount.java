@@ -21,7 +21,11 @@ import fr.proline.core.orm.util.JsonSerializer;
 @Entity
 @Table(name = "user_account")
 public class UserAccount implements Serializable {
-
+    
+	public enum UserGroupType {
+		USER, ADMIN
+    };
+    
     private static final long serialVersionUID = 1L;
 
     @Id
