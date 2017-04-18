@@ -118,7 +118,7 @@ public class SpectrumTitleParsingRule implements Serializable {
 		MAX_QUANT_RULE(SoftwareRelease.MAX_QUANT,"^RawFile: (.+?) FinneganScanNumber:",null,null,"FinneganScanNumber: (\\d+)","FinneganScanNumber: (\\d+)",null,null),
 		PROLINE_RULE(SoftwareRelease.PROLINE,"raw_file_identifier:(\\w+?);","first_cycle:(\\d+);","last_cycle:(\\d+);","first_scan:(\\d+);","last_scan:(\\d+);","first_time:(\\d+\\.\\d+);","last_time:(\\d+\\.\\d+);"),
 		PROTEIN_PILOT_RULE(SoftwareRelease.PROTEIN_PILOT,"File:\"(\\w+)\\.wiff\"","Locus:\\d\\.\\d\\.\\d\\.(\\d+)\\.\\d+ File:","Locus:\\d\\.\\d\\.\\d\\.(\\d+)\\.\\d+ File:",null,null,null,null),
-		PROTEOME_DISCOVER_RULE(SoftwareRelease.PROTEOME_DISCOVER,null,null,null,"Spectrum\\d+\\s+scans:(\\d+?),","Spectrum\\d+\\s+scans:(\\d+?),",null,null),
+		PROTEOME_DISCOVER_RULE(SoftwareRelease.PROTEOME_DISCOVER,null,null,null,"scans:.*?(\\d+),","scans:.*?(\\d+),",null,null),
 		PROTEO_WIZARD_2_0_RULE(SoftwareRelease.PROTEO_WIZARD_2_0,null,null,null,"scan=(\\d+)","scan=(\\d+)",null,null),
 		PROTEO_WIZARD_2_1_RULE(SoftwareRelease.PROTEO_WIZARD_2_1,"(.+)\\.\\d+\\.\\d+\\.\\d+$",null,null,".+\\.(\\d+)\\.\\d+\\.\\d+$",".+\\.\\d+\\.(\\d+)\\.\\d+$",null,null),
 		PROTEO_WIZARD_3_0_RULE(SoftwareRelease.PROTEO_WIZARD_3_0,"File:\"(.+?)\\..+\",",null,null,"scan=(\\d+)","scan=(\\d+)",null,null),
