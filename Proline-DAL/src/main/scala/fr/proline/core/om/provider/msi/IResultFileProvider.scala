@@ -8,6 +8,7 @@ import fr.proline.core.om.model.msi.PtmDefinition
 import fr.profi.chemistry.model.Enzyme
 
 trait IResultFileVerifier {
+  
    // returns PtmDefinitions referenced by the specified file
    def getPtmDefinitions(fileLocation: File, importProperties: Map[String, Any]): Seq[PtmDefinition]
    // can be used to verify that the provider handle this kind of file (ex: MSMS search, error tolerant search, n15 search, PMF, ...)  
@@ -18,11 +19,27 @@ trait IResultFileVerifier {
 
 trait IResultFileProvider {
   
+  /**
+   * 
+   * String uniquely identifying this IResultFileProvider
+   */
   val fileType: String
-  def getResultFile( fileLocation: File, importProperties: Map[String, Any],
-      parserContext: ProviderDecoratedExecutionContext): IResultFile
+  
+  /**
+   * Return a ResultFile Instance for specified file and parse properties 
+   */
+  def getResultFile( fileLocation: File, importProperties: Map[String, Any], parserContext: ProviderDecoratedExecutionContext): IResultFile
+  
+  /**
+   * Return an IResultFileVerifier for this IResultFileProvider type which could be use to make various verification such as file format, PTM definition ...
+   */
   def getResultFileVerifier : IResultFileVerifier
+  
   def setParserContext(parserContext: ProviderDecoratedExecutionContext) : Unit = None  // X!Tandem needs to connect to database to check PTM and enzymes
+  
+  /**
+   * Return a list of all properties (associated to their type) that is used by this IResultFileProvider
+   */
   val resultFileProperties : Map[String, Class[_]]
   
 }

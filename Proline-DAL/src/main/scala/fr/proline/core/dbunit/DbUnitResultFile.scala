@@ -51,6 +51,7 @@ class DbUnitResultFile(
   
   this.instrumentConfig = Option(msiSearch.searchSettings.instrumentConfig)
   this.peaklistSoftware = Option(msiSearch.peakList.peaklistSoftware)
+  override def parseResultSet(wantDecoy: Boolean)  {  }
   
   def getResultSet( wantDecoy: Boolean ): ResultSet = {
     
