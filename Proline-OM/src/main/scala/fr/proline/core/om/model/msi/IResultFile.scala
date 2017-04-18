@@ -30,6 +30,12 @@ trait IResultFile extends IRsContainer {
     
   def close(): Unit // release resources
   
+  /**
+   * Load ResultSet from associated file. 
+   * This method could be called before the getResultSet() but it's not mandatory...
+   */  
+  def parseResultSet(wantDecoy: Boolean )
+  
   // Requirements
   // TODO: make this requirement works ???
   //require(fileLocation != null, "fileLocation is null")
