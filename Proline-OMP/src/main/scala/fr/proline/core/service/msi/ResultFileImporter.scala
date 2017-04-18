@@ -42,13 +42,16 @@ class ResultFileImporter(
   private var targetResultSetId: Long = 0L
   private var targetResultSet :Option[ResultSet] = None
 
+  private var resultFile: IResultFile = null
+  
   override protected def beforeInterruption = {
-    // Release database connections
-    //this.logger.info("releasing database connections before service interruption...")
+    // Close result file if needed
+    this.logger.info("releasing result file before service interruption...")
+    if(resultFile != null)
+      resultFile.close()
   }
 
-  def getTargetResultSetId = targetResultSetId
-  
+  def getTargetResultSetId = targetResultSetId  
   def getTargetResultSetOpt : Option[ResultSet] = targetResultSet
 
   def runService(): Boolean = {
@@ -63,8 +66,6 @@ class ResultFileImporter(
     val rsStorer = RsStorer(msiDbCtx, useJPA = useJpaStorer)
     var localMSITransaction: Boolean = false
     var msiTransacOk: Boolean = false
-
-    var resultFile: IResultFile = null
 
     try {
 
@@ -83,10 +84,9 @@ class ResultFileImporter(
 
       // Open the result file
       resultFile = rfProvider.get.getResultFile(resultIdentFile, importerProperties, parserContext)
-      >>>
+      executeOnProgress() //execute registered action during progress
 
       // --- Configure result file before parsing ---
-
       // Retrieve the instrument configuration
       val instConfigProvider = new SQLInstrumentConfigProvider(executionContext.getUDSDbConnectionContext)
       resultFile.instrumentConfig = instConfigProvider.getInstrumentConfig(instrumentConfigId)
@@ -99,8 +99,14 @@ class ResultFileImporter(
 
         resultFile.peaklistSoftware = Some(peaklistSoftware)
       }
-      >>>
+      executeOnProgress() //execute registered action during progress
 
+      //--- READ FILE BEFORE STIRE
+      resultFile.parseResultSet(false) //read target
+      if(resultFile.hasDecoyResultSet)
+        resultFile.parseResultSet(true)
+      executeOnProgress() //execute registered action during progress
+      
       storerContext = StorerContext(executionContext) // Use Object factory
 
       val tdMode = if (resultFile.hasDecoyResultSet) {
@@ -125,7 +131,7 @@ class ResultFileImporter(
       this.targetResultSetId = storedRS.id
       targetResultSet = Some(storedRS)
 
-      >>>
+      executeOnProgress() //execute registered action during progress
 
       // Commit transaction if it was initiated locally
       if (localMSITransaction) {
