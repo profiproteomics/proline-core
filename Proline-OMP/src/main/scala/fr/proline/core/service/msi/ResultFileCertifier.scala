@@ -1,28 +1,21 @@
 package fr.proline.core.service.msi
 
 import java.io.File
+
 import scala.collection.mutable.ArrayBuffer
+
 import com.typesafe.scalalogging.LazyLogging
+
+import fr.profi.chemistry.model.Enzyme
 import fr.proline.api.service.IService
 import fr.proline.context.IExecutionContext
-import fr.proline.core.dal.context._
-import fr.proline.core.om.provider.ProviderDecoratedExecutionContext
-import fr.proline.core.om.provider.msi.IResultFileProvider
-import fr.proline.core.om.provider.msi.ResultFileProviderRegistry
-import fr.proline.core.om.storer.ps.BuildPtmDefinitionStorer
-import fr.proline.core.om.storer.uds.BuildEnzymeStorer
+import fr.proline.core.dal.context.dbCtxToTxDbCtx
 import fr.proline.core.om.model.msi.PtmDefinition
+import fr.proline.core.om.provider.ProviderDecoratedExecutionContext
 import fr.proline.core.om.provider.msi.IResultFileProvider
 import fr.proline.core.om.provider.msi.ResultFileProviderRegistry
-import fr.proline.core.om.provider.ProviderDecoratedExecutionContext
-import fr.proline.core.om.storer.uds.BuildEnzymeStorer
 import fr.proline.core.om.storer.ps.BuildPtmDefinitionStorer
-import fr.profi.chemistry.model.Enzyme
-import fr.proline.core.om.provider.msi.IResultFileProvider
-import fr.proline.core.om.provider.msi.ResultFileProviderRegistry
-import fr.proline.core.om.provider.ProviderDecoratedExecutionContext
 import fr.proline.core.om.storer.uds.BuildEnzymeStorer
-import fr.proline.core.om.storer.ps.BuildPtmDefinitionStorer
 
 
 class ResultFileCertifier(
@@ -42,7 +35,9 @@ class ResultFileCertifier(
     val udsDbCtx = executionContext.getUDSDbConnectionContext()
     
     for ((fileType, files) <- resultIdentFilesByFormat) {
-      
+      	executeOnProgress() //execute registered action during progress
+      	
+
       // Get Right ResultFile provider
       val rfProvider: Option[IResultFileProvider] = ResultFileProviderRegistry.get(fileType)
       require(rfProvider.isDefined, "No ResultFileProvider for specified identification file format "+fileType)
@@ -52,7 +47,6 @@ class ResultFileCertifier(
       if(fileType.equals("xtandem.xml")) {
         val parserContext = ProviderDecoratedExecutionContext(executionContext) // Use Object factory       
         rfProvider.get.setParserContext(parserContext)
-//        rfProvider.get.setXtandemFile()
       }
       
       val storer = BuildPtmDefinitionStorer(executionContext.getPSDbConnectionContext)
@@ -81,9 +75,10 @@ class ResultFileCertifier(
         for (e <- enzymeDefs) {
           if (!enzymes.exists(_.eq(e))) enzymes += e
         }
-//        if(!enzymes.exists(_.eq(enzyme))) enzymes += enzyme
       }
       
+    	executeOnProgress() //execute registered action during progress
+      	
       // Store PTMs if some were found
       if( ptms.length > 0 ) {
         
@@ -93,7 +88,8 @@ class ResultFileCertifier(
         }
         if( isTxOk == false ) result = false
       }
-      
+
+    	executeOnProgress() //execute registered action during progress
       // Store enzyme if some were found
       if(enzymes.length > 0) {
         

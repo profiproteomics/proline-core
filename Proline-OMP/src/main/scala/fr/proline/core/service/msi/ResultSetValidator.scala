@@ -154,11 +154,11 @@ class ResultSetValidator(
       params = RsmValidationParamsProperties(),
       results = RsmValidationResultsProperties()
     )
-    >>>
+    executeOnProgress() //execute registered action during progress
 
     // --- Validate PSM ---
     val( appliedPSMFilters, pepMatchValidationRocCurveOpt ) = this._validatePeptideMatches(targetRs, rsmValProperties)
-    >>>
+    executeOnProgress() //execute registered action during progress
 
     // --- Compute RSM from validated PSMs ---
 
@@ -189,7 +189,7 @@ class ResultSetValidator(
     // Build result summary for each individual result set
     val targetRsm = createRSM(Some(targetRs), pepMatchValidationRocCurveOpt).get
     val decoyRsmOpt = createRSM(if (targetRs.decoyResultSet != null) targetRs.decoyResultSet else None, None)
-    >>>
+    executeOnProgress() //execute registered action during progress
 
     // Set target RSM validation properties
     targetRsm.properties = Some(ResultSummaryProperties(validationProperties = Some(rsmValProperties)))
@@ -230,7 +230,7 @@ class ResultSetValidator(
 
       // Store target result summary
       rsmStorer.storeResultSummary(targetRsm, execContext)
-      >>>
+      executeOnProgress() //execute registered action during progress
       
           
       // Commit transaction if it was initiated locally
@@ -283,7 +283,7 @@ class ResultSetValidator(
           
       }
     } //End execute all PSM filters
-    >>>
+    executeOnProgress() //execute registered action during progress
 
     // If define, execute peptide match validator
     val rocCurveOpt = if( pepMatchValidator.isEmpty) None
@@ -381,7 +381,7 @@ class ResultSetValidator(
       }
     } //End go through all Prot Filters
 
-    >>>
+    executeOnProgress() //execute registered action during progress
 
     
     val tdModeOpt = if(targetRsm.resultSet.get.properties.isDefined && targetRsm.resultSet.get.properties.get.targetDecoyMode.isDefined){

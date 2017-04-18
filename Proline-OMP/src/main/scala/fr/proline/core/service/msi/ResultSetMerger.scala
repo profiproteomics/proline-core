@@ -148,6 +148,8 @@ class ResultSetMerger(
       }*/
     }
     
+    executeOnProgress() //execute registered action during progress
+    
     // Check that resultSets have FULL content
     for (rs <- resultSetById.values) {
     	require( rs.isValidatedContent == false, "use ResultSummaryMerger if you want to deal with validated result sets")
@@ -188,15 +190,17 @@ class ResultSetMerger(
         isValidatedContent = false,
         isDecoy = false,
         additionMode = aggregationMode.getOrElse(AdditionMode.AGGREGATION)
-      )
-  
+      )      
       for (rsId <- targetRsIds) {
         targetRsAdder.addResultSet(resultSetProvider(rsId))
         //logger.info("Additioner state : " + targetMergerAlgo.mergedProteinMatches.size + " ProMs, " + targetMergerAlgo.peptideById.size + " Peps," + targetMergerAlgo.mergedProteinMatches.map(_.sequenceMatches).flatten.length + " SeqMs")
       }
       
+      
       targetRsAdder.toResultSet
     }
+    
+    executeOnProgress() //execute registered action during progress
     
     if (decoyRsCount > 0) {
       logger.debug("Merging DECOY ResultSets ...")
@@ -207,13 +211,15 @@ class ResultSetMerger(
         isDecoy = true,
         additionMode = aggregationMode.getOrElse(AdditionMode.AGGREGATION)
       )
-
+      
       for (decoyRsId <- decoyRsIds) {
         decoyRsAdder.addResultSet(resultSetProvider(decoyRsId))
       }
 
       val decoyRs = decoyRsAdder.toResultSet
-
+      
+      executeOnProgress() //execute registered action during progress
+      
       DoJDBCWork.withEzDBC(storerContext.getMSIDbConnectionContext) { msiEzDBC =>
         /* Store merged decoy result set */
         _storeMergedResultSet(storerContext, msiEzDBC, decoyRs, decoyRsIds)
@@ -223,7 +229,9 @@ class ResultSetMerger(
 
       logger.debug("Merged DECOY ResultSet Id: " + decoyRs.id)
     }
-
+    
+    executeOnProgress() //execute registered action during progress
+    
     DoJDBCWork.withEzDBC(storerContext.getMSIDbConnectionContext) { msiEzDBC =>
       /* Store merged target result set */
       _storeMergedResultSet(storerContext, msiEzDBC, mergedResultSet, targetRsIds)
@@ -248,7 +256,7 @@ class ResultSetMerger(
     val rsStorer = RsStorer(storerContext.getMSIDbConnectionContext, useJPA)
     rsStorer.storeResultSet(resultSet, storerContext)
 
-    >>>
+    executeOnProgress() //execute registered action during progress
 
     // Link parent result set to its child result sets
     val parentRSId = resultSet.id
@@ -261,7 +269,6 @@ class ResultSetMerger(
       for (childRsId <- distinctRsIds) stmt.executeWith(parentRSId, childRsId)
     }
 
-    >>>
   }
 
 }

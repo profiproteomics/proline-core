@@ -92,7 +92,7 @@ class SpectraParamsUpdater(
       firstTimeRegex = Option(udsSpecTitleParsingRule.getFirstTime),
       lastTimeRegex = Option(udsSpecTitleParsingRule.getLastTime)
     )
-    
+    executeOnProgress() //execute registered action during progress
     this.logger.debug("Use parsing rule: " + parsingRule)
     
     // Do JDBC work in a managed transaction (rolled back if necessary)*

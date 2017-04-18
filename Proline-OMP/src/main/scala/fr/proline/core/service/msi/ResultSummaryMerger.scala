@@ -314,7 +314,7 @@ class ResultSummaryMerger(
       val rsStorer = RsStorer(storerContext.getMSIDbConnectionContext, useJPA)
       rsStorer.storeResultSet(mergedResultSet, storerContext)
 
-      >>>
+      executeOnProgress() //execute registered action during progress
 
       // Update peptide match ids referenced in peptide instances
       for (pepInstance <- peptideInstances) {
@@ -361,7 +361,7 @@ class ResultSummaryMerger(
       logger.info("store result summary...")
       RsmStorer(execCtx.getMSIDbConnectionContext).storeResultSummary(tmpMergedResultSummary, execCtx)
 
-      >>>
+      executeOnProgress() //execute registered action during progress
       
       // --- Create links between parent and child result summaries --- //
       val parentRsmId = tmpMergedResultSummary.id
@@ -392,7 +392,7 @@ class ResultSummaryMerger(
       }
       
     }
-    >>>
+    executeOnProgress() //execute registered action during progress
 
   }
 

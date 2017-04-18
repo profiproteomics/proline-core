@@ -114,7 +114,7 @@ class RSMProteinSetFilterer (
     }
     //End go through all Prot Filters
 
-    >>>
+    executeOnProgress() //execute registered action during progress
 
 
     // Save Protein Set Filters properties
