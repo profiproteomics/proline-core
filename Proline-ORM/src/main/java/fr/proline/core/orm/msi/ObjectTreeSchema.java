@@ -29,7 +29,8 @@ public class ObjectTreeSchema implements Serializable {
     	SPECTRAL_COUNTING_QUANT_PEPTIDES("object_tree.spectral_counting_quant_peptides"),
     	SPECTRAL_COUNTING_QUANT_PEPTIDE_IONS("object_tree.spectral_counting_quant_peptide_ions"),
     	PEPTIDE_VALIDATION_ROC_CURVE("result_summary.peptide_validation_roc_curve"),
-    	PROTEIN_VALIDATION_ROC_CURVE("result_summary.protein_validation_roc_curve");
+    	PROTEIN_VALIDATION_ROC_CURVE("result_summary.protein_validation_roc_curve"), 
+    	PTM_SITES("result_summary.ptm_sites");
     	
     	private final String name;
     	

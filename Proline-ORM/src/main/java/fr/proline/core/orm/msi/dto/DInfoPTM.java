@@ -3,6 +3,7 @@ package fr.proline.core.orm.msi.dto;
 import java.util.HashMap;
 
 public class DInfoPTM {
+	
 	private long m_idPtmSpecificity;
 	private Character m_residueAASpecificity;
 	private String m_locationSpecificity;

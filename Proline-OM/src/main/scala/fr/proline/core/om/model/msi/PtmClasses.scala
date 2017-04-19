@@ -381,3 +381,14 @@ case class LocatedPtm(
 
 }
 
+case class PtmSite(
+  val proteinMatchId: Long, 
+  val definitionId: Long,
+  val seqPosition: Int, 
+  val bestPeptideMatchId: Long,
+  val peptideIdsByPtmPosition: Map[Int, Array[Long]], 
+  val peptideInstanceIds: Array[Long], 
+  val isomericPeptideInstanceIds: Array[Long]
+) {
+  
+}

@@ -41,7 +41,8 @@ public class DPeptideMatch implements Comparable<DPeptideMatch> {
     private String m_serializedProperties = null;
     
     private ArrayList<DPeptidePTM> m_peptidePTMArray = null;
-
+    private DPtmSiteProperties m_ptmSiteProperties = null;
+    
     
     public DPeptideMatch(long id, Integer rank, int charge, Float deltaMoz, double experimentalMoz, int missedCleavage, Float score, long resultSetId, Integer cdPrettyRank, Integer sdPrettyRank) {
         m_id = id;
@@ -229,6 +230,14 @@ public class DPeptideMatch implements Comparable<DPeptideMatch> {
 
 	public void setPeptidePTMArray(ArrayList<DPeptidePTM> peptidePTMArray) {
 		m_peptidePTMArray = peptidePTMArray;
+	}
+
+	public DPtmSiteProperties getPtmSiteProperties() {
+		return m_ptmSiteProperties;
+	}
+
+	public void setPtmSiteProperties(DPtmSiteProperties m_ptmSiteProperties) {
+		this.m_ptmSiteProperties = m_ptmSiteProperties;
 	}
 	
 	
