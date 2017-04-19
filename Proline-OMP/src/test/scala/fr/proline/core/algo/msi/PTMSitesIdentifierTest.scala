@@ -16,45 +16,36 @@ import fr.proline.core.algo.msi.validation.BasicTDAnalyzer
 import fr.proline.core.algo.msi.validation.TargetDecoyModes
 import fr.profi.util.serialization.ProfiJson
 import fr.proline.core.dbunit.DbUnitResultFileUtils
+import fr.proline.core.algo.msi.inference.ParsimoniousProteinSetInferer
+import fr.proline.core.om.model.msi.ResultSet
+import fr.proline.core.om.model.msi.ResultSummary
 
-object PTMSitesIdentifierTest extends AbstractEmptyDatastoreTestCase  with StrictLogging {
-
-  // Define some vars
-  val driverType = DriverType.H2
-  val targetRSId: Long = 2L
-  val useJPA = false
-  val decoyRSId = Option.empty[Long]
+object PTMSitesIdentifierTest extends StrictLogging {
   
+  lazy val proteinSetInferer = new ParsimoniousProteinSetInferer()
+  var readRS: ResultSet = null
+  var rsm: ResultSummary = null
+  
+  @BeforeClass
+  def init() {
+    readRS = GRE_F068213_M2_4_TD_EColi_TEST_CASE.getRS
+    rsm = proteinSetInferer.computeResultSummary( resultSet = readRS )
+  }
+
 }
 
 class PTMSitesIdentifierTest extends StrictLogging {
 
-  val sqlExecutionContext = PTMSitesIdentifierTest.executionContext
+  val sqlExecutionContext = GRE_F068213_M2_4_TD_EColi_TEST_CASE.executionContext
 
   @Test
   def testPTMSitesIdentifier() {
 
-//    val scoreTh = 20.0f
-//    val pepFilters = Seq(new ScorePSMFilter(scoreThreshold = scoreTh))
-//    
-//    val targetRS = DbUnitResultFileUtils.importDbUnitResultFile(GRE_F068213_M2_4_TD_EColi, sqlExecutionContext) 
-//    
-//    val rsValidation = new ResultSetValidator(
-//      execContext = PTMSitesIdentifierTest.executionContext,
-//      targetRs = targetRS,
-//      tdAnalyzer = Some(new BasicTDAnalyzer(TargetDecoyModes.CONCATENATED)),
-//      pepMatchPreFilters = Some(pepFilters),
-//      pepMatchValidator = None,
-//      protSetFilters = None,
-//      inferenceMethod = Some(InferenceMethod.PARSIMONIOUS), 
-//      storeResultSummary = true
-//    )
-//
-//    rsValidation.runService
-//    val tRSM = rsValidation.validatedTargetRsm
-//    val ptmSites = new PTMSitesIdentifier().identifyPTMSites(tRSM,targetRS.proteinMatches)
+
+
+//    val ptmSites = new PTMSitesIdentifier().identifyPTMSites(rsm,readRS.proteinMatches)
 //    println("serialized" + ProfiJson.serialize(ptmSites))
-//    
+    
     
   }
 
