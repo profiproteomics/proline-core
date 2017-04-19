@@ -29,7 +29,7 @@ object PTMSitesIdentifierTest extends StrictLogging {
   @BeforeClass
   def init() {
     readRS = GRE_F068213_M2_4_TD_EColi_TEST_CASE.getRS
-    //rsm = proteinSetInferer.computeResultSummary( resultSet = readRS )
+    rsm = proteinSetInferer.computeResultSummary( resultSet = readRS )
   }
 
 }
@@ -41,9 +41,8 @@ class PTMSitesIdentifierTest extends StrictLogging {
   @Test
   def testPTMSitesIdentifier() {
 
-//    val ptmSites = new PTMSitesIdentifier().identifyPTMSites(rsm,readRS.proteinMatches)
-//    println("serialized" + ProfiJson.serialize(ptmSites))
-    
+    val ptmSites = new PTMSitesIdentifier().identifyPTMSites(PTMSitesIdentifierTest.rsm,PTMSitesIdentifierTest.readRS.proteinMatches)
+    println("serialized" + ProfiJson.serialize(ptmSites))
     
   }
 

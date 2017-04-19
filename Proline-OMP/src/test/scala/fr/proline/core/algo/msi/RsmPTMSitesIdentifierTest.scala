@@ -22,36 +22,28 @@ import org.junit.Ignore
 
 object RsmPTMSitesIdentifierTest extends AbstractResultSummaryTestCase with StrictLogging {
 
-  // Define some vars
+  // Define some needed values
   val driverType = DriverType.H2
   val dbUnitResultFile = STR_F063442_F122817_MergedRSMs
   val targetRSMId: Long = 33L
   val useJPA = true
 
+  protected var readRSM: ResultSummary = null
+
   @BeforeClass
   @throws(classOf[Exception])
   override def setUp() = {
-
-    logger.info("Initializing DBs")
-    super.initDBsDBManagement(driverType)
-
-    //Load Data
-    pdiDBTestCase.loadDataSet(DbUnitSampleDataset.PROTEINS.getResourcePath)
-    psDBTestCase.loadDataSet(dbUnitResultFile.psDbDatasetPath)
-    msiDBTestCase.loadCompositeDataSet(
-      Array(
-        dbUnitResultFile.msiDbDatasetPath,
-        "/fr/proline/core/algo/msi/Prot_ChangeTypical.xml"
-      )
-    )
-    udsDBTestCase.loadDataSet(dbUnitResultFile.udsDbDatasetPath)
-    
-    logger.info("PDI, PS, MSI and UDS dbs succesfully initialized !")
-    
-    val ctxAndProvider = buildJPAContext()
-    executionContext = ctxAndProvider._1 
+    super.setUp()
+    readRSM = this._loadRSM()
   }
-  
+
+  private def _loadRSM(): ResultSummary = {
+    val rsm = rsmProvider.getResultSummary(targetRSMId, true).get
+    rsm
+  }
+
+  def getRSM() = readRSM
+
 }
 
 class RsmPTMSitesIdentifierTest extends StrictLogging {
