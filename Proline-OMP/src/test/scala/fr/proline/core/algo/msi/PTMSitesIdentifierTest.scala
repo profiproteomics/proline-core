@@ -28,7 +28,7 @@ object PTMSitesIdentifierTest extends StrictLogging {
   
   @BeforeClass
   def init() {
-    readRS = GRE_F068213_M2_4_TD_EColi_TEST_CASE.getRS
+    readRS = STR_F122817_Mascot_v2_3_TEST_CASE.getRS
     rsm = proteinSetInferer.computeResultSummary( resultSet = readRS )
   }
 
@@ -36,7 +36,7 @@ object PTMSitesIdentifierTest extends StrictLogging {
 
 class PTMSitesIdentifierTest extends StrictLogging {
 
-  val sqlExecutionContext = GRE_F068213_M2_4_TD_EColi_TEST_CASE.executionContext
+  val sqlExecutionContext = STR_F122817_Mascot_v2_3_TEST_CASE.executionContext
 
   @Test
   def testPTMSitesIdentifier() {
