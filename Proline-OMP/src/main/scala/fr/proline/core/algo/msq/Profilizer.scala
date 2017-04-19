@@ -2,20 +2,24 @@ package fr.proline.core.algo.msq
 
 import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.HashMap
+
 import org.apache.commons.math3.stat.StatUtils
+
 import com.typesafe.scalalogging.LazyLogging
+
+import fr.profi.util.collection._
 import fr.profi.util.lang.EnhancedEnum
 import fr.profi.util.math.median
 import fr.profi.util.primitives.isZeroOrNaN
 import fr.profi.util.random.randomGaussian
 import fr.proline.core.algo.msq.profilizer._
 import fr.proline.core.algo.msq.profilizer.filtering._
+import fr.proline.core.algo.msq.summarizing.BuildMasterQuantPeptide
 import fr.proline.core.om.model.msq._
 import fr.proline.core.om.model.msq.MasterQuantComponent
 import fr.proline.core.om.model.msq.MasterQuantComponent
 import fr.proline.core.om.model.msq.MasterQuantComponent
-import fr.proline.core.algo.msq.summarizing.BuildMasterQuantPeptide
-import fr.proline.core.om.model.SelectionLevel
+import fr.proline.core.om.model.SelectionLevel 
 
 // TODO: recompute raw abundances from peakels
 // (smoothing methods, area VS apex intensity, first isotope vs max one vs isotope pattern fitting)
@@ -331,25 +335,38 @@ class Profilizer( expDesign: ExperimentalDesign, groupSetupNumber: Int = 1, mast
       }
     } toMap
     val bgByQcIdx = expDesignSetup.quantChannels.map( qc => bgBySampleNum(qc.sampleNumber) )
-    
+
     // Compute the intersection of filtered masterQuantPeptides and mqPeptideSelLevelById
-    for( mqProtSet <- masterQuantProtSets ) {
-      
-      val selectionLevelMap: HashMap[Long, Int] = mqProtSet.masterQuantPeptides.map(a => a.id -> a.selectionLevel)(collection.breakOut)
-      val curSelectionLevelMap = mqProtSet.properties.get.getSelectionLevelByMqPeptideId().getOrElse(HashMap())
-      selectionLevelMap.transform((k,datasetSelectionLevel) => 
-          if (SelectionLevel.isSetManually(datasetSelectionLevel)) { datasetSelectionLevel } else { 
-            val protSelectionLevel = curSelectionLevelMap(k)
-            val newSelectionLevel = if (SelectionLevel.isSetManually(protSelectionLevel)) {
-              protSelectionLevel
-            } else {
-              datasetSelectionLevel
-            }
-            newSelectionLevel
-          }
-        )
-      
-      mqProtSet.properties.get.mqPeptideSelLevelById = selectionLevelMap
+    for (mqProtSet <- masterQuantProtSets) {
+
+      val datasetSelLvlMap = mqProtSet.masterQuantPeptides.toLongMapWith(a => a.id -> a.selectionLevel)
+      val protSetSelLvlMap = mqProtSet.properties.get.getSelectionLevelByMqPeptideId().getOrElse({
+        // Note: this default map construction is kept for backward compatibility,
+        // it should be now computed during the quantitation phase
+        val defaultSelLvlMap: HashMap[Long, Int] = datasetSelLvlMap.map{case (k ,v) => 
+          val newSelectionLevel = if (SelectionLevel.isSelected(v)) SelectionLevel.SELECTED_AUTO else SelectionLevel.DESELECTED_AUTO
+          k -> newSelectionLevel 
+          }(collection.breakOut)
+        defaultSelLvlMap
+      })
+
+      // Update protein set selection level only if not set manually
+      for (
+        (mqPepId, protSetSelLvl) <- protSetSelLvlMap;
+        if (SelectionLevel.isSetAutomatically(protSetSelLvl))
+      ) {
+        val datasetSelLvl = datasetSelLvlMap(mqPepId)
+
+        // Compute new automatic selection level
+        val newAutoSelLvl = if (SelectionLevel.isSelected(datasetSelLvl)) SelectionLevel.SELECTED_AUTO
+        else SelectionLevel.DESELECTED_AUTO
+
+        if (protSetSelLvl != newAutoSelLvl) {
+          protSetSelLvlMap.update(mqPepId, newAutoSelLvl)
+        }
+      }
+
+      mqProtSet.properties.get.mqPeptideSelLevelById = protSetSelLvlMap
     }
 
     // Clusterize MasterQuantPeptides according to the provided method
