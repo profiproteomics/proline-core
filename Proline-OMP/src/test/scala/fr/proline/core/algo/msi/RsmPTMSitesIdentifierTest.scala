@@ -26,7 +26,7 @@ object RsmPTMSitesIdentifierTest extends AbstractResultSummaryTestCase with Stri
   val driverType = DriverType.H2
   val dbUnitResultFile = STR_F063442_F122817_MergedRSMs
   val targetRSMId: Long = 33L
-  val useJPA = true
+  val useJPA = false
   val decoyRSId = Option.empty[Long]
   
 }

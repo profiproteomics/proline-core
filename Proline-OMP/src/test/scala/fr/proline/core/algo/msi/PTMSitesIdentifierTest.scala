@@ -22,7 +22,7 @@ object PTMSitesIdentifierTest extends AbstractEmptyDatastoreTestCase  with Stric
   // Define some vars
   val driverType = DriverType.H2
   val targetRSId: Long = 2L
-  val useJPA = true
+  val useJPA = false
   val decoyRSId = Option.empty[Long]
   
 }
@@ -30,7 +30,6 @@ object PTMSitesIdentifierTest extends AbstractEmptyDatastoreTestCase  with Stric
 class PTMSitesIdentifierTest extends StrictLogging {
 
   val sqlExecutionContext = PTMSitesIdentifierTest.executionContext
-  
 
   @Test
   def testPTMSitesIdentifier() {
