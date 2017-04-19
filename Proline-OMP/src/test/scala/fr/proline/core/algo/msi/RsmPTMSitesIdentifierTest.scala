@@ -26,8 +26,31 @@ object RsmPTMSitesIdentifierTest extends AbstractResultSummaryTestCase with Stri
   val driverType = DriverType.H2
   val dbUnitResultFile = STR_F063442_F122817_MergedRSMs
   val targetRSMId: Long = 33L
-  val useJPA = false
-  val decoyRSId = Option.empty[Long]
+  val useJPA = true
+
+  @BeforeClass
+  @throws(classOf[Exception])
+  override def setUp() = {
+
+    logger.info("Initializing DBs")
+    super.initDBsDBManagement(driverType)
+
+    //Load Data
+    pdiDBTestCase.loadDataSet(DbUnitSampleDataset.PROTEINS.getResourcePath)
+    psDBTestCase.loadDataSet(dbUnitResultFile.psDbDatasetPath)
+    msiDBTestCase.loadCompositeDataSet(
+      Array(
+        dbUnitResultFile.msiDbDatasetPath,
+        "/fr/proline/core/algo/msi/Prot_ChangeTypical.xml"
+      )
+    )
+    udsDBTestCase.loadDataSet(dbUnitResultFile.udsDbDatasetPath)
+    
+    logger.info("PDI, PS, MSI and UDS dbs succesfully initialized !")
+    
+    val ctxAndProvider = buildJPAContext()
+    executionContext = ctxAndProvider._1 
+  }
   
 }
 
@@ -36,9 +59,7 @@ class RsmPTMSitesIdentifierTest extends StrictLogging {
 
   @Test
   def testPTMSitesIdentifier() {
-
-//    new RsmPTMSitesIdentifier(RsmPTMSitesIdentifierTest.executionContext, RsmPTMSitesIdentifierTest.targetRSMId, false).runService
-        
+    new RsmPTMSitesIdentifier(RsmPTMSitesIdentifierTest.executionContext, RsmPTMSitesIdentifierTest.targetRSMId, false).runService
   }
 
   
