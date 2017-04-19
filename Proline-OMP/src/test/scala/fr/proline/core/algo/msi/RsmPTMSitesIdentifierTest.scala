@@ -37,7 +37,7 @@ class RsmPTMSitesIdentifierTest extends StrictLogging {
   @Test
   def testPTMSitesIdentifier() {
 
-    new RsmPTMSitesIdentifier(RsmPTMSitesIdentifierTest.executionContext, RsmPTMSitesIdentifierTest.targetRSMId, false).runService
+//    new RsmPTMSitesIdentifier(RsmPTMSitesIdentifierTest.executionContext, RsmPTMSitesIdentifierTest.targetRSMId, false).runService
         
   }
 
