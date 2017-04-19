@@ -18,6 +18,7 @@ import fr.proline.core.algo.msi.validation.TargetDecoyModes
 import fr.profi.util.serialization.ProfiJson
 import fr.proline.core.service.msi.RsmPTMSitesIdentifier
 import fr.proline.core.om.model.msi.ResultSummary
+import org.junit.Ignore
 
 object RsmPTMSitesIdentifierTest extends AbstractResultSummaryTestCase with StrictLogging {
 
@@ -30,9 +31,11 @@ object RsmPTMSitesIdentifierTest extends AbstractResultSummaryTestCase with Stri
   
 }
 
+@Ignore
 class RsmPTMSitesIdentifierTest extends StrictLogging {
 
 
+  @Ignore
   @Test
   def testPTMSitesIdentifier() {
 
