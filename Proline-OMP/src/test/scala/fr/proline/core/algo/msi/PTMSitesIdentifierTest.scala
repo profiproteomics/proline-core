@@ -15,12 +15,12 @@ import fr.proline.core.algo.msi.filtering.pepmatch.ScorePSMFilter
 import fr.proline.core.algo.msi.validation.BasicTDAnalyzer
 import fr.proline.core.algo.msi.validation.TargetDecoyModes
 import fr.profi.util.serialization.ProfiJson
+import fr.proline.core.dbunit.DbUnitResultFileUtils
 
-object PTMSitesIdentifierTest extends AbstractEmptyDatastoreTestCase with DbUnitResultFileLoading with StrictLogging {
+object PTMSitesIdentifierTest extends AbstractEmptyDatastoreTestCase  with StrictLogging {
 
   // Define some vars
   val driverType = DriverType.H2
-  val dbUnitResultFile = GRE_F068213_M2_4_TD_EColi
   val targetRSId: Long = 2L
   val useJPA = true
   val decoyRSId = Option.empty[Long]
@@ -29,13 +29,16 @@ object PTMSitesIdentifierTest extends AbstractEmptyDatastoreTestCase with DbUnit
 
 class PTMSitesIdentifierTest extends StrictLogging {
 
-  val targetRS = PTMSitesIdentifierTest.getRS()
+  val sqlExecutionContext = PTMSitesIdentifierTest.executionContext
+  
 
   @Test
   def testPTMSitesIdentifier() {
 
-    val scoreTh = 22.0f
+    val scoreTh = 20.0f
     val pepFilters = Seq(new ScorePSMFilter(scoreThreshold = scoreTh))
+    
+    val targetRS = DbUnitResultFileUtils.importDbUnitResultFile(GRE_F068213_M2_4_TD_EColi, sqlExecutionContext) 
     
     val rsValidation = new ResultSetValidator(
       execContext = PTMSitesIdentifierTest.executionContext,

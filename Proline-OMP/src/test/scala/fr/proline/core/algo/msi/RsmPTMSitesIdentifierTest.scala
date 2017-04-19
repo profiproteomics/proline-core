@@ -31,11 +31,9 @@ object RsmPTMSitesIdentifierTest extends AbstractResultSummaryTestCase with Stri
   
 }
 
-@Ignore
 class RsmPTMSitesIdentifierTest extends StrictLogging {
 
 
-  @Ignore
   @Test
   def testPTMSitesIdentifier() {
 
