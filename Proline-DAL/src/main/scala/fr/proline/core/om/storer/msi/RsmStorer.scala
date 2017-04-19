@@ -13,6 +13,7 @@ import fr.proline.core.om.model.msi.MsiRocCurve
 import fr.proline.core.om.model.msi.ResultSummary
 import fr.proline.core.om.storer.msi.impl.SQLRsmStorer
 import fr.proline.core.orm.msi.ObjectTreeSchema.SchemaName
+import fr.proline.core.om.model.msi.PtmSite
 
 trait IRsmStorer extends LazyLogging {
   
@@ -26,13 +27,9 @@ trait IRsmStorer extends LazyLogging {
 object RsmStorer {
   
   private val rsmInsertQuery = MsiDbResultSummaryTable.mkInsertQuery{ (c,colsList) => colsList.filter( _ != c.ID) }
-  private val rocCurveInsertQuery = MsiDbObjectTreeTable.mkInsertQuery { (ct,colsList) => 
-    List(ct.CLOB_DATA, ct.SCHEMA_NAME)
-  }
-  private val rocCurveMappingInsertQuery = MsiDbResultSummaryObjectTreeMapTable.mkInsertQuery()
-  private val peptideRocCurveSchemaName = SchemaName.PEPTIDE_VALIDATION_ROC_CURVE.toString
-  private val proteinRocCurveSchemaName = SchemaName.PROTEIN_VALIDATION_ROC_CURVE.toString
-            
+  private val objectTreeInsertQuery = MsiDbObjectTreeTable.mkInsertQuery { (ct,colsList) => List(ct.CLOB_DATA, ct.SCHEMA_NAME) }
+  private val rsmObjectTreeMapInsertQuery = MsiDbResultSummaryObjectTreeMapTable.mkInsertQuery()
+
   def apply( msiDbContext: DatabaseConnectionContext ): RsmStorer = {
       new RsmStorer( new SQLRsmStorer() )
   }
@@ -78,34 +75,40 @@ class RsmStorer( private val _writer: IRsmStorer ) extends LazyLogging {
         
         rsm.id = stmt.generatedLong
       }
-      
+
       // Store ROC curves if they are defined
-      def storeRocCurve( rocCurve: MsiRocCurve, schemaName: String ) {
-        val objectTreeId = msiEzDBC.executePrepared(RsmStorer.rocCurveInsertQuery, true) { stmt =>
-          stmt.executeWith(
-            ProfiJson.serialize(rocCurve),
-            schemaName
-          )
-
-          stmt.generatedLong
-        }
-
-        msiEzDBC.executePrepared(RsmStorer.rocCurveMappingInsertQuery, true) { stmt =>
-          stmt.executeWith(rsm.id, schemaName, objectTreeId)
-        }
-      }
-
       if (storeRocCurves) {
         for (peptideValidationRocCurve <- rsm.peptideValidationRocCurve) {
-          storeRocCurve(peptideValidationRocCurve, RsmStorer.peptideRocCurveSchemaName)
+          _storeObjectTree(msiEzDBC, rsm.id, peptideValidationRocCurve, SchemaName.PEPTIDE_VALIDATION_ROC_CURVE.toString)
           logger.info("peptideValidationRocCurve have been stored")
         }
         for (proteinValidationRocCurve <- rsm.proteinValidationRocCurve) {
-          storeRocCurve(proteinValidationRocCurve, RsmStorer.proteinRocCurveSchemaName)
+          _storeObjectTree(msiEzDBC, rsm.id, proteinValidationRocCurve, SchemaName.PROTEIN_VALIDATION_ROC_CURVE.toString)
           logger.info("proteinValidationRocCurve have been stored")
         }
       }
     }
   }
   
+  
+  def storePtmSites(rsmId: Long, ptmSites: Iterable[PtmSite], execCtx: IExecutionContext ): Unit = {
+    DoJDBCWork.withEzDBC(execCtx.getMSIDbConnectionContext) { msiEzDBC =>      
+          _storeObjectTree(msiEzDBC, rsmId, ptmSites, SchemaName.PTM_SITES.toString)
+          logger.info("ptmSites have been stored")
+    }
+  }
+
+  private def _storeObjectTree(msiEzDBC: EasyDBC, rsmId: Long, objectTree: Any, schemaName: String ) {
+        val objectTreeId = msiEzDBC.executePrepared(RsmStorer.objectTreeInsertQuery, true) { stmt =>
+          stmt.executeWith(
+            ProfiJson.serialize(objectTree),
+            schemaName
+          )
+          stmt.generatedLong
+        }
+        msiEzDBC.executePrepared(RsmStorer.rsmObjectTreeMapInsertQuery, true) { stmt =>
+          stmt.executeWith(rsmId, schemaName, objectTreeId)
+        }
+  }
+
 }
