@@ -293,6 +293,10 @@ case class MasterQuantPeptideIon(
     quantPeptideIonMap.values.foldLeft(0f)( (s,qp) => s + qp.abundance )
   }
   
+  def calcRawAbundanceSum(): Float = {
+    quantPeptideIonMap.values.foldLeft(0f)( (s,qp) => s + qp.rawAbundance)
+  }
+
   def calcFrequency( qcCount: Int ): Float = {
     this.countDefinedRawAbundances() / qcCount
   }

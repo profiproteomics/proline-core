@@ -26,12 +26,12 @@ case class PeptideInstancePtm(peptideInstance: PeptideInstance, ptm: LocatedPtm)
  * Determine PTMs site modifications 
  * 
  */
-class PTMSitesIdentifier () extends LazyLogging {
+class PtmSitesIdentifier () extends LazyLogging {
    
   /**
    *   
    */
-	def identifyPTMSites(rsm: ResultSummary, proteinMatches: Array[ProteinMatch]) : Iterable[PtmSite] = {
+	def identifyPtmSites(rsm: ResultSummary, proteinMatches: Array[ProteinMatch]) : Iterable[PtmSite] = {
 	  
 	  val proteinMatchesById = proteinMatches.map { pm => pm.id -> pm }.toMap
 	  val ptmSites = ArrayBuffer.empty[PtmSite]

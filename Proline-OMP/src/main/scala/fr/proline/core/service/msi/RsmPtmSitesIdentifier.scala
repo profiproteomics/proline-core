@@ -7,7 +7,7 @@ import fr.profi.util.regex.RegexUtils._
 import fr.proline.api.service.IService
 import fr.proline.context.IExecutionContext
 import fr.proline.context.MsiDbConnectionContext
-import fr.proline.core.algo.msi.PTMSitesIdentifier
+import fr.proline.core.algo.msi.PtmSitesIdentifier
 import fr.proline.core.dal._
 import fr.proline.core.dal.tables.SelectQueryBuilder._
 import fr.proline.core.dal.tables.SelectQueryBuilder1
@@ -22,7 +22,7 @@ import fr.proline.core.orm.msi.ObjectTreeSchema.SchemaName
 import fr.profi.util.primitives._
 import fr.proline.core.dal.tables.msi.MsiDbObjectTreeTable
 
-object RsmPTMSitesIdentifier extends LazyLogging {
+object RsmPtmSitesIdentifier extends LazyLogging {
 
   def loadResultSummary(rsmId: Long, execContext: IExecutionContext): ResultSummary = {
 
@@ -45,7 +45,7 @@ object RsmPTMSitesIdentifier extends LazyLogging {
 
 }
 
-class RsmPTMSitesIdentifier(
+class RsmPtmSitesIdentifier(
   execContext: IExecutionContext,
   resultSummaryId: Long,
   force: Boolean) extends IService with LazyLogging {
@@ -69,7 +69,7 @@ class RsmPTMSitesIdentifier(
          _deletePtmSites(existingObjectTreeId.get)
       }
    
-      val ptmSitesIdentifier = new PTMSitesIdentifier()
+      val ptmSitesIdentifier = new PtmSitesIdentifier()
       val proteinMatchProvider = new SQLProteinMatchProvider(msiDbContext)
       val rsmStorer = RsmStorer(msiDbContext)
 
@@ -77,9 +77,9 @@ class RsmPTMSitesIdentifier(
       val wasInTransaction = msiDbContext.isInTransaction()
       if (!wasInTransaction) msiDbContext.beginTransaction()
 
-      val rsm = RsmPTMSitesIdentifier.loadResultSummary(resultSummaryId, execContext)
+      val rsm = RsmPtmSitesIdentifier.loadResultSummary(resultSummaryId, execContext)
       logger.info("Start identifying Ptm sites")
-      val ptmSites = ptmSitesIdentifier.identifyPTMSites(rsm, proteinMatchProvider.getResultSummariesProteinMatches(List(resultSummaryId)))
+      val ptmSites = ptmSitesIdentifier.identifyPtmSites(rsm, proteinMatchProvider.getResultSummariesProteinMatches(List(resultSummaryId)))
       rsmStorer.storePtmSites(rsm.id, ptmSites, execContext)
 
       // Commit transaction if it was initiated locally

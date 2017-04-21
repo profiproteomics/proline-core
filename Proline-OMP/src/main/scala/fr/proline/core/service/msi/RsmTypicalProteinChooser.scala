@@ -7,7 +7,7 @@ import fr.proline.context.IExecutionContext
 import fr.proline.core.algo.msi.TypicalProteinChooser
 import fr.proline.core.algo.msi.TypicalProteinChooserRule
 
-class RSMTypicalProteinChooser(
+class RsmTypicalProteinChooser(
   execCtx: IExecutionContext,
   resultSummaryId: Long,
   rulesToApplyPrioritized: Seq[TypicalProteinChooserRule]

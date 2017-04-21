@@ -23,7 +23,7 @@ import fr.proline.core.om.model.msi.FilterDescriptor
 import fr.proline.core.om.model.msi.ResultSet
 import fr.proline.repository.DriverType
 
-object RSMProtSetFiltererF136482Test extends AbstractEmptyDatastoreTestCase with DbUnitResultFileLoading with StrictLogging {
+object RsmProtSetFiltererF136482Test extends AbstractEmptyDatastoreTestCase with DbUnitResultFileLoading with StrictLogging {
 
   val driverType = DriverType.H2
   val dbUnitResultFile = STR_F136482_CTD
@@ -43,12 +43,12 @@ object RSMProtSetFiltererF136482Test extends AbstractEmptyDatastoreTestCase with
   
 }
 
-class RSMProtSetFiltererF136482Test extends StrictLogging {
+class RsmProtSetFiltererF136482Test extends StrictLogging {
   
   protected val DEBUG_TESTS = false
-  val targetRS = RSMProtSetFiltererF136482Test.getRS
+  val targetRS = RsmProtSetFiltererF136482Test.getRS
   targetRS.decoyResultSet = None
-  val executionContext = RSMProtSetFiltererF136482Test.executionContext
+  val executionContext = RsmProtSetFiltererF136482Test.executionContext
   
   require( targetRS != null, "targetRS is null")
   require( executionContext != null, "executionContext is null")
@@ -102,7 +102,7 @@ class RSMProtSetFiltererF136482Test extends StrictLogging {
 
 
     logger.info(" RSMProtSetFilterer : step2. filter protein set ")
-    val rsmProtSetFilerer = new RSMProteinSetFilterer(
+    val rsmProtSetFilerer = new RsmProteinSetFilterer(
 		execCtx = executionContext,
 		targetRsm = tRSM, 
 		protSetFilters = protProteoTypiqueFilters

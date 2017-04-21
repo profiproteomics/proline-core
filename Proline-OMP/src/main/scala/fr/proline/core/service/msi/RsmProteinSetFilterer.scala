@@ -23,15 +23,15 @@ import fr.profi.util.serialization.ProfiJson
 import fr.proline.repository.util.JDBCWork
 import java.sql.Connection
 
-object RSMProteinSetFilterer {
+object RsmProteinSetFilterer {
   
-  def apply(execCtx: IExecutionContext,targetRsmId: Long, protSetFilters: Seq[IProteinSetFilter]  ) : RSMProteinSetFilterer = {
+  def apply(execCtx: IExecutionContext,targetRsmId: Long, protSetFilters: Seq[IProteinSetFilter]  ) : RsmProteinSetFilterer = {
    	  val targetRsm = _loadResultSummary(targetRsmId, execCtx)
 
    	    // Load decoy result set if needed
 
 	    
-    new RSMProteinSetFilterer( execCtx, targetRsm, protSetFilters )
+    new RsmProteinSetFilterer( execCtx, targetRsm, protSetFilters )
 
 	}
   
@@ -62,7 +62,7 @@ object RSMProteinSetFilterer {
  *
  */
 
-class RSMProteinSetFilterer (  
+class RsmProteinSetFilterer (  
 	execCtx: IExecutionContext,
 	targetRsm: ResultSummary, 
 	protSetFilters: Seq[IProteinSetFilter] 

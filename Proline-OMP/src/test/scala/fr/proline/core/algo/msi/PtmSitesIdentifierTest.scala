@@ -41,7 +41,7 @@ class PTMSitesIdentifierTest extends StrictLogging {
   @Test
   def testPTMSitesIdentifier() {
 
-    val ptmSites = new PTMSitesIdentifier().identifyPTMSites(PTMSitesIdentifierTest.rsm,PTMSitesIdentifierTest.readRS.proteinMatches)
+    val ptmSites = new PtmSitesIdentifier().identifyPtmSites(PTMSitesIdentifierTest.rsm,PTMSitesIdentifierTest.readRS.proteinMatches)
     println("serialized" + ProfiJson.serialize(ptmSites))
     
   }
