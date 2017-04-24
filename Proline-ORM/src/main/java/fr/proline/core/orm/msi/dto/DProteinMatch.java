@@ -1,9 +1,15 @@
 package fr.proline.core.orm.msi.dto;
 
+import java.io.IOException;
 import java.util.HashMap;
+import java.util.Map;
+
+import fr.proline.core.orm.util.JsonSerializer;
 
 public class DProteinMatch {
 
+	public static final String OBSERVABLE_PEPTIDE_COUNT_KEY = "observable_peptide_count";
+	
     private long m_id;
     private String m_accession;
     private Float m_score;
@@ -12,32 +18,57 @@ public class DProteinMatch {
     private String m_description;
     private DBioSequence m_bioSequence;
     private boolean m_bioSequenceSet = false;
+    private Integer m_observablePeptidesCount = null;
     
     private HashMap<Long, DPeptideSet> peptideSetMap = null;
     
     private DPeptideMatch[] m_peptideMatches;
     private long[] m_peptideMatchesId;
-    //private ProteinSet[] m_proteinSetArray = null;
+
     
-    public DProteinMatch(long id, String accession,  Float score, int peptideCount, long resultSetId, String description) {
+    public DProteinMatch(long id, String accession,  Float score, int peptideCount, long resultSetId, String description, String serializedProperties) {
         m_id = id;
         m_accession = accession;
         m_score = score;
         m_peptideCount = peptideCount;
         m_resultSetId = resultSetId;
         m_description = description;
+        setObservablePeptidesCountFromSerializedProperties(serializedProperties);
     }
     
-    public DProteinMatch(long id, String accession,  Float score, int peptideCount, long resultSetId, String description, long peptideSetId, Float peptideSetScore, int sequenceCount, int peptideSetPeptideCount, int peptideMatchCount, long resultSummaryId) {
+    public DProteinMatch(long id, String accession,  Float score, int peptideCount, long resultSetId, String description, String serializedProperties, long peptideSetId, Float peptideSetScore, int sequenceCount, int peptideSetPeptideCount, int peptideMatchCount, long resultSummaryId) {
         m_id = id;
         m_accession = accession;
         m_score = score;
         m_peptideCount = peptideCount;
         m_resultSetId = resultSetId;
         m_description = description;
+        setObservablePeptidesCountFromSerializedProperties(serializedProperties);
         
         DPeptideSet peptideSet = new DPeptideSet(peptideSetId, peptideSetScore, sequenceCount, peptideSetPeptideCount, peptideMatchCount, resultSummaryId);
         setPeptideSet(peptideSet.getResultSummaryId(), peptideSet);
+    }
+    
+    private void setObservablePeptidesCountFromSerializedProperties(String serializedProperties) {
+    	
+    	m_observablePeptidesCount = null;
+    	
+    	try {
+			if (serializedProperties != null) {
+				Map<String, Object> pmqSerializedMap = JsonSerializer.getMapper().readValue(serializedProperties, Map.class);
+				if (pmqSerializedMap != null) {
+					Object value = pmqSerializedMap.get(OBSERVABLE_PEPTIDE_COUNT_KEY);
+					if (value != null) {
+						m_observablePeptidesCount = Integer.parseInt(value.toString());
+					}
+				}
+			}
+		} catch (IOException ie) {
+		}
+    }
+    
+    public Integer getObservablePeptidesCount() {
+    	return m_observablePeptidesCount;
     }
     
     public long getId() {
