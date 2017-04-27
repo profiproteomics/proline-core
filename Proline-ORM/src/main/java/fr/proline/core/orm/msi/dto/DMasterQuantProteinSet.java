@@ -4,6 +4,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import javax.persistence.Transient;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -62,6 +64,9 @@ public class DMasterQuantProteinSet {
 	 */
 	private int nbQuantifiedPeptides;
 	
+	// serializedProperties as a map
+	@Transient
+	private java.util.Map<String, Object> serializedPropertiesMap;
 	
 	public DMasterQuantProteinSet() {
 		
@@ -169,6 +174,16 @@ public class DMasterQuantProteinSet {
 	}
 
 
+	@SuppressWarnings("unchecked")
+	public java.util.Map<String, Object> getSerializedPropertiesAsMap()
+			throws Exception {
+		if ((serializedPropertiesMap == null) && (m_serializedProperties != null)) {
+			serializedPropertiesMap = JsonSerializer.getMapper().readValue(
+					getSerializedProperties(), java.util.Map.class);
+		}
+		return serializedPropertiesMap;
+	}
+	
 	public void setMasterQuantProtSetProperties(MasterQuantProteinSetProperties properties) {
 		this.mqProteinSetProperties = properties;
 	}
