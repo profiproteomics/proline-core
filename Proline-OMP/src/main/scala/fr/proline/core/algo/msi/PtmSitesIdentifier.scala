@@ -30,25 +30,25 @@ case class PeptideInstancePtm(peptideInstance: PeptideInstance, ptm: LocatedPtm)
 class PtmSitesIdentifier () extends LazyLogging {
    
 // VDS Workaround test for issue #16643   
-//  private def  toOtherReadableString(ptm: LocatedPtm) = {
-//    val ptmDef = ptm.definition
-//    val shortName = ptmDef.names.shortName
-//    
-//    val ptmConstraint = if (ptm.isNTerm || ptm.isCTerm){ 
-//        val loc = PtmLocation.withName(ptmDef.location)
-//        var otherLoc : String = ""
-//        loc match {
-//          case PtmLocation.ANY_C_TERM => otherLoc = PtmLocation.PROT_C_TERM.toString()
-//          case PtmLocation.PROT_C_TERM => otherLoc = PtmLocation.ANY_C_TERM.toString()
-//          case PtmLocation.ANY_N_TERM => otherLoc = PtmLocation.PROT_N_TERM.toString()
-//          case PtmLocation.PROT_N_TERM => otherLoc = PtmLocation.ANY_N_TERM.toString()
-//        }
-//        otherLoc
-//           
-//      } else "" + ptmDef.residue + ptm.seqPosition
-//    
-//    s"${shortName} (${ptmConstraint})"
-//  }
+  private def  toOtherReadableString(ptm: LocatedPtm) = {
+    val ptmDef = ptm.definition
+    val shortName = ptmDef.names.shortName
+    
+    val ptmConstraint = if (ptm.isNTerm || ptm.isCTerm){ 
+        val loc = PtmLocation.withName(ptmDef.location)
+        var otherLoc : String = ""
+        loc match {
+          case PtmLocation.ANY_C_TERM => otherLoc = PtmLocation.PROT_C_TERM.toString()
+          case PtmLocation.PROT_C_TERM => otherLoc = PtmLocation.ANY_C_TERM.toString()
+          case PtmLocation.ANY_N_TERM => otherLoc = PtmLocation.PROT_N_TERM.toString()
+          case PtmLocation.PROT_N_TERM => otherLoc = PtmLocation.ANY_N_TERM.toString()
+        }
+        otherLoc
+           
+      } else "" + ptmDef.residue + ptm.seqPosition
+    
+    s"${shortName} (${ptmConstraint})"
+  }
   
   /**
    *   
@@ -62,19 +62,20 @@ class PtmSitesIdentifier () extends LazyLogging {
 	    for (proteinMatchId <- peptideSet.proteinMatchIds) {
 	      
 	      def isModificationProbabilityDefined(pm: PeptideMatch, ptm: LocatedPtm): Boolean = {
-	        val result = (pm.properties.isDefined && 
-	         pm.properties.get.ptmSiteProperties.isDefined &&
-	         pm.properties.get.ptmSiteProperties.get.getMascotProbabilityBySite.isDefined &&
-	         pm.properties.get.ptmSiteProperties.get.getMascotProbabilityBySite.get.contains(ptm.toReadableString()))
+	        // VDS : Correct Code
+//	        val result = (pm.properties.isDefined && 
+//	         pm.properties.get.ptmSiteProperties.isDefined &&
+//	         pm.properties.get.ptmSiteProperties.get.getMascotProbabilityBySite.isDefined &&
+//	         pm.properties.get.ptmSiteProperties.get.getMascotProbabilityBySite.get.contains(ptm.toReadableString()))
 	         // VDS Workaround test for issue #16643
-//          var result = false; 	        
-//	        if(pm.properties.isDefined && pm.properties.get.ptmSiteProperties.isDefined && pm.properties.get.ptmSiteProperties.get.getMascotProbabilityBySite.isDefined){
-//	          if(pm.properties.get.ptmSiteProperties.get.getMascotProbabilityBySite.get.contains(ptm.toReadableString()))
-//	            result = true;
-//	          else {
-//	            result = pm.properties.get.ptmSiteProperties.get.getMascotProbabilityBySite.get.contains(toOtherReadableString(ptm))
-//	          }
-//	        }
+          var result = false; 	        
+	        if(pm.properties.isDefined && pm.properties.get.ptmSiteProperties.isDefined && pm.properties.get.ptmSiteProperties.get.getMascotProbabilityBySite.isDefined){
+	          if(pm.properties.get.ptmSiteProperties.get.getMascotProbabilityBySite.get.contains(ptm.toReadableString()))
+	            result = true;
+	          else {
+	            result = pm.properties.get.ptmSiteProperties.get.getMascotProbabilityBySite.get.contains(toOtherReadableString(ptm))
+	          }
+	        }
 	        result
 	      }
 	      
@@ -98,15 +99,15 @@ class PtmSitesIdentifier () extends LazyLogging {
 	      val site = proteinMatchSites.map{case (k,peptideInstances) => 
 
 	         def modificationProbability(pm: PeptideMatch, ptm: LocatedPtm): Float = {
-//	           VDS Workaround test for issue #16643
-//	           val f = if(pm.properties.get.ptmSiteProperties.get.getMascotProbabilityBySite.get.contains(ptm.toReadableString())) {
-//	             pm.properties.get.ptmSiteProperties.get.getMascotProbabilityBySite.get(ptm.toReadableString())
-//	           } else {
-//	             pm.properties.get.ptmSiteProperties.get.getMascotProbabilityBySite.get(toOtherReadableString(ptm))
-//	           }
-//           
-//             f
-	           pm.properties.get.ptmSiteProperties.get.getMascotProbabilityBySite.get(ptm.toReadableString())	           
+             //	VDS Workaround test for issue #16643
+	           val f = if(pm.properties.get.ptmSiteProperties.get.getMascotProbabilityBySite.get.contains(ptm.toReadableString())) {
+	             pm.properties.get.ptmSiteProperties.get.getMascotProbabilityBySite.get(ptm.toReadableString())
+	           } else {
+	             pm.properties.get.ptmSiteProperties.get.getMascotProbabilityBySite.get(toOtherReadableString(ptm))
+	           }          
+             f
+	           //VDS : Correct Code
+//	           pm.properties.get.ptmSiteProperties.get.getMascotProbabilityBySite.get(ptm.toReadableString())	           
 	         }
 
             // -- Search for the best PeptideMatch         
