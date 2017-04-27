@@ -65,8 +65,7 @@ public class DMasterQuantProteinSet {
 	private int nbQuantifiedPeptides;
 	
 	// serializedProperties as a map
-	@Transient
-	private java.util.Map<String, Object> serializedPropertiesMap;
+	private java.util.Map<String, Object> serializedPropertiesMap = null;
 	
 	public DMasterQuantProteinSet() {
 		
