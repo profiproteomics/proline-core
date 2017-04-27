@@ -312,6 +312,7 @@ object PeptideMatchScoreType extends Enumeration {
   val OMSSA_EVALUE = Value("omssa:expect value")
   val PERCOLATOR_PEP_LOG_SCALED = Value("percolator:pep log scaled")
   val SEQUEST_EXPECT_LOG_SCALED = Value("sequest:expect log scaled")
+  val XTANDEM_EXPECT_LOG_SCALED = Value("xtandem:expect log scaled")
   val XTANDEM_HYPERSCORE = Value("xtandem:hyperscore")
 
 }
