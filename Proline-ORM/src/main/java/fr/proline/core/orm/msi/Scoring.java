@@ -123,7 +123,7 @@ public class Scoring implements Serializable {
 			"sequest", "expect log scaled",
 			"The -log10(expect) provided by Sequest for a peptide match."
 		),
-		XTANDEM_EVALUE_LOG_SCALED(
+		XTANDEM_EXPECT_LOG_SCALED(
       "xtandem", "expect log scaled",
       "The -log10(expect) provided by X!Tandem for a peptide match."
     ),
