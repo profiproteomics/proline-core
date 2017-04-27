@@ -32,7 +32,6 @@ import fr.proline.core.om.model.msq.QuantPeptide
 import fr.proline.core.om.model.msq.QuantProteinSet
 import fr.proline.core.om.model.msq.SpectralCountProperties
 import fr.proline.core.om.provider.msi.impl.SQLResultSummaryProvider
-import fr.proline.core.om.storer.msi.impl.ReadBackRsmDuplicator
 import fr.proline.core.om.storer.msi.impl.RsmDuplicator
 import fr.proline.core.orm.msi.ObjectTreeSchema.SchemaName
 import fr.proline.core.orm.msi.PeptideInstance
@@ -680,7 +679,7 @@ class WeightedSpectralCountQuantifier(
       var unidentifiedProteinsInRSM: Int = 0
 
       //--- Calculate SCs for each Ref RSM ProtSet
-      protSetWeightStructsByProtSetId.foreach(entry => {	    
+      protSetWeightStructsByProtSetId.foreach  (entry => {	    
         val currentProteinSetWeightStruct = entry._2
         
         //Get PeptideSet containing protein in current RSM if exist
