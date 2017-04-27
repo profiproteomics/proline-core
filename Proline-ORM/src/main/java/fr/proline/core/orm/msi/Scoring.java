@@ -102,6 +102,7 @@ public class Scoring implements Serializable {
 			"mascot", "modified mudpit score",
 			"A modified version of the MudPIT score computed by Proline."
 		),
+		// TODO: rename me OMSSA_EVALUE_LOG_SCALED
 		OMSSA_EVALUE(
 			"omssa", "expect value",
 			"The -log10(E-value) provided by OMSSA for a peptide match."
@@ -122,6 +123,10 @@ public class Scoring implements Serializable {
 			"sequest", "expect log scaled",
 			"The -log10(expect) provided by Sequest for a peptide match."
 		),
+		XTANDEM_EVALUE_LOG_SCALED(
+      "xtandem", "expect log scaled",
+      "The -log10(expect) provided by X!Tandem for a peptide match."
+    ),
 		XTANDEM_HYPERSCORE(
 			"xtandem", "hyperscore",
 			"The hyperscore provided by X!Tandem for a peptide match."
