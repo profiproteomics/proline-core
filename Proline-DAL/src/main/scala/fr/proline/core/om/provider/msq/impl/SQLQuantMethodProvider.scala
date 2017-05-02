@@ -89,16 +89,18 @@ class SQLQuantMethodProvider(val udsDbCtx: UdsDbConnectionContext) extends IQuan
     udsEzDBC.select(quantTableSqlQuery) { r =>
       val quantLabelId = r.getLong(QuantLabelCols.ID)
       val quantLabelName = r.getString(QuantLabelCols.NAME)
-      val quantLabelType = QuantLabelType.withName(QuantLabelCols.TYPE)
+      val quantLabelTypeAsStr = r.getString(QuantLabelCols.TYPE)
       val serializedProperties = r.getString(QuantLabelCols.SERIALIZED_PROPERTIES)
       
-      quantLabelType match {
-        case ISOBARIC_TAG => IsobaricTag(
+      val quantLabelTypeOpt = QuantLabelType.maybeNamed(quantLabelTypeAsStr) 
+      
+      quantLabelTypeOpt match {
+        case Some(ISOBARIC_TAG) => IsobaricTag(
           id = quantLabelId,
           name = quantLabelName,
           properties = ProfiJson.deserialize[IsobaricTagProperties](serializedProperties)
         ).asInstanceOf[T]
-        case _ => throw new Exception("this label is not supported yet")
+        case _ => throw new Exception(s"the label $quantLabelTypeAsStr is not supported yet")
       }
       
     } toList
