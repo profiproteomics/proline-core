@@ -3,6 +3,7 @@ package fr.proline.core.om.provider.msq.impl
 import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.LongMap
 
+import fr.profi.util.collection._
 import fr.profi.util.serialization.ProfiJson
 import fr.profi.util.primitives._
 import fr.proline.context.MsiDbConnectionContext
@@ -14,15 +15,21 @@ import fr.proline.core.dal.tables.msi.MsiDbMasterQuantPeptideIonTable
 import fr.proline.core.dal.tables.msi.MsiDbObjectTreeTable
 import fr.proline.core.om.model.msq.MasterQuantPeptideIon
 import fr.proline.core.om.model.msq.MasterQuantPeptideIonProperties
+import fr.proline.core.om.model.msq.MasterQuantReporterIon
 import fr.proline.core.om.model.msq.QuantPeptideIon
 import fr.proline.core.om.provider.msq.IMasterQuantPeptideIonProvider
 
-class SQLMasterQuantPeptideIonProvider(val msiDbCtx: MsiDbConnectionContext) extends IMasterQuantPeptideIonProvider {
+class SQLMasterQuantPeptideIonProvider(
+  val msiDbCtx: MsiDbConnectionContext,
+  loadReporterIons: Boolean = false
+) extends IMasterQuantPeptideIonProvider {
   
-  val MQPepIonTable = MsiDbMasterQuantPeptideIonTable
-  val MQPepIonCols = MQPepIonTable.columns
-  val MQComponentTable = MsiDbMasterQuantComponentTable
-  val ObjectTreeTable = MsiDbObjectTreeTable
+  private val mqRepIonProvider = new SQLMasterQuantReporterIonProvider(msiDbCtx)
+  
+  private val MQPepIonTable = MsiDbMasterQuantPeptideIonTable
+  private val MQPepIonCols = MQPepIonTable.columns
+  private val MQComponentTable = MsiDbMasterQuantComponentTable
+  private val ObjectTreeTable = MsiDbObjectTreeTable
   
   def getMasterQuantPeptideIons( mqPepIonIds: Seq[Long] ): Array[MasterQuantPeptideIon] = {    
     require( mqPepIonIds != null, "mqPepIonIds is null")
@@ -37,7 +44,10 @@ class SQLMasterQuantPeptideIonProvider(val msiDbCtx: MsiDbConnectionContext) ext
       " AND "~ t2.OBJECT_TREE_ID ~" = "~ t3.ID
     )
     
-    this.loadMasterQuantPeptideIons(mqPepIonQuery)
+    val mqRepIons = if (!loadReporterIons) Array.empty[MasterQuantReporterIon]
+    else mqRepIonProvider.getMQPeptideIonsMQReporterIons(mqPepIonIds)
+    
+    this.loadMasterQuantPeptideIons(mqPepIonQuery, mqRepIons)
   }
   
   def getMasterQuantPeptidesMQPeptideIons( mqPepIds: Seq[Long] ): Array[MasterQuantPeptideIon] = {    
@@ -52,8 +62,14 @@ class SQLMasterQuantPeptideIonProvider(val msiDbCtx: MsiDbConnectionContext) ext
       " AND "~ t1.MASTER_QUANT_COMPONENT_ID ~" = "~ t2.ID ~
       " AND "~ t2.OBJECT_TREE_ID ~" = "~ t3.ID
     )
-
-    this.loadMasterQuantPeptideIons(mqPepIonQuery)
+    
+    val mqPepIons = this.loadMasterQuantPeptideIons(mqPepIonQuery, Array.empty[MasterQuantReporterIon])
+    
+    if (loadReporterIons) {
+      this.loadMasterQuantReporterIons(mqPepIons)
+    }
+    
+    mqPepIons
   }
 
   def getLcMsMasterFeaturesMQPeptideIons( lcMsMasterFeatureIds: Seq[Long] ): Array[MasterQuantPeptideIon] = {
@@ -69,7 +85,13 @@ class SQLMasterQuantPeptideIonProvider(val msiDbCtx: MsiDbConnectionContext) ext
         " AND "~ t2.OBJECT_TREE_ID ~" = "~ t3.ID
     )
 
-    this.loadMasterQuantPeptideIons(mqPepIonQuery)
+    val mqPepIons = this.loadMasterQuantPeptideIons(mqPepIonQuery, Array.empty[MasterQuantReporterIon])
+    
+    if (loadReporterIons) {
+      this.loadMasterQuantReporterIons(mqPepIons)
+    }
+    
+    mqPepIons
   }
 
   def getQuantResultSummariesMQPeptideIons(quantRsmIds: Seq[Long]): Array[MasterQuantPeptideIon] = {
@@ -88,17 +110,23 @@ class SQLMasterQuantPeptideIonProvider(val msiDbCtx: MsiDbConnectionContext) ext
       " AND "~ t1.MASTER_QUANT_COMPONENT_ID ~" = "~ t2.ID ~
       " AND "~ t2.OBJECT_TREE_ID ~" = "~ t3.ID
     )
-      
-    this.loadMasterQuantPeptideIons(mqPepIonQuery)
+    
+    val mqRepIons = if (!loadReporterIons) Array.empty[MasterQuantReporterIon]
+    else mqRepIonProvider.getQuantResultSummariesMQReporterIons(quantRsmIds)
+    
+    this.loadMasterQuantPeptideIons(mqPepIonQuery, mqRepIons)
   }
   
-  protected def loadMasterQuantPeptideIons(sqlQuery: String): Array[MasterQuantPeptideIon] = {
+  protected def loadMasterQuantPeptideIons(sqlQuery: String, mqRepIons: Array[MasterQuantReporterIon]): Array[MasterQuantPeptideIon] = {
+    
+    val mqRepIonsByMqPepIonId = mqRepIons.groupByLong(_.masterQuantPeptideIonId.getOrElse(0) )
     
     DoJDBCReturningWork.withEzDBC(msiDbCtx) { msiEzDBC =>
       
       val mqPepIons = new ArrayBuffer[MasterQuantPeptideIon]()
       msiEzDBC.selectAndProcess(sqlQuery) { r =>
-        mqPepIons += this._buildMasterQuantPeptideIon( r.toAnyMap() )
+        val mqRepIons = mqRepIonsByMqPepIonId.get(r.getLong(MQPepIonCols.ID)).getOrElse(Array.empty[MasterQuantReporterIon])
+        mqPepIons += this._buildMasterQuantPeptideIon(r, mqRepIons)
       }
       
       mqPepIons.toArray
@@ -106,7 +134,18 @@ class SQLMasterQuantPeptideIonProvider(val msiDbCtx: MsiDbConnectionContext) ext
 
   }
   
-  private def _buildMasterQuantPeptideIon( record: AnyMap ): MasterQuantPeptideIon = {
+  protected def loadMasterQuantReporterIons(mqPepIons: Array[MasterQuantPeptideIon]) = {
+    
+    val mqPepIonIds = mqPepIons.map(_.id)
+    val mqRepIons = mqRepIonProvider.getMQPeptideIonsMQReporterIons(mqPepIonIds)
+    val mqRepIonsByMqPepIonId = mqRepIons.groupByLong(_.masterQuantPeptideIonId.getOrElse(0))
+    mqPepIons.foreach { mqPepIon =>
+      mqPepIon.masterQuantReporterIons = mqRepIonsByMqPepIonId.get(mqPepIon.id).getOrElse(Array.empty[MasterQuantReporterIon])
+    }
+
+  }
+  
+  private def _buildMasterQuantPeptideIon(record: IValueContainer, mqRepIons: Array[MasterQuantReporterIon]): MasterQuantPeptideIon = {
     
     val r = record
     
@@ -129,7 +168,8 @@ class SQLMasterQuantPeptideIonProvider(val msiDbCtx: MsiDbConnectionContext) ext
       lcmsMasterFeatureId = r.getLongOption(MQPepIonCols.LCMS_MASTER_FEATURE_ID),
       unmodifiedPeptideIonId = r.getLongOption(MQPepIonCols.UNMODIFIED_PEPTIDE_ION_ID),
       quantPeptideIonMap = quantPepIonMap,
-      properties = r.getStringOption(MQPepIonCols.SERIALIZED_PROPERTIES).map(ProfiJson.deserialize[MasterQuantPeptideIonProperties](_))
+      properties = r.getStringOption(MQPepIonCols.SERIALIZED_PROPERTIES).map(ProfiJson.deserialize[MasterQuantPeptideIonProperties](_)),
+      masterQuantReporterIons = mqRepIons
     )
   }
 

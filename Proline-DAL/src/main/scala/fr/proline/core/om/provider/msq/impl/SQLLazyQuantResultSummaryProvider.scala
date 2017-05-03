@@ -13,12 +13,13 @@ import fr.proline.core.om.provider.msq.IQuantResultSummaryProvider
 class SQLLazyQuantResultSummaryProvider(
   override val msiDbCtx: MsiDbConnectionContext,
   override val psDbCtx: DatabaseConnectionContext,
-  override val udsDbCtx: UdsDbConnectionContext
-) extends SQLLazyResultSummaryProvider(msiDbCtx,psDbCtx,udsDbCtx) {  
+  override val udsDbCtx: UdsDbConnectionContext,
+  loadReporterIons: Boolean = false
+) extends SQLLazyResultSummaryProvider(msiDbCtx,psDbCtx,udsDbCtx) {
   
   protected val mqProtSetProvider = new SQLMasterQuantProteinSetProvider(msiDbCtx, psDbCtx)
   protected val mqPepProvider = new SQLMasterQuantPeptideProvider(msiDbCtx, psDbCtx)
-  protected val mqPepIonProvider = new SQLMasterQuantPeptideIonProvider(msiDbCtx)
+  protected val mqPepIonProvider = new SQLMasterQuantPeptideIonProvider(msiDbCtx,loadReporterIons)
   
   val MQComponentTable = MsiDbMasterQuantComponentTable
   val MQCompCols = MQComponentTable.columns
