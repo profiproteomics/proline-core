@@ -1229,7 +1229,7 @@ class ExtractMapSet(
         this.logger.info(s"Start peakel detection for run id=$lcMsRunId (map #$mapNumber) from " + mzDbFile.getAbsolutePath())
 
         // Create TMP file to store orphan peakels which will be deleted after JVM exit
-        val peakelFile = File.createTempFile(s"${lcMsRun.getRawFileName}-", ".sqlite")
+        val peakelFile = File.createTempFile(s"${lcMsRun.getRawFileName}-", ".sqlite",ExtractMapSet.tempDir)
         //peakelFile.deleteOnExit()
         this.logger.debug(s"Creating tmp file for run id=$lcMsRunId at: " + peakelFile)
 
