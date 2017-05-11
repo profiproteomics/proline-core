@@ -29,27 +29,6 @@ case class PeptideInstancePtm(peptideInstance: PeptideInstance, ptm: LocatedPtm)
  */
 class PtmSitesIdentifier () extends LazyLogging {
    
-// VDS Workaround test for issue #16643   
-  private def  toOtherReadableString(ptm: LocatedPtm) = {
-    val ptmDef = ptm.definition
-    val shortName = ptmDef.names.shortName
-    
-    val ptmConstraint = if (ptm.isNTerm || ptm.isCTerm){ 
-        val loc = PtmLocation.withName(ptmDef.location)
-        var otherLoc : String = ""
-        loc match {
-          case PtmLocation.ANY_C_TERM => otherLoc = PtmLocation.PROT_C_TERM.toString()
-          case PtmLocation.PROT_C_TERM => otherLoc = PtmLocation.ANY_C_TERM.toString()
-          case PtmLocation.ANY_N_TERM => otherLoc = PtmLocation.PROT_N_TERM.toString()
-          case PtmLocation.PROT_N_TERM => otherLoc = PtmLocation.ANY_N_TERM.toString()
-        }
-        otherLoc
-           
-      } else "" + ptmDef.residue + ptm.seqPosition
-    
-    s"${shortName} (${ptmConstraint})"
-  }
-  
   /**
    *   
    */
@@ -151,9 +130,10 @@ class PtmSitesIdentifier () extends LazyLogging {
 	        
 	        PtmSite(
 	          proteinMatchId = proteinMatchId, 
-	          definitionId= k._1.id, 
+	          ptmDefinitionId= k._1.id, 
 	          seqPosition = k._2, 
 	          bestPeptideMatchId = bestPeptideMatch.id,
+	          localizationConfidence = bestProba,
 	          peptideIdsByPtmPosition = peptideIdsBySeqPosition,
 	          peptideInstanceIds = peptideInstances.map(_.peptideInstance.id).toArray, 
 	          isomericPeptideInstanceIds = isomericPeptideInstances.map(_.id).toArray)
@@ -165,8 +145,73 @@ class PtmSitesIdentifier () extends LazyLogging {
     ptmSites
 	}
 	
+	def aggregatePtmSites(childrenSites: Array[Iterable[PtmSite]], sitesProteinMatches: Array[ProteinMatch], parentProteinMatches: Array[ProteinMatch]) : Iterable[PtmSite] = {
+	  val proteinAccessionByProteinMatchId = sitesProteinMatches.map { pm => pm.id -> pm.accession }.toMap
+	  val proteinMatchesByAccession = parentProteinMatches.map { pm => pm.accession -> pm}.toMap	  
+	  val ptmSites = ArrayBuffer.empty[PtmSite]
+	  
+	  val ptmSitesMap = scala.collection.mutable.Map[(String, Long, Int), ArrayBuffer[PtmSite]]()
+	  
+	  for (sites <- childrenSites) {
+	    sites.foreach { site => 
+	      ptmSitesMap.getOrElseUpdate((proteinAccessionByProteinMatchId(site.proteinMatchId), site.ptmDefinitionId, site.seqPosition), ArrayBuffer.empty[PtmSite]) += site
+	    }
+	  }
+	  
+	  ptmSitesMap.foreach { case (key, value) => 
+	      val peptideMap = value.map(_.peptideIdsByPtmPosition).flatten
+	      val newPeptideMap = peptideMap.groupBy( _._1).map{ case (k,v) => k -> v.map(_._2).flatten.distinct.toArray }
+	      val bestProbabilities = value.map(_.bestPeptideMatchId) zip value.map(_.localizationConfidence)
+	      val newBestPeptideMatch = bestProbabilities.maxBy(_._2)
+	      
+	      val newPeptideInstanceIds = value.map(_.peptideInstanceIds).flatten.distinct
+	      val newIsomericPeptideInstanceIds = value.map(_.isomericPeptideInstanceIds).flatten.distinct
+	      
+	      val newSite = PtmSite(proteinMatchId = proteinMatchesByAccession(key._1).id, 
+	              ptmDefinitionId = key._2,
+	              seqPosition = key._3, 
+	              bestPeptideMatchId = newBestPeptideMatch._1,
+	              localizationConfidence = newBestPeptideMatch._2,
+	              peptideIdsByPtmPosition = newPeptideMap,
+	              peptideInstanceIds = newPeptideInstanceIds.toArray,
+	              isomericPeptideInstanceIds = newIsomericPeptideInstanceIds.toArray)
+	      ptmSites += newSite
+	  }
+	  logger.info(ptmSites.size + " Ptm sites identified")
+	  ptmSites
+	}
+	
+	
+	/*
+	 * VDS Workaround test for issue #16643   
+	 */
+  private def toOtherReadableString(ptm: LocatedPtm) = {
+    val ptmDef = ptm.definition
+    val shortName = ptmDef.names.shortName
+    
+    val ptmConstraint = if (ptm.isNTerm || ptm.isCTerm){ 
+        val loc = PtmLocation.withName(ptmDef.location)
+        var otherLoc : String = ""
+        loc match {
+          case PtmLocation.ANY_C_TERM => otherLoc = PtmLocation.PROT_C_TERM.toString()
+          case PtmLocation.PROT_C_TERM => otherLoc = PtmLocation.ANY_C_TERM.toString()
+          case PtmLocation.ANY_N_TERM => otherLoc = PtmLocation.PROT_N_TERM.toString()
+          case PtmLocation.PROT_N_TERM => otherLoc = PtmLocation.ANY_N_TERM.toString()
+        }
+        otherLoc
+           
+      } else "" + ptmDef.residue + ptm.seqPosition
+    
+    s"${shortName} (${ptmConstraint})"
+  }
+  
+  /*
+   * get a key for the given PeptideInstance based on sequence and ptms definition sorted by name. This means that to peptide instances with
+   * same sequence and a same modification located at a different position get the same key.
+   */
 	private def _getKey(peptideInstance: PeptideInstance): String = {
 	  peptideInstance.peptide.sequence+peptideInstance.peptide.ptms.map(_.definition.toReadableString()).sorted.mkString
 	}
+	
 }
 

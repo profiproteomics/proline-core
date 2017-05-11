@@ -384,11 +384,13 @@ case class LocatedPtm(
 case class PtmSite(
   val proteinMatchId: Long, 
   // ptm definition 
-  val definitionId: Long,
+  val ptmDefinitionId: Long,
   // position of the ptm site on the protein sequence
   val seqPosition: Int, 
   // best (higher ptm probability) peptide match for this site
   val bestPeptideMatchId: Long,
+  // The localization probability (percentage between 0 and 100)
+  val localizationConfidence: Float,
   // map of peptide Ids matching that site, organized by position of the modification on the peptide sequence
   val peptideIdsByPtmPosition: Map[Int, Array[Long]], 
   // array of matching peptide instances in leaf RSM
