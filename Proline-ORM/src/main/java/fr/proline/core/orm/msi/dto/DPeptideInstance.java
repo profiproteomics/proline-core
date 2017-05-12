@@ -1,7 +1,9 @@
 package fr.proline.core.orm.msi.dto;
 
-import fr.proline.core.orm.msi.ResultSummary;
+import java.util.List;
+
 import fr.proline.core.orm.msi.Peptide;
+import fr.proline.core.orm.msi.ResultSummary;
 
 
 public class DPeptideInstance {
@@ -12,10 +14,9 @@ public class DPeptideInstance {
 	private int m_validatedProteinSetCount;
 	private Float m_elutionTime;
 	
-	
 	private DPeptideMatch m_bestPeptideMatch;
-	
 	private ResultSummary resultSummary;
+	private List<DPeptideMatch> m_peptideMatches;
 	
 	public DPeptideInstance(long id, long peptideId, int validatedProteinSetCount, Float elutionTime) {
         m_id = id;
@@ -65,6 +66,14 @@ public class DPeptideInstance {
 
 	public void setResultSummary(ResultSummary resultSummary) {
 		this.resultSummary = resultSummary;
+	}
+
+	public List<DPeptideMatch> getPeptideMatches() {
+		return m_peptideMatches;
+	}
+
+	public void setPeptideMatches(List<DPeptideMatch> m_peptideMatches) {
+		this.m_peptideMatches = m_peptideMatches;
 	}
 
 }
