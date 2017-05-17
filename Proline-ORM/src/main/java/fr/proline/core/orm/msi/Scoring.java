@@ -86,6 +86,10 @@ public class Scoring implements Serializable {
 			"andromeda", "score",
 			"The score provided by Andromeda for a peptide match."
 		),
+    COMET_EVALUE_LOG_SCALED(
+      "comet", "evalue log scaled",
+      "The -log10(expectation value) provided by Comet for a peptide match."
+    ),
 		MASCOT_IONS_SCORE(
 			"mascot", "ions score",
 			"The score provided for each Mascot peptide."
@@ -107,10 +111,10 @@ public class Scoring implements Serializable {
 			"omssa", "expect value",
 			"The -log10(E-value) provided by OMSSA for a peptide match."
 		),
-		COMET_EVALUE_LOG_SCALED(
-			"comet", "evalue log scaled",
-			"The -log10(expectation value) provided by Comet for a peptide match."
-		),
+    PEPTIDE_SHAKER_PSM_SCORE(
+      "peptide_shaker", "psm score",
+      "The score provided by PeptideShaker for a peptide match."
+    ),
 		MSGF_EVALUE_LOG_SCALED(
 			"msgf", "evalue log scaled",
 			"The -log10(EValue) provided by MS-GF for a peptide match."
