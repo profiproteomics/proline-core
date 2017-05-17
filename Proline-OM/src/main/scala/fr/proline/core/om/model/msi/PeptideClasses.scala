@@ -297,19 +297,16 @@ object PeptideMatch extends InMemoryIdGen with LazyLogging {
 //    if(missedCleavages > 0) logger.debug("Sequence "+residueBefore.getOrElse("^")+"."+sequence+"."+residueAfter.getOrElse("$")+" has "+missedCleavages+" miscleavages")
     missedCleavages
   }
-
-
-
   
 }
 
 object PeptideMatchScoreType extends Enumeration {
-  
   val ANDROMEDA_SCORE = Value("andromeda:score")
   val COMET_EVALUE_LOG_SCALED = Value("comet:evalue log scaled")
   val MASCOT_IONS_SCORE = Value("mascot:ions score")
   val MSGF_EVALUE_LOG_SCALED = Value("msgf:evalue log scaled")
   val OMSSA_EVALUE = Value("omssa:expect value")
+  val PEPTIDE_SHAKER_PSM_SCORE = Value("peptide_shaker:psm score")
   val PERCOLATOR_PEP_LOG_SCALED = Value("percolator:pep log scaled")
   val SEQUEST_EXPECT_LOG_SCALED = Value("sequest:expect log scaled")
   val XTANDEM_EXPECT_LOG_SCALED = Value("xtandem:expect log scaled")
