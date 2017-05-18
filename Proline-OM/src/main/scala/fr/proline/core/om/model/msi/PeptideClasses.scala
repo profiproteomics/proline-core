@@ -429,6 +429,7 @@ case class PeptideMatchPtmSiteProperties(
   protected var mascotProbabilityBySite: Map[String, Float] = null,
   
   // A raw string containing some PhosphoRS information
+  // This is mainly useful to manage PhosphoRS results obtained from mzIdentML files
   @BeanProperty var phosphoRsString: Option[String] = None
 ) {
   
