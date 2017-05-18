@@ -419,14 +419,17 @@ case class PeptideMatchResultSummaryProperties (
   @BeanProperty var mascotAdjustedExpectationValue: Option[Double] = None
 )
 
-case class PeptideMatchPtmSiteProperties (
+case class PeptideMatchPtmSiteProperties(
   
   @JsonDeserialize(contentAs = classOf[java.lang.Float] )
   @BeanProperty var mascotDeltaScore: Option[Float] = None,
   
   // Key is the ReadableString of the LocatedPtm, value is the Mascot Probability for this site
   @JsonDeserialize(contentAs = classOf[java.lang.Float])
-  protected var mascotProbabilityBySite: Map[String, Float] = null
+  protected var mascotProbabilityBySite: Map[String, Float] = null,
+  
+  // A raw string containing some PhosphoRS information
+  @BeanProperty var phosphoRsString: Option[String] = None
 ) {
   
   def getMascotProbabilityBySite(): Option[Map[String, Float]] = {
