@@ -185,56 +185,67 @@ private[msi] object PgRsWriter extends AbstractSQLRsWriter() {
       // Bulk insert of peptide matches
       logger.info("BULK insert of peptide matches")
 
+      var scoringErr = false
+      var scoreType : String = ""
+      
       //val pgBulkLoader = bulkCopyManager.copyIn("COPY " + tmpPepMatchTableName + " ( id, " + pepMatchTableColsWithoutPK + " ) FROM STDIN")
       val pgBulkLoader = bulkCopyManager.copyIn(
         s"COPY ${MsiDbPeptideMatchTable.name} ($pepMatchTableColsWithoutPK) FROM STDIN"
       )
   
       // Iterate over peptide matches to store them
-      for (peptideMatch <- peptideMatches) {
+      for (peptideMatch <- peptideMatches if !scoringErr) {
         
-        val scoreType = peptideMatch.scoreType
-        val scoringId = scoringIdByType.get(scoreType.toString)
-        require(scoringId.isDefined, "can't find a scoring id for the score type '" + scoreType + "'")
+        scoreType = peptideMatch.scoreType.toString()
+        val scoringId = scoringIdByType.get(scoreType)
+        if(!scoringId.isDefined)
+          scoringErr = true 
+        else {
         
-        val msQuery = peptideMatch.msQuery
-        val bestChildId = peptideMatch.bestChildId
+          val msQuery = peptideMatch.msQuery
+          val bestChildId = peptideMatch.bestChildId
 
-        var pmCharge = msQuery.charge
-        if(peptideMatch.properties.isDefined && peptideMatch.properties.get.getOmssaProperties.isDefined) {
-          pmCharge = peptideMatch.properties.get.getOmssaProperties.get.getCorrectedCharge
-        }
+          var pmCharge = msQuery.charge
+          if(peptideMatch.properties.isDefined && peptideMatch.properties.get.getOmssaProperties.isDefined) {
+            pmCharge = peptideMatch.properties.get.getOmssaProperties.get.getCorrectedCharge
+          }  
 
-        // Build a row containing peptide match values
-        val pepMatchValues = List(
-          //peptideMatch.id,
-          pmCharge,
-          msQuery.moz,
-          peptideMatch.score,
-          peptideMatch.rank,
-          peptideMatch.cdPrettyRank,
-          peptideMatch.sdPrettyRank,
-          peptideMatch.deltaMoz,
-          peptideMatch.missedCleavage,
-          peptideMatch.fragmentMatchesCount,
-          peptideMatch.isDecoy,
-          peptideMatch.properties.map(ProfiJson.serialize(_)),
-          peptideMatch.peptide.id,
-          msQuery.id,
-          if (bestChildId == 0) None else Some(bestChildId),
-          scoringId.get,
-          rsId
-        )
+          // Build a row containing peptide match values
+          val pepMatchValues = List(
+            //peptideMatch.id,
+            pmCharge,
+            msQuery.moz,
+            peptideMatch.score,
+            peptideMatch.rank,
+            peptideMatch.cdPrettyRank,
+            peptideMatch.sdPrettyRank,
+            peptideMatch.deltaMoz,
+            peptideMatch.missedCleavage,
+            peptideMatch.fragmentMatchesCount,
+            peptideMatch.isDecoy,
+            peptideMatch.properties.map(ProfiJson.serialize(_)),
+            peptideMatch.peptide.id,
+            msQuery.id,
+            if (bestChildId == 0) None else Some(bestChildId),
+            scoringId.get,
+            rsId
+          )
         
-       // Store peptide match
-        val pepMatchBytes = encodeRecordForPgCopy(pepMatchValues)
-        pgBulkLoader.writeToCopy(pepMatchBytes, 0, pepMatchBytes.length)
-        
-      }
+         // Store peptide match
+          val pepMatchBytes = encodeRecordForPgCopy(pepMatchValues)
+          pgBulkLoader.writeToCopy(pepMatchBytes, 0, pepMatchBytes.length)
+          }           
+      } // end go through peptideMatch or until scoringErr !
   
       // End of BULK copy
-      val nbInsertedPepMatches = pgBulkLoader.endCopy()
-
+      if(scoringErr){
+        //Error : Cancel copy and throw exception
+        pgBulkLoader.cancelCopy()
+        throw new IllegalArgumentException("requirement failed: "+ "can't find a scoring id for the score type '" + scoreType + "'")
+      }
+        
+       val nbInsertedPepMatches = pgBulkLoader.endCopy()
+              
       /*// Move TMP table content to MAIN table
       logger.info("move TMP table " + tmpPepMatchTableName + " into MAIN peptide_match table. # of tmp pepMatches: "+nbInsertedPepMatches)
       val insertedPepMatched = stmt.executeUpdate("INSERT into peptide_match (" + pepMatchTableColsWithoutPK + ") " +
