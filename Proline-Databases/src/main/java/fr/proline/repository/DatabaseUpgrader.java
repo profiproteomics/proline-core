@@ -15,14 +15,14 @@ import java.util.List;
 
 import javax.sql.DataSource;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import org.flywaydb.core.Flyway;
+import org.flywaydb.core.api.FlywayException;
 import org.flywaydb.core.api.MigrationInfo;
 import org.flywaydb.core.api.MigrationState;
 import org.flywaydb.core.api.MigrationType;
 import org.flywaydb.core.api.MigrationVersion;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import fr.profi.util.SQLUtils;
 import fr.profi.util.StringUtils;
@@ -185,6 +185,9 @@ public final class DatabaseUpgrader {
 				if (repairChecksum) {
 					flyway.repair();
 				}
+				
+				flyway.setOutOfOrder(true);
+
 
 				migrationsCount = flyway.migrate();
 				LOG.info("Flyway applies {} migration(s) to {}", migrationsCount, prolineDbType);
