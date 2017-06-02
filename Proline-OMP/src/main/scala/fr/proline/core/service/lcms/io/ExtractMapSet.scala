@@ -1236,7 +1236,7 @@ class ExtractMapSet(
         // Create a mapping between the TMP file and the LC-MS run
         entityCache.addPeakelFile(lcMsRunId, peakelFile)
 
-        val resultPromise = Promise[(Observable[(Int,Array[MzDbPeakel])],LongMap[Array[SpectrumHeader]])]
+        val resultPromise = Promise[(Observable[(Int,Array[MzDbPeakel])],Array[SpectrumHeader],LongMap[Array[SpectrumHeader]])]
         
         Future {
           this.logger.info(s"Detecting peakels in raw MS survey for run id=$lcMsRunId...")
@@ -1257,7 +1257,7 @@ class ExtractMapSet(
             
             // Launch the peakel detection
             val onDetectedPeakels = { observablePeakels: Observable[(Int,Array[MzDbPeakel])] =>
-              resultPromise.success(observablePeakels,mzdbFtDetector.ms2SpectrumHeadersByCycle)
+              resultPromise.success(observablePeakels,mzDb.getMs1SpectrumHeaders,mzdbFtDetector.ms2SpectrumHeadersByCycle)
             }
             val nParRunSlices = ExtractMapSet.RUN_SLICE_MAX_PARALLELISM
             mzdbFtDetector.detectPeakelsAsync( mzDb.getLcMsRunSliceIterator(), onDetectedPeakels, nParRunSlices )
@@ -1291,7 +1291,7 @@ class ExtractMapSet(
           }
         }
 
-        val futureResult = resultPromise.future.map { case (observableRunSlicePeakels, ms2SpecHeadersByCycle) =>
+        val futureResult = resultPromise.future.map { case (observableRunSlicePeakels, ms1SpecHeaders, ms2SpecHeadersByCycle) =>
 
           // TODO: create/manage this scheduler differently ?
           val rxIOScheduler = schedulers.IOScheduler()
@@ -1320,7 +1320,7 @@ class ExtractMapSet(
                 logger.trace(s"Storing ${peakels.length} peakels for run slice #$rsId and run #${lcMsRun.id}...")
                 
                 // Store peakels in SQLite file
-                this._storePeakelsInPeakelDB(peakelFileConnection, peakels, lcMsRun.scanSequence.get)
+                this._storePeakelsInPeakelDB(peakelFileConnection, peakels, ms1SpecHeaders)
                 
                 subscriber.onNext(peakels)
                 
@@ -1956,15 +1956,19 @@ class ExtractMapSet(
   private def _storePeakelsInPeakelDB(
     sqliteConn: SQLiteConnection,
     peakels: Array[MzDbPeakel],
-    scanSequence: LcMsScanSequence
+    ms1SpecHeaders: Array[SpectrumHeader]
   ) {
     
-    val cycleByScanInitialId = scanSequence.scans.toLongMapWith { scan =>
-      (scan.initialId, scan.cycle)
+    // Retrieve some mappings relative to the mzDB spectra ids
+    val initialIdByMzDbSpecId = ms1SpecHeaders.toLongMapWith { sh =>
+      sh.getId -> sh.getInitialId
+    }
+    val cycleByMzDbSpecId = ms1SpecHeaders.toLongMapWith { sh =>
+      sh.getId -> sh.getCycle
     }
 
     // BEGIN TRANSACTION
-    sqliteConn.exec("BEGIN TRANSACTION;");
+    sqliteConn.exec("BEGIN TRANSACTION;")
 
     // Prepare the insertion in the peakel table
     val peakelStmt = sqliteConn.prepare(
@@ -1978,7 +1982,7 @@ class ExtractMapSet(
     try {
       for (peakel <- peakels) {
 
-        val scanInitialIds = peakel.getSpectrumIds()
+        val scanInitialIds = peakel.getSpectrumIds().map(initialIdByMzDbSpecId(_))
         val peakelMessage = peakel.toPeakelDataMatrix()
         val peakelMessageAsBytes = PeakelDataMatrix.pack(peakelMessage)
 
@@ -1990,7 +1994,7 @@ class ExtractMapSet(
         peakelStmt.bind(fieldNumber, peakelMz); fieldNumber += 1
         peakelStmt.bind(fieldNumber, peakelTime); fieldNumber += 1
         peakelStmt.bind(fieldNumber, peakel.calcDuration()); fieldNumber += 1
-        peakelStmt.bind(fieldNumber, peakel.calcGapCount(cycleByScanInitialId)); fieldNumber += 1
+        peakelStmt.bind(fieldNumber, peakel.calcGapCount(cycleByMzDbSpecId)); fieldNumber += 1
         peakelStmt.bind(fieldNumber, peakel.getApexIntensity); fieldNumber += 1
         peakelStmt.bind(fieldNumber, peakel.area); fieldNumber += 1
         peakelStmt.bind(fieldNumber, peakel.calcAmplitude()); fieldNumber += 1
