@@ -84,7 +84,7 @@ class PgPeakelWriter(lcmsDbCtx: LcMsDbConnectionContext) extends IPeakelWriter w
           
           val newRawMapId = peakel.rawMapId
           require( newRawMapId > 0, "peakel.rawMapId must be greater than zero")
-          oldRawMapIdByNewRawMapId.put(oldRawMapId, newRawMapId)
+          oldRawMapIdByNewRawMapId.put(newRawMapId, oldRawMapId)
           
           if (peakelsCountByRawMapId.contains(newRawMapId) == false) {
             peakelsCountByRawMapId.put(newRawMapId, 0)
