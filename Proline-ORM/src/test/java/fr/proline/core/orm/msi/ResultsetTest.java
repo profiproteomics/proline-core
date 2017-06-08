@@ -17,6 +17,7 @@ import org.slf4j.LoggerFactory;
 
 import fr.proline.core.orm.msi.repository.PeptideMatchRepository;
 import fr.proline.core.orm.msi.repository.PeptideReadablePtmStringRepository;
+import fr.proline.core.orm.msi.repository.ResultSetRepository;
 import fr.proline.repository.ProlineDatabaseType;
 import fr.proline.repository.util.DatabaseTestCase;
 import fr.profi.util.MathUtils;
@@ -61,6 +62,29 @@ public class ResultsetTest extends DatabaseTestCase {
 	    SearchSettingsSeqDatabaseMap map = msiSearch.getSearchSetting()
 		    .getSearchSettingsSeqDatabaseMaps().iterator().next();
 	    assertEquals(map.getSeqDatabase().getName(), "Swissprot");
+	} finally {
+
+	    if (msiEm != null) {
+		try {
+		    msiEm.close();
+		} catch (Exception exClose) {
+		    LOG.error("Error closing MSI EntityManager", exClose);
+		}
+	    }
+
+	}
+
+    }
+    
+    @Test
+    public void readChildMsISearch() {
+	final EntityManager msiEm = getConnector().createEntityManager();
+
+	try {
+		
+	    List<Long> msiSIds = ResultSetRepository.findChildMsiSearchIdsForResultSet(msiEm, 3L);
+	    assertNotNull(msiSIds);
+	    assertEquals(msiSIds.size(), 2);
 	} finally {
 
 	    if (msiEm != null) {
