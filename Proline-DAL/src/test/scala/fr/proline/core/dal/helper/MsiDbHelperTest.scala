@@ -48,8 +48,12 @@ class MsiDbHelperTest {
     val helper = new MsiDbHelper(msiDbCtx)
 
     val msiIds = helper.getResultSetsMsiSearchIds(Array(3L))
-
     assertEquals(2, msiIds.length)
+    
+//    val msiIds2 = helper.getMsiSearchIdsByParentResultSetId(Array(3L))
+//    assertEquals(2, msiIds2.get(3L).get.size)
+    
+    
     
     msiDbCtx.close()
   }
