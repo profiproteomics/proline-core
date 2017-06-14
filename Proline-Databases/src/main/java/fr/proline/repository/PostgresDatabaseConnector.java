@@ -1,8 +1,8 @@
 package fr.proline.repository;
 
+import java.lang.reflect.Field;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.sql.Connection;
 import java.util.Map;
 import java.util.Properties;
 import java.util.concurrent.atomic.AtomicLong;
@@ -10,13 +10,15 @@ import java.util.concurrent.atomic.AtomicLong;
 import javax.persistence.EntityManagerFactory;
 import javax.sql.DataSource;
 
-import org.postgresql.ds.PGPoolingDataSource;
-import org.postgresql.ds.PGSimpleDataSource;
+//import com.mchange.v2.c3p0.ComboPooledDataSource;
+import com.zaxxer.hikari.HikariConfig;
+import com.zaxxer.hikari.HikariDataSource;
+import com.zaxxer.hikari.pool.HikariPool;
+
 //import org.postgresql.ds.PGPoolingDataSource;
+import org.postgresql.ds.PGSimpleDataSource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import com.mchange.v2.c3p0.ComboPooledDataSource;
 
 import fr.profi.util.PropertiesUtils;
 import fr.profi.util.StringUtils;
@@ -79,14 +81,14 @@ public class PostgresDatabaseConnector extends AbstractDatabaseConnector {
 			}
 		}
 
-		final DataSource source = (maxConnection > 1) ? buildC3P0DataSource(ident, properties, fakeURI, maxConnection)
+		final DataSource source = (maxConnection > 1) ? buildHikariDataSource(ident, properties, fakeURI, maxConnection)
 			: buildSimpleDataSource(ident, properties, fakeURI);
 
 		LOG.info("Pool creation duration = "+(System.currentTimeMillis() - start)+" ms for "+getProlineDatabaseType());
 		return source;
 	}
 
-	private DataSource buildPGPoolingDataSource(final String ident, final Map<Object, Object> properties, URI fakeURI, Integer maxConnectionPerProject) {
+	/*private DataSource buildPGPoolingDataSource(final String ident, final Map<Object, Object> properties, URI fakeURI, Integer maxConnectionPerProject) {
 
 		PGPoolingDataSource source = new PGPoolingDataSource();
 
@@ -112,10 +114,10 @@ public class PostgresDatabaseConnector extends AbstractDatabaseConnector {
 		source.setPassword(PropertiesUtils.getProperty(properties, PERSISTENCE_JDBC_PASSWORD_KEY));
 		source.setMaxConnections(DEFAULT_MAX_POOL_CONNECTIONS);
 		source.setApplicationName(PropertiesUtils.getProperty(properties, JDBC_APPNAME_KEY));
-		/* Force TCP keepalive on raw SQL JDBC connections */
+		// Force TCP keepalive on raw SQL JDBC connections //
 		source.setTcpKeepAlive(true);
 		return source;
-	}
+	}*/
 
 	private DataSource buildSimpleDataSource(final String ident, final Map<Object, Object> properties, URI fakeURI) {
 
@@ -147,7 +149,7 @@ public class PostgresDatabaseConnector extends AbstractDatabaseConnector {
 		return new DataSourceWrapper(source, this);
 	}
 
-	private DataSource buildC3P0DataSource(final String ident, final Map<Object, Object> properties, URI fakeURI, Integer maxConnection) {
+	/*private DataSource buildC3P0DataSource(final String ident, final Map<Object, Object> properties, URI fakeURI, Integer maxConnection) {
 		final String datasourceName = ident + '_' + NAME_SEQUENCE.getAndIncrement();
 		ComboPooledDataSource source = new ComboPooledDataSource();
 		Properties props = new Properties();
@@ -162,6 +164,32 @@ public class PostgresDatabaseConnector extends AbstractDatabaseConnector {
 		source.setMaxPoolSize(maxConnection);
 		source.setDataSourceName(datasourceName);
 		return source;
+	}*/
+
+	private DataSource buildHikariDataSource(final String ident, final Map<Object, Object> properties, URI fakeURI, Integer maxConnection) {
+		final String poolName = ident + '_' + NAME_SEQUENCE.getAndIncrement();
+
+		Properties dsProperties = new Properties();
+		Object appName = PropertiesUtils.getProperty(properties, JDBC_APPNAME_KEY);
+		if (appName != null) {
+			dsProperties.put(JDBC_APPNAME_KEY, appName);
+		}
+
+		HikariConfig config = new HikariConfig();
+		config.setDataSourceProperties(dsProperties);
+		config.setPoolName(poolName);
+
+		config.setJdbcUrl(PropertiesUtils.getProperty(properties, PERSISTENCE_JDBC_URL_KEY));
+		config.setUsername(PropertiesUtils.getProperty(properties, PERSISTENCE_JDBC_USER_KEY));
+		config.setPassword(PropertiesUtils.getProperty(properties, PERSISTENCE_JDBC_PASSWORD_KEY));
+		//config.setMinimumIdle(MIN_POOL_SIZE);
+		config.setMaximumPoolSize(maxConnection);
+		//config.setConnectionTimeout(8000);
+		//config.setAutoCommit(false);
+		
+		//config.setMetricRegistry(this.metricRegistry);
+
+		return new HikariDataSource(config);
 	}
 
 	@Override
@@ -182,8 +210,11 @@ public class PostgresDatabaseConnector extends AbstractDatabaseConnector {
 			properties.put(HIBERNATE_DIALECT_KEY, TableNameSequencePostgresDialect.class.getName());
 		}
 
-		/* Configure c3p0 pool for production environnement */
-		enableC3P0Pool(properties);
+		/* Configure c3p0 pool for production environment */
+		//enableC3P0Pool(properties);
+		
+		/* Configure HikariCP pool for production environment */
+		enableHikariPool(properties);
 
 		/*
 		 * PostgreSQL JDBC driver version 9.1-901-1.jdbc4 does NOT support
@@ -211,7 +242,7 @@ public class PostgresDatabaseConnector extends AbstractDatabaseConnector {
 		if (m_dataSource == null)
 			return 0;
 		
-		if (m_dataSource instanceof ComboPooledDataSource) {
+		/*if (m_dataSource instanceof ComboPooledDataSource) {
 			try {
 				ComboPooledDataSource poolDS = ((ComboPooledDataSource) m_dataSource);
 				return poolDS.getNumBusyConnections();
@@ -222,19 +253,55 @@ public class PostgresDatabaseConnector extends AbstractDatabaseConnector {
 
 		} else {
 			return super.getOpenConnectionCount();
-		}
+		}*/
 		
+		if (m_dataSource instanceof HikariDataSource) {
+			try {
+				HikariDataSource poolDS = ((HikariDataSource) m_dataSource);
+				HikariPool pool = _getHikariDataSourcePool(poolDS);
+				
+				//this.metricRegistry.get(poolDS.getPoolName() +".pool.ActiveConnections");
+				return pool.getActiveConnections();
+			} catch (Exception exClose) {
+				LOG.error("Error counting open connection from DataSource", exClose);
+				return 0;
+			}
+
+		} else {
+			return super.getOpenConnectionCount();
+		}
+	}
+	
+	private HikariPool _getHikariDataSourcePool(HikariDataSource dataSource)
+		throws NoSuchFieldException, SecurityException, IllegalArgumentException, IllegalAccessException {
+		Field fpool = HikariDataSource.class.getDeclaredField("pool");
+		fpool.setAccessible(true);
+		return (HikariPool) fpool.get(dataSource);
 	}
 	
 	@Override
 	protected void doClose(final String ident, final DataSource source) {
-
-		if (source instanceof ComboPooledDataSource) {
+		
+		/*if (source instanceof ComboPooledDataSource) {
 			LOG.debug("Closing DataSource for [{}]", ident);
 
 			try {
 				ComboPooledDataSource poolDS = ((ComboPooledDataSource) source);
-				LOG.warn("Number of busy connections = "+poolDS.getNumBusyConnections());
+				LOG.warn("Number of busy connections = " + poolDS.getNumBusyConnections());
+				poolDS.close();
+			} catch (Exception exClose) {
+				LOG.error("Error closing DataSource for [" + ident + ']', exClose);
+			}
+
+		}*/
+
+		if (source instanceof HikariDataSource) {
+			LOG.debug("Closing DataSource for [{}]", ident);
+
+			try {
+				HikariDataSource poolDS = ((HikariDataSource) source);
+				HikariPool pool = _getHikariDataSourcePool(poolDS);
+				LOG.warn("Number of active connections = "+pool.getActiveConnections());
 				poolDS.close();
 			} catch (Exception exClose) {
 				LOG.error("Error closing DataSource for [" + ident + ']', exClose);

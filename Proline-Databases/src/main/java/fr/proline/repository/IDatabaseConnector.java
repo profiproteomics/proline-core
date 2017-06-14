@@ -1,6 +1,8 @@
 package fr.proline.repository;
 
 import java.io.Closeable;
+import java.sql.Connection;
+import java.sql.SQLException;
 import java.util.Map;
 
 import javax.persistence.EntityManager;
@@ -29,6 +31,8 @@ public interface IDatabaseConnector extends Closeable {
 	Object getProperty(Object key);
 
 	DataSource getDataSource();
+	
+	Connection createUnmanagedConnection() throws SQLException;
 	
 	EntityManager createEntityManager();
 	

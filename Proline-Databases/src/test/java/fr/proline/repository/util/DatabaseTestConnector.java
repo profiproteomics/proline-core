@@ -1,5 +1,7 @@
 package fr.proline.repository.util;
 
+import java.sql.Connection;
+import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.Arrays;
 import java.util.Collection;
@@ -144,6 +146,10 @@ public class DatabaseTestConnector implements IDatabaseConnector {
 
 	public DataSource getDataSource() {
 		return m_realConnector.getDataSource();
+	}
+	
+	public Connection createUnmanagedConnection() throws SQLException {
+		return m_realConnector.createUnmanagedConnection();
 	}
 
 	/*@Override

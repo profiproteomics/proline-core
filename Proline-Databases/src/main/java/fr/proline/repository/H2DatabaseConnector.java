@@ -2,6 +2,7 @@ package fr.proline.repository;
 
 import java.util.Map;
 
+import javax.persistence.EntityManagerFactory;
 import javax.sql.DataSource;
 
 import org.h2.jdbcx.JdbcConnectionPool;
@@ -40,6 +41,24 @@ public class H2DatabaseConnector extends AbstractDatabaseConnector {
 		}
 
 		return result;
+	}
+	
+	@Override
+	protected EntityManagerFactory createEntityManagerFactory(
+		final ProlineDatabaseType database,
+		final Map<Object, Object> properties,
+		final boolean ormOptimizations
+	) {
+
+		if (properties == null) {
+			throw new IllegalArgumentException("Properties Map is null");
+		}
+
+		if (properties.get(HIBERNATE_DIALECT_KEY) == null) {
+			properties.put(HIBERNATE_DIALECT_KEY, "org.hibernate.dialect.H2Dialect");
+		}
+
+		return super.createEntityManagerFactory(database, properties, ormOptimizations);
 	}
 
 	@Override

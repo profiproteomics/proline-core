@@ -3,6 +3,8 @@ package fr.proline.repository;
 import static fr.profi.util.StringUtils.LINE_SEPARATOR;
 
 import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -15,8 +17,6 @@ import javax.sql.DataSource;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import com.mchange.v2.c3p0.ComboPooledDataSource;
 
 import fr.profi.util.PropertiesUtils;
 import fr.profi.util.StringUtils;
@@ -32,8 +32,16 @@ public abstract class AbstractDatabaseConnector implements IDatabaseConnector, I
 	public static final String JDBC_APPNAME_KEY = "ApplicationName";
 	public static final String HIBERNATE_DIALECT_KEY = "hibernate.dialect";
 	public static final String PERSISTENCE_VALIDATION_MODE_KEY = "javax.persistence.validation.mode";
+	
+	// HikariCP config keys
+	public static final String HIBERNATE_CONNECTION_PROVIDER_CLASS_KEY = "hibernate.connection.provider_class";
+	public static final String HIBERNATE_POOL_MIN_IDLE_KEY = "hibernate.hikari.minimumIdle";
+	public static final String HIBERNATE_POOL_MAX_SIZE_KEY = "hibernate.hikari.maximumPoolSize";
+	public static final String HIBERNATE_POOL_MAX_IDLE_TIME_KEY = "hibernate.hikari.idleTimeout";
+	
+	//public static final String HIBERNATE_POOL_PREFERRED_TEST_QUERY_KEY = "hibernate.hikari.connectionTestQuery"; not recommanded
 
-	// Hibernate renamed from c3p0.minPoolSize !
+	/*// Hibernate renamed from c3p0.minPoolSize !
 	public static final String HIBERNATE_POOL_MIN_SIZE_KEY = "hibernate.c3p0.min_size";
 
 	// Hibernate renamed from c3p0.maxPoolSize !
@@ -46,13 +54,16 @@ public abstract class AbstractDatabaseConnector implements IDatabaseConnector, I
 
 	// Hibernate renamed from c3p0.idleConnectionTestPeriod !
 	public static final String HIBERNATE_POOL_IDLE_CON_TEST_PERIOD_KEY = "hibernate.c3p0.idle_test_period";
-	public static final String HIBERNATE_POOL_PREFERRED_TEST_QUERY_KEY = "hibernate.c3p0.preferredTestQuery";
+	public static final String HIBERNATE_POOL_PREFERRED_TEST_QUERY_KEY = "hibernate.c3p0.preferredTestQuery";*/
+	
 	public static final String HIBERNATE_FETCH_SIZE_KEY = "hibernate.jdbc.fetch_size";
 	public static final String HIBERNATE_BATCH_SIZE_KEY = "hibernate.jdbc.batch_size";
 	public static final String HIBERNATE_BATCH_VERSIONED_DATA_KEY = "hibernate.jdbc.batch_versioned_data";
 	public static final String HIBERNATE_BYTECODE_OPTIMIZER_KEY = "hibernate.bytecode.use_reflection_optimizer";
 
 	public static final int DEFAULT_MAX_POOL_CONNECTIONS = 20; // TODO increase value for server side
+	public static final int DEFAULT_MIN_IDLE_CONNECTIONS = 10; // TODO increase value for server side
+	public static final int DEFAULT_MAX_IDLE_TIME = 14 * 60 * 1000; // Max idle time of 14 minutes
 	public static final String PROLINE_MAX_POOL_CONNECTIONS_KEY = "proline.project.max.pool.connection";
 
 	public static final String JDBC_SCHEME = "jdbc";
@@ -214,6 +225,15 @@ public abstract class AbstractDatabaseConnector implements IDatabaseConnector, I
 		} // End of synchronized block on m_connectorLock
 
 		return m_dataSource;
+	}
+	
+	public final Connection createUnmanagedConnection() throws SQLException {
+		
+		final String jdbcURL = PropertiesUtils.getProperty(m_properties, PERSISTENCE_JDBC_URL_KEY);
+		final String user = PropertiesUtils.getProperty(m_properties, PERSISTENCE_JDBC_USER_KEY);
+		final String password = PropertiesUtils.getProperty(m_properties, PERSISTENCE_JDBC_PASSWORD_KEY);
+		
+		return DriverManager.getConnection(jdbcURL,user,password);
 	}
 
 	protected final EntityManagerFactory getEntityManagerFactory() {
@@ -406,14 +426,14 @@ public abstract class AbstractDatabaseConnector implements IDatabaseConnector, I
 		LOG.warn("Closing DatabaseConnector [{}] does not close already retrieved SQL JDBC Connection resources", ident);
 	}
 
-	protected static void enableC3P0Pool(final Map<Object, Object> properties) {
+	/*protected static void enableC3P0Pool(final Map<Object, Object> properties) {
 
 		if (properties == null) {
 			throw new IllegalArgumentException("Properties Map is null");
 		}
 
 		if (properties.get(HIBERNATE_POOL_MIN_SIZE_KEY) == null) {
-			/* minPoolSize = 0 */
+			// minPoolSize = 0 
 			properties.put(HIBERNATE_POOL_MIN_SIZE_KEY, "0");
 		}
 
@@ -422,7 +442,7 @@ public abstract class AbstractDatabaseConnector implements IDatabaseConnector, I
 		}
 
 		if (properties.get(HIBERNATE_POOL_MAX_IDLE_TIME_KEY) == null) {
-			/* Max idle time of 14 minutes */
+			// Max idle time of 14 minutes
 			properties.put(HIBERNATE_POOL_MAX_IDLE_TIME_KEY, "840");
 		}
 
@@ -430,16 +450,41 @@ public abstract class AbstractDatabaseConnector implements IDatabaseConnector, I
 			properties.put(HIBERNATE_POOL_MAX_STATEMENTS_PER_CON_KEY, "30");
 		}
 
-		/* If JDBC driver does NOT support Connection.isValid() method, override preferredTestQuery */
+		// If JDBC driver does NOT support Connection.isValid() method, override preferredTestQuery
 
 		if (properties.get(HIBERNATE_POOL_TEST_CON_ON_CHECKIN_KEY) == null) {
-			/* Check connection is valid asynchronously at every connection checkin */
+			// Check connection is valid asynchronously at every connection checkin
 			properties.put(HIBERNATE_POOL_TEST_CON_ON_CHECKIN_KEY, "true");
 		}
 
 		if (properties.get(HIBERNATE_POOL_IDLE_CON_TEST_PERIOD_KEY) == null) {
-			/* Check pooled but unchecked-out connections every 5 minutes (fastest recommended TCP keepalive) */
+			// Check pooled but unchecked-out connections every 5 minutes (fastest recommended TCP keepalive)
 			properties.put(HIBERNATE_POOL_IDLE_CON_TEST_PERIOD_KEY, "300");
+		}
+
+	}*/
+	
+	protected static void enableHikariPool(final Map<Object, Object> properties) {
+
+		if (properties == null) {
+			throw new IllegalArgumentException("Properties Map is null");
+		}
+
+		if (properties.get(HIBERNATE_CONNECTION_PROVIDER_CLASS_KEY) == null) {
+			properties.put(HIBERNATE_CONNECTION_PROVIDER_CLASS_KEY, "com.zaxxer.hikari.hibernate.HikariConnectionProvider");
+		}
+
+		if (properties.get(HIBERNATE_POOL_MIN_IDLE_KEY) == null) {
+			properties.put(HIBERNATE_POOL_MIN_IDLE_KEY, Integer.toString(DEFAULT_MIN_IDLE_CONNECTIONS));
+		}
+
+		if (properties.get(HIBERNATE_POOL_MAX_SIZE_KEY) == null) {
+			properties.put(HIBERNATE_POOL_MAX_SIZE_KEY, Integer.toString(DEFAULT_MAX_POOL_CONNECTIONS));
+		}
+
+		if (properties.get(HIBERNATE_POOL_MAX_IDLE_TIME_KEY) == null) {
+			// Max idle time of 14 minutes
+			properties.put(HIBERNATE_POOL_MAX_IDLE_TIME_KEY, Integer.toString(DEFAULT_MAX_IDLE_TIME));
 		}
 
 	}

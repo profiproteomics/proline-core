@@ -46,19 +46,20 @@
       <groupId>org.hibernate</groupId>
       <artifactId>hibernate-entitymanager</artifactId>
     </dependency>
-
-    <!-- C3p0 Pool for Hibernate (runtime scope) -->
+    
+    <!-- HikariCP Pool Hibernate integration (runtime scope) -->
     <dependency>
       <groupId>org.hibernate</groupId>
-      <artifactId>hibernate-c3p0</artifactId>
+      <artifactId>hibernate-hikaricp</artifactId>
+      <version>4.3.11.Final</version> <!-- TODO: inherit from ProFI-Pom ? -->
       <scope>runtime</scope>
     </dependency>
-
-    <!-- Explicit c3p0 latest version to use mchange-commons-java compatible with SLF4J -->
+    
+    <!-- HikariCP Pool -->
     <dependency>
-      <groupId>com.mchange</groupId>
-      <artifactId>c3p0</artifactId>
-      <!-- Version inherited from ProFI-Pom -->
+      <groupId>com.zaxxer</groupId>
+      <artifactId>HikariCP</artifactId>
+      <version>2.5.1</version> <!-- TODO: inherit from ProFI-Pom ? -->
     </dependency>
 
     <!-- Databases (Compile-scope to use Drivers DataSource) -->
