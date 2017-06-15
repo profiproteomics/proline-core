@@ -142,7 +142,10 @@ case class MasterQuantProteinSetProperties(
   if( mqPeptideSelLevelById == null ) mqPeptideSelLevelById = HashMap()
   
   def getSelectionLevelByMqPeptideId(): Option[HashMap[Long, Int]] = {
-    Option(mqPeptideSelLevelById)
+    if(mqPeptideSelLevelById == null || mqPeptideSelLevelById.isEmpty)
+      None
+    else  
+      Option(mqPeptideSelLevelById)
   }
   
   def setSelectionLevelByMqPeptideId( mqPeptideSelLevelMap: Option[HashMap[Long, Int]] ) = {
@@ -155,7 +158,10 @@ case class MasterQuantProteinSetProperties(
   if( mqPeptideIonSelLevelById == null ) mqPeptideIonSelLevelById = HashMap()
   
   def getSelectionLevelByMqPeptideIonId(): Option[HashMap[Long, Int]] = {
-    Option(mqPeptideIonSelLevelById)
+     if(mqPeptideIonSelLevelById == null || mqPeptideIonSelLevelById.isEmpty)
+      None
+    else  
+      Option(mqPeptideIonSelLevelById)
   }
   
   def setSelectionLevelByMqPeptideIonId( mqPeptideIonSelLevelMap: Option[HashMap[Long, Int]] ) = {
