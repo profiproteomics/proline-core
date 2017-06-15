@@ -211,7 +211,7 @@ object MsiSearchBuilder {
     val msmsSettingsById = new HashMap[Long,MSMSSearchSettings]
     eachMSMSSearchSettingsRecord { r =>
       msmsSettingsById += r.getLong(msmsSearchCols.ID) -> new MSMSSearchSettings(
-        ms2ChargeStates = r.getString(msmsSearchCols.FRAGMENT_CHARGE_STATES),
+        ms2ChargeStates = r.getStringOrElse(msmsSearchCols.FRAGMENT_CHARGE_STATES, ""), //Optional parameter 
         ms2ErrorTol = r.getDouble(msmsSearchCols.FRAGMENT_MASS_ERROR_TOLERANCE),
         ms2ErrorTolUnit = r.getString(msmsSearchCols.FRAGMENT_MASS_ERROR_TOLERANCE_UNIT)
       )
