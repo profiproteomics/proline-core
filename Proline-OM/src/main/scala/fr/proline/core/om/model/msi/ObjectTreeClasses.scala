@@ -88,6 +88,12 @@ case class TheoreticalFragmentSeries(
   // Plain constructor needed for MessagePack
   def this() = this("", Array.empty[Double])
 
+  def this(fragSeries: String, masses: Array[Double], ionSeries: String, charge: Int) = {
+    this(fragSeries,Array.empty[Double])
+    _ionSeries = ionSeries
+    _charge = charge
+  }
+  
   @transient lazy val isReverse = Fragmentation.isReverseSeries(fragSeries)
 
   @transient private var _ionSeries: String = null
@@ -95,20 +101,30 @@ case class TheoreticalFragmentSeries(
 
   private def _parseFragSeriesIfNotDone() {
     if (_ionSeries == null) {
-      val FragSeriesRegex = """(\w+\*?)([+]*).*""".r
-      val FragSeriesRegex(ionSeries, chargeStr) = fragSeries
+      val z = {
+        var index = fragSeries.length() -1
+        var z = 0
+        while((index >= 0) && fragSeries.charAt(index).equals('+')) {
+          z += 1
+          index -= 1
+        }
+        z
+      }
+      this._charge = if (z == 0) {1} else {z}
+      val ionSeries = fragSeries.substring(0, fragSeries.length() - Math.max(0, z))
 
       // FIXME: why do we need to make this replacement here ?
       this._ionSeries = ionSeries.replace("0", "-H2O").replace("*", "-NH3")
-
-      if (chargeStr.length > 0)
-        this._charge = chargeStr.length
     }
   }
 
   // TODO: check usages
   //def ionSeries: String = { _parseFragSeriesIfNotDone(); this._ionSeries }
-  def ionSeries: FragmentIonSeries.Value = { _parseFragSeriesIfNotDone(); FragmentIonSeries.withName(this._ionSeries) }
+  def ionSeries: FragmentIonSeries.Value = { 
+    _parseFragSeriesIfNotDone();
+    FragmentIonSeries.withName(this._ionSeries) 
+  }
+  
   def charge: Int = { _parseFragSeriesIfNotDone(); this._charge }
 }
 
