@@ -1311,7 +1311,7 @@ class ExtractMapSet(
             tryOrPropagateError {
               logger.info("Observing detected peakels to store them in the PeakelDB...")
               
-              // Open TMP SQLite file
+              // Open TMP SQLite file using a lazy val to perform its instantiation in the appropriate thread
               lazy val peakelFileConnection = _initPeakelStore(peakelFile)
               
               observableRunSlicePeakels.observeOn(rxIOScheduler).subscribe({ case (rsId,peakels) =>
@@ -1509,7 +1509,7 @@ class ExtractMapSet(
         this.logger.info("Building features from MS/MS matched peakels...")
         
         val peakelMatchesByPeakelId = peakelMatches.groupByLong(_.peakel.id)
-        for ( (peakelId,peakelMatches) <- peakelMatchesByPeakelId) {
+        for ((peakelId, peakelMatches) <- peakelMatchesByPeakelId) {
           
           // Re-load the peakel from the peakelDB
           val identifiedPeakel = peakelMatches.head.peakel
@@ -2037,7 +2037,7 @@ class ExtractMapSet(
     }
 
     // COMMIT TRANSACTION
-    sqliteConn.exec("COMMIT TRANSACTION;");
+    sqliteConn.exec("COMMIT TRANSACTION;")
   }
 
     // TODO: remove me (an in-memory R*Tree is now used)
@@ -2269,6 +2269,8 @@ class ExtractMapSet(
     while (!backup.isFinished()) {
       backup.backupStep(-1)
     }
+    
+    backup.dispose(false) // false means "do not dispose the in-memory database"
     
     memPeakelDb
   }
