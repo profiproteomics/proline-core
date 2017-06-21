@@ -855,11 +855,6 @@ class ExtractMapSet(
           
         } // end (peptide, charge) loop
     
-        // Delete created TMP files (they should be deleted on exit if program fails)
-        //    for (tmpFile <- peakelFileByRun.values) {
-        //      tmpFile.delete
-        //    }
-        
         //
         //    Then search for missing features
         //
@@ -1224,7 +1219,11 @@ class ExtractMapSet(
       val futurePeakelDetectionResult = if (needPeakelDetection) {
         
         // Remove TMP files if they exist
-        existingPeakelFiles.foreach(_.delete())
+        existingPeakelFiles.foreach { peakelFile =>
+          if (peakelFile.delete() == false) {
+            this.logger.warn("Can't delete peakelDB file located at: "+  peakelFile)
+          }
+        }
         
         this.logger.info(s"Start peakel detection for run id=$lcMsRunId (map #$mapNumber) from " + mzDbFile.getAbsolutePath())
 
@@ -1343,23 +1342,22 @@ class ExtractMapSet(
         futureResult
         
       } else {
-        
-        logger.info(s"Will re-use existing peakelDB for run id=$lcMsRunId (map #$mapNumber): "+existingPeakelFiles(0))
+         
+        val lastPeakelFile = existingPeakelFiles.sortBy( - _.lastModified() ).head
+        logger.info(s"Will re-use existing peakelDB for run id=$lcMsRunId (map #$mapNumber): "+lastPeakelFile)
         
         // Peakel file already exists => reuse it ! 
         // Create a mapping between the TMP file and the LC-MS run
-        entityCache.addPeakelFile(lcMsRunId, existingPeakelFiles(0))
+        entityCache.addPeakelFile(lcMsRunId, lastPeakelFile)
 
         val mzDb = new MzDbReader(mzDbFile, true)
         
         try {
           logger.info("Loading scan meta-data from mzDB file: "+mzDbFile)
           val ms2SpectrumHeadersByCycle = mzDb.getMs2SpectrumHeaders().groupByLong(_.getCycle.toInt)
+          val observablePeakels = _streamPeakels(lastPeakelFile)
           
-          val peakelFile = existingPeakelFiles(0)
-          val observablePeakels = _streamPeakels(peakelFile)
-          
-          Future.successful( (existingPeakelFiles(0), observablePeakels, ms2SpectrumHeadersByCycle) )
+          Future.successful( (lastPeakelFile, observablePeakels, ms2SpectrumHeadersByCycle) )
           
         } finally {
           mzDb.close()
