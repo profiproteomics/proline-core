@@ -855,11 +855,6 @@ class ExtractMapSet(
           
         } // end (peptide, charge) loop
     
-        // Delete created TMP files (they should be deleted on exit if program fails)
-        //    for (tmpFile <- peakelFileByRun.values) {
-        //      tmpFile.delete
-        //    }
-        
         //
         //    Then search for missing features
         //
@@ -1224,7 +1219,11 @@ class ExtractMapSet(
       val futurePeakelDetectionResult = if (needPeakelDetection) {
         
         // Remove TMP files if they exist
-        existingPeakelFiles.foreach(_.delete())
+        existingPeakelFiles.foreach { peakelFile =>
+          if (peakelFile.delete() == false) {
+            this.logger.warn("Can't delete peakelDB file located at: "+  peakelFile)
+          }
+        }
         
         this.logger.info(s"Start peakel detection for run id=$lcMsRunId (map #$mapNumber) from " + mzDbFile.getAbsolutePath())
 
@@ -1236,7 +1235,7 @@ class ExtractMapSet(
         // Create a mapping between the TMP file and the LC-MS run
         entityCache.addPeakelFile(lcMsRunId, peakelFile)
 
-        val resultPromise = Promise[(Observable[(Int,Array[MzDbPeakel])],LongMap[Array[SpectrumHeader]])]
+        val resultPromise = Promise[(Observable[(Int,Array[MzDbPeakel])],Array[SpectrumHeader],LongMap[Array[SpectrumHeader]])]
         
         Future {
           this.logger.info(s"Detecting peakels in raw MS survey for run id=$lcMsRunId...")
@@ -1257,7 +1256,7 @@ class ExtractMapSet(
             
             // Launch the peakel detection
             val onDetectedPeakels = { observablePeakels: Observable[(Int,Array[MzDbPeakel])] =>
-              resultPromise.success(observablePeakels,mzdbFtDetector.ms2SpectrumHeadersByCycle)
+              resultPromise.success(observablePeakels,mzDb.getMs1SpectrumHeaders,mzdbFtDetector.ms2SpectrumHeadersByCycle)
             }
             val nParRunSlices = ExtractMapSet.RUN_SLICE_MAX_PARALLELISM
             mzdbFtDetector.detectPeakelsAsync( mzDb.getLcMsRunSliceIterator(), onDetectedPeakels, nParRunSlices )
@@ -1291,7 +1290,7 @@ class ExtractMapSet(
           }
         }
 
-        val futureResult = resultPromise.future.map { case (observableRunSlicePeakels, ms2SpecHeadersByCycle) =>
+        val futureResult = resultPromise.future.map { case (observableRunSlicePeakels, ms1SpecHeaders, ms2SpecHeadersByCycle) =>
 
           // TODO: create/manage this scheduler differently ?
           val rxIOScheduler = schedulers.IOScheduler()
@@ -1312,7 +1311,7 @@ class ExtractMapSet(
             tryOrPropagateError {
               logger.info("Observing detected peakels to store them in the PeakelDB...")
               
-              // Open TMP SQLite file
+              // Open TMP SQLite file using a lazy val to perform its instantiation in the appropriate thread
               lazy val peakelFileConnection = _initPeakelStore(peakelFile)
               
               observableRunSlicePeakels.observeOn(rxIOScheduler).subscribe({ case (rsId,peakels) =>
@@ -1320,7 +1319,7 @@ class ExtractMapSet(
                 logger.trace(s"Storing ${peakels.length} peakels for run slice #$rsId and run #${lcMsRun.id}...")
                 
                 // Store peakels in SQLite file
-                this._storePeakelsInPeakelDB(peakelFileConnection, peakels, lcMsRun.scanSequence.get)
+                this._storePeakelsInPeakelDB(peakelFileConnection, peakels, ms1SpecHeaders)
                 
                 subscriber.onNext(peakels)
                 
@@ -1343,23 +1342,22 @@ class ExtractMapSet(
         futureResult
         
       } else {
-        
-        logger.info(s"Will re-use existing peakelDB for run id=$lcMsRunId (map #$mapNumber): "+existingPeakelFiles(0))
+         
+        val lastPeakelFile = existingPeakelFiles.sortBy( - _.lastModified() ).head
+        logger.info(s"Will re-use existing peakelDB for run id=$lcMsRunId (map #$mapNumber): "+lastPeakelFile)
         
         // Peakel file already exists => reuse it ! 
         // Create a mapping between the TMP file and the LC-MS run
-        entityCache.addPeakelFile(lcMsRunId, existingPeakelFiles(0))
+        entityCache.addPeakelFile(lcMsRunId, lastPeakelFile)
 
         val mzDb = new MzDbReader(mzDbFile, true)
         
         try {
           logger.info("Loading scan meta-data from mzDB file: "+mzDbFile)
           val ms2SpectrumHeadersByCycle = mzDb.getMs2SpectrumHeaders().groupByLong(_.getCycle.toInt)
+          val observablePeakels = _streamPeakels(lastPeakelFile)
           
-          val peakelFile = existingPeakelFiles(0)
-          val observablePeakels = _streamPeakels(peakelFile)
-          
-          Future.successful( (existingPeakelFiles(0), observablePeakels, ms2SpectrumHeadersByCycle) )
+          Future.successful( (lastPeakelFile, observablePeakels, ms2SpectrumHeadersByCycle) )
           
         } finally {
           mzDb.close()
@@ -1511,7 +1509,7 @@ class ExtractMapSet(
         this.logger.info("Building features from MS/MS matched peakels...")
         
         val peakelMatchesByPeakelId = peakelMatches.groupByLong(_.peakel.id)
-        for ( (peakelId,peakelMatches) <- peakelMatchesByPeakelId) {
+        for ((peakelId, peakelMatches) <- peakelMatchesByPeakelId) {
           
           // Re-load the peakel from the peakelDB
           val identifiedPeakel = peakelMatches.head.peakel
@@ -1956,15 +1954,19 @@ class ExtractMapSet(
   private def _storePeakelsInPeakelDB(
     sqliteConn: SQLiteConnection,
     peakels: Array[MzDbPeakel],
-    scanSequence: LcMsScanSequence
+    ms1SpecHeaders: Array[SpectrumHeader]
   ) {
     
-    val cycleByScanInitialId = scanSequence.scans.toLongMapWith { scan =>
-      (scan.initialId, scan.cycle)
+    // Retrieve some mappings relative to the mzDB spectra ids
+    val initialIdByMzDbSpecId = ms1SpecHeaders.toLongMapWith { sh =>
+      sh.getId -> sh.getInitialId
+    }
+    val cycleByMzDbSpecId = ms1SpecHeaders.toLongMapWith { sh =>
+      sh.getId -> sh.getCycle
     }
 
     // BEGIN TRANSACTION
-    sqliteConn.exec("BEGIN TRANSACTION;");
+    sqliteConn.exec("BEGIN TRANSACTION;")
 
     // Prepare the insertion in the peakel table
     val peakelStmt = sqliteConn.prepare(
@@ -1978,7 +1980,7 @@ class ExtractMapSet(
     try {
       for (peakel <- peakels) {
 
-        val scanInitialIds = peakel.getSpectrumIds()
+        val scanInitialIds = peakel.getSpectrumIds().map(initialIdByMzDbSpecId(_))
         val peakelMessage = peakel.toPeakelDataMatrix()
         val peakelMessageAsBytes = PeakelDataMatrix.pack(peakelMessage)
 
@@ -1990,7 +1992,7 @@ class ExtractMapSet(
         peakelStmt.bind(fieldNumber, peakelMz); fieldNumber += 1
         peakelStmt.bind(fieldNumber, peakelTime); fieldNumber += 1
         peakelStmt.bind(fieldNumber, peakel.calcDuration()); fieldNumber += 1
-        peakelStmt.bind(fieldNumber, peakel.calcGapCount(cycleByScanInitialId)); fieldNumber += 1
+        peakelStmt.bind(fieldNumber, peakel.calcGapCount(cycleByMzDbSpecId)); fieldNumber += 1
         peakelStmt.bind(fieldNumber, peakel.getApexIntensity); fieldNumber += 1
         peakelStmt.bind(fieldNumber, peakel.area); fieldNumber += 1
         peakelStmt.bind(fieldNumber, peakel.calcAmplitude()); fieldNumber += 1
@@ -2035,7 +2037,7 @@ class ExtractMapSet(
     }
 
     // COMMIT TRANSACTION
-    sqliteConn.exec("COMMIT TRANSACTION;");
+    sqliteConn.exec("COMMIT TRANSACTION;")
   }
 
     // TODO: remove me (an in-memory R*Tree is now used)
@@ -2267,6 +2269,8 @@ class ExtractMapSet(
     while (!backup.isFinished()) {
       backup.backupStep(-1)
     }
+    
+    backup.dispose(false) // false means "do not dispose the in-memory database"
     
     memPeakelDb
   }
