@@ -24,42 +24,44 @@ import fr.profi.util.StringUtils;
 public abstract class AbstractDatabaseConnector implements IDatabaseConnector, IConnectionListener {
 
 	/* Constants */
+	public static final String JDBC_APPNAME_KEY = "ApplicationName";
+	
+	/*** JPA ****/
 	public static final String PERSISTENCE_JDBC_DRIVER_KEY = "javax.persistence.jdbc.driver";
 	public static final String PERSISTENCE_JDBC_URL_KEY = "javax.persistence.jdbc.url";
 	public static final String PERSISTENCE_JDBC_USER_KEY = "javax.persistence.jdbc.user";
 	public static final String PERSISTENCE_JDBC_PASSWORD_KEY = "javax.persistence.jdbc.password";
-
-	public static final String JDBC_APPNAME_KEY = "ApplicationName";
-	public static final String HIBERNATE_DIALECT_KEY = "hibernate.dialect";
 	public static final String PERSISTENCE_VALIDATION_MODE_KEY = "javax.persistence.validation.mode";
-	
-	// HikariCP config keys
-	public static final String HIBERNATE_CONNECTION_PROVIDER_CLASS_KEY = "hibernate.connection.provider_class";
-	public static final String HIBERNATE_POOL_MIN_IDLE_KEY = "hibernate.hikari.minimumIdle";
-	public static final String HIBERNATE_POOL_MAX_SIZE_KEY = "hibernate.hikari.maximumPoolSize";
-	public static final String HIBERNATE_POOL_MAX_IDLE_TIME_KEY = "hibernate.hikari.idleTimeout";
-	
-	//public static final String HIBERNATE_POOL_PREFERRED_TEST_QUERY_KEY = "hibernate.hikari.connectionTestQuery"; not recommanded
 
-	/*// Hibernate renamed from c3p0.minPoolSize !
-	public static final String HIBERNATE_POOL_MIN_SIZE_KEY = "hibernate.c3p0.min_size";
-
-	// Hibernate renamed from c3p0.maxPoolSize !
-	public static final String HIBERNATE_POOL_MAX_SIZE_KEY = "hibernate.c3p0.max_size";
-
-	// Hibernate renamed from c3p0.maxIdleTime !
-	public static final String HIBERNATE_POOL_MAX_IDLE_TIME_KEY = "hibernate.c3p0.timeout";
-	public static final String HIBERNATE_POOL_MAX_STATEMENTS_PER_CON_KEY = "hibernate.c3p0.maxStatementsPerConnection";
-	public static final String HIBERNATE_POOL_TEST_CON_ON_CHECKIN_KEY = "hibernate.c3p0.testConnectionOnCheckin";
-
-	// Hibernate renamed from c3p0.idleConnectionTestPeriod !
-	public static final String HIBERNATE_POOL_IDLE_CON_TEST_PERIOD_KEY = "hibernate.c3p0.idle_test_period";
-	public static final String HIBERNATE_POOL_PREFERRED_TEST_QUERY_KEY = "hibernate.c3p0.preferredTestQuery";*/
-	
+	/*** HIBERNATE ****/
+	public static final String HIBERNATE_DIALECT_KEY = "hibernate.dialect";
 	public static final String HIBERNATE_FETCH_SIZE_KEY = "hibernate.jdbc.fetch_size";
 	public static final String HIBERNATE_BATCH_SIZE_KEY = "hibernate.jdbc.batch_size";
 	public static final String HIBERNATE_BATCH_VERSIONED_DATA_KEY = "hibernate.jdbc.batch_versioned_data";
 	public static final String HIBERNATE_BYTECODE_OPTIMIZER_KEY = "hibernate.bytecode.use_reflection_optimizer";
+	
+	/*** HIBERNATE POOL SPECIFIC  ****/ 
+	// HikariCP config keys
+	public static final String HIBERNATE_HIKARI_CONNECTION_PROVIDER_CLASS_KEY = "hibernate.connection.provider_class";
+	public static final String HIBERNATE_HIKARI_POOL_MIN_IDLE_KEY = "hibernate.hikari.minimumIdle";
+	public static final String HIBERNATE_HIKARI_POOL_MAX_SIZE_KEY = "hibernate.hikari.maximumPoolSize";
+	public static final String HIBERNATE_HIKARI_POOL_MAX_IDLE_TIME_KEY = "hibernate.hikari.idleTimeout";
+	
+	//public static final String HIBERNATE_POOL_PREFERRED_TEST_QUERY_KEY = "hibernate.hikari.connectionTestQuery"; not recommanded
+
+	// c3po config keys
+	// Hibernate renamed from c3p0.minPoolSize !
+	public static final String HIBERNATE_C3PO_POOL_MIN_SIZE_KEY = "hibernate.c3p0.min_size";
+	// Hibernate renamed from c3p0.maxPoolSize !
+	public static final String HIBERNATE_C3PO_POOL_MAX_SIZE_KEY = "hibernate.c3p0.max_size";
+	// Hibernate renamed from c3p0.maxIdleTime !
+	public static final String HIBERNATE_C3PO_POOL_MAX_IDLE_TIME_KEY = "hibernate.c3p0.timeout";
+	public static final String HIBERNATE_C3PO_POOL_MAX_STATEMENTS_PER_CON_KEY = "hibernate.c3p0.maxStatementsPerConnection";
+	public static final String HIBERNATE_C3PO_POOL_TEST_CON_ON_CHECKIN_KEY = "hibernate.c3p0.testConnectionOnCheckin";
+	// Hibernate renamed from c3p0.idleConnectionTestPeriod !
+	public static final String HIBERNATE_C3PO_POOL_IDLE_CON_TEST_PERIOD_KEY = "hibernate.c3p0.idle_test_period";
+	public static final String HIBERNATE_C3PO__POOL_PREFERRED_TEST_QUERY_KEY = "hibernate.c3p0.preferredTestQuery";
+	
 
 	public static final int DEFAULT_MAX_POOL_CONNECTIONS = 20; // TODO increase value for server side
 	public static final int DEFAULT_MIN_IDLE_CONNECTIONS = 10; // TODO increase value for server side
@@ -269,6 +271,7 @@ public abstract class AbstractDatabaseConnector implements IDatabaseConnector, I
 				}
 
 				try {
+					LOG.info(" ---- createEntityManagerFactory  FOR UDS Db with "+propertiesCopy);
 					m_entityManagerFactory = createEntityManagerFactory(
 						getProlineDatabaseType(),
 						propertiesCopy,
@@ -280,7 +283,6 @@ public abstract class AbstractDatabaseConnector implements IDatabaseConnector, I
 
 					throw new RuntimeException(message, ex);
 				}
-
 			}
 
 		} // End of synchronized block on m_connectorLock
@@ -426,43 +428,43 @@ public abstract class AbstractDatabaseConnector implements IDatabaseConnector, I
 		LOG.warn("Closing DatabaseConnector [{}] does not close already retrieved SQL JDBC Connection resources", ident);
 	}
 
-	/*protected static void enableC3P0Pool(final Map<Object, Object> properties) {
+	protected static void enableC3P0Pool(final Map<Object, Object> properties) {
 
 		if (properties == null) {
 			throw new IllegalArgumentException("Properties Map is null");
 		}
 
-		if (properties.get(HIBERNATE_POOL_MIN_SIZE_KEY) == null) {
+		if (properties.get(HIBERNATE_C3PO_POOL_MIN_SIZE_KEY) == null) {
 			// minPoolSize = 0 
-			properties.put(HIBERNATE_POOL_MIN_SIZE_KEY, "0");
+			properties.put(HIBERNATE_C3PO_POOL_MIN_SIZE_KEY, "0");
 		}
 
-		if (properties.get(HIBERNATE_POOL_MAX_SIZE_KEY) == null) {
-			properties.put(HIBERNATE_POOL_MAX_SIZE_KEY, Integer.toString(DEFAULT_MAX_POOL_CONNECTIONS));
+		if (properties.get(HIBERNATE_C3PO_POOL_MAX_SIZE_KEY) == null) {
+			properties.put(HIBERNATE_C3PO_POOL_MAX_SIZE_KEY, Integer.toString(DEFAULT_MAX_POOL_CONNECTIONS));
 		}
 
-		if (properties.get(HIBERNATE_POOL_MAX_IDLE_TIME_KEY) == null) {
+		if (properties.get(HIBERNATE_C3PO_POOL_MAX_IDLE_TIME_KEY) == null) {
 			// Max idle time of 14 minutes
-			properties.put(HIBERNATE_POOL_MAX_IDLE_TIME_KEY, "840");
+			properties.put(HIBERNATE_C3PO_POOL_MAX_IDLE_TIME_KEY, "840");
 		}
 
-		if (properties.get(HIBERNATE_POOL_MAX_STATEMENTS_PER_CON_KEY) == null) {
-			properties.put(HIBERNATE_POOL_MAX_STATEMENTS_PER_CON_KEY, "30");
+		if (properties.get(HIBERNATE_C3PO_POOL_MAX_STATEMENTS_PER_CON_KEY) == null) {
+			properties.put(HIBERNATE_C3PO_POOL_MAX_STATEMENTS_PER_CON_KEY, "30");
 		}
 
 		// If JDBC driver does NOT support Connection.isValid() method, override preferredTestQuery
 
-		if (properties.get(HIBERNATE_POOL_TEST_CON_ON_CHECKIN_KEY) == null) {
+		if (properties.get(HIBERNATE_C3PO_POOL_TEST_CON_ON_CHECKIN_KEY) == null) {
 			// Check connection is valid asynchronously at every connection checkin
-			properties.put(HIBERNATE_POOL_TEST_CON_ON_CHECKIN_KEY, "true");
+			properties.put(HIBERNATE_C3PO_POOL_TEST_CON_ON_CHECKIN_KEY, "true");
 		}
 
-		if (properties.get(HIBERNATE_POOL_IDLE_CON_TEST_PERIOD_KEY) == null) {
+		if (properties.get(HIBERNATE_C3PO_POOL_IDLE_CON_TEST_PERIOD_KEY) == null) {
 			// Check pooled but unchecked-out connections every 5 minutes (fastest recommended TCP keepalive)
-			properties.put(HIBERNATE_POOL_IDLE_CON_TEST_PERIOD_KEY, "300");
+			properties.put(HIBERNATE_C3PO_POOL_IDLE_CON_TEST_PERIOD_KEY, "300");
 		}
 
-	}*/
+	}
 	
 	protected static void enableHikariPool(final Map<Object, Object> properties) {
 
@@ -470,25 +472,41 @@ public abstract class AbstractDatabaseConnector implements IDatabaseConnector, I
 			throw new IllegalArgumentException("Properties Map is null");
 		}
 
-		if (properties.get(HIBERNATE_CONNECTION_PROVIDER_CLASS_KEY) == null) {
-			properties.put(HIBERNATE_CONNECTION_PROVIDER_CLASS_KEY, "com.zaxxer.hikari.hibernate.HikariConnectionProvider");
+		if (properties.get(HIBERNATE_HIKARI_CONNECTION_PROVIDER_CLASS_KEY) == null) {
+			properties.put(HIBERNATE_HIKARI_CONNECTION_PROVIDER_CLASS_KEY, "com.zaxxer.hikari.hibernate.HikariConnectionProvider");
 		}
 
-		if (properties.get(HIBERNATE_POOL_MIN_IDLE_KEY) == null) {
-			properties.put(HIBERNATE_POOL_MIN_IDLE_KEY, Integer.toString(DEFAULT_MIN_IDLE_CONNECTIONS));
+		if (properties.get(HIBERNATE_HIKARI_POOL_MIN_IDLE_KEY) == null) {
+			properties.put(HIBERNATE_HIKARI_POOL_MIN_IDLE_KEY, Integer.toString(DEFAULT_MIN_IDLE_CONNECTIONS));
 		}
 
-		if (properties.get(HIBERNATE_POOL_MAX_SIZE_KEY) == null) {
-			properties.put(HIBERNATE_POOL_MAX_SIZE_KEY, Integer.toString(DEFAULT_MAX_POOL_CONNECTIONS));
+		if (properties.get(HIBERNATE_HIKARI_POOL_MAX_SIZE_KEY) == null) {
+			properties.put(HIBERNATE_HIKARI_POOL_MAX_SIZE_KEY, Integer.toString(DEFAULT_MAX_POOL_CONNECTIONS));
 		}
 
-		if (properties.get(HIBERNATE_POOL_MAX_IDLE_TIME_KEY) == null) {
+		if (properties.get(HIBERNATE_HIKARI_POOL_MAX_IDLE_TIME_KEY) == null) {
 			// Max idle time of 14 minutes
-			properties.put(HIBERNATE_POOL_MAX_IDLE_TIME_KEY, Integer.toString(DEFAULT_MAX_IDLE_TIME));
+			properties.put(HIBERNATE_HIKARI_POOL_MAX_IDLE_TIME_KEY, Integer.toString(DEFAULT_MAX_IDLE_TIME));
 		}
 
 	}
 
+	protected static Integer getMaxPoolConnection(final Map<Object, Object> properties){
+		Integer maxConnection = DEFAULT_MAX_POOL_CONNECTIONS;
+		if (properties.containsKey(PROLINE_MAX_POOL_CONNECTIONS_KEY)) {
+			if (Integer.class.isInstance(properties.get(PROLINE_MAX_POOL_CONNECTIONS_KEY)))
+				maxConnection = (Integer) properties.get(PROLINE_MAX_POOL_CONNECTIONS_KEY);
+			else {
+				try {
+					maxConnection = Integer.parseInt((String) properties.get(PROLINE_MAX_POOL_CONNECTIONS_KEY));
+				} catch (NumberFormatException nfe) {
+					maxConnection = DEFAULT_MAX_POOL_CONNECTIONS;
+				}
+			}
+		}
+		return maxConnection;
+	}
+	
 	private static int addConnectorInstances(final String ident) {
 		assert (!StringUtils.isEmpty(ident)) : "addConnectorInstances() invalid ident";
 

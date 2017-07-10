@@ -10,15 +10,16 @@ import java.util.concurrent.atomic.AtomicLong;
 import javax.persistence.EntityManagerFactory;
 import javax.sql.DataSource;
 
-//import com.mchange.v2.c3p0.ComboPooledDataSource;
-import com.zaxxer.hikari.HikariConfig;
-import com.zaxxer.hikari.HikariDataSource;
-import com.zaxxer.hikari.pool.HikariPool;
-
 //import org.postgresql.ds.PGPoolingDataSource;
 import org.postgresql.ds.PGSimpleDataSource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.mchange.v2.c3p0.ComboPooledDataSource;
+//import com.mchange.v2.c3p0.ComboPooledDataSource;
+import com.zaxxer.hikari.HikariConfig;
+import com.zaxxer.hikari.HikariDataSource;
+import com.zaxxer.hikari.pool.HikariPool;
 
 import fr.profi.util.PropertiesUtils;
 import fr.profi.util.StringUtils;
@@ -34,8 +35,11 @@ public class PostgresDatabaseConnector extends AbstractDatabaseConnector {
 
 	private static final AtomicLong NAME_SEQUENCE = new AtomicLong(0L);
 	
-	public PostgresDatabaseConnector(final ProlineDatabaseType database, final Map<Object, Object> properties) {
+	private IDatabaseConnector.ConnectionPoolType m_poolManagementType;
+	
+	public PostgresDatabaseConnector(final ProlineDatabaseType database, final Map<Object, Object> properties, final IDatabaseConnector.ConnectionPoolType poolManagementType) {
 		super(database, properties);
+		m_poolManagementType = (poolManagementType == null) ? IDatabaseConnector.ConnectionPoolType.HIGH_PERF_POOL_MANAGEMENT : poolManagementType;
 	}
 
 	@Override
@@ -67,26 +71,32 @@ public class PostgresDatabaseConnector extends AbstractDatabaseConnector {
 			throw new IllegalArgumentException("Invalid PostgreSQL database URI");
 		}
 
-		// WARN : if you change the line below, you must change the doClose implementation !! 
-		Integer maxConnection = DEFAULT_MAX_POOL_CONNECTIONS;
-		if (properties.containsKey(PROLINE_MAX_POOL_CONNECTIONS_KEY)) {
-			if (Integer.class.isInstance(properties.get(PROLINE_MAX_POOL_CONNECTIONS_KEY)))
-				maxConnection = (Integer) properties.get(PROLINE_MAX_POOL_CONNECTIONS_KEY);
-			else {
-				try {
-					maxConnection = Integer.parseInt((String) properties.get(PROLINE_MAX_POOL_CONNECTIONS_KEY));
-				} catch (NumberFormatException nfe) {
-					maxConnection = DEFAULT_MAX_POOL_CONNECTIONS;
-				}
-			}
-		}
+		// WARN : if you change the line below (method), you must change the doClose implementation !! 
+		Integer maxConnection = getMaxPoolConnection(properties) ;
+		DataSource source = null;
+		switch (m_poolManagementType) {
+		case NO_POOL_MANAGEMENT:
+			source = buildSimpleDataSource(ident, properties, fakeURI);
+			break;
+		
+		case SIMPLE_POOL_MANAGEMENT:
+			source = buildC3P0DataSource(ident, properties, fakeURI, maxConnection);
+			break;
 
-		final DataSource source = (maxConnection > 1) ? buildHikariDataSource(ident, properties, fakeURI, maxConnection)
-			: buildSimpleDataSource(ident, properties, fakeURI);
+		case HIGH_PERF_POOL_MANAGEMENT:
+			source = buildHikariDataSource(ident, properties, fakeURI, maxConnection);
+			break;
+
+		default:
+			break;
+		}
+		
 
 		LOG.info("Pool creation duration = "+(System.currentTimeMillis() - start)+" ms for "+getProlineDatabaseType());
 		return source;
 	}
+	
+	
 
 	/*private DataSource buildPGPoolingDataSource(final String ident, final Map<Object, Object> properties, URI fakeURI, Integer maxConnectionPerProject) {
 
@@ -149,7 +159,7 @@ public class PostgresDatabaseConnector extends AbstractDatabaseConnector {
 		return new DataSourceWrapper(source, this);
 	}
 
-	/*private DataSource buildC3P0DataSource(final String ident, final Map<Object, Object> properties, URI fakeURI, Integer maxConnection) {
+	private DataSource buildC3P0DataSource(final String ident, final Map<Object, Object> properties, URI fakeURI, Integer maxConnection) {
 		final String datasourceName = ident + '_' + NAME_SEQUENCE.getAndIncrement();
 		ComboPooledDataSource source = new ComboPooledDataSource();
 		Properties props = new Properties();
@@ -161,10 +171,11 @@ public class PostgresDatabaseConnector extends AbstractDatabaseConnector {
 		source.setJdbcUrl(PropertiesUtils.getProperty(properties, PERSISTENCE_JDBC_URL_KEY));
 		source.setUser(PropertiesUtils.getProperty(properties, PERSISTENCE_JDBC_USER_KEY));
 		source.setPassword(PropertiesUtils.getProperty(properties, PERSISTENCE_JDBC_PASSWORD_KEY));
+		LOG.debug(" buildC3P0DataSource maxConnection "+ maxConnection);
 		source.setMaxPoolSize(maxConnection);
 		source.setDataSourceName(datasourceName);
 		return source;
-	}*/
+	}
 
 	private DataSource buildHikariDataSource(final String ident, final Map<Object, Object> properties, URI fakeURI, Integer maxConnection) {
 		final String poolName = ident + '_' + NAME_SEQUENCE.getAndIncrement();
@@ -183,6 +194,7 @@ public class PostgresDatabaseConnector extends AbstractDatabaseConnector {
 		config.setUsername(PropertiesUtils.getProperty(properties, PERSISTENCE_JDBC_USER_KEY));
 		config.setPassword(PropertiesUtils.getProperty(properties, PERSISTENCE_JDBC_PASSWORD_KEY));
 		//config.setMinimumIdle(MIN_POOL_SIZE);
+		LOG.debug(" buildHikariDataSource maxConnection "+ maxConnection);
 		config.setMaximumPoolSize(maxConnection);
 		//config.setConnectionTimeout(8000);
 		//config.setAutoCommit(false);
@@ -210,12 +222,30 @@ public class PostgresDatabaseConnector extends AbstractDatabaseConnector {
 			properties.put(HIBERNATE_DIALECT_KEY, TableNameSequencePostgresDialect.class.getName());
 		}
 
-		/* Configure c3p0 pool for production environment */
-		//enableC3P0Pool(properties);
+		switch (m_poolManagementType) {
+		case NO_POOL_MANAGEMENT:			
+			break;
 		
-		/* Configure HikariCP pool for production environment */
-		enableHikariPool(properties);
+		case SIMPLE_POOL_MANAGEMENT:
+			/* Configure c3p0 pool for production environment */
+			LOG.debug(" --- > Will Configure c3p0  with "+properties);
+			enableC3P0Pool(properties);
+			break;
 
+		case HIGH_PERF_POOL_MANAGEMENT:
+			LOG.debug(" --- > Will Configure HikariCP with "+properties);
+			/* Configure HikariCP pool for production environment */
+			enableHikariPool(properties);
+			//set HIBERNATE_POOL_MAX_SIZE_KEY to PROLINE_MAX_POOL_CONNECTIONS_KEY if set otherwise to default value 
+			Integer maxPool = getMaxPoolConnection(properties);
+			properties.put(HIBERNATE_HIKARI_POOL_MAX_SIZE_KEY, maxPool.toString());			
+			break;
+
+		default:
+			break;
+		}
+		
+		
 		/*
 		 * PostgreSQL JDBC driver version 9.1-901-1.jdbc4 does NOT support
 		 * Connection.isValid() : java.sql.SQLFeatureNotSupportedException: La
@@ -242,7 +272,12 @@ public class PostgresDatabaseConnector extends AbstractDatabaseConnector {
 		if (m_dataSource == null)
 			return 0;
 		
-		/*if (m_dataSource instanceof ComboPooledDataSource) {
+		switch (m_poolManagementType) {
+		case NO_POOL_MANAGEMENT:	
+			return super.getOpenConnectionCount();
+			
+			
+		case SIMPLE_POOL_MANAGEMENT:
 			try {
 				ComboPooledDataSource poolDS = ((ComboPooledDataSource) m_dataSource);
 				return poolDS.getNumBusyConnections();
@@ -250,12 +285,8 @@ public class PostgresDatabaseConnector extends AbstractDatabaseConnector {
 				LOG.error("Error counting open connection from DataSource", exClose);
 				return 0;
 			}
-
-		} else {
-			return super.getOpenConnectionCount();
-		}*/
-		
-		if (m_dataSource instanceof HikariDataSource) {
+			
+		case HIGH_PERF_POOL_MANAGEMENT:
 			try {
 				HikariDataSource poolDS = ((HikariDataSource) m_dataSource);
 				HikariPool pool = _getHikariDataSourcePool(poolDS);
@@ -266,10 +297,10 @@ public class PostgresDatabaseConnector extends AbstractDatabaseConnector {
 				LOG.error("Error counting open connection from DataSource", exClose);
 				return 0;
 			}
-
-		} else {
-			return super.getOpenConnectionCount();
-		}
+			
+		default:
+			return 0;
+		}		
 	}
 	
 	private HikariPool _getHikariDataSourcePool(HikariDataSource dataSource)
@@ -282,9 +313,13 @@ public class PostgresDatabaseConnector extends AbstractDatabaseConnector {
 	@Override
 	protected void doClose(final String ident, final DataSource source) {
 		
-		/*if (source instanceof ComboPooledDataSource) {
+	
+		switch (m_poolManagementType) {
+		case NO_POOL_MANAGEMENT:	
+			break;
+			
+		case SIMPLE_POOL_MANAGEMENT:	
 			LOG.debug("Closing DataSource for [{}]", ident);
-
 			try {
 				ComboPooledDataSource poolDS = ((ComboPooledDataSource) source);
 				LOG.warn("Number of busy connections = " + poolDS.getNumBusyConnections());
@@ -293,9 +328,7 @@ public class PostgresDatabaseConnector extends AbstractDatabaseConnector {
 				LOG.error("Error closing DataSource for [" + ident + ']', exClose);
 			}
 
-		}*/
-
-		if (source instanceof HikariDataSource) {
+		case HIGH_PERF_POOL_MANAGEMENT:
 			LOG.debug("Closing DataSource for [{}]", ident);
 
 			try {
@@ -306,7 +339,6 @@ public class PostgresDatabaseConnector extends AbstractDatabaseConnector {
 			} catch (Exception exClose) {
 				LOG.error("Error closing DataSource for [" + ident + ']', exClose);
 			}
-
 		}
 
 	}

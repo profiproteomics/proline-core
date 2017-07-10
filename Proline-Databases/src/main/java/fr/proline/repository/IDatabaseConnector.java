@@ -18,6 +18,12 @@ import javax.sql.DataSource;
  * 
  */
 public interface IDatabaseConnector extends Closeable {
+	
+	public enum ConnectionPoolType {
+		NO_POOL_MANAGEMENT,
+		SIMPLE_POOL_MANAGEMENT,
+		HIGH_PERF_POOL_MANAGEMENT		
+	}
 
 	ProlineDatabaseType getProlineDatabaseType();
 
