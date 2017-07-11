@@ -8,6 +8,8 @@ import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
+import javax.persistence.NamedQueries;
+import javax.persistence.NamedQuery;
 import javax.persistence.OneToMany;
 import javax.persistence.Table;
 
@@ -16,6 +18,10 @@ import javax.persistence.Table;
  * 
  */
 @Entity
+@NamedQueries({
+	@NamedQuery(name = "findQuantMethodForTypeAndUnit", query = "select qm from fr.proline.core.orm.uds.QuantitationMethod qm"
+		+ " where (upper(qm.type) = :searchType) and (upper(qm.abundanceUnit) = :searchAbundanceUnit)")
+})
 @Table(name = "quant_method")
 public class QuantitationMethod implements Serializable {
 
