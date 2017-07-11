@@ -3,12 +3,9 @@ package fr.proline.core.algo.msq.config
 import fr.proline.core.om.model.msi.ProteinSet
 
 case class SpectralCountConfig(
-  // TODO: rename into identResultSummaryId to be consistent with the MQC properties
-  parentRSMId: Option[Long],
-  // TODO: rename into identDatasetId to be consistent with the MQC properties
-  parentDSId: Option[Long],
-  // TODO: rename to weightsRefRsmIds to be consistent with the MQC properties
-  weightRefRSMIds: Seq[Long] = Seq.empty[Long]
+  identResultSummaryId: Option[Long],
+  identDatasetId : Option[Long],
+  weightsRefRsmIds: Seq[Long] = Seq.empty[Long]
 ) extends IQuantConfig
 
 /**
