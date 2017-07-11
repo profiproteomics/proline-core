@@ -262,7 +262,7 @@ class CreateSCQuantitation(
       }
       udsQf.setQuantitationChannels(currentMQChQuantChannelsList)
       udsMasterQuantChannelsList.add(udsQf)      
-      udsEM.merge(udsQf)
+      udsEM.merge(udsQf)//VDS TO ADD in CreateQuanti ?
     }
     
     udsQuantitation.setSampleReplicates(new HashSet(udsSampleReplicateByKey.values))

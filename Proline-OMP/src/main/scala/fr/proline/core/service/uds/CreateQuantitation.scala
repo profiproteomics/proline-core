@@ -400,6 +400,7 @@ class CreateQuantitation(
         }
         
         udsMqc.setQuantitationChannels(udsQuantChannelsForMQCList)
+       // udsEM.merge(udsMqc)//VDS : Needed ?! Exist in CreateSCQuanti!
       }
       
       // TODO: sampleReplicates should be an ArrayList instead of an HashSet
