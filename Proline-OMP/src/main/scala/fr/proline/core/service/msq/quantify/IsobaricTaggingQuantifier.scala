@@ -194,10 +194,6 @@ class IsobaricTaggingQuantifier(
     }
   }
   
-  // DBO: why is this needed ? 
-  def getResultAsJSON(): String = {
-    throw new Exception("Not Yet Implemented")
-  }
   
   private def _quantifyIdentRsm(identRsm: ResultSummary): ArrayBuffer[MasterQuantReporterIon] = {
     

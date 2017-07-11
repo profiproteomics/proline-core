@@ -115,7 +115,6 @@ abstract class AbstractMasterQuantChannelQuantifier extends LazyLogging {
     ObjectTreeSchemaRepository.loadOrCreateObjectTreeSchema(msiEm, SchemaName.QUANT_PROTEIN_SETS.toString())
   }
   protected def getMergedResultSummary(msiDbCtx: MsiDbConnectionContext): ResultSummary
-  def getResultAsJSON(): String
   
   protected def storeMsiQuantResultSet(msiIdentResultSets: List[MsiResultSet]): MsiResultSet = {
 
