@@ -24,6 +24,8 @@ import fr.proline.core.dal.tables.msi.MsiDbObjectTreeTable
 import scala.collection.mutable.ArrayBuffer
 import fr.profi.util.serialization.ProfiJson
 import fr.proline.core.dal.tables.msi.MsiDbResultSummaryRelationTable
+import fr.proline.core.om.provider.msi.impl.SQLPeptideMatchProvider
+import fr.proline.core.dal.tables.msi.MsiDbPeptideMatchTable
 
 object RsmPtmSitesIdentifier extends LazyLogging {
 
@@ -126,7 +128,7 @@ class RsmPtmSitesIdentifier(
         val proteinMatches = proteinMatchProvider.getResultSummariesProteinMatches(childRSMIds)
         // then aggregate those sites
         logger.debug(s"Aggregation of PtmSite ResultSummary #${resultSummary.id}")
-        ptmSites = ptmSitesIdentifier.aggregatePtmSites(sites.toArray, proteinMatches, proteinMatchProvider.getResultSummariesProteinMatches(List(resultSummary.id)))
+        ptmSites = ptmSitesIdentifier.aggregatePtmSites(sites.toArray, proteinMatches, proteinMatchProvider.getResultSummariesProteinMatches(List(resultSummary.id)), _getPeptideMatchScores)
       } else {
         // this ResultSummary is a leaf RSM 
         logger.info(s"Identifying Ptm sites for ResultSummary #${resultSummary.id}")
@@ -171,6 +173,20 @@ class RsmPtmSitesIdentifier(
         val ptmSites = ProfiJson.deserialize[Iterable[PtmSite]](clob)
         ptmSites
       }.head
+    }
+  }
+  
+    private def _getPeptideMatchScores(peptideMatchIds: Array[Long]): Map[Long, Double] = {
+    DoJDBCReturningWork.withEzDBC(execContext.getMSIDbConnectionContext) { msiEzDBC =>
+
+      val peptideMatchesQuery = new SelectQueryBuilder1(MsiDbPeptideMatchTable).mkSelectQuery((t, c) =>
+        List(t.ID, t.SCORE) -> "WHERE " ~ t.ID ~ " IN(" ~ peptideMatchIds.mkString(",") ~ ")"
+      )
+
+      msiEzDBC.select(peptideMatchesQuery) { r =>
+        (r.getLong(MsiDbPeptideMatchTable.columns.ID) -> r.getDouble(MsiDbPeptideMatchTable.columns.SCORE))
+      }.toMap
+      
     }
   }
 
