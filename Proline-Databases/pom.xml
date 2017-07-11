@@ -37,7 +37,11 @@
     </dependency>
 
     <!-- Use SLF4J instead of Apache common-loggings -->
-
+    <dependency>
+      <groupId>org.slf4j</groupId>
+      <artifactId>jcl-over-slf4j</artifactId>
+    </dependency>
+    
     <dependency>
       <groupId>org.hibernate</groupId>
       <artifactId>hibernate-entitymanager</artifactId>
