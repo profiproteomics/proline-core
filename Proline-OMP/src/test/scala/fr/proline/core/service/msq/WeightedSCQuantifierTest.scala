@@ -78,7 +78,7 @@ class WeightedSCQuantifierTest extends StrictLogging {
   def quantifyRSMSC() {
 
     val weightRefRSMIds = Seq(33L)
-    val spCountCfg = new SpectralCountConfig(parentRSMId = Some(targetRSMId), parentDSId = None, weightRefRSMIds=weightRefRSMIds)
+    val spCountCfg = new SpectralCountConfig(identResultSummaryId = Some(targetRSMId), identDatasetId = None, weightsRefRsmIds=weightRefRSMIds)
 
     val udsEm = executionContext.getUDSDbConnectionContext.getEntityManager
     udsEm.getTransaction().begin()
@@ -197,7 +197,6 @@ class WeightedSCQuantifierTest extends StrictLogging {
     var wsCalculator = new WeightedSpectralCountQuantifier(executionContext = executionContext, udsMasterQuantChannel = mqCh, quantConfig = spCountCfg)
     wsCalculator.quantify
     assertNotNull(mqCh.getQuantResultSummaryId())
-    //    logger.debug("  wsCalculator RESULT  "+wsCalculator.getResultAsJSON)
 
   }
 
