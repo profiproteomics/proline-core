@@ -149,7 +149,7 @@ class PtmSitesIdentifier() extends LazyLogging {
     ptmSites
   }
 
-  def aggregatePtmSites(childrenSites: Array[Iterable[PtmSite]], sitesProteinMatches: Array[ProteinMatch], parentProteinMatches: Array[ProteinMatch]): Iterable[PtmSite] = {
+  def aggregatePtmSites(childrenSites: Array[Iterable[PtmSite]], sitesProteinMatches: Array[ProteinMatch], parentProteinMatches: Array[ProteinMatch], pmScoreProvider: (Array[Long]) => Map[Long, Double]): Iterable[PtmSite] = {
     val proteinAccessionByProteinMatchId = sitesProteinMatches.map { pm => pm.id -> pm.accession }.toMap
     val proteinMatchesByAccession = parentProteinMatches.map { pm => pm.accession -> pm }.toMap
     val ptmSites = ArrayBuffer.empty[PtmSite]
@@ -167,16 +167,20 @@ class PtmSitesIdentifier() extends LazyLogging {
         val peptideMap = value.map(_.peptideIdsByPtmPosition).flatten
         val newPeptideMap = peptideMap.groupBy(_._1).map { case (k, v) => k -> v.map(_._2).flatten.distinct.toArray }
         val bestProbabilities = value.map(_.bestPeptideMatchId) zip value.map(_.localizationConfidence)
-        val newBestPeptideMatch = bestProbabilities.maxBy(_._2)
-
+        // TODO : need to retrieve bestProbabilities._1 peptideMatches to determine their identification score
+        // and choose the right "best" PSM
+        val pmScoresById = pmScoreProvider(bestProbabilities.map(_._1).toArray)
+        val newBestPTMProbability = bestProbabilities.maxBy(_._2)._2
+        val newBestPeptideMatchId = bestProbabilities.filter(_._2 >= newBestPTMProbability).map(x => (x._1 , pmScoresById(x._1))).maxBy(_._2)._1
+        
         val newPeptideInstanceIds = value.map(_.peptideInstanceIds).flatten.distinct
         val newIsomericPeptideInstanceIds = value.map(_.isomericPeptideInstanceIds).flatten.distinct
 
         val newSite = PtmSite(proteinMatchId = proteinMatchesByAccession(key._1).id,
           ptmDefinitionId = key._2,
           seqPosition = key._3,
-          bestPeptideMatchId = newBestPeptideMatch._1,
-          localizationConfidence = newBestPeptideMatch._2,
+          bestPeptideMatchId = newBestPeptideMatchId,
+          localizationConfidence = newBestPTMProbability,
           peptideIdsByPtmPosition = newPeptideMap,
           peptideInstanceIds = newPeptideInstanceIds.toArray,
           isomericPeptideInstanceIds = newIsomericPeptideInstanceIds.toArray)
