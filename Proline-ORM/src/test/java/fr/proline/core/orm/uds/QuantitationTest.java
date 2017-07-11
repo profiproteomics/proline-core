@@ -3,6 +3,7 @@ package fr.proline.core.orm.uds;
 import static org.junit.Assert.*;
 
 import javax.persistence.EntityManager;
+import javax.persistence.NonUniqueResultException;
 
 import org.junit.After;
 import org.junit.Before;
@@ -10,6 +11,7 @@ import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import fr.proline.core.orm.uds.repository.QuantitationMethodRepository;
 import fr.proline.repository.ProlineDatabaseType;
 import fr.proline.repository.util.DatabaseTestCase;
 
@@ -62,7 +64,24 @@ public class QuantitationTest extends DatabaseTestCase {
 	}
 
     }
-
+    
+    //  <QUANT_METHOD ID="2" NAME="label free based on spectral counting" TYPE="label_free" ABUNDANCE_UNIT="spectral_counts"/>
+    @Test
+    public void getQuantitationMethod() {
+    	final EntityManager udsEm = getConnector().createEntityManager();
+    	QuantitationMethod qm = QuantitationMethodRepository.findQuantMethodForTypeAndAbundanceUnit(udsEm, "label_free","spectral_counts");
+    	assertNotNull(qm);
+    	assertEquals(2, qm.getId());
+    }
+    
+    @Test    
+    public void getUnknownQuantitationMethod() {
+    	final EntityManager udsEm = getConnector().createEntityManager();
+    	QuantitationMethod qm = QuantitationMethodRepository.findQuantMethodForTypeAndAbundanceUnit(udsEm, "label_free","ee");
+    	assertNull(qm);
+    }
+    
+    
     @After
     public void tearDown() {
 	super.tearDown();
