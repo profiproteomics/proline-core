@@ -123,7 +123,9 @@ class Quantifier(
             case AbundanceUnit.FEATURE_INTENSITY => {
               quantifyLabelFreeMasterQC(udsMasterQuantChannels, deserialize[LabelFreeQuantConfig](quantConfigAsStr))
             }
-            case AbundanceUnit.SPECTRAL_COUNTS => {}
+            case AbundanceUnit.SPECTRAL_COUNTS => {
+              quantifySpectralCountMasterQC(udsMasterQuantChannels, deserialize[SpectralCountConfig](quantConfigAsStr))
+            }
           }
         }
         case RESIDUE_LABELING => {}
@@ -173,6 +175,25 @@ class Quantifier(
 
     }
   }
+  
+  
+  protected def quantifySpectralCountMasterQC(
+    udsMasterQuantChannels: List[UdsMasterQuantChannel],
+    scQuantConfig: SpectralCountConfig
+  ) {
+  
+    require(udsMasterQuantChannels.length == 1, "Spectral Count could be run on only one MasterQuantChannel")
+    
+    val mqcQuantifier = BuildMasterQuantChannelQuantifier(
+      executionContext,
+      udsMasterQuantChannels(0),
+      experimentalDesign,
+      null,
+      scQuantConfig
+    ).quantify()
+  
+  }
+  
   
   protected def quantifyLabelFreeMasterQC(
     udsMasterQuantChannels: List[UdsMasterQuantChannel],
