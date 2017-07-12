@@ -74,108 +74,123 @@ class WeightedSpectralCountQuantifier(
 
   def quantifyMasterChannel(): Unit = {
 
-    logger.info("-- Starting spectral count quantifier")
+    logger.info("-- Starting spectral count quantifier")        
+    var isLocalUdsTx = false //Is transaction started here
+    var isLocalMsiTx = false //Is transaction started here
+    try {
 
-    // Begin new ORM transaction
-    msiDbCtx.beginTransaction()
-    udsDbCtx.beginTransaction()
+      if(!msiDbCtx.isInTransaction()) {
+        //  Begin new ORM transaction
+        msiDbCtx.beginTransaction()
+        isLocalMsiTx = true
+      }
+      
+      if(!udsDbCtx.isInTransaction()) {
+        //  Begin new ORM transaction
+        udsDbCtx.beginTransaction()
+        isLocalUdsTx = true
+      }
 
-    // Store the master quant result set
-    val msiQuantResultSet = this.storeMsiQuantResultSet(entityCache.msiIdentResultSets)
-    val quantRsId = msiQuantResultSet.getId()
-
-    // Create corresponding master quant result summary
-    val msiQuantRSM = this.storeMsiQuantResultSummary(msiQuantResultSet)
-    val quantRsmId = msiQuantRSM.getId
-
-    // Update quant result summary id of the master quant channel
-    udsMasterQuantChannel.setQuantResultSummaryId(quantRsmId)
-
-    udsEm.persist(udsMasterQuantChannel) 
-    udsEm.flush()
-
-    var start = System.currentTimeMillis()
-
-    // Store master quant result summary
-    val rsmProvider = new SQLResultSummaryProvider(msiDbCtx, psDbCtx, udsDbCtx)
-    val rsmDuplicator =  new RsmDuplicator(rsmProvider)  
-    quantClonedMergedRSM = rsmDuplicator.cloneAndStoreRSM(this.mergedResultSummary, msiQuantRSM, msiQuantResultSet, false, msiEm) 
-
- 
-
-    var end = System.currentTimeMillis()
-    logger.debug("-- Clone IDF RSM to Quant RSM : " + (end - start) + " ms")
-    
-    val weightRefRSMDefined = (quantConfig.weightsRefRsmIds != null && !quantConfig.weightsRefRsmIds.isEmpty)
-
-    //Create Map between peptide ref RSM and identification RSM where SC is to be calculated   
-	val identRSMsIdByWeightRefRSMId : HashMap[Long, ArrayBuffer[Long]] = if(!weightRefRSMDefined) {
-         val resultMap = new HashMap[Long, ArrayBuffer[Long]]()          
-    	 resultMap += (mergedResultSummary.id -> (new ArrayBuffer[Long]()  ++= identRSMIds) )
-    	 resultMap
-    } else {      
-    	createRSMHierarchyMap(identRSMIds)
-    }
-        
-    logger.debug(identRSMsIdByWeightRefRSMId.size+" Weight reference RSMs  ")
-    if(identRSMsIdByWeightRefRSMId.size>1){
-      identRSMsIdByWeightRefRSMId.foreach(entry=>{
-        logger.debug(" Weight reference RSMs  "+entry._1+" ==> "+entry._2)
-        
-      })
-    }
-
-        
-	 val allRSMsByID : Map[Long, ResultSummary] = loadAndUpdateRSMs(identRSMsIdByWeightRefRSMId).map( rsm => rsm.id -> rsm).toMap
-
-    
-    // -- Create ProteinSetSCDescription (ProteinSet,typicalPMAcc,PeptidesSCDescription[pepSpecific, nbr PSM specific, weightByPeptideId])  from reference RSM
-    val proteinSetSCStructsByProtSetId = createProteinSetSCDescription(identRSMsIdByWeightRefRSMId, allRSMsByID)
-
-    var end2 = System.currentTimeMillis()
-    logger.debug("-- Create ProteinSetSCDescription  " + (end2 - end) + " ms. Found "
-      + proteinSetSCStructsByProtSetId.size + " proteins to calculate SC for (versus " + mergedResultSummary.proteinSets.length + " in merged RSM)")
-
-    // Compute master quant peptides
-    // !! Warning : Returned values are linked to Identification RSM (OM Objects) and not to Quantitation RSM (ORM Objects)
-    val (mqPeptides, mqProtSets) = computeMasterQuantValues(
-      udsMasterQuantChannel,
-      entityCache.identResultSummaries,
-      identRSMsIdByWeightRefRSMId, 
-      proteinSetSCStructsByProtSetId
-    )
-
-    end = System.currentTimeMillis()
-    logger.debug("-- computeMasterQuantValues : " + (end - end2) + " ms")
-
-    this.logger.info("storing " + mqPeptides.size + " master peptide quant data...")
-
-    // Iterate over master quant peptides to store corresponding spectral counts
-    for (mqPeptide <- mqPeptides) {
-      this.storeMasterQuantPeptide(mqPeptide, msiQuantRSM, Some(mqPeptide.peptideInstance.get.id))
-    }
-
-    end2 = System.currentTimeMillis()
-    logger.debug("-- storing master peptide quant data : " + (end2 - end) + " ms")
-
-    this.logger.info("storing " + mqProtSets.size + " master proteins set quant data...")
-
-    // Iterate over master quant protein sets to store corresponding spectral counts
-    for (mqProtSet <- mqProtSets) {
-        this.storeMasterQuantProteinSet(mqProtSet, mqProtSet.proteinSet.id, msiQuantRSM)
-    }
-
-    end = System.currentTimeMillis()
-    logger.debug("-- storing master proteins quant dat : " + (end - end2) + " ms")
-
-//    _resultAsJSON = createJSonOutputResult(msiQuantRSM, mqProtSets, proteinSetSCStructsByProtSetId)
-
-    end2 = System.currentTimeMillis()
-    logger.debug("-- createJSonOutputResult : " + (end2 - end) + " ms")
-
-    // Commit ORM transaction
-    msiDbCtx.commitTransaction()
-    udsDbCtx.commitTransaction()
+  
+      // Store the master quant result set
+      val msiQuantResultSet = this.storeMsiQuantResultSet(entityCache.msiIdentResultSets)
+      val quantRsId = msiQuantResultSet.getId()
+  
+      // Create corresponding master quant result summary
+      val msiQuantRSM = this.storeMsiQuantResultSummary(msiQuantResultSet)
+      val quantRsmId = msiQuantRSM.getId
+  
+      // Update quant result summary id of the master quant channel
+      udsMasterQuantChannel.setQuantResultSummaryId(quantRsmId)
+  
+      udsEm.persist(udsMasterQuantChannel) 
+      udsEm.flush()
+  
+      var start = System.currentTimeMillis()
+  
+      // Store master quant result summary
+      val rsmProvider = new SQLResultSummaryProvider(msiDbCtx, psDbCtx, udsDbCtx)
+      val rsmDuplicator =  new RsmDuplicator(rsmProvider)  
+      quantClonedMergedRSM = rsmDuplicator.cloneAndStoreRSM(this.mergedResultSummary, msiQuantRSM, msiQuantResultSet, false, msiEm) 
+  
+   
+  
+      var end = System.currentTimeMillis()
+      logger.debug("-- Clone IDF RSM to Quant RSM : " + (end - start) + " ms")
+      
+      val weightRefRSMDefined = (quantConfig.weightsRefRsmIds != null && !quantConfig.weightsRefRsmIds.isEmpty)
+  
+      //Create Map between peptide ref RSM and identification RSM where SC is to be calculated   
+  	val identRSMsIdByWeightRefRSMId : HashMap[Long, ArrayBuffer[Long]] = if(!weightRefRSMDefined) {
+           val resultMap = new HashMap[Long, ArrayBuffer[Long]]()          
+      	 resultMap += (mergedResultSummary.id -> (new ArrayBuffer[Long]()  ++= identRSMIds) )
+      	 resultMap
+      } else {      
+      	createRSMHierarchyMap(identRSMIds)
+      }
+          
+      logger.debug(identRSMsIdByWeightRefRSMId.size+" Weight reference RSMs  ")
+      if(identRSMsIdByWeightRefRSMId.size>1){
+        identRSMsIdByWeightRefRSMId.foreach(entry=>{
+          logger.debug(" Weight reference RSMs  "+entry._1+" ==> "+entry._2)
+          
+        })
+      }
+  
+          
+  	 val allRSMsByID : Map[Long, ResultSummary] = loadAndUpdateRSMs(identRSMsIdByWeightRefRSMId).map( rsm => rsm.id -> rsm).toMap
+  
+      
+      // -- Create ProteinSetSCDescription (ProteinSet,typicalPMAcc,PeptidesSCDescription[pepSpecific, nbr PSM specific, weightByPeptideId])  from reference RSM
+      val proteinSetSCStructsByProtSetId = createProteinSetSCDescription(identRSMsIdByWeightRefRSMId, allRSMsByID)
+  
+      var end2 = System.currentTimeMillis()
+      logger.debug("-- Create ProteinSetSCDescription  " + (end2 - end) + " ms. Found "
+        + proteinSetSCStructsByProtSetId.size + " proteins to calculate SC for (versus " + mergedResultSummary.proteinSets.length + " in merged RSM)")
+  
+      // Compute master quant peptides
+      // !! Warning : Returned values are linked to Identification RSM (OM Objects) and not to Quantitation RSM (ORM Objects)
+      val (mqPeptides, mqProtSets) = computeMasterQuantValues(
+        udsMasterQuantChannel,
+        entityCache.identResultSummaries,
+        identRSMsIdByWeightRefRSMId, 
+        proteinSetSCStructsByProtSetId
+      )
+  
+      end = System.currentTimeMillis()
+      logger.debug("-- computeMasterQuantValues : " + (end - end2) + " ms")
+  
+      this.logger.info("storing " + mqPeptides.size + " master peptide quant data...")
+  
+      // Iterate over master quant peptides to store corresponding spectral counts
+      for (mqPeptide <- mqPeptides) {
+        this.storeMasterQuantPeptide(mqPeptide, msiQuantRSM, Some(mqPeptide.peptideInstance.get.id))
+      }
+  
+      end2 = System.currentTimeMillis()
+      logger.debug("-- storing master peptide quant data : " + (end2 - end) + " ms")
+  
+      this.logger.info("storing " + mqProtSets.size + " master proteins set quant data...")
+  
+      // Iterate over master quant protein sets to store corresponding spectral counts
+      for (mqProtSet <- mqProtSets) {
+          this.storeMasterQuantProteinSet(mqProtSet, mqProtSet.proteinSet.id, msiQuantRSM)
+      }
+  
+      end = System.currentTimeMillis()
+      logger.debug("-- storing master proteins quant dat : " + (end - end2) + " ms")
+  
+  //    _resultAsJSON = createJSonOutputResult(msiQuantRSM, mqProtSets, proteinSetSCStructsByProtSetId)
+  
+      end2 = System.currentTimeMillis()
+      logger.debug("-- createJSonOutputResult : " + (end2 - end) + " ms")
+    } finally {
+        // Commit ORM transaction
+      if(isLocalMsiTx)
+        msiDbCtx.commitTransaction()
+      if(isLocalUdsTx)
+        udsDbCtx.commitTransaction()   
+    }     
 
   }
 
