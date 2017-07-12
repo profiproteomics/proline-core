@@ -1,11 +1,14 @@
 package fr.proline.core.algo.msq.config
 
 import fr.proline.core.om.model.msi.ProteinSet
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize
 
 case class SpectralCountConfig(
+  @JsonDeserialize(contentAs = classOf[java.lang.Long] )
   identResultSummaryId: Option[Long],
-  identDatasetId : Option[Long],
-  weightsRefRsmIds: Seq[Long] = Seq.empty[Long]
+  @JsonDeserialize(contentAs = classOf[java.lang.Long] )
+  identDatasetId : Option[Long],  
+  weightsRefRsmIds: Array[Long] = Array.empty[Long]  
 ) extends IQuantConfig
 
 /**
