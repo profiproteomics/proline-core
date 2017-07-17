@@ -271,7 +271,6 @@ public abstract class AbstractDatabaseConnector implements IDatabaseConnector, I
 				}
 
 				try {
-					LOG.info(" ---- createEntityManagerFactory  FOR UDS Db with "+propertiesCopy);
 					m_entityManagerFactory = createEntityManagerFactory(
 						getProlineDatabaseType(),
 						propertiesCopy,

@@ -228,12 +228,10 @@ public class PostgresDatabaseConnector extends AbstractDatabaseConnector {
 		
 		case SIMPLE_POOL_MANAGEMENT:
 			/* Configure c3p0 pool for production environment */
-			LOG.debug(" --- > Will Configure c3p0  with "+properties);
 			enableC3P0Pool(properties);
 			break;
 
 		case HIGH_PERF_POOL_MANAGEMENT:
-			LOG.debug(" --- > Will Configure HikariCP with "+properties);
 			/* Configure HikariCP pool for production environment */
 			enableHikariPool(properties);
 			//set HIBERNATE_POOL_MAX_SIZE_KEY to PROLINE_MAX_POOL_CONNECTIONS_KEY if set otherwise to default value 
