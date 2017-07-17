@@ -1,7 +1,5 @@
 package fr.proline.core.service.msq.quantify
 
-import java.sql.Connection
-
 import scala.collection.JavaConversions.iterableAsScalaIterable
 import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.HashMap
@@ -36,10 +34,8 @@ import fr.proline.core.om.storer.msi.impl.RsmDuplicator
 import fr.proline.core.orm.msi.ObjectTreeSchema.SchemaName
 import fr.proline.core.orm.msi.PeptideInstance
 import fr.proline.core.orm.msi.ProteinMatch
-import fr.proline.core.orm.msi.{ ResultSummary => MsiResultSummary }
 import fr.proline.core.orm.msi.repository.ObjectTreeSchemaRepository
 import fr.proline.core.orm.uds.MasterQuantitationChannel
-import fr.proline.repository.util.JDBCWork
 
 
 /**
@@ -126,7 +122,11 @@ class WeightedSpectralCountQuantifier(
       	 resultMap += (mergedResultSummary.id -> (new ArrayBuffer[Long]()  ++= identRSMIds) )
       	 resultMap
       } else {      
-      	createRSMHierarchyMap(identRSMIds)
+        // create RSM list belonging to mergedRSM hierarchy : fixes problem of clear/revalidate/remerge ...
+        val rsmIdsInHierarchy = new ArrayBuffer[Long]()
+        rsmIdsInHierarchy += mergedResultSummary.id
+        rsmIdsInHierarchy ++= getMergedRSMChildsRSMIds(rsmIdsInHierarchy)
+      	createRSMHierarchyMap(identRSMIds, rsmIdsInHierarchy)
       }
           
       logger.debug(identRSMsIdByWeightRefRSMId.size+" Weight reference RSMs  ")
@@ -182,8 +182,8 @@ class WeightedSpectralCountQuantifier(
   
   //    _resultAsJSON = createJSonOutputResult(msiQuantRSM, mqProtSets, proteinSetSCStructsByProtSetId)
   
-      end2 = System.currentTimeMillis()
-      logger.debug("-- createJSonOutputResult : " + (end2 - end) + " ms")
+//      end2 = System.currentTimeMillis()
+//      logger.debug("-- createJSonOutputResult : " + (end2 - end) + " ms")
     } finally {
         // Commit ORM transaction
       if(isLocalMsiTx)
@@ -194,12 +194,30 @@ class WeightedSpectralCountQuantifier(
 
   }
 
+  private def getMergedRSMChildsRSMIds(parentId: ArrayBuffer[Long]): Seq[Long] = {
+    
+    var childs = new ArrayBuffer[Long]()
+    DoJDBCReturningWork.withEzDBC( msiDbCtx) { msiEzDBC =>
+				val sqlQuery = new SelectQueryBuilder1(MsiDbResultSummaryRelationTable).mkSelectQuery( (t,c) =>
+					List(t.PARENT_RESULT_SUMMARY_ID,t.CHILD_RESULT_SUMMARY_ID) -> "WHERE "~ t.PARENT_RESULT_SUMMARY_ID ~" IN("~ parentId.mkString(",") ~")" )
+				msiEzDBC.select(sqlQuery) { r => {
+					val parent = toLong(r.nextAny) 
+					val child = toLong(r.nextAny)   	  	
+					childs += child
+				  }
+			}
+		}
+    if(!childs.isEmpty)
+      childs ++= getMergedRSMChildsRSMIds(childs)
+    childs
+  }
   
   // Case where child don't have parent !!! Should not occur : At least mergedResultSummary should be found ! 
-  private def createRSMHierarchyMap(childsIds: Seq[Long], tmpChildPerParentMap : HashMap[Long, ArrayBuffer[Long]] = new HashMap[Long, ArrayBuffer[Long]]()) : HashMap[Long, ArrayBuffer[Long]] = {
+  private def createRSMHierarchyMap(childsIds: Seq[Long], rsmIdsInHierarchy: Seq[Long], tmpChildPerParentMap : HashMap[Long, ArrayBuffer[Long]] = new HashMap[Long, ArrayBuffer[Long]]()) : HashMap[Long, ArrayBuffer[Long]] = {
     
 		val resultMap = new HashMap[Long, ArrayBuffer[Long]]()
 		val childToSearchIdsBuilder = Seq.newBuilder[Long]
+		
 		//test if childsIds are peptide Ref RSM or mergedResultSummary => Don't search in hierarchy !
 		// Should only occur on first call of createRSMHierarchyMap... 
 	    childsIds.foreach(	childId =>{
@@ -217,17 +235,18 @@ class WeightedSpectralCountQuantifier(
 		val childsPerParent = new HashMap[Long, ArrayBuffer[Long]]()
 		val childToSearchIds = childToSearchIdsBuilder.result
 		if(!childToSearchIds.isEmpty){
-			DoJDBCReturningWork.withEzDBC( msiDbCtx, { msiEzDBC =>
+			DoJDBCReturningWork.withEzDBC( msiDbCtx) { msiEzDBC =>
 				val sqlQuery = new SelectQueryBuilder1(MsiDbResultSummaryRelationTable).mkSelectQuery( (t,c) =>
 					List(t.PARENT_RESULT_SUMMARY_ID,t.CHILD_RESULT_SUMMARY_ID) -> "WHERE "~ t.CHILD_RESULT_SUMMARY_ID ~" IN("~ childToSearchIds.mkString(",") ~")" )
 				msiEzDBC.select(sqlQuery) { r => {
 					val parent = toLong(r.nextAny) 
 					val child = toLong(r.nextAny) 
-					val childList = childsPerParent.getOrElseUpdate(parent, new ArrayBuffer[Long]())
-					childList += child
-				  }
-				}
-			})
+  	  		if(rsmIdsInHierarchy.contains(parent)) {//Parent in hierarchy, go ahead
+					  val childList = childsPerParent.getOrElseUpdate(parent, new ArrayBuffer[Long]())
+					  childList += child
+		      }
+			  }}
+			}
 		}
 			
 		val newChildsBuilder = Seq.newBuilder[Long]
@@ -241,15 +260,15 @@ class WeightedSpectralCountQuantifier(
     				childList ++= tmpChildPerParentMap(childId) //Move child from temporary Map to final Map !
     				resultMap.put(parentID,childList )
     				tmpChildPerParentMap.remove(childId)
-		    	} else { //Current Child is an identification RSM		    	  
-		    		val childList = resultMap.getOrElseUpdate(parentID, new ArrayBuffer[Long]()) // Get Child already associated to this parent
+		    	} else { //Current Child is an identification RSM		    	
+  	    		val childList = resultMap.getOrElseUpdate(parentID, new ArrayBuffer[Long]()) // Get Child already associated to this parent
     				childList += (childId) //add child from temporary Map to final Map !
     				resultMap.put(parentID,childList )
 		    	} 
 		    })		    
-
 		  } else { // Parent is not a peptide Ref : Search in hierarchy 
 		    newChildsBuilder += parentID
+
 		    childIDs.foreach(childId =>{
 		    	if(tmpChildPerParentMap.contains(childId)){ // Current child was identified as a parent of original identification RSM.
 		    	  val childList = tmpChildPerParentMap.getOrElseUpdate(parentID, new ArrayBuffer[Long]()) // Get Child already associated to this parent
@@ -269,7 +288,7 @@ class WeightedSpectralCountQuantifier(
 		
 		val newChilds = newChildsBuilder.result
 		if(!newChilds.isEmpty){
-      val returnedResultMap = createRSMHierarchyMap(newChilds, tmpChildPerParentMap)
+      val returnedResultMap = createRSMHierarchyMap(newChilds, rsmIdsInHierarchy, tmpChildPerParentMap)
 		  returnedResultMap.foreach(entry => {
 		    val retParentId = entry._1
         val retChildList = entry._2
@@ -502,7 +521,7 @@ class WeightedSpectralCountQuantifier(
     }
    
     // Load result summaries 
-	  this.logger.info("loading result summaries...")
+	  logger.info("loading result summaries...")
 
     // Instantiate a RSM provider
     val rsmProvider = new SQLResultSummaryProvider(msiDbCtx, psDbCtx, udsDbCtx)
@@ -518,7 +537,7 @@ class WeightedSpectralCountQuantifier(
     
 	  if( rsmsForSCUpdate.nonEmpty ) {
       // Load result summaries 
-      this.logger.info("updatePepInstanceSC for result summaries as needed...")
+      logger.info("updatePepInstanceSC for result summaries as needed...")
       
       val pepInstanceFilteringLeafSCUpdater= new PepInstanceFilteringLeafSCUpdater()
       pepInstanceFilteringLeafSCUpdater.updatePepInstanceSC(rsmsForSCUpdate, executionContext)
@@ -612,7 +631,7 @@ class WeightedSpectralCountQuantifier(
     if (quantConfig.identResultSummaryId.isEmpty)
       createMergedResultSummary(msiDbCtx)
     else {
-      this.logger.debug("Read Merged RSM with ID " + quantConfig.identResultSummaryId.get)
+      logger.debug("Read Merged RSM with ID " + quantConfig.identResultSummaryId.get)
 
       // Instantiate a RSM provider
       val rsmProvider = new SQLResultSummaryProvider(msiDbCtx = msiDbCtx, psDbCtx = psDbCtx, udsDbCtx = udsDbCtx)
@@ -643,7 +662,6 @@ class WeightedSpectralCountQuantifier(
    * Compute WSC for each ref RSM typical protein in each rsm and store information in
    * QuantProteinSet and MasterQuantProteinSet
    *
-   * @param mergedRSM : RSM de départ et pas celui de quanti ? TODO
    */
   def computeMasterQuantValues(
     udsMasterQuantChannel: MasterQuantitationChannel,   
@@ -680,7 +698,7 @@ class WeightedSpectralCountQuantifier(
     resultSummaries.foreach(rsm => {
       logger.debug("  --- computeMasterQuantValues for rsm " + rsm.id)
       val qcId = qcIdByRsmId(rsm.id)
-      val weightRefRSMId = weightRefRSMIdByIdentRSMId(rsm.id) //TODO get valide one !!!! 
+      val weightRefRSMId = weightRefRSMIdByIdentRSMId(rsm.id) 
 
       val quantPepByPepID: scala.collection.mutable.Map[Long, QuantPeptide] = scala.collection.mutable.Map[Long, QuantPeptide]()
 
