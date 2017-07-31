@@ -48,7 +48,7 @@ public class ResultSetRepository {
     	if( rsIds.isEmpty()) 
     		return;
     		   
-    	List<Long> childRsIds = new ArrayList<Long>();
+    	List<Long> childRsIds = new ArrayList<>();
     	Query query = msiEm.createNativeQuery("SELECT result_set_relation.child_result_set_id, result_set.msi_search_id FROM result_set, result_set_relation " +
 		        "WHERE result_set.id = result_set_relation.child_result_set_id AND result_set_relation.parent_result_set_id IN (:rsIds)");
 		query.setParameter("rsIds", rsIds);
@@ -57,9 +57,11 @@ public class ResultSetRepository {
 		for(Object[] nextResult : queryResult){
 			
 			childRsIds.add( ((BigInteger) nextResult[0]).longValue());
-			Long msiSearchId  =((BigInteger) nextResult[1]).longValue();
-			if(msiSearchId != null && !childMsiSearchIds.contains(msiSearchId))
-				childMsiSearchIds.add(msiSearchId);
+			if(nextResult[1] != null) {
+				Long msiSearchId = ((BigInteger) nextResult[1]).longValue();
+				if (!childMsiSearchIds.contains(msiSearchId))
+					childMsiSearchIds.add(msiSearchId);
+			}
 		}
 
 	    // If we have found child result sets					      		    
