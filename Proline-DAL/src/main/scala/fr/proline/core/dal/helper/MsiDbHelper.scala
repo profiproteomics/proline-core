@@ -34,9 +34,29 @@ class MsiDbHelper(msiDbCtx: DatabaseConnectionContext) {
 
     DoJDBCReturningWork.withEzDBC(msiDbCtx) { ezDBC =>
       ezDBC.selectLongs(
-        "SELECT decoy_result_set_id FROM result_set WHERE id in " +
+        "SELECT decoy_result_set_id FROM result_set WHERE id IN " +
         targetResultSetIds.mkString("(", ", ", ")") +
-        " AND decoy_result_set_id IS NOT NULL")
+        " AND decoy_result_set_id IS NOT NULL"
+      )
+    }
+  }
+  
+  def getDecoyRsIdByTargetRsId(targetResultSetIds: Seq[Long]): LongMap[Long] = {
+    if ( targetResultSetIds == null || targetResultSetIds.isEmpty )
+      return LongMap.empty[Long]
+
+    DoJDBCReturningWork.withEzDBC(msiDbCtx) { ezDBC =>
+      val decoyrRsIdByTargetRsId = new LongMap[Long](targetResultSetIds.length)
+      
+      ezDBC.selectAndProcess(
+        "SELECT id, decoy_result_set_id FROM result_set WHERE id IN " +
+        targetResultSetIds.mkString("(", ", ", ")") +
+        " AND decoy_result_set_id IS NOT NULL"
+      ) { r =>
+        decoyrRsIdByTargetRsId.put(r.nextLong, r.nextLong)
+      }
+      
+      decoyrRsIdByTargetRsId
     }
   }
 
