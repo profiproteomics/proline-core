@@ -1440,9 +1440,19 @@ class ExtractMapSet(
         logger.debug(s"Last spectrum initial ID of run ${scanSequence.runId} is $lastSpecNumber" )
         
         for ( (specNum,pepMatches) <- pepMatchesBySpecNumber) {
-          pepMatchesMatrix(specNum.toInt) = pepMatches
+          try {
+            pepMatchesMatrix(specNum.toInt) = pepMatches
+          } catch {
+            case t: Throwable => {
+              throw new Exception(
+                s"The spectrum number (${specNum.toInt}) is too high for the conisdered mzDB file (lastSpecNumber is $lastSpecNumber). " + 
+                "Please check that the provided mzDB file is matching the MS/MS search result one.",
+                t
+              )
+            }
+          }
         }
-        
+
         // Match detected peakels with validated PSMs
         val peakelMatchesFuture = _buildPeakelMatches(
           publishedPeakelFlow,
