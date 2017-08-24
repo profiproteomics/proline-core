@@ -506,8 +506,8 @@ class RsmDuplicator(rsmProvider: IResultSummaryProvider) extends IRsmDuplicator 
 /**
  * Should not be used any more : RsmDuplicator with  eraseSourceIds: Boolean = false should be the same !
  */
+@deprecated("Use RsmDuplicator with 'eraseSourceIds = false' instead","1.1.0")
 class ReadBackRsmDuplicator(rsmProvider: IResultSummaryProvider) extends IRsmDuplicator with LazyLogging {
-
   
   override def cloneAndStoreRSM(sourceRSM: ResultSummary, emptyRSM: MsiResultSummary, emptyRS: MsiResultSet,  eraseSourceIds: Boolean, msiEm: EntityManager): ResultSummary = {
 
