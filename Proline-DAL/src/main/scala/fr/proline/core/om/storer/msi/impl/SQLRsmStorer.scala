@@ -106,12 +106,12 @@ private[msi] class SQLRsmStorer() extends IRsmStorer {
           
             ezDBC.selectAndProcess(sqlQuery) { r =>
   
-              val spectrumId = toLong(r.nextAny)
+              val spectrumId = r.nextLong
               val spectrumTitle = r.nextString
   
-              val firstTime = r.nextAny
+              val firstTime = r.nextFloat
               if (firstTime != null) {
-                spectrumIdElutionTimeMap += (spectrumId.toLong -> firstTime.asInstanceOf[Float])
+                spectrumIdElutionTimeMap += (spectrumId -> firstTime)
               } else {
                 if (firstTimeNullErrHappened == false) {
                   firstTimeNullErrHappened = true
@@ -123,7 +123,7 @@ private[msi] class SQLRsmStorer() extends IRsmStorer {
               }
             }
           }) //END DoJDBCWork
-          } //END peaklistIdSqlQuery not empty !
+        } //END peaklistIdSqlQuery not empty !
      
      } else 
         logger.error("no peptide instance for this rsm!")

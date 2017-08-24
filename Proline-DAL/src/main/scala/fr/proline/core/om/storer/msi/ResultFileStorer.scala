@@ -29,7 +29,8 @@ object ResultFileStorer extends LazyLogging {
     sqlCompatMode: Boolean, // TODO: remove me when SQL & JPA importers are removed
     targetDecoyMode: Option[String],
     acDecoyRegex: Option[util.matching.Regex] = None,
-    saveSpectrumMatch: Boolean = false,
+    storeSpectraData: Boolean = true,
+    storeSpectrumMatches: Boolean = false,
     rsSplitter: Option[IResultSetSplitter] = None
   ): ResultSet = {
 
@@ -64,6 +65,7 @@ object ResultFileStorer extends LazyLogging {
     val pklWriter = rsStorer.getOrBuildPeaklistWriter(storerContext)
 
     // Insert the peaklist information
+    // TODO: provide the value storeSpectraData to the PeaklistWriter (to avoid loading peaks if not necessary)
     msiSearch.peakList.id = pklWriter.insertPeaklist(msiSearch.peakList, storerContext)
 
     // Insert spectra contained in result file
@@ -89,7 +91,7 @@ object ResultFileStorer extends LazyLogging {
       // Store target and decoy result sets
       rsStorer.storeResultSet(targetRs, msQueries, storerContext)
 
-      if (saveSpectrumMatch) {
+      if (storeSpectrumMatches) {
         // Insert target spectrum matches
         logger.info("Storing TARGET spectrum matches...")
         rsStorer.insertSpectrumMatches(targetRs, resultFile, storerContext)
@@ -139,7 +141,7 @@ object ResultFileStorer extends LazyLogging {
         pm.id = pepMatchMapAfterSplit((pm.msQuery.id, pm.peptide.uniqueKey)).id
       }
 
-      if (saveSpectrumMatch) {
+      if (storeSpectrumMatches) {
         // Insert target and decoy spectrum matches
         logger.info("Storing target and decoy spectrum matches...")
         rsStorer.insertSpectrumMatches(targetRs, resultFile, storerContext)
@@ -158,7 +160,7 @@ object ResultFileStorer extends LazyLogging {
       // Store target result set
       rsStorer.storeResultSet(targetRs, msQueries, storerContext)
 
-      if (saveSpectrumMatch) {
+      if (storeSpectrumMatches) {
         // Insert target spectrum matches
         logger.info("Storing target spectrum matches...")
         rsStorer.insertSpectrumMatches(targetRs, resultFile, storerContext)

@@ -106,7 +106,7 @@ object DbUnitResultFileUtils {
       sqlCompatMode = !execCtx.isJPA, // SQL compat => FIXME: remove me when ResultFileStorer has the same behavior for JPA/SQL
       targetDecoyMode = rs.getTargetDecoyMode(),
       acDecoyRegex = None,
-      saveSpectrumMatch = false,
+      storeSpectrumMatches = false,
       rsSplitter = None
     )
     
