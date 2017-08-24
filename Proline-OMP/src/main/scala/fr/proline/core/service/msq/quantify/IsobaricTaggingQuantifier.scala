@@ -16,8 +16,6 @@ import fr.proline.core.om.model.msi.Spectrum
 import fr.proline.core.om.model.msq._
 import fr.proline.core.om.provider.msi.impl.SQLResultSummaryProvider
 import fr.proline.core.om.provider.msi.impl.SQLSpectrumProvider
-import fr.proline.core.om.storer.msi.impl.ReadBackRsmDuplicator
-import fr.proline.core.om.storer.msi.impl.ResetIdsRsmDuplicator
 import fr.proline.core.orm.msi.{ ObjectTree => MsiObjectTree }
 import fr.proline.core.orm.msi.{ ResultSummary => MsiResultSummary }
 import fr.proline.core.orm.msi.ObjectTreeSchema.SchemaName

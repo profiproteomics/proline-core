@@ -215,7 +215,11 @@ class MasterQuantChannelEntityCache(
     val runIds = sortedQuantChannels.map(_.getRun.getId).toList.distinct
 
     // Load the LC-MS runs
-    lcMsRunProvider.getRuns(runIds, loadScanSequence = false)
+    var runNumber = 0
+    lcMsRunProvider.getRuns(runIds, loadScanSequence = false).map { lcMsRun =>
+      runNumber += 1
+      lcMsRun.copy(number = runNumber)
+    }
   }
   
   // TODO: move to SQLScanSequenceProvider provider
