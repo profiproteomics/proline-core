@@ -35,7 +35,8 @@ class ResultFileImporter(
   peaklistSoftwareId: Long,
   importerProperties: Map[String, Any],
   acDecoyRegex: Option[util.matching.Regex] = None,
-  saveSpectrumMatch: Boolean = false,
+  storeSpectraData: Boolean = true,
+  storeSpectrumMatches: Boolean = false,
   useJpaStorer: Boolean = false // use of SQLRsStorer by default
 ) extends IService with LazyLogging {
 
@@ -125,7 +126,8 @@ class ResultFileImporter(
         !executionContext.isJPA, // SQL compat => FIXME: remove me when ResultFileStorer has the same behavior for JPA/SQL
         tdMode,
         acDecoyRegex,
-        saveSpectrumMatch,
+        storeSpectraData,
+        storeSpectrumMatches,
         if (acDecoyRegex.isDefined) Some(TargetDecoyResultSetSplitter) else None
       )
       this.targetResultSetId = storedRS.id
