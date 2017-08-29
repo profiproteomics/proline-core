@@ -66,6 +66,7 @@ public class MsiSearch implements Serializable {
 
     // uni-directional many-to-one association to Peaklist
     @ManyToOne
+    @JoinColumn(name = "peaklist_id")
     private Peaklist peaklist;
 
     // uni-directional many-to-one association to SearchSetting

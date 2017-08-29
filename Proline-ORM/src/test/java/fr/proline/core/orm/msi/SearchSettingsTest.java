@@ -33,7 +33,7 @@ public class SearchSettingsTest extends DatabaseTestCase {
 	String[] datasets = new String[] { "/dbunit/datasets/msi-db_init_dataset.xml",
 		"/dbunit/datasets/msi/Resultset_Dataset.xml", "/dbunit/datasets/msi/MsiSearch_Dataset.xml" };
 
-	loadCompositeDataSet(datasets);
+		loadCompositeDataSet(datasets);
     }
 
     @Override 
@@ -46,7 +46,7 @@ public class SearchSettingsTest extends DatabaseTestCase {
 	final EntityManager msiEm = getConnector().createEntityManager();
 
 	try {
-	    MsiSearch msiSearch = msiEm.find(MsiSearch.class, Long.valueOf(1L));
+	    MsiSearch msiSearch = msiEm.find(MsiSearch.class, 1L);
 	    assertNotNull(msiSearch);
 	    assertEquals(msiSearch.getPeaklist().getId(), 1L);
 	    Set<SearchSettingsSeqDatabaseMap> mappedDbs = msiSearch.getSearchSetting()
@@ -56,7 +56,7 @@ public class SearchSettingsTest extends DatabaseTestCase {
 		    .getSearchSettingsSeqDatabaseMaps().iterator().next();
 	    assertEquals(map.getSeqDatabase().getName(), "Swissprot");
 
-	    MsiSearch secondMsiSearch = msiEm.find(MsiSearch.class, Long.valueOf(3L));
+	    MsiSearch secondMsiSearch = msiEm.find(MsiSearch.class, 3L);
 	    assertEquals(secondMsiSearch.getSearchSetting().getSearchSettingsSeqDatabaseMaps().size(), 0);
 	} finally {
 
@@ -77,9 +77,9 @@ public class SearchSettingsTest extends DatabaseTestCase {
 	final EntityManager msiEm = getConnector().createEntityManager();
 
 	try {
-	    MsiSearch secondMsiSearch = msiEm.find(MsiSearch.class, Long.valueOf(3L));
+	    MsiSearch secondMsiSearch = msiEm.find(MsiSearch.class, 3L);
 
-	    SeqDatabase database = msiEm.find(SeqDatabase.class, Long.valueOf(1L));
+	    SeqDatabase database = msiEm.find(SeqDatabase.class, 1L);
 
 	    SearchSettingsSeqDatabaseMap map = new SearchSettingsSeqDatabaseMap();
 	    map.setSearchSetting(secondMsiSearch.getSearchSetting());
@@ -94,7 +94,7 @@ public class SearchSettingsTest extends DatabaseTestCase {
 
 	    msiEm.clear();
 
-	    MsiSearch secondMsiSearch2 = msiEm.find(MsiSearch.class, Long.valueOf(3L));
+	    MsiSearch secondMsiSearch2 = msiEm.find(MsiSearch.class, 3L);
 	    assertNotSame(secondMsiSearch, secondMsiSearch2);
 	    Set<SearchSettingsSeqDatabaseMap> mappedDbs = secondMsiSearch2.getSearchSetting()
 		    .getSearchSettingsSeqDatabaseMaps();

@@ -51,10 +51,12 @@ public class InstrumentConfiguration implements Serializable {
 
     // uni-directional many-to-one association to Activation
     @ManyToOne
+    @JoinColumn(name = "activation_type")
     private Activation activation;
 
     // bi-directional many-to-one association to Instrument
     @ManyToOne
+    @JoinColumn(name = "instrument_id")
     private Instrument instrument;
 
     // uni-directional many-to-many association to FragmentationRule
@@ -66,67 +68,67 @@ public class InstrumentConfiguration implements Serializable {
     }
 
     public long getId() {
-	return id;
+	    return id;
     }
 
     public void setId(final long pId) {
-	id = pId;
+	    id = pId;
     }
 
     public String getMs1Analyzer() {
-	return this.ms1Analyzer;
+	    return this.ms1Analyzer;
     }
 
     public void setMs1Analyzer(String ms1Analyzer) {
-	this.ms1Analyzer = ms1Analyzer;
+	    this.ms1Analyzer = ms1Analyzer;
     }
 
     public String getMsnAnalyzer() {
-	return this.msnAnalyzer;
+	    return this.msnAnalyzer;
     }
 
     public void setMsnAnalyzer(String msnAnalyzer) {
-	this.msnAnalyzer = msnAnalyzer;
+	    this.msnAnalyzer = msnAnalyzer;
     }
 
     public String getName() {
-	return this.name;
+	    return this.name;
     }
 
     public void setName(String name) {
-	this.name = name;
+	    this.name = name;
     }
 
     public String getSerializedProperties() {
-	return this.serializedProperties;
+	    return this.serializedProperties;
     }
 
     public void setSerializedProperties(String serializedProperties) {
-	this.serializedProperties = serializedProperties;
+	    this.serializedProperties = serializedProperties;
     }
 
     public Activation getActivation() {
-	return this.activation;
+	    return this.activation;
     }
 
     public void setActivation(Activation activation) {
-	this.activation = activation;
+	    this.activation = activation;
     }
 
     public Instrument getInstrument() {
-	return this.instrument;
+	    return this.instrument;
     }
 
-    public void setInstrument(Instrument instrument) {
-	this.instrument = instrument;
+    public void setInstrument(Instrument instrument)   {
+	    this.instrument = instrument;
     }
 
     public Set<FragmentationRule> getFragmentationRules() {
-	return this.fragmentationRules;
+    	return this.fragmentationRules;
     }
 
     public void setFragmentationRules(Set<FragmentationRule> fragmentationRules) {
-	this.fragmentationRules = fragmentationRules;
+	    this.fragmentationRules = fragmentationRules;
     }
 
 }

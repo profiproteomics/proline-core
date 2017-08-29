@@ -130,7 +130,7 @@ public class DataStoreConnectorFactory extends AbstractDSConnecorFactory {
 	 * @param useManagedConnection Boolean used to indicate if we should use or not a managed connection for the DataStore initialization.
 	 */
 	public void initialize(final IDatabaseConnector udsDbConnector, final String applicationName, final boolean useManagedConnection) {
-	  if (useManagedConnection == false) {
+	  if (!useManagedConnection) {
 	    this.initialize(udsDbConnector, applicationName);
 	    return;
 	  }

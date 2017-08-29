@@ -31,7 +31,7 @@ public class MsiPeptideTest extends DatabaseTestCase {
 
     @Before
     public void setUp() throws Exception {
-	initDatabase();
+			initDatabase();
     }
 
     @Override 
@@ -90,10 +90,10 @@ public class MsiPeptideTest extends DatabaseTestCase {
 		msiTransaction2.begin();
 		msiTransacOk = false;
 
-		final List<Long> ids = new ArrayList<Long>();
+		final List<Long> ids = new ArrayList<>();
 
 		for (long i = 0; i < PEPTIDE_COUNT; ++i) {
-		    ids.add(Long.valueOf(i));
+		    ids.add(i);
 		}
 
 		final List<Peptide> peptides = MsiPeptideRepository.findPeptidesForIds(msiEm, ids);

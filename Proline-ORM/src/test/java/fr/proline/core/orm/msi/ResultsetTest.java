@@ -75,29 +75,33 @@ public class ResultsetTest extends DatabaseTestCase {
 	}
 
     }
-    
-    @Test
-    public void readChildMsISearch() {
-	final EntityManager msiEm = getConnector().createEntityManager();
 
-	try {
-		
-	    List<Long> msiSIds = ResultSetRepository.findChildMsiSearchIdsForResultSet(msiEm, 3L);
-	    assertNotNull(msiSIds);
-	    assertEquals(msiSIds.size(), 2);
-	} finally {
+	@Test
+	public void readChildMsISearch() {
+		final EntityManager msiEm = getConnector().createEntityManager();
 
-	    if (msiEm != null) {
 		try {
-		    msiEm.close();
-		} catch (Exception exClose) {
-		    LOG.error("Error closing MSI EntityManager", exClose);
+
+			List<Long> msiSIds = ResultSetRepository.findChildMsiSearchIdsForResultSet(msiEm, 3L);
+			assertNotNull(msiSIds);
+			assertEquals(msiSIds.size(), 2);
+
+			msiSIds = ResultSetRepository.findChildMsiSearchIdsForResultSet(msiEm, 4L); //test with 2 levels hierarchy
+			assertNotNull(msiSIds);
+			assertEquals(msiSIds.size(), 2);
+		} finally {
+
+			if (msiEm != null) {
+				try {
+					msiEm.close();
+				} catch (Exception exClose) {
+					LOG.error("Error closing MSI EntityManager", exClose);
+				}
+			}
+
 		}
-	    }
 
 	}
-
-    }
 
     @Test
     public void readDecoyResultSet() {
