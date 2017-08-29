@@ -6,7 +6,8 @@ import fr.profi.util.serialization.ProfiJson
 import fr.proline.core.om.model.msi.ResultSummary
 import fr.proline.core.om.provider.msi.IResultSummaryProvider
 import fr.proline.core.om.storer.msi.IRsmDuplicator
-
+import fr.proline.core.orm.msi.Peptide
+import fr.proline.core.orm.msi.MsQuery
 import fr.proline.core.orm.msi.{PeptideInstance => MsiPeptideInstance}
 import fr.proline.core.orm.msi.{PeptideInstancePeptideMatchMap => MsiPepInstPepMatchMap}
 import fr.proline.core.orm.msi.{PeptideInstancePeptideMatchMapPK => MsiPepInstPepMatchMapPK}
@@ -30,10 +31,11 @@ import fr.proline.core.orm.msi.{ResultSet => MsiResultSet}
 import fr.proline.core.orm.msi.{ResultSummary => MsiResultSummary}
 import fr.proline.core.orm.msi.{Scoring => MsiScoring}
 import fr.proline.core.orm.msi.{SequenceMatch => MsiSequenceMatch}
+import fr.proline.core.orm.msi.SequenceMatchPK
 import fr.proline.core.util.ResidueUtils.scalaCharToCharacter
 import javax.persistence.EntityManager
 
-import fr.proline.core._
+
 import fr.proline.core.orm.msi.repository.ScoringRepository
 
 
@@ -103,7 +105,7 @@ class RsmDuplicator(rsmProvider: IResultSummaryProvider) extends IRsmDuplicator 
         //msiMasterPepMatch.setMsQueryId(bestPepMatch.msQueryId)
 
         // FIXME: remove this mapping when the ORM is updated
-        val msiMSQFake = new orm.msi.MsQuery
+        val msiMSQFake = new MsQuery
         msiMSQFake.setId(mergedPepMatch.msQuery.id)
         msiMasterPepMatch.setMsQuery(msiMSQFake)
 
@@ -153,7 +155,7 @@ class RsmDuplicator(rsmProvider: IResultSummaryProvider) extends IRsmDuplicator 
 
       //Retrieve ORM Peptide
       // TODO: DBO => avoid this because this is particularly slow
-      val msiPep = msiEm.find(classOf[orm.msi.Peptide], peptideId)
+      val msiPep = msiEm.find(classOf[Peptide], peptideId)
 
       val msiMasterPepInstance = new MsiPeptideInstance()
       msiMasterPepInstance.setPeptideMatchCount(sourcePepInstPepMatchIds.length)
@@ -467,7 +469,7 @@ class RsmDuplicator(rsmProvider: IResultSummaryProvider) extends IRsmDuplicator 
               if (!mappedMasterPepMatchesIdSet.contains(masterPepMatchId)) {
                 mappedMasterPepMatchesIdSet.add(masterPepMatchId)
 
-                val msiMasterSeqMatchPK = new orm.msi.SequenceMatchPK()
+                val msiMasterSeqMatchPK = new SequenceMatchPK()
                 msiMasterSeqMatchPK.setProteinMatchId(msiMasterProtMatchId)
                 msiMasterSeqMatchPK.setPeptideId(sourceSeqMatch.getPeptideId)
                 msiMasterSeqMatchPK.setStart(sourceSeqMatch.start)
@@ -564,7 +566,7 @@ class ReadBackRsmDuplicator(rsmProvider: IResultSummaryProvider) extends IRsmDup
       //msiMasterPepMatch.setMsQueryId(bestPepMatch.msQueryId)
 
       // FIXME: remove this mapping when the ORM is updated
-      val msiMSQFake = new orm.msi.MsQuery
+      val msiMSQFake = new MsQuery
       msiMSQFake.setId(mergedPepMatch.msQuery.id)
       msiMasterPepMatch.setMsQuery(msiMSQFake)
 
@@ -580,7 +582,7 @@ class ReadBackRsmDuplicator(rsmProvider: IResultSummaryProvider) extends IRsmDup
       masterQuantPepMatchIdByMergedPepMatchId(mergedPepMatch.id) = msiMasterPepMatchId
 
       //Retrieve ORM Peptide 
-      val ormPep = msiEm.find(classOf[orm.msi.Peptide], peptideId)
+      val ormPep = msiEm.find(classOf[Peptide], peptideId)
 
       val msiMasterPepInstance = new MsiPeptideInstance()
       msiMasterPepInstance.setPeptideMatchCount(mergedPepInstPepMatchIds.length) // TODO: check that
@@ -844,7 +846,7 @@ class ReadBackRsmDuplicator(rsmProvider: IResultSummaryProvider) extends IRsmDup
               if (mappedMasterPepMatchesIdSet.contains(masterPepMatchId) == false) {
                 mappedMasterPepMatchesIdSet(masterPepMatchId) = true
 
-                val msiMasterSeqMatchPK = new orm.msi.SequenceMatchPK()
+                val msiMasterSeqMatchPK = new SequenceMatchPK()
                 msiMasterSeqMatchPK.setProteinMatchId(msiMasterProtMatchId)
                 msiMasterSeqMatchPK.setPeptideId(mergedSeqMatch.getPeptideId)
                 msiMasterSeqMatchPK.setStart(mergedSeqMatch.start)

@@ -16,7 +16,7 @@ import fr.proline.context.LcMsDbConnectionContext
 import fr.proline.core.dal.ProlineEzDBC
 import fr.proline.core.om.provider.lcms.impl.SQLScanSequenceProvider
 import fr.proline.repository.DriverType
-import fr.proline.repository.ProlineDatabaseType
+
 
 class V0_6__core_0_4_0_LCMS_data_migration extends JdbcMigration with LazyLogging {
   

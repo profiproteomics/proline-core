@@ -14,6 +14,12 @@
 
   <dependencies>
 
+
+    <dependency>
+      <groupId>org.slf4j</groupId>
+      <artifactId>slf4j-api</artifactId>
+    </dependency>
+
     <!-- ProFi Commons -->
     <dependency>
       <groupId>fr.proline.util</groupId>
@@ -35,6 +41,16 @@
     <dependency>
       <groupId>fr.proline</groupId>
       <artifactId>Proline-Databases</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>fr.profi</groupId>
+      <artifactId>mzdb-processing</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>fr.profi</groupId>
+      <artifactId>ProFI-Proteomics</artifactId>
     </dependency>
 
     <!-- Direct dependencies -->
@@ -76,7 +92,36 @@
       <artifactId>joda-convert</artifactId>
       <!-- Version inherited from ProFI-Pom -->
     </dependency>
-    
+
+
+    <dependency>
+      <groupId>org.flywaydb</groupId>
+      <artifactId>flyway-core</artifactId>
+      <version>3.2.1</version>
+
+      <!-- Use SLF4J instead of Apache common-loggings -->
+      <exclusions>
+        <exclusion>
+          <groupId>commons-logging</groupId>
+          <artifactId>commons-logging</artifactId>
+        </exclusion>
+      </exclusions>
+
+    </dependency>
+
+    <dependency>
+      <groupId>org.msgpack</groupId>
+      <artifactId>msgpack</artifactId>
+      <!-- Version should be inherited from ProFI-Pom but the scala module is not available yet -->
+      <version>0.6.12</version>
+    </dependency>
+
+    <dependency>
+      <groupId>commons-codec</groupId>
+      <artifactId>commons-codec</artifactId>
+      <version>1.10</version>
+    </dependency>
+
     <!-- Cache -->
     <!--
     <dependency>
@@ -102,6 +147,18 @@
 <!--       <artifactId>snappy-java</artifactId> -->
 <!--       <version>1.0.4.1</version> -->
 <!--     </dependency> -->
+
+    <dependency>
+      <groupId>com.fasterxml.jackson.core</groupId>
+      <artifactId>jackson-databind</artifactId>
+      <!-- Version inherited from ProFI-Pom -->
+    </dependency>
+
+    <dependency>
+      <groupId>org.hibernate.javax.persistence</groupId>
+      <artifactId>hibernate-jpa-2.1-api</artifactId>
+      <version>1.0.0.Final</version>
+    </dependency>
 
     <!-- Tests -->
     <dependency>
@@ -133,6 +190,12 @@
       <scope>test</scope>
     </dependency>
 
+    <dependency>
+      <groupId>org.hamcrest</groupId>
+      <artifactId>hamcrest-core</artifactId>
+      <version>1.3</version>
+      <scope>test</scope>
+    </dependency>
   </dependencies>
 
   <build>

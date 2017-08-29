@@ -8,7 +8,7 @@ import fr.proline.core.dal.BuildLazyExecutionContext
 import fr.proline.core.om.model.msi._
 import fr.proline.core.dal.AbstractMultipleDBTestCase
 import fr.proline.repository.DriverType
-import org.scalatest.matchers.MustMatchers
+import org.scalatest.MustMatchers
 import fr.proline.context.DatabaseConnectionContext
 import javax.persistence.EntityManager
 
