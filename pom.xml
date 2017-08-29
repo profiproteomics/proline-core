@@ -5,7 +5,7 @@
   <parent>
     <artifactId>ProFI-Pom</artifactId>
     <groupId>fr.proline</groupId>
-    <version>0.3.0-SNAPSHOT</version>  <!-- Snapshot Trunk version -->
+    <version>0.4.0-SNAPSHOT</version>  <!-- Snapshot Trunk version -->
   </parent>
 
   <artifactId>Proline-Core</artifactId>
@@ -41,6 +41,11 @@
         <groupId>fr.proline.util</groupId>
         <artifactId>ProFI-Commons-Scala</artifactId>
         <version>0.7.0-SNAPSHOT</version> <!-- Snapshot Trunk version -->
+      </dependency>
+      <dependency>
+        <groupId>fr.profi</groupId>
+        <artifactId>ProFI-Proteomics</artifactId>
+        <version>0.3.0-SNAPSHOT</version>
       </dependency>
       
       <!-- MzDB access and processing -->
@@ -128,21 +133,21 @@
       <groupId>ch.qos.logback</groupId>
       <artifactId>logback-core</artifactId>
       <!-- Version inherited from ProFI-Pom -->
-      <scope>test</scope>
+      <scope>compile</scope>
     </dependency>
 
     <dependency>
       <groupId>ch.qos.logback</groupId>
       <artifactId>logback-classic</artifactId>
       <!-- Version inherited from ProFI-Pom -->
-      <scope>test</scope>
+      <scope>compile</scope>
     </dependency>
 
   </dependencies>
 
   <build>
     <plugins>
-     
+
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-surefire-plugin</artifactId>
