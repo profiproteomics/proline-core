@@ -13,7 +13,7 @@ import org.junit.Assert._
 class SetClustererTest extends JUnitSuite {
 
   @Test
-  def OneSets() = {
+  def OneSets() : Unit = {
 
     val inputSet = Set(1, 2, 3, 4)
     val setsById = Map(1 -> inputSet,
@@ -30,7 +30,7 @@ class SetClustererTest extends JUnitSuite {
   }
 
   @Test
-  def OneSetOneStrictSubSet() = {
+  def OneSetOneStrictSubSet(): Unit = {
 
     val setsById = Map(1 -> Set(1, 2, 3, 4, 5),
                        2 -> Set(1, 2, 3, 4))
@@ -48,7 +48,7 @@ class SetClustererTest extends JUnitSuite {
   }
 
   @Test
-  def TwoSetsOneSubsumable() = {
+  def TwoSetsOneSubsumable(): Unit = {
 
     val setsById = Map(1 -> Set(1, 2, 3),
                        2 -> Set(4, 5, 6),
@@ -73,7 +73,7 @@ class SetClustererTest extends JUnitSuite {
   }
 
   @Test
-  def ThreeSetsOneSubsumable() = {
+  def ThreeSetsOneSubsumable(): Unit = {
 
     val setsById = Map(1 -> Set(5, 6, 7),
                        2 -> Set(1, 2, 3),
@@ -100,7 +100,7 @@ class SetClustererTest extends JUnitSuite {
   }
   
     @Test
-  def ThreeSetsOneSubsumable2() = {
+  def ThreeSetsOneSubsumable2(): Unit = {
 
     val setsById = Map(1 -> Set(1,2),
                        2 -> Set(3, 4),
@@ -127,7 +127,7 @@ class SetClustererTest extends JUnitSuite {
   }
 
   @Test
-  def ThreeSubsumable() = {
+  def ThreeSubsumable(): Unit = {
 
     val setsById = Map(1 -> Set(1, 2),
                        2 -> Set(2, 3),
@@ -145,7 +145,7 @@ class SetClustererTest extends JUnitSuite {
   }
 
     @Test
-  def SixSubsumable() = {
+  def SixSubsumable() : Unit= {
 
     val setsById = Map(1 -> Set(1, 2),
                        2 -> Set(2, 3),
@@ -166,7 +166,7 @@ class SetClustererTest extends JUnitSuite {
   }
 
   @Test
-  def Subsumables() = {
+  def Subsumables() : Unit = {
 
     val setsById = Map(1 -> Set(1, 2),
                        2 -> Set(2, 3),

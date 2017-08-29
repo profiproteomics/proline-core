@@ -5,7 +5,7 @@ import org.junit.Before
 import org.junit.Test
 import org.junit.Assert._
 import org.scalatest.junit.JUnitSuite
-import org.scalatest.matchers.MustMatchers
+import org.scalatest.MustMatchers
 import com.typesafe.scalalogging.StrictLogging
 import fr.proline.core.om.model.lcms._
 import fr.proline.core.util.generator.lcms._

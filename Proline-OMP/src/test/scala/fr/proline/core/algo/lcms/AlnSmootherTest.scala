@@ -4,7 +4,7 @@ import scala.collection.mutable.ArrayBuffer
 import org.junit.Before
 import org.junit.Test
 import org.scalatest.junit.JUnitSuite
-import org.scalatest.matchers.MustMatchers
+import org.scalatest.MustMatchers
 import com.typesafe.scalalogging.StrictLogging
 import fr.proline.core.om.model.lcms._
 
@@ -61,7 +61,7 @@ class AlnSmootherTest extends JUnitSuite with MustMatchers with StrictLogging {
     // Test requirements
     newLandmarks.length must equal (20)
     newLandmarks(0).time must equal (1)    
-    newLandmarks(0).deltaTime must be ( 0.841f plusOrMinus 1e-3f )
+    newLandmarks(0).deltaTime must be ( 0.841f +- 1e-3f )
     newLandmarks.map(_.deltaTime).toArray must equal (deltaTimeList)
     
     ()
@@ -77,7 +77,7 @@ class AlnSmootherTest extends JUnitSuite with MustMatchers with StrictLogging {
     // Test requirements
     newLandmarks.length must equal (39)
     newLandmarks(0).time must equal (1)
-    newLandmarks(38).deltaTime must be ( 0.913f plusOrMinus 1e-3f )
+    newLandmarks(38).deltaTime must be ( 0.913f +- 1e-3f )
     
     ()
   }
@@ -92,7 +92,7 @@ class AlnSmootherTest extends JUnitSuite with MustMatchers with StrictLogging {
     // Test requirements
     newLandmarks.length must equal (20)
     newLandmarks(0).time must equal (1)
-    newLandmarks(0).deltaTime must be ( 0.841f plusOrMinus 1e-3f )
+    newLandmarks(0).deltaTime must be ( 0.841f +- 1e-3f )
     newLandmarks.map(_.deltaTime).toArray must equal (deltaTimeList)
   }
   
@@ -106,7 +106,7 @@ class AlnSmootherTest extends JUnitSuite with MustMatchers with StrictLogging {
     // Test requirements
     newLandmarks.length must equal (40)
     newLandmarks(0).time must equal (1)
-    newLandmarks(39).deltaTime must be ( 0.913f plusOrMinus 1e-3f )
+    newLandmarks(39).deltaTime must be ( 0.913f +- 1e-3f )
     
   }
   
@@ -118,7 +118,7 @@ class AlnSmootherTest extends JUnitSuite with MustMatchers with StrictLogging {
     // Test requirements
     newLandmarks.length must equal (20)
     newLandmarks(0).time must equal (1)    
-    newLandmarks(19).deltaTime must be ( 0.752f plusOrMinus 1e-3f )
+    newLandmarks(19).deltaTime must be ( 0.752f +- 1e-3f )
     
   }
   

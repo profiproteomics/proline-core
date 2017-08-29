@@ -1,14 +1,10 @@
 package fr.proline.core.algo.msi
 
 import scala.collection.JavaConversions.collectionAsScalaIterable
-import scala.util.control.Breaks.break
-import scala.util.control.Breaks.breakable
-import fr.proline.context.IExecutionContext
 import fr.profi.util.regex.RegexUtils._
-import fr.proline.core.orm.msi.ProteinMatch
+import fr.proline.core.orm.msi.{ProteinMatch, ProteinSet}
 import com.typesafe.scalalogging.LazyLogging
 import javax.persistence.EntityManager
-import scala.collection.mutable.ArrayBuffer
 
 /**
  * Algo to change the typical protein of all Protein Set for a given ResultSummary.
@@ -32,15 +28,15 @@ class TypicalProteinChooser () extends LazyLogging {
 	def changeTypical(rsmId: Long, priorityRulesToApply : Seq[TypicalProteinChooserRule], msiEM : EntityManager){
    
 	logger.info(" Load data for Typical Protein Chooser multi rules")
-    val ormProtSetRSM = msiEM.createQuery("FROM fr.proline.core.orm.msi.ProteinSet protSet WHERE resultSummary.id = :rsmId", 
-    		  	classOf[fr.proline.core.orm.msi.ProteinSet]).setParameter("rsmId",rsmId).getResultList().toList
+    val ormProtSetRSM = msiEM.createQuery("FROM fr.proline.core.orm.msi.ProteinSet protSet WHERE resultSummary.id = :rsmId",
+			classOf[fr.proline.core.orm.msi.ProteinSet]).setParameter("rsmId", rsmId).getResultList.toList
     
     		  	
     var modifiedProtSet = Seq.newBuilder[fr.proline.core.orm.msi.ProteinSet]
     ormProtSetRSM.foreach(protSet => {
       
-        val sameSetProts =  protSet.getProteinSetProteinMatchItems().filter(!_.getIsInSubset()).map(pspmi => { pspmi.getProteinMatch()}).toSeq.sortBy(_.getAccession())
-    	var currentTypical =sameSetProts.filter(_.getId() == protSet.getProteinMatchId())(0) 
+			val sameSetProts =  protSet.getProteinSetProteinMatchItems.filter(!_.getIsInSubset).map(pspmi => { pspmi.getProteinMatch}).toSeq.sortBy(_.getAccession())
+			val currentTypical = sameSetProts.filter(_.getId == protSet.getProteinMatchId)(0)
     	    	
     	var foundNewTypical = false
     	val potentialTypicals = Seq.newBuilder[ProteinMatch]
@@ -52,7 +48,7 @@ class TypicalProteinChooser () extends LazyLogging {
  		
     		//Search in in samesets    
           	sameSetProts.foreach(sameset => {
-            val valueToTest: String = if (ruleToApply.applyToAcc) sameset.getAccession() else sameset.getDescription()
+            val valueToTest: String = if (ruleToApply.applyToAcc) sameset.getAccession else sameset.getDescription
             if (valueToTest =~ ruleToApply.rulePattern) {
               potentialTypicals += sameset
               foundNewTypical = true // sameset respect current constraint
@@ -62,10 +58,10 @@ class TypicalProteinChooser () extends LazyLogging {
     	
 	  //New typical to save !     
 	  if(foundNewTypical){
-	     val newTypical = potentialTypicals.result.sortBy(_.getAccession()).head
+	     val newTypical = potentialTypicals.result.sortBy(_.getAccession).head
 	     if(!newTypical.equals(currentTypical)){
 //	       logger.trace("NEW Typical, was "+currentTypical.getAccession()+" now => "+newTypical.getAccession())
-	    	 protSet.setProteinMatchId(newTypical.getId())		
+	    	 protSet.setProteinMatchId(newTypical.getId)
 	    	 modifiedProtSet += protSet
 	     }
 	  }
@@ -76,7 +72,7 @@ class TypicalProteinChooser () extends LazyLogging {
 
   }
     
-  def getChangedProteinSets = {modifiedProteinSets}
+  def getChangedProteinSets: Seq[ProteinSet] = {modifiedProteinSets}
   
 }
 

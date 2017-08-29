@@ -13,15 +13,15 @@ class RsmTypicalProteinChooser(
   rulesToApplyPrioritized: Seq[TypicalProteinChooserRule]
 ) extends IService with LazyLogging {
 
-  require(execCtx.isJPA(), " Invalid connexion type for this service ")
+  require(execCtx.isJPA, " Invalid connexion type for this service ")
   require(resultSummaryId > 0L, "Invalid  ResultSummary Id specified")
   private var modifiedProteinSetsCount = 0
 
   def runService(): Boolean = {
 
-    val msiDbContext = execCtx.getMSIDbConnectionContext()
+    val msiDbContext = execCtx.getMSIDbConnectionContext
     msiDbContext.beginTransaction()
-    val msiEM = msiDbContext.getEntityManager()
+    val msiEM = msiDbContext.getEntityManager
 
     logger.info("Run Typical Protein Chooser")
 
@@ -39,6 +39,6 @@ class RsmTypicalProteinChooser(
     true
   }
 
-  def getChangedProteinSetsCount = { modifiedProteinSetsCount }
+  def getChangedProteinSetsCount: Int = { modifiedProteinSetsCount }
 
 }
