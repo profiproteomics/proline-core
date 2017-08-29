@@ -7,6 +7,7 @@ import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
+import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.Table;
 
@@ -33,6 +34,7 @@ public class EnzymeCleavage implements Serializable {
 
     // bi-directional many-to-one association to Enzyme
     @ManyToOne
+    @JoinColumn(name = "enzyme_id")
     private Enzyme enzyme;
 
     public EnzymeCleavage() {
