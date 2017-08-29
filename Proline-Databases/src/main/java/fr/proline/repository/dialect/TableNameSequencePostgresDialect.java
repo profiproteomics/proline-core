@@ -1,8 +1,8 @@
 package fr.proline.repository.dialect;
 
-import org.hibernate.dialect.PostgreSQL82Dialect;
-
 import fr.proline.repository.id.TableNameSequenceGenerator;
+import fr.proline.repository.id.TableNameSequenceStyleGenerator;
+import org.hibernate.dialect.PostgreSQL94Dialect;
 
 /**
  * Creates a sequence per table instead of the default behavior of one global sequence named
@@ -24,16 +24,21 @@ import fr.proline.repository.id.TableNameSequenceGenerator;
  * @author Burt
  * @author LMN
  */
-public class TableNameSequencePostgresDialect extends PostgreSQL82Dialect {
+public class TableNameSequencePostgresDialect extends PostgreSQL94Dialect {
 
 	/**
 	 * Get the native identifier generator class.
 	 * 
 	 * @return TableNameSequenceGenerator.
 	 */
-	@Override
-	public Class<?> getNativeIdentifierGeneratorClass() {
-		return TableNameSequenceGenerator.class;
-	}
+//	@Override
+//	public Class<?> getNativeIdentifierGeneratorClass() {
+//		return TableNameSequenceGenerator.class;
+//	}
 
+
+	@Override
+	public String getNativeIdentifierGeneratorStrategy() {
+		return TableNameSequenceStyleGenerator.class.getCanonicalName();
+	}
 }

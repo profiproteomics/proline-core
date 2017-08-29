@@ -10,13 +10,11 @@ import java.util.concurrent.atomic.AtomicLong;
 import javax.persistence.EntityManagerFactory;
 import javax.sql.DataSource;
 
-//import org.postgresql.ds.PGPoolingDataSource;
 import org.postgresql.ds.PGSimpleDataSource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.mchange.v2.c3p0.ComboPooledDataSource;
-//import com.mchange.v2.c3p0.ComboPooledDataSource;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
 import com.zaxxer.hikari.pool.HikariPool;
@@ -132,11 +130,6 @@ public class PostgresDatabaseConnector extends AbstractDatabaseConnector {
 	private DataSource buildSimpleDataSource(final String ident, final Map<Object, Object> properties, URI fakeURI) {
 
 		PGSimpleDataSource source = new PGSimpleDataSource();
-		Properties props = new Properties();
-		Object appName = PropertiesUtils.getProperty(properties, JDBC_APPNAME_KEY);
-		if (appName != null) {
-			props.put(JDBC_APPNAME_KEY, appName);
-		}
 
 		final String serverName = fakeURI.getHost();
 		if (serverName != null) {
@@ -258,9 +251,7 @@ public class PostgresDatabaseConnector extends AbstractDatabaseConnector {
 		//		}
 
 		/* Force TCP keepalive on EntityManager connections */
-		if (properties.get(HIBERNATE_CONNECTION_KEEPALIVE_KEY) == null) {
-			properties.put(HIBERNATE_CONNECTION_KEEPALIVE_KEY, "true");
-		}
+		properties.putIfAbsent(HIBERNATE_CONNECTION_KEEPALIVE_KEY, "true");
 
 		return super.createEntityManagerFactory(database, properties, ormOptimizations);
 	}
@@ -319,7 +310,7 @@ public class PostgresDatabaseConnector extends AbstractDatabaseConnector {
 		case SIMPLE_POOL_MANAGEMENT:	
 			LOG.debug("Closing DataSource for [{}]", ident);
 			try {
-				ComboPooledDataSource poolDS = ((ComboPooledDataSource) source);
+				ComboPooledDataSource poolDS = (ComboPooledDataSource) source;
 				LOG.warn("Number of busy connections = " + poolDS.getNumBusyConnections());
 				poolDS.close();
 			} catch (Exception exClose) {
@@ -328,9 +319,8 @@ public class PostgresDatabaseConnector extends AbstractDatabaseConnector {
 
 		case HIGH_PERF_POOL_MANAGEMENT:
 			LOG.debug("Closing DataSource for [{}]", ident);
-
 			try {
-				HikariDataSource poolDS = ((HikariDataSource) source);
+				HikariDataSource poolDS = (HikariDataSource) source;
 				HikariPool pool = _getHikariDataSourcePool(poolDS);
 				LOG.warn("Number of active connections = "+pool.getActiveConnections());
 				poolDS.close();

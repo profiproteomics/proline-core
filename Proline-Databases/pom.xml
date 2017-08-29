@@ -12,6 +12,7 @@
   <name>${project.artifactId}</name>
   <description>Proline Databases</description>
 
+
   <dependencies>
 
     <!-- Direct dependencies -->
@@ -46,12 +47,24 @@
       <groupId>org.hibernate</groupId>
       <artifactId>hibernate-entitymanager</artifactId>
     </dependency>
-    
+
+    <dependency>
+      <groupId>org.hibernate.javax.persistence</groupId>
+      <artifactId>hibernate-jpa-2.1-api</artifactId>
+      <version>1.0.0.Final</version>
+    </dependency>
+
+    <dependency>
+      <groupId>org.hibernate</groupId>
+      <artifactId>hibernate-core</artifactId>
+      <version>${hibernate.version}</version>
+    </dependency>
+
     <!-- HikariCP Pool Hibernate integration (runtime scope) -->
     <dependency>
       <groupId>org.hibernate</groupId>
       <artifactId>hibernate-hikaricp</artifactId>
-      <version>4.3.11.Final</version> <!-- TODO: inherit from ProFI-Pom ? -->
+      <version>${hibernate.version}</version> <!-- TODO: inherit from ProFI-Pom ? -->
       <scope>runtime</scope>
     </dependency>
     

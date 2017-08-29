@@ -35,14 +35,14 @@ public abstract class DatabaseTestCase {
 	private boolean m_toreDown;
 
 	/**
-	 * Retrives the list of table names from <code>DatabaseMetaData</code> of
+	 * Retrieves the list of table names from <code>DatabaseMetaData</code> of
 	 * the given SQL JDBC Connection for debugging purpose.
 	 * 
 	 * @param con
 	 *            SQL JDBC Connection, must not be <code>null</code>. If
 	 *            obtained from a JPA EntityManager, a valid Transaction must be
 	 *            started.
-	 * @return List of table names formated as a printable string.
+	 * @return List of table names formatted as a printable string.
 	 */
 	public static String formatTableNames(final Connection con) throws SQLException {
 

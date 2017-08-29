@@ -1,13 +1,12 @@
 package fr.proline.repository.id;
 
-import java.util.Properties;
-
-import org.hibernate.dialect.Dialect;
+import fr.profi.util.StringUtils;
 import org.hibernate.id.PersistentIdentifierGenerator;
 import org.hibernate.id.SequenceGenerator;
+import org.hibernate.service.ServiceRegistry;
 import org.hibernate.type.Type;
 
-import fr.profi.util.StringUtils;
+import java.util.Properties;
 
 /**
  * This class uses one sequence by entity (using PostgreSQL convention for sequence name) instead of global
@@ -28,7 +27,7 @@ public class TableNameSequenceGenerator extends SequenceGenerator {
 	 * name : tableName_pkColumnName_seq).
 	 */
 	@Override
-	public void configure(final Type type, final Properties params, final Dialect dialect) {
+	public void configure(final Type type, final Properties params, final ServiceRegistry serviceRegistry) {
 
 		if (params == null) {
 			throw new IllegalArgumentException("Params is null");
@@ -50,7 +49,7 @@ public class TableNameSequenceGenerator extends SequenceGenerator {
 
 		}
 
-		super.configure(type, params, dialect);
+		super.configure(type, params, serviceRegistry);
 	}
 
 }

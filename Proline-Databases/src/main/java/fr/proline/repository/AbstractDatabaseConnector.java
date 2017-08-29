@@ -39,8 +39,10 @@ public abstract class AbstractDatabaseConnector implements IDatabaseConnector, I
 	public static final String HIBERNATE_BATCH_SIZE_KEY = "hibernate.jdbc.batch_size";
 	public static final String HIBERNATE_BATCH_VERSIONED_DATA_KEY = "hibernate.jdbc.batch_versioned_data";
 	public static final String HIBERNATE_BYTECODE_OPTIMIZER_KEY = "hibernate.bytecode.use_reflection_optimizer";
-	
-	/*** HIBERNATE POOL SPECIFIC  ****/ 
+	public static final String HIBERNATE_IMPLICIT_NAMING_STRATEGY_KEY = "hibernate.implicit_naming_strategy";
+	public static final String HIBERNATE_ID_NEW_GENERATOR_MAPPINGS_KEY= "hibernate.id.new_generator_mappings";
+
+	/*** HIBERNATE POOL SPECIFIC  ****/ 	
 	// HikariCP config keys
 	public static final String HIBERNATE_HIKARI_CONNECTION_PROVIDER_CLASS_KEY = "hibernate.connection.provider_class";
 	public static final String HIBERNATE_HIKARI_POOL_MIN_IDLE_KEY = "hibernate.hikari.minimumIdle";
@@ -113,7 +115,7 @@ public abstract class AbstractDatabaseConnector implements IDatabaseConnector, I
 			throw new IllegalArgumentException("Properties Map is null");
 		}
 
-		m_properties = new HashMap<Object, Object>(properties); // Protection copy
+		m_properties = new HashMap<>(properties); // Protection copy
 
 		final StringBuilder identBuffer = new StringBuilder(prolineDbType.getPersistenceUnitName());
 
@@ -144,7 +146,7 @@ public abstract class AbstractDatabaseConnector implements IDatabaseConnector, I
 
 	public final boolean isMemory() {
 		/* Protection copy */
-		final Map<Object, Object> propertiesCopy = new HashMap<Object, Object>(m_properties);
+		final Map<Object, Object> propertiesCopy = new HashMap<>(m_properties);
 
 		return isMemory(propertiesCopy);
 	}
@@ -168,7 +170,7 @@ public abstract class AbstractDatabaseConnector implements IDatabaseConnector, I
 			if (additionalProperties == null) {
 				m_additionalProperties = null;
 			} else {
-				m_additionalProperties = new HashMap<Object, Object>(additionalProperties); // Protection copy
+				m_additionalProperties = new HashMap<>(additionalProperties); // Protection copy
 			}
 
 		}
@@ -200,7 +202,7 @@ public abstract class AbstractDatabaseConnector implements IDatabaseConnector, I
 			if (m_dataSource == null) {
 				final ProlineDatabaseType prolineDbType = getProlineDatabaseType();
 				/* Protection copy */
-				final Map<Object, Object> propertiesCopy = new HashMap<Object, Object>(m_properties);
+				final Map<Object, Object> propertiesCopy = new HashMap<>(m_properties);
 
 				if ((m_additionalProperties != null) && !m_additionalProperties.isEmpty()) {
 
@@ -247,11 +249,11 @@ public abstract class AbstractDatabaseConnector implements IDatabaseConnector, I
 			}
 
 			if (m_entityManagerFactory == null) {
-				m_entityManagers = new ArrayList<EntityManager>();
+				m_entityManagers = new ArrayList<>();
 
 				final ProlineDatabaseType prolineDbType = getProlineDatabaseType();
 				/* Protection copy */
-				final Map<Object, Object> propertiesCopy = new HashMap<Object, Object>(m_properties);
+				final Map<Object, Object> propertiesCopy = new HashMap<>(m_properties);
 
 				if ((m_additionalProperties != null) && !m_additionalProperties.isEmpty()) {
 
@@ -433,60 +435,34 @@ public abstract class AbstractDatabaseConnector implements IDatabaseConnector, I
 			throw new IllegalArgumentException("Properties Map is null");
 		}
 
-		if (properties.get(HIBERNATE_C3PO_POOL_MIN_SIZE_KEY) == null) {
-			// minPoolSize = 0 
-			properties.put(HIBERNATE_C3PO_POOL_MIN_SIZE_KEY, "0");
-		}
+		properties.putIfAbsent(HIBERNATE_C3PO_POOL_MIN_SIZE_KEY, "0");// minPoolSize = 0
 
-		if (properties.get(HIBERNATE_C3PO_POOL_MAX_SIZE_KEY) == null) {
-			properties.put(HIBERNATE_C3PO_POOL_MAX_SIZE_KEY, Integer.toString(DEFAULT_MAX_POOL_CONNECTIONS));
-		}
+		properties.putIfAbsent(HIBERNATE_C3PO_POOL_MAX_SIZE_KEY, Integer.toString(DEFAULT_MAX_POOL_CONNECTIONS));
 
-		if (properties.get(HIBERNATE_C3PO_POOL_MAX_IDLE_TIME_KEY) == null) {
-			// Max idle time of 14 minutes
-			properties.put(HIBERNATE_C3PO_POOL_MAX_IDLE_TIME_KEY, "840");
-		}
+		properties.putIfAbsent(HIBERNATE_C3PO_POOL_MAX_IDLE_TIME_KEY, "840");	// Max idle time of 14 minutes
 
-		if (properties.get(HIBERNATE_C3PO_POOL_MAX_STATEMENTS_PER_CON_KEY) == null) {
-			properties.put(HIBERNATE_C3PO_POOL_MAX_STATEMENTS_PER_CON_KEY, "30");
-		}
+		properties.putIfAbsent(HIBERNATE_C3PO_POOL_MAX_STATEMENTS_PER_CON_KEY,"30");
 
 		// If JDBC driver does NOT support Connection.isValid() method, override preferredTestQuery
 
-		if (properties.get(HIBERNATE_C3PO_POOL_TEST_CON_ON_CHECKIN_KEY) == null) {
-			// Check connection is valid asynchronously at every connection checkin
-			properties.put(HIBERNATE_C3PO_POOL_TEST_CON_ON_CHECKIN_KEY, "true");
-		}
+		properties.putIfAbsent(HIBERNATE_C3PO_POOL_TEST_CON_ON_CHECKIN_KEY,"true"); // Check connection is valid asynchronously at every connection checkin
 
-		if (properties.get(HIBERNATE_C3PO_POOL_IDLE_CON_TEST_PERIOD_KEY) == null) {
-			// Check pooled but unchecked-out connections every 5 minutes (fastest recommended TCP keepalive)
-			properties.put(HIBERNATE_C3PO_POOL_IDLE_CON_TEST_PERIOD_KEY, "300");
-		}
-
+		properties.putIfAbsent(HIBERNATE_C3PO_POOL_IDLE_CON_TEST_PERIOD_KEY,"300"); // Check pooled but unchecked-out connections every 5 minutes (fastest recommended TCP keepalive)
 	}
+
 	
 	protected static void enableHikariPool(final Map<Object, Object> properties) {
 
 		if (properties == null) {
 			throw new IllegalArgumentException("Properties Map is null");
 		}
+		properties.putIfAbsent(HIBERNATE_HIKARI_CONNECTION_PROVIDER_CLASS_KEY, "org.hibernate.hikaricp.internal.HikariCPConnectionProvider");
 
-		if (properties.get(HIBERNATE_HIKARI_CONNECTION_PROVIDER_CLASS_KEY) == null) {
-			properties.put(HIBERNATE_HIKARI_CONNECTION_PROVIDER_CLASS_KEY, "com.zaxxer.hikari.hibernate.HikariConnectionProvider");
-		}
+		properties.putIfAbsent(HIBERNATE_HIKARI_POOL_MIN_IDLE_KEY, Integer.toString(DEFAULT_MIN_IDLE_CONNECTIONS));
 
-		if (properties.get(HIBERNATE_HIKARI_POOL_MIN_IDLE_KEY) == null) {
-			properties.put(HIBERNATE_HIKARI_POOL_MIN_IDLE_KEY, Integer.toString(DEFAULT_MIN_IDLE_CONNECTIONS));
-		}
+		properties.putIfAbsent(HIBERNATE_HIKARI_POOL_MAX_SIZE_KEY, Integer.toString(DEFAULT_MAX_POOL_CONNECTIONS));
 
-		if (properties.get(HIBERNATE_HIKARI_POOL_MAX_SIZE_KEY) == null) {
-			properties.put(HIBERNATE_HIKARI_POOL_MAX_SIZE_KEY, Integer.toString(DEFAULT_MAX_POOL_CONNECTIONS));
-		}
-
-		if (properties.get(HIBERNATE_HIKARI_POOL_MAX_IDLE_TIME_KEY) == null) {
-			// Max idle time of 14 minutes
-			properties.put(HIBERNATE_HIKARI_POOL_MAX_IDLE_TIME_KEY, Integer.toString(DEFAULT_MAX_IDLE_TIME));
-		}
+	  properties.putIfAbsent(HIBERNATE_HIKARI_POOL_MAX_IDLE_TIME_KEY, Integer.toString(DEFAULT_MAX_IDLE_TIME)); // Max idle time of 14 minutes
 
 	}
 
@@ -517,7 +493,7 @@ public abstract class AbstractDatabaseConnector implements IDatabaseConnector, I
 			int oldCount = 0;
 
 			if (oldCountObj != null) {
-				oldCount = oldCountObj.intValue();
+				oldCount = oldCountObj;
 			}
 
 			if (oldCount < 0) {
@@ -528,7 +504,7 @@ public abstract class AbstractDatabaseConnector implements IDatabaseConnector, I
 
 			result = oldCount + 1;
 
-			CONNECTOR_INSTANCES.put(ident, Integer.valueOf(result));
+			CONNECTOR_INSTANCES.put(ident, result);
 		} // End of synchronized block on CONNECTOR_INSTANCES
 
 		return result;
@@ -545,7 +521,7 @@ public abstract class AbstractDatabaseConnector implements IDatabaseConnector, I
 			int oldCount = 0;
 
 			if (oldCountObj != null) {
-				oldCount = oldCountObj.intValue();
+				oldCount = oldCountObj;
 			}
 
 			if (oldCount <= 0) {
@@ -562,26 +538,19 @@ public abstract class AbstractDatabaseConnector implements IDatabaseConnector, I
 
 	private static void optimize(final Map<Object, Object> properties) {
 		assert (properties != null) : "optimize() properties is null";
+		properties.putIfAbsent(HIBERNATE_IMPLICIT_NAMING_STRATEGY_KEY,"legacy-hbm");//to allow mapping between ORM ClassName and table
 
-		if (properties.get(PERSISTENCE_VALIDATION_MODE_KEY) == null) {
-			properties.put(PERSISTENCE_VALIDATION_MODE_KEY, "none");
-		}
+		properties.putIfAbsent(PERSISTENCE_VALIDATION_MODE_KEY, "none");
 
-		if (properties.get(HIBERNATE_FETCH_SIZE_KEY) == null) {
-			properties.put(HIBERNATE_FETCH_SIZE_KEY, "1000");
-		}
+		properties.putIfAbsent(HIBERNATE_FETCH_SIZE_KEY, "1000");
 
-		if (properties.get(HIBERNATE_BATCH_SIZE_KEY) == null) {
-			properties.put(HIBERNATE_BATCH_SIZE_KEY, "30");
-		}
+		properties.putIfAbsent(HIBERNATE_BATCH_SIZE_KEY, "30");
 
-		if (properties.get(HIBERNATE_BATCH_VERSIONED_DATA_KEY) == null) {
-			properties.put(HIBERNATE_BATCH_VERSIONED_DATA_KEY, "true");
-		}
+		properties.putIfAbsent(HIBERNATE_BATCH_VERSIONED_DATA_KEY, "true");
 
-		if (properties.get(HIBERNATE_BYTECODE_OPTIMIZER_KEY) == null) {
-			properties.put(HIBERNATE_BYTECODE_OPTIMIZER_KEY, "true");
-		}
+		properties.putIfAbsent(HIBERNATE_BYTECODE_OPTIMIZER_KEY, "true");
+
+		properties.putIfAbsent(HIBERNATE_ID_NEW_GENERATOR_MAPPINGS_KEY, "false");
 
 	}
 
