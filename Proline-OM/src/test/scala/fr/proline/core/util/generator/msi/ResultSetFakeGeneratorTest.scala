@@ -9,7 +9,7 @@ import fr.proline.core.om.model.msi.ResultSet
 class ResultSetFakeGeneratorTest extends JUnitSuite with StrictLogging {
 
   @Test
-  def simpleResultSet() = {
+  def simpleResultSet() : Unit =  {
     val nbProts: Int = 2
     val nbPeps: Int = 10
 
@@ -25,7 +25,7 @@ class ResultSetFakeGeneratorTest extends JUnitSuite with StrictLogging {
   }
 
   @Test
-  def sharedPepResultSet() = {
+  def sharedPepResultSet() : Unit =  {
     val nbProts: Int = 2
     val nbPeps: Int = 4
 
@@ -43,7 +43,7 @@ class ResultSetFakeGeneratorTest extends JUnitSuite with StrictLogging {
   }
 
   @Test
-  def sharedPepFromNewProtResultSet() = {
+  def sharedPepFromNewProtResultSet() : Unit =    {
     val nbProts: Int = 2
     val nbPeps: Int = 4
 
@@ -61,7 +61,7 @@ class ResultSetFakeGeneratorTest extends JUnitSuite with StrictLogging {
   }
 
   @Test
-  def withSimpleMissCleavage() = {
+  def withSimpleMissCleavage() : Unit =   {
     val nbProts: Int = 2
     val nbPeps: Int = 20
 
@@ -80,7 +80,7 @@ class ResultSetFakeGeneratorTest extends JUnitSuite with StrictLogging {
   }
 
   @Test
-  def withMultiMissCleavage() = {
+  def withMultiMissCleavage() : Unit =  {
     val nbProts: Int = 2
     val nbPeps: Int = 20
 
@@ -102,7 +102,7 @@ class ResultSetFakeGeneratorTest extends JUnitSuite with StrictLogging {
   }
 
   @Test
-  def withDuplicatedPeptides() = {
+  def withDuplicatedPeptides(): Unit =   {
     val nbProts: Int = 4
     val nbPeps: Int = 20
     val duplic1Nb: Int = 5
@@ -119,7 +119,7 @@ class ResultSetFakeGeneratorTest extends JUnitSuite with StrictLogging {
   }
 
   @Test
-  def withAll() = {
+  def withAll() : Unit = {
     val nbProts: Int = 4
     val nbPeps: Int = 20
 
