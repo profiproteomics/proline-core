@@ -34,6 +34,7 @@ public class FeaturePeakelItem implements Serializable {
 
 	//bi-directional many-to-one association to Map
 	@ManyToOne
+	@JoinColumn(name = "map_id")
 	private Map map;
 
 	//bi-directional many-to-one association to Peakel

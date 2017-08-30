@@ -24,13 +24,13 @@ public class PeptideInstancePeptideMatchMap implements Serializable {
 	private String serializedProperties;
   
     //bi-directional many-to-one association to PeptideInstance
-    @ManyToOne
+	@ManyToOne
   @JoinColumn(name="peptide_instance_id")
   @MapsId("peptideInstanceId")
   private PeptideInstance peptideInstance;
     
     //uni-directional many-to-one association to PeptideMatch
-    @ManyToOne
+  @ManyToOne
   @JoinColumn(name="peptide_match_id")
   @MapsId("peptideMatchId")
   private PeptideMatch peptideMatch;

@@ -28,10 +28,12 @@ public class RatioDefinition implements Serializable {
 
     // uni-directional many-to-one association to BiologicalGroup
     @ManyToOne
+    @JoinColumn(name = "numerator_id")
     private BiologicalGroup numerator;
 
     // uni-directional many-to-one association to BiologicalGroup
     @ManyToOne
+    @JoinColumn(name = "denominator_id")
     private BiologicalGroup denominator;
 
     // bi-directional many-to-one association to GroupSetup

@@ -44,6 +44,7 @@ public class BioSequenceGeneMap implements Serializable {
 
     // uni-directional many-to-one association to Taxon
     @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "taxon_id")
     private Taxon taxon;
 
     public BioSequenceGeneMap() {

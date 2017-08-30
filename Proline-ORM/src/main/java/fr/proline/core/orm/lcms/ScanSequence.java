@@ -43,6 +43,7 @@ public class ScanSequence implements Serializable {
 
 	//uni-directional many-to-one association to Instrument
 	@ManyToOne
+	@JoinColumn(name = "instrument_id")
 	private Instrument instrument;
 
 	public ScanSequence() {

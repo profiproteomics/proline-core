@@ -8,7 +8,9 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.ManyToOne;
+import javax.persistence.JoinColumn;
 import javax.persistence.Table;
+
 
 import org.apache.commons.lang3.builder.ToStringBuilder;
 
@@ -36,6 +38,7 @@ public class TaxonExtraName implements Serializable {
 
     // bi-directional many-to-one association to Taxon
     @ManyToOne
+    @JoinColumn(name = "taxon_id")
     private Taxon taxon;
 
     public TaxonExtraName() {

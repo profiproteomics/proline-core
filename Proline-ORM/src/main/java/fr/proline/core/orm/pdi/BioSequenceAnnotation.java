@@ -43,6 +43,7 @@ public class BioSequenceAnnotation implements Serializable {
 
     // uni-directional many-to-one association to Taxon
     @ManyToOne
+    @JoinColumn(name = "taxon_id")
     private Taxon taxon;
 
     public BioSequenceAnnotation() {

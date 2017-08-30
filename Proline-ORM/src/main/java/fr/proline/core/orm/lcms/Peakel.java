@@ -58,6 +58,7 @@ public class Peakel implements Serializable {
 
 	//bi-directional many-to-one association to Map
 	@ManyToOne
+	@JoinColumn(name = "map_id")
 	private Map map;
 
 	//uni-directional many-to-one association to Scan
