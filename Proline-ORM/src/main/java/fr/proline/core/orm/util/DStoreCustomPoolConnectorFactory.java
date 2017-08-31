@@ -181,7 +181,7 @@ public class DStoreCustomPoolConnectorFactory extends AbstractDSConnecorFactory 
 	 */
 	@Override
 	public void initialize(final IDatabaseConnector udsDbConnector, String applicationName) {
-		initialize(udsDbConnector, applicationName, ConnectionPoolType.HIGH_PERF_POOL_MANAGEMENT);
+		initialize(udsDbConnector, applicationName, IDatabaseConnector.DEFAULT_POOL_TYPE); //ConnectionPoolType.HIGH_PERF_POOL_MANAGEMENT);
 	}
 
 	protected IDatabaseConnector createProjectDatabaseConnector(
