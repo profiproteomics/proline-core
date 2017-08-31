@@ -37,7 +37,7 @@ public class PostgresDatabaseConnector extends AbstractDatabaseConnector {
 	
 	public PostgresDatabaseConnector(final ProlineDatabaseType database, final Map<Object, Object> properties, final IDatabaseConnector.ConnectionPoolType poolManagementType) {
 		super(database, properties);
-		m_poolManagementType = (poolManagementType == null) ? IDatabaseConnector.ConnectionPoolType.HIGH_PERF_POOL_MANAGEMENT : poolManagementType;
+		m_poolManagementType = (poolManagementType == null) ? IDatabaseConnector.DEFAULT_POOL_TYPE : poolManagementType;
 	}
 
 	@Override

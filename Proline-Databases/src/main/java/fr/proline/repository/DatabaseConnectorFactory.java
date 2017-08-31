@@ -73,7 +73,7 @@ public final class DatabaseConnectorFactory {
 			throw new IllegalArgumentException("Invalid propertiesFileName");
 		}
 
-		return createDatabaseConnectorInstance(database, PropertiesUtils.loadProperties(propertiesFileName), IDatabaseConnector.ConnectionPoolType.HIGH_PERF_POOL_MANAGEMENT);
+		return createDatabaseConnectorInstance(database, PropertiesUtils.loadProperties(propertiesFileName), IDatabaseConnector.DEFAULT_POOL_TYPE);//IDatabaseConnector.ConnectionPoolType.HIGH_PERF_POOL_MANAGEMENT);
 	}
 	
 	public static IDatabaseConnector createDatabaseConnectorInstance(
@@ -100,6 +100,6 @@ public final class DatabaseConnectorFactory {
 			throw new IllegalArgumentException("Database is null");
 		}
 
-		return createDatabaseConnectorInstance(database, properties, IDatabaseConnector.ConnectionPoolType.HIGH_PERF_POOL_MANAGEMENT);
+		return createDatabaseConnectorInstance(database, properties, IDatabaseConnector.DEFAULT_POOL_TYPE);//IDatabaseConnector.ConnectionPoolType.HIGH_PERF_POOL_MANAGEMENT);
 	}
 }

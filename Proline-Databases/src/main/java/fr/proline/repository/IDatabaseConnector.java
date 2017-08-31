@@ -25,6 +25,8 @@ public interface IDatabaseConnector extends Closeable {
 		HIGH_PERF_POOL_MANAGEMENT		
 	}
 
+	public static ConnectionPoolType DEFAULT_POOL_TYPE = ConnectionPoolType.SIMPLE_POOL_MANAGEMENT;
+
 	ProlineDatabaseType getProlineDatabaseType();
 
 	DriverType getDriverType();
