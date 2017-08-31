@@ -316,6 +316,7 @@ public class PostgresDatabaseConnector extends AbstractDatabaseConnector {
 			} catch (Exception exClose) {
 				LOG.error("Error closing DataSource for [" + ident + ']', exClose);
 			}
+			break;
 
 		case HIGH_PERF_POOL_MANAGEMENT:
 			LOG.debug("Closing DataSource for [{}]", ident);
