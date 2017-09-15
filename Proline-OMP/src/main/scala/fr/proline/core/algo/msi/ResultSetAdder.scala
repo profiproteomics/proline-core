@@ -347,6 +347,7 @@ private[this] class ProteinMatchAdder( newResultSetId: Long ) {
     
     // Clone firstAddedProteinMatch while setting some values computed using the merged protein matches
     firstAddedProteinMatch.copy(
+      description = proteinMatchDescription,
       id = ProteinMatch.generateNewId,
       score = proteinMatchScore,
       coverage = 0.0f, // protein match sequence coverage cannot be computed and depends on validated psm
