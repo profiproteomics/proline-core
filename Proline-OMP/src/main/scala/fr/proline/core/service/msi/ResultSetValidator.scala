@@ -1,50 +1,46 @@
 package fr.proline.core.service.msi
 
-import scala.collection.mutable.ArrayBuffer
 import com.typesafe.scalalogging.LazyLogging
 import fr.proline.api.service.IService
-import fr.proline.context.DatabaseConnectionContext
 import fr.proline.context.IExecutionContext
 import fr.proline.core.algo.msi.InferenceMethod
+import fr.proline.core.algo.msi.ProteinSetInferer
+import fr.proline.core.algo.msi.filtering.IFilterNeedingResultSet
+import fr.proline.core.algo.msi.filtering.IPeptideMatchFilter
+import fr.proline.core.algo.msi.filtering.IProteinSetFilter
+import fr.proline.core.algo.msi.filtering.PepMatchFilterParams
+import fr.proline.core.algo.msi.scoring.PepSetScoring
+import fr.proline.core.algo.msi.scoring.PeptideSetScoreUpdater
+import fr.proline.core.algo.msi.validation.BuildTDAnalyzer
+import fr.proline.core.algo.msi.validation.IPeptideMatchValidator
+import fr.proline.core.algo.msi.validation.IProteinSetValidator
+import fr.proline.core.algo.msi.validation.ITargetDecoyAnalyzer
+import fr.proline.core.algo.msi.validation.TargetDecoyComputer
+import fr.proline.core.algo.msi.validation.TargetDecoyModes
+import fr.proline.core.algo.msi.validation.ValidationResult
 import fr.proline.core.algo.msi.validation.pepmatch.BasicPepMatchValidator
 import fr.proline.core.algo.msi.validation.proteinset.BasicProtSetValidator
+import fr.proline.core.algo.msq.spectralcount.PepInstanceFilteringLeafSCUpdater
+import fr.proline.core.dal.DoJDBCReturningWork
+import fr.proline.core.dal.tables.SelectQueryBuilder._
+import fr.proline.core.dal.tables.SelectQueryBuilder1
+import fr.proline.core.dal.tables.msi.MsiDbResultSetRelationTable
+import fr.proline.core.om.model.msi.FilterDescriptor
+import fr.proline.core.om.model.msi.MsiRocCurve
+import fr.proline.core.om.model.msi.ResultSet
+import fr.proline.core.om.model.msi.ResultSummary
+import fr.proline.core.om.model.msi.ResultSummaryProperties
+import fr.proline.core.om.model.msi.RsmValidationParamsProperties
+import fr.proline.core.om.model.msi.RsmValidationProperties
+import fr.proline.core.om.model.msi.RsmValidationResultProperties
+import fr.proline.core.om.model.msi.RsmValidationResultsProperties
 import fr.proline.core.om.provider.msi.IResultSetProvider
 import fr.proline.core.om.provider.msi.impl.ORMResultSetProvider
 import fr.proline.core.om.provider.msi.impl.SQLResultSetProvider
 import fr.proline.core.om.storer.msi.RsmStorer
-import fr.proline.core.algo.msq.spectralcount.PepInstanceFilteringLeafSCUpdater
-import fr.proline.core.algo.msi.filtering.proteinset.PeptidesCountPSFilter
-import fr.proline.core.algo.msi.ProteinSetInferer
-import fr.proline.core.algo.msi.filtering.IProteinSetFilter
-import fr.proline.core.algo.msi.filtering.PepMatchFilterParams
-import fr.proline.core.algo.msi.filtering.IPeptideMatchFilter
-import fr.proline.core.algo.msi.filtering.IFilterNeedingResultSet
-import fr.proline.core.algo.msi.validation.ITargetDecoyAnalyzer
-import fr.proline.core.algo.msi.validation.BuildTDAnalyzer
-import fr.proline.core.algo.msi.validation.ValidationResult
-import fr.proline.core.algo.msi.validation.IPeptideMatchValidator
-import fr.proline.core.algo.msi.validation.TargetDecoyComputer
-import fr.proline.core.algo.msi.validation.TargetDecoyModes
-import fr.proline.core.algo.msi.validation.IProteinSetValidator
-import fr.proline.core.algo.msi.scoring.PeptideSetScoreUpdater
-import fr.proline.core.algo.msi.scoring.PepSetScoring
-import fr.proline.core.om.model.msi.RsmValidationProperties
-import fr.proline.core.om.model.msi.RsmValidationResultProperties
-import fr.proline.core.om.model.msi.MsiRocCurve
-import fr.proline.core.om.model.msi.FilterDescriptor
-import fr.proline.core.om.model.msi.ResultSet
-import fr.proline.core.om.model.msi.ResultSummary
-import fr.proline.core.om.model.msi.RsmValidationParamsProperties
-import fr.proline.core.om.model.msi.ResultSummaryProperties
-import fr.proline.core.dal.helper.MsiDbHelper
-import fr.proline.core.om.model.msi.RsmValidationResultsProperties
-import fr.proline.core.dal.helper.MsiDbHelper
-import fr.proline.core.dal.helper.MsiDbHelper
-import fr.proline.core.dal.DoJDBCReturningWork
-import fr.proline.core.dal.tables.SelectQueryBuilder1
-import fr.proline.core.dal.tables.msi.MsiDbResultSetRelationTable
-import fr.proline.core.dal.tables.SelectQueryBuilder._
+
 import scala.collection.immutable.HashMap
+import scala.collection.mutable.ArrayBuffer
 
 // TODO: use this config in the constructors
 case class ValidationConfig(
@@ -59,18 +55,18 @@ case class ValidationConfig(
 object ResultSetValidator {
 
   def apply(
-    execContext: IExecutionContext,
-    targetRsId: Long,
-    tdAnalyzer: Option[ITargetDecoyAnalyzer] = None,
-    pepMatchPreFilters: Option[Seq[IPeptideMatchFilter]] = None,
-    pepMatchValidator: Option[IPeptideMatchValidator] = None,
-    protSetFilters: Option[Seq[IProteinSetFilter]] = None,
-    protSetValidator: Option[IProteinSetValidator] = None,
-    inferenceMethod: Option[InferenceMethod.Value] = Some(InferenceMethod.PARSIMONIOUS),
-    peptideSetScoring: Option[PepSetScoring.Value] = Some(PepSetScoring.MASCOT_STANDARD_SCORE),
-    storeResultSummary: Boolean = true,
-    propagatePSMValidation: Boolean = false,
-    propagateProtSetValidation: Boolean = false
+             execContext: IExecutionContext,
+             targetRsId: Long,
+             tdAnalyzer: Option[ITargetDecoyAnalyzer] = None,
+             pepMatchPreFilters: Option[Seq[IPeptideMatchFilter]] = None,
+             pepMatchValidator: Option[IPeptideMatchValidator] = None,
+             protSetFilters: Option[Seq[IProteinSetFilter]] = None,
+             protSetValidator: Option[IProteinSetValidator] = None,
+             inferenceMethod: Option[InferenceMethod.Value] = Some(InferenceMethod.PARSIMONIOUS),
+             peptideSetScoring: Option[PepSetScoring.Value] = Some(PepSetScoring.MASCOT_STANDARD_SCORE),
+             storeResultSummary: Boolean = true,
+             propagatePepMatchValidation: Boolean = false,
+             propagateProtSetValidation: Boolean = false
   ): ResultSetValidator = {
 
     val rsProvider = getResultSetProvider(execContext)
@@ -88,7 +84,7 @@ object ResultSetValidator {
       }
     }
 
-    
+
     new ResultSetValidator(
       execContext,
       targetRs.get,
@@ -100,7 +96,7 @@ object ResultSetValidator {
       inferenceMethod,
       peptideSetScoring,
       storeResultSummary,
-      propagatePSMValidation,
+      propagatePepMatchValidation,
       propagateProtSetValidation
     )
   }
@@ -132,27 +128,27 @@ object ResultSetValidator {
  *
  */
 class ResultSetValidator(
-  execContext: IExecutionContext,
-  targetRs: ResultSet,
-  tdAnalyzer: Option[ITargetDecoyAnalyzer] = None,
-  pepMatchPreFilters: Option[Seq[IPeptideMatchFilter]] = None,
-  pepMatchValidator: Option[IPeptideMatchValidator] = None,
-  protSetFilters: Option[Seq[IProteinSetFilter]] = None,
-  protSetValidator: Option[IProteinSetValidator] = None,
-  inferenceMethod: Option[InferenceMethod.Value] = Some(InferenceMethod.PARSIMONIOUS),
-  peptideSetScoring: Option[PepSetScoring.Value] = Some(PepSetScoring.MASCOT_STANDARD_SCORE),
-  storeResultSummary: Boolean = true,
-  propagatePSMValidation: Boolean = false,
-  propagateProtSetValidation: Boolean = false
+                          execContext: IExecutionContext,
+                          targetRs: ResultSet,
+                          tdAnalyzer: Option[ITargetDecoyAnalyzer] = None,
+                          pepMatchPreFilters: Option[Seq[IPeptideMatchFilter]] = None,
+                          pepMatchValidator: Option[IPeptideMatchValidator] = None,
+                          protSetFilters: Option[Seq[IProteinSetFilter]] = None,
+                          protSetValidator: Option[IProteinSetValidator] = None,
+                          inferenceMethod: Option[InferenceMethod.Value] = Some(InferenceMethod.PARSIMONIOUS),
+                          peptideSetScoring: Option[PepSetScoring.Value] = Some(PepSetScoring.MASCOT_STANDARD_SCORE),
+                          storeResultSummary: Boolean = true,
+                          propagatePepMatchValidation: Boolean = false,
+                          propagateProtSetValidation: Boolean = false
 
 ) extends IService with LazyLogging {
 
   private val msiDbContext = execContext.getMSIDbConnectionContext
   var validatedTargetRsm: ResultSummary = null
   var validatedDecoyRsm: Option[ResultSummary] = null
-  
+
   var targetRSMIdPerRsId : HashMap[Long, Long] = new HashMap[Long, Long]()
-  
+
   // WARNING: this is hack which enables TD competition when rank filtering is used
   // FIXME: find a better way to handle the TD competition
   var useTdCompetition = false
@@ -161,7 +157,7 @@ class ResultSetValidator(
     useTdCompetition = pepMatchPreFilters.get.exists(_.filterParameter == rankFilterAsStr)
     logger.debug(s"Auto-determination of 'useTdCompetition' gives '$useTdCompetition'")
   }
-  
+
   // If no TDAnalyzer specified, specify default one
   val finalTDAnalyzer = if(tdAnalyzer.isEmpty) BuildTDAnalyzer(useTdCompetition, targetRs, null)
   else {
@@ -169,7 +165,7 @@ class ResultSetValidator(
     tdAnalyzer.get.useTdCompetition = useTdCompetition
     tdAnalyzer
   }
-    
+
   // Update the target analyzer of the validators
   pepMatchValidator.foreach(_.tdAnalyzer = finalTDAnalyzer)
 
@@ -189,7 +185,7 @@ class ResultSetValidator(
       params = RsmValidationParamsProperties(),
       results = RsmValidationResultsProperties()
     )
-    
+
     executeOnProgress() //execute registered action during progress
 
     // --- Validate PSM ---
@@ -197,7 +193,7 @@ class ResultSetValidator(
     executeOnProgress() //execute registered action during progress
 
     // --- Compute RSM from validated PSMs ---
-    
+
     // Instantiate a protein set inferer
     val protSetInferer = ProteinSetInferer(inferenceMethod.get)
 
@@ -205,9 +201,9 @@ class ResultSetValidator(
     def createRSM(currentRS: Option[ResultSet], peptideValidationRocCurve: Option[MsiRocCurve]): Option[ResultSummary] = {
       if (currentRS.isDefined) {
 
-        // compute result summary from specified result set (validated peptide matches ) 
+        // compute result summary from specified result set (validated peptide matches )
         val rsm = protSetInferer.computeResultSummary(currentRS.get, keepSubsummableSubsets = true)
-        
+
         // Attach the ROC curve
         rsm.peptideValidationRocCurve = peptideValidationRocCurve
 
@@ -242,22 +238,22 @@ class ResultSetValidator(
 
     val took = curTimeInSecs() - startTime
     this.logger.info("Validation service took " + took + " seconds")
-    
+
     //-- Propagate Validation if asked
-    if (propagatePSMValidation || propagateProtSetValidation) {     
-      val propagatedPSMFilters =if(propagatePSMValidation) Some(appliedPSMFilters) else None
+    if (propagatePepMatchValidation || propagateProtSetValidation) {
+      val propagatedPSMFilters =if(propagatePepMatchValidation) Some(appliedPSMFilters) else None
       val propagatedProtSetFilters =if(propagateProtSetValidation) protSetFilters else None
       _propagateToChilds(propagatedPSMFilters, propagatedProtSetFilters, targetRs.id)
     }
-   
-    
-    // Instantiate totalLeavesMatchCount 
+
+
+    // Instantiate totalLeavesMatchCount
     this.logger.debug("updatePepInstanceSC for new validated result summaries ...")
     val rsms2Update = if(decoyRsmOpt.isDefined) Seq(targetRsm, decoyRsmOpt.get) else Seq(targetRsm)
-    
+
     val pepInstanceFilteringLeafSCUpdater= new PepInstanceFilteringLeafSCUpdater()
     pepInstanceFilteringLeafSCUpdater.updatePepInstanceSC(rsms2Update, execContext)
-      
+
     if (storeResultSummary) {
 
       // Check if a transaction is already initiated
@@ -275,8 +271,8 @@ class ResultSetValidator(
       // Store target result summary
       rsmStorer.storeResultSummary(targetRsm, execContext)
       executeOnProgress() //execute registered action during progress
-      
-          
+
+
       // Commit transaction if it was initiated locally
       if (!wasInTransaction) msiDbContext.commitTransaction()
 
@@ -287,7 +283,7 @@ class ResultSetValidator(
     this.validatedTargetRsm = targetRsm
     this.validatedDecoyRsm = decoyRsmOpt
     targetRSMIdPerRsId += (targetRs.id -> targetRsm.id)
-       
+
     this.beforeInterruption()
 
     true
@@ -299,7 +295,7 @@ class ResultSetValidator(
 
       val recursiveRSValidator = ResultSetValidator(execContext, rsId, finalTDAnalyzer,
         propagatedPSMFilters, None, propagatedProtSetFilters, None,
-        inferenceMethod, peptideSetScoring, storeResultSummary, propagatePSMValidation, propagateProtSetValidation)
+        inferenceMethod, peptideSetScoring, storeResultSummary, propagatePepMatchValidation, propagateProtSetValidation)
       recursiveRSValidator.run()
        targetRSMIdPerRsId ++= recursiveRSValidator.targetRSMIdPerRsId
     })
