@@ -74,7 +74,7 @@ object ResultSet extends InMemoryIdGen {
         for(peptideId <- peptideIds) {
           val pepMatches = pepMatchesByPepId.getOrElse(peptideId, Array.empty[PeptideMatch])
           for( pepMatch <- pepMatches ) {
-            protMatchesByPepMatchId.getOrElse(pepMatch.id, new ArrayBuffer[ProteinMatch]) += protMatch
+            protMatchesByPepMatchId.getOrElseUpdate(pepMatch.id, new ArrayBuffer[ProteinMatch]) += protMatch
           }
         }
       }
@@ -691,7 +691,7 @@ object ValidatedResultSetBuilder {
         sequenceMatches = newSeqMatches
       )
     }
-    
+
     ( validatedPeptides, validatedPepMatches, validatedProtAndSeqMatches )
   }
   
