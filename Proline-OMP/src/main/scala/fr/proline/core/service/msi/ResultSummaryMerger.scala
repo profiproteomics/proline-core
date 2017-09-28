@@ -261,7 +261,8 @@ class ResultSummaryMerger(
           proteinResults = Some(
             RsmValidationResultProperties(
               targetMatchesCount = protSetsCount,
-              decoyMatchesCount = decoyProtSetsCountOpt
+              decoyMatchesCount = decoyProtSetsCountOpt,
+              fdr = decoyProtSetsCountOpt.map(_.toFloat/protSetsCount)
             )
           )
         )
