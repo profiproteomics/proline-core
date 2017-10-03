@@ -219,7 +219,7 @@ class RsmDuplicator(rsmProvider: IResultSummaryProvider) extends IRsmDuplicator 
     this.logger.debug(" ---  End go through PepInstance; duration" + (time1-time2))
     // Retrieve some vars
     val sourcePeptideSets = sourceRSM.peptideSets
-    this.logger.debug(message = "number of grouped peptide sets: " + sourcePeptideSets.length + " sameset " + sourcePeptideSets.filter(!_.isSubset).length)
+    this.logger.debug("number of grouped peptide sets: " + sourcePeptideSets.length + " sameset " + sourcePeptideSets.filter(!_.isSubset).length)
     val sourceProteinSets = sourceRSM.proteinSets
     this.logger.debug("number of grouped protein sets: " + sourceProteinSets.length)
     val sourceProtSetById = sourceRSM.getProteinSetById
