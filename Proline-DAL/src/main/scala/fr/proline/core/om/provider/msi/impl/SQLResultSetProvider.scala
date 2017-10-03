@@ -1,20 +1,17 @@
 package fr.proline.core.om.provider.msi.impl
 
-import scala.collection.mutable.ArrayBuffer
-import scala.collection.mutable.LongMap
-
 import com.typesafe.scalalogging.LazyLogging
-
 import fr.profi.util.collection._
-import fr.profi.util.serialization.ProfiJson
 import fr.proline.context._
 import fr.proline.core.dal.DoJDBCReturningWork
-import fr.proline.core.dal.tables.msi.MsiDbResultSetTable
-import fr.proline.core.dal.tables.SelectQueryBuilder1
 import fr.proline.core.dal.tables.SelectQueryBuilder._
+import fr.proline.core.dal.tables.SelectQueryBuilder1
+import fr.proline.core.dal.tables.msi.MsiDbResultSetTable
 import fr.proline.core.om.builder.ResultSetBuilder
 import fr.proline.core.om.model.msi._
-import fr.proline.core.om.provider.msi.{ IResultSetProvider, PeptideMatchFilter, ResultSetFilter }
+import fr.proline.core.om.provider.msi.{IResultSetProvider, PeptideMatchFilter, ResultSetFilter}
+
+import scala.collection.mutable.LongMap
 
 trait SQLResultSetLoader extends LazyLogging {
 
@@ -41,8 +38,6 @@ trait SQLResultSetLoader extends LazyLogging {
     pepMatches: Array[PeptideMatch],
     protMatches: Array[ProteinMatch]
   ): Array[ResultSet] = {
-
-    import fr.profi.util.primitives._
 
     // Build some maps
     val pepMatchesByRsId = pepMatches.groupByLong(_.resultSetId)
