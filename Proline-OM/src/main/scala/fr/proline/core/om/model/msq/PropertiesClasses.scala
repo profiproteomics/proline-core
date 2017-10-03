@@ -1,10 +1,9 @@
 package fr.proline.core.om.model.msq
 
-import scala.collection.mutable.HashMap
-import scala.collection.mutable.LongMap
-import scala.beans.BeanProperty
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize
-import fr.profi.util.collection._
+
+import scala.beans.BeanProperty
+import scala.collection.mutable.HashMap
 
 case class ComputedRatio(
   @BeanProperty var numerator: Float,
