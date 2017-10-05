@@ -11,13 +11,7 @@ import fr.proline.core.algo.msi.filtering.IProteinSetFilter
 import fr.proline.core.algo.msi.filtering.PepMatchFilterParams
 import fr.proline.core.algo.msi.scoring.PepSetScoring
 import fr.proline.core.algo.msi.scoring.PeptideSetScoreUpdater
-import fr.proline.core.algo.msi.validation.BuildTDAnalyzer
-import fr.proline.core.algo.msi.validation.IPeptideMatchValidator
-import fr.proline.core.algo.msi.validation.IProteinSetValidator
-import fr.proline.core.algo.msi.validation.ITargetDecoyAnalyzer
-import fr.proline.core.algo.msi.validation.TargetDecoyComputer
-import fr.proline.core.algo.msi.validation.TargetDecoyModes
-import fr.proline.core.algo.msi.validation.ValidationResult
+import fr.proline.core.algo.msi.validation.{BuildTDAnalyzer, IPeptideMatchValidator, IProteinSetValidator, ITargetDecoyAnalyzer, TargetDecoyComputer, TargetDecoyModes, ValidationResult, ValidationResults}
 import fr.proline.core.algo.msi.validation.pepmatch.BasicPepMatchValidator
 import fr.proline.core.algo.msi.validation.proteinset.BasicProtSetValidator
 import fr.proline.core.algo.msq.spectralcount.PepInstanceFilteringLeafSCUpdater
@@ -25,15 +19,7 @@ import fr.proline.core.dal.DoJDBCReturningWork
 import fr.proline.core.dal.tables.SelectQueryBuilder._
 import fr.proline.core.dal.tables.SelectQueryBuilder1
 import fr.proline.core.dal.tables.msi.MsiDbResultSetRelationTable
-import fr.proline.core.om.model.msi.FilterDescriptor
-import fr.proline.core.om.model.msi.MsiRocCurve
-import fr.proline.core.om.model.msi.ResultSet
-import fr.proline.core.om.model.msi.ResultSummary
-import fr.proline.core.om.model.msi.ResultSummaryProperties
-import fr.proline.core.om.model.msi.RsmValidationParamsProperties
-import fr.proline.core.om.model.msi.RsmValidationProperties
-import fr.proline.core.om.model.msi.RsmValidationResultProperties
-import fr.proline.core.om.model.msi.RsmValidationResultsProperties
+import fr.proline.core.om.model.msi._
 import fr.proline.core.om.provider.msi.IResultSetProvider
 import fr.proline.core.om.provider.msi.impl.ORMResultSetProvider
 import fr.proline.core.om.provider.msi.impl.SQLResultSetProvider
@@ -77,7 +63,7 @@ object ResultSetValidator {
     }
 
     // Load decoy result set if needed
-    if (execContext.isJPA == false) {
+    if (!execContext.isJPA ) {
       val decoyRsId = targetRs.get.getDecoyResultSetId
       if (decoyRsId > 0) {
         targetRs.get.decoyResultSet = rsProvider.getResultSet(decoyRsId)
@@ -144,8 +130,8 @@ class ResultSetValidator(
 ) extends IService with LazyLogging {
 
   private val msiDbContext = execContext.getMSIDbConnectionContext
-  var validatedTargetRsm: ResultSummary = null
-  var validatedDecoyRsm: Option[ResultSummary] = null
+  var validatedTargetRsm: ResultSummary = _
+  var validatedDecoyRsm: Option[ResultSummary] = _
 
   var targetRSMIdPerRsId : HashMap[Long, Long] = new HashMap[Long, Long]()
 
@@ -172,7 +158,7 @@ class ResultSetValidator(
   override protected def beforeInterruption = {
   }
 
-  def curTimeInSecs() = System.currentTimeMillis() / 1000
+  def curTimeInSecs(): Long = System.currentTimeMillis() / 1000
 
   def runService(): Boolean = {
 
@@ -257,7 +243,7 @@ class ResultSetValidator(
     if (storeResultSummary) {
 
       // Check if a transaction is already initiated
-      val wasInTransaction = msiDbContext.isInTransaction()
+      val wasInTransaction = msiDbContext.isInTransaction
       if (!wasInTransaction) msiDbContext.beginTransaction()
 
       // Instantiate a RSM storer
@@ -350,7 +336,7 @@ class ResultSetValidator(
     executeOnProgress() //execute registered action during progress
 
     // If define, execute peptide match validator
-    val rocCurveOpt = if( pepMatchValidator.isEmpty) None
+    val rocCurveOpt: Option[MsiRocCurve] = if( pepMatchValidator.isEmpty) None
     else {
       val somePepMatchValidator = pepMatchValidator.get
       val validationFilter = somePepMatchValidator.validationFilter
@@ -420,7 +406,12 @@ class ResultSetValidator(
 
   private def _validateProteinSets(targetRsm: ResultSummary, rsmValProperties: RsmValidationProperties): Option[MsiRocCurve] = {
 //    if (protSetFilters.isEmpty && protSetValidator.isEmpty) return None  
-    
+
+   val tdModeOpt = if(targetRsm.resultSet.get.properties.isDefined && targetRsm.resultSet.get.properties.get.targetDecoyMode.isDefined){
+      val tdModeStr = targetRsm.resultSet.get.properties.get.targetDecoyMode.get
+      Some(TargetDecoyModes.withName(tdModeStr))
+    } else None
+
     val filterDescriptors = new ArrayBuffer[FilterDescriptor]()
     var finalValidationResult: ValidationResult = null
 
@@ -430,13 +421,14 @@ class ResultSetValidator(
 
         // Apply filter
         val protSetValidatorForFiltering = new BasicProtSetValidator(protSetFilter)
+        protSetValidatorForFiltering.targetDecoyMode = tdModeOpt
         val valResults = protSetValidatorForFiltering.validateProteinSets(targetRsm)
         finalValidationResult = valResults.finalResult
 
         logger.debug(
           "After Filter " + protSetFilter.filterDescription +
             " Nbr protein set target validated = " + finalValidationResult.targetMatchesCount +
-            " <> " + targetRsm.proteinSets.filter(_.isValidated).length
+            " <> " + targetRsm.proteinSets.count(_.isValidated)
         )
          
         // Store Validation Params obtained after filtering
@@ -447,14 +439,13 @@ class ResultSetValidator(
 
     executeOnProgress() //execute registered action during progress
 
-    
-    val tdModeOpt = if(targetRsm.resultSet.get.properties.isDefined && targetRsm.resultSet.get.properties.get.targetDecoyMode.isDefined){
-      val tdModeStr = targetRsm.resultSet.get.properties.get.targetDecoyMode.get  
-      Some(TargetDecoyModes.withName(tdModeStr))
-    } else None
+    // Get current FDR and execute validator only if expected FDR not already reached
+    val expectedFdr = if (protSetValidator.isDefined) protSetValidator.get.expectedFdr else None
+    val initialFdr = getFdrForRSM(targetRsm,tdModeOpt)
+    val fdrReached =  (initialFdr.isDefined && expectedFdr.isDefined) && (initialFdr.get < expectedFdr.get)
 
     // If define, execute protein set validator  
-    val rocCurveOpt = if (protSetValidator.isEmpty) None
+    val rocCurveOpt = if (protSetValidator.isEmpty || fdrReached ) None
     else {
 
       logger.debug("Run protein set validator: " + protSetValidator.get.toFilterDescriptor.parameter)
@@ -462,7 +453,7 @@ class ResultSetValidator(
       // Update the target/decoy mode of the protein set validator for this RSM
       protSetValidator.get.targetDecoyMode = tdModeOpt
       
-      val valResults = protSetValidator.get.validateProteinSets(targetRsm)
+      val valResults: ValidationResults = protSetValidator.get.validateProteinSets(targetRsm)
       finalValidationResult = valResults.finalResult
 
       filterDescriptors += protSetValidator.get.toFilterDescriptor
@@ -471,7 +462,6 @@ class ResultSetValidator(
     }
 
     // Save Protein Set Filters properties
-    val expectedFdr = if (protSetValidator.isDefined) protSetValidator.get.expectedFdr else None
     rsmValProperties.getParams.setProteinExpectedFdr(expectedFdr)
     rsmValProperties.getParams.setProteinFilters(Some(filterDescriptors.toArray))
 
@@ -479,19 +469,11 @@ class ResultSetValidator(
     val protSetValResults = if (finalValidationResult == null) {
       logger.debug("Final Validation Result is NULL")
 
+      val fdr : Option[Float] = getFdrForRSM(targetRsm, tdModeOpt)
       val targetMatchesCount = targetRsm.proteinSets.count(_.isValidated)
       val decoyMatchesCount = if (targetRsm.decoyResultSummary == null || targetRsm.decoyResultSummary.isEmpty) None
       else Some(targetRsm.decoyResultSummary.get.proteinSets.count(_.isValidated))
 
-      //Compute FDR 
-      var fdr : Option[Float] = None
-      if(decoyMatchesCount.isDefined && decoyMatchesCount.get > 0 && tdModeOpt.isDefined){             
-        tdModeOpt.get match {
-          case TargetDecoyModes.CONCATENATED => { fdr = Some(TargetDecoyComputer.calcCdFDR(targetMatchesCount, decoyMatchesCount.get)) }
-          case TargetDecoyModes.SEPARATED    => { fdr = Some(TargetDecoyComputer.calcSdFDR(targetMatchesCount, decoyMatchesCount.get)) }    
-        }
-      }
-      
       RsmValidationResultProperties(
         targetMatchesCount = targetMatchesCount,
         decoyMatchesCount = decoyMatchesCount,
@@ -526,5 +508,22 @@ class ResultSetValidator(
     }
     
     rocCurveOpt
+  }
+
+  private def getFdrForRSM(targetRsm: ResultSummary, tdModeOpt: Option[TargetDecoyModes.Value]): Option[Float] = {
+
+    val targetMatchesCount = targetRsm.proteinSets.count(_.isValidated)
+    val decoyMatchesCount = if (targetRsm.decoyResultSummary == null || targetRsm.decoyResultSummary.isEmpty) None
+    else Some(targetRsm.decoyResultSummary.get.proteinSets.count(_.isValidated))
+
+    //Compute FDR if needed
+    var fdr : Option[Float] = None
+    if(decoyMatchesCount.isDefined && decoyMatchesCount.get > 0 && tdModeOpt.isDefined) {
+      tdModeOpt.get match {
+        case TargetDecoyModes.CONCATENATED => fdr = Some(TargetDecoyComputer.calcCdFDR(targetMatchesCount, decoyMatchesCount.get))
+        case TargetDecoyModes.SEPARATED => fdr = Some(TargetDecoyComputer.calcSdFDR(targetMatchesCount, decoyMatchesCount.get))
+      }
+    }
+    fdr
   }
 }
