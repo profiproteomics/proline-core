@@ -1,13 +1,12 @@
 package fr.proline.core.algo.msi.validation
 
-import scala.collection.mutable.ArrayBuffer
-import scala.util.control.Breaks._
-import com.fasterxml.jackson.annotation.JsonInclude
 import com.typesafe.scalalogging.LazyLogging
 import fr.proline.core.algo.msi.filtering._
-import fr.proline.core.om.model.msi.{ PeptideMatch, ResultSet }
 import fr.proline.core.algo.msi.filtering.pepmatch.MascotPValuePSMFilter
-import fr.proline.core.om.model.msi.ResultSetProperties
+import fr.proline.core.om.model.msi.{PeptideMatch, ResultSet, ResultSetProperties}
+
+import scala.collection.mutable.ArrayBuffer
+import scala.util.control.Breaks._
 
 object BuildTDAnalyzer extends LazyLogging {
 
@@ -34,7 +33,7 @@ object BuildTDAnalyzer extends LazyLogging {
         new CompetitionBasedTDAnalyzer(pepMatchSorter.get)
       } else {
         */
-      val tdModeAsStrOpt = rs.getTargetDecoyMode
+      val tdModeAsStrOpt = rs.getTargetDecoyMode()
       require(tdModeAsStrOpt.isDefined, "ResultSet #" + rsId + " has no valid TargetDecoyMode Property")
 
       val tdMode = TargetDecoyModes.withName(tdModeAsStrOpt.get)
@@ -112,14 +111,14 @@ abstract class AbstractTargetDecoyAnalyzer extends ITargetDecoyAnalyzer with Laz
   ): Array[ValidationResult] = {
 
     // Memorize validation status of peptide matches
-    val allPepMatches = (targetPepMatches ++ decoyPepMatches)
+    val allPepMatches = targetPepMatches ++ decoyPepMatches
     val pepMatchValStatusMap = PeptideMatchFiltering.getPepMatchValidationStatusMap(allPepMatches)
 
     // Build the peptide match joint map
     val pmJointMap = TargetDecoyComputer.buildPeptideMatchJointMap(targetPepMatches, Some(decoyPepMatches))
     logger.debug("ROCAnalysisV1 PeptideMatches joint Map size: " + pmJointMap.size)
     
-    var filterThreshold = validationFilter.getThresholdStartValue
+    var filterThreshold = validationFilter.getThresholdStartValue()
 
     logger.debug("ROCAnalysisV1 entering FDR loop with initial filterThreshold: " + filterThreshold + " ...")
 
@@ -144,13 +143,13 @@ abstract class AbstractTargetDecoyAnalyzer extends ITargetDecoyAnalyzer with Laz
       validationFilter.setThresholdValue(filterThreshold)
 
       // Apply filter on target and decoy peptide matches
-      validationFilter.filterPeptideMatches(allPepMatches, true, false)
+      validationFilter.filterPeptideMatches(allPepMatches, incrementalValidation = true, traceability = false)
 
       // Compute the ROC point
       val rocPoint = this.calcTDStatistics(pmJointMap)
 
       // Set ROC point validation properties
-      rocPoint.addProperties(validationFilter.getFilterProperties)
+      rocPoint.addProperties(validationFilter.getFilterProperties())
 
       // Add ROC point to the curve
       rocPoints += rocPoint
@@ -178,7 +177,7 @@ abstract class AbstractTargetDecoyAnalyzer extends ITargetDecoyAnalyzer with Laz
     rocPoints.toArray
   }
 
-  // Note : this implementation seeems to be too long to process (too many decoy peptide matches)
+  // Note : this implementation seems to be too long to process (too many decoy peptide matches)
   // TODO: remove me
   def performROCAnalysisV2(
     targetPepMatches: Seq[PeptideMatch],
@@ -187,7 +186,7 @@ abstract class AbstractTargetDecoyAnalyzer extends ITargetDecoyAnalyzer with Laz
   ): Array[ValidationResult] = {
 
     // Memorize validation status of peptide matches
-    val allPepMatches = (targetPepMatches ++ decoyPepMatches)
+    val allPepMatches = targetPepMatches ++ decoyPepMatches
     val pepMatchValStatusMap = PeptideMatchFiltering.getPepMatchValidationStatusMap(allPepMatches)
 
     // Build the peptide match joint map
@@ -219,14 +218,14 @@ abstract class AbstractTargetDecoyAnalyzer extends ITargetDecoyAnalyzer with Laz
         validationFilter.setThresholdValue(validationFilter.getNextValue(thresholdValue))
 
         // Apply filter on target and decoy peptide matches
-        validationFilter.filterPeptideMatches(allPepMatches, true, false)
+        validationFilter.filterPeptideMatches(allPepMatches, incrementalValidation = true, traceability = false)
 
         // Compute the ROC point
         val rocPoint = this.calcTDStatistics(pmJointMap)
         logger.trace("New FDR = " + rocPoint.fdr)
 
         // Set ROC point validation properties
-        rocPoint.addProperties(validationFilter.getFilterProperties)
+        rocPoint.addProperties(validationFilter.getFilterProperties())
 
         // Add ROC point to the curve
         rocPoints += rocPoint
@@ -269,8 +268,8 @@ abstract class AbstractTargetDecoyAnalyzer extends ITargetDecoyAnalyzer with Laz
     //logger.debug("performROCAnalysis => PeptideMatches joint Map size: " + pmJointMap.size)
 
     // Remember validation status of peptide matches
-    val allPepMatches = (targetPepMatches ++ decoyPepMatches)
-    val pepMatchValStatusMap = PeptideMatchFiltering.getPepMatchValidationStatusMap(allPepMatches)
+    val allPepMatches = targetPepMatches ++ decoyPepMatches
+    val pepMatchValStatusMap: Map[Long, Boolean] = PeptideMatchFiltering.getPepMatchValidationStatusMap(allPepMatches)
 
     // Retrieve filtered peptide matches
     // TODO: use selection levels instead of isValidated boolean value
@@ -284,18 +283,18 @@ abstract class AbstractTargetDecoyAnalyzer extends ITargetDecoyAnalyzer with Laz
     val sortedDistinctThresholds = sortedPepMatches.map( validationFilter.getPeptideMatchValueForFiltering(_) ).distinct
     
     // Set the filter threshold
-    validationFilter.setThresholdValue(sortedDistinctThresholds(0))
+    validationFilter.setThresholdValue(sortedDistinctThresholds.head)
     
-    // Group peptide matches by their treshold value
+    // Group peptide matches by their threshold value
     // This allows to handle the case where several peptide matches are validated with the same threshold value
     val filteredPepMatchesGroupedByThreshold = filteredPepMatches.groupBy { pm =>
       validationFilter.getPeptideMatchValueForFiltering(pm)
     }
     
-    logger.debug("performROCAnalysis => applying filters on Target & Decoy PSMs ...")
+    logger.debug("performROCAnalysis => applying filters on Target & Decoy PSMs ..."+filteredPepMatches.length+" PSMS with "+filteredPepMatchesGroupedByThreshold.size+" different threshold value")
 
     // Apply filter on target and decoy peptide matches
-    validationFilter.filterPeptideMatches(filteredPepMatches, true, false)
+    validationFilter.filterPeptideMatches(filteredPepMatches, incrementalValidation = true, traceability = false)
     
     logger.debug("performROCAnalysis => entering sortedDistinctThresholds loop ...")
 
@@ -320,17 +319,16 @@ abstract class AbstractTargetDecoyAnalyzer extends ITargetDecoyAnalyzer with Laz
       targetMatchesCount += curTargetMatchesCount
       decoyMatchesCount += curDecoyMatchesCount
       
-      val curRocPoint = this.calcTDStatistics(targetMatchesCount, decoyMatchesCount)
+      val curRocPoint: ValidationResult = this.calcTDStatistics(targetMatchesCount, decoyMatchesCount)
       
       // Set ROC point validation properties
       validationFilter.setThresholdValue(thresholdValue)
-      curRocPoint.addProperties(validationFilter.getFilterProperties)
+      curRocPoint.addProperties(validationFilter.getFilterProperties())
 
       // Add ROC point to the curve
       rocPoints += curRocPoint
       
-      //curRocPoint = this.updateValidationResult(curRocPoint, pmJointMap, curPepMatchForRocCreation)
-      logger.trace("New FDR = " + curRocPoint.fdr)
+      logger.trace("New FDR = " + curRocPoint.fdr+" nbr decoy/target  \t"+decoyMatchesCount+"\t"+targetMatchesCount+"\t"+thresholdValue)
     }
     
     val end = System.currentTimeMillis
@@ -340,7 +338,7 @@ abstract class AbstractTargetDecoyAnalyzer extends ITargetDecoyAnalyzer with Laz
     PeptideMatchFiltering.restorePepMatchValidationStatus(filteredPepMatches, pepMatchValStatusMap)
     logger.debug("performROCAnalysis => restorePepMatchValidationStatus done")
     
-    // Remove ROC points having the same number of decoy matches and keep target ROC point preceding a deocy one
+    // Remove ROC points having the same number of decoy matches and keep target ROC point preceding a decoy one
     val filteredRocPoints = new ArrayBuffer[ValidationResult](rocPoints.length)
     
     if (rocPoints.length < 2) filteredRocPoints ++= rocPoints

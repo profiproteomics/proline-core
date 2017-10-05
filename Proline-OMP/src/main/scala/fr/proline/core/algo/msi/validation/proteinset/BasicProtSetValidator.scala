@@ -1,10 +1,8 @@
 package fr.proline.core.algo.msi.validation.proteinset
 
 import com.typesafe.scalalogging.LazyLogging
-
 import fr.proline.core.algo.msi.filtering._
 import fr.proline.core.algo.msi.validation._
-import fr.proline.core.om.model.msi.ProteinSet
 import fr.proline.core.om.model.msi.ResultSummary
 
 

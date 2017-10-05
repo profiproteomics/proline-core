@@ -206,8 +206,9 @@ object BuildProteinSetValidator {
     
     validationMethod match {
       case ProtSetValidationMethods.BASIC => {
-        val threshold = thresholds.get(ValidationThresholdKeys.THRESHOLD_VALUE)
-        new BasicProtSetValidator(BuildProteinSetFilter(validationFilterParam))
+        val protSetValidator = new BasicProtSetValidator(BuildProteinSetFilter(validationFilterParam))
+        protSetValidator.targetDecoyMode = targetDecoyModeOpt
+        protSetValidator
       }
       case ProtSetValidationMethods.PEPTIDE_MATCH_RULES => {
 

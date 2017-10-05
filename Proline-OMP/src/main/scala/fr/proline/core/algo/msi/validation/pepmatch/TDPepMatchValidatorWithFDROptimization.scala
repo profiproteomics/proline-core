@@ -16,15 +16,24 @@ class TDPepMatchValidatorWithFDROptimization(
   
   def validatePeptideMatches( pepMatches: Seq[PeptideMatch], decoyPepMatches: Option[Seq[PeptideMatch]] = None ): ValidationResults = {
     require(decoyPepMatches.isDefined, "decoy peptide matches must be provided")
-    
-    val rocPoints = tdAnalyzer.get.performROCAnalysis(pepMatches, decoyPepMatches.get, validationFilter)
+
+    val expectedFdrValue = expectedFdr.get
+
+    //Start by verifying fdr is not already less than expected one
+    val initialValidationResult =  tdAnalyzer.get.calcTDStatistics(pepMatches.filter(_.isValidated), decoyPepMatches.get.filter(_.isValidated))
+    if(initialValidationResult.fdr.isDefined && initialValidationResult.fdr.get < expectedFdrValue) {
+      //no need to perform ROC Analysis, expected already reached
+       return  ValidationResults(null, None)
+    }
+
+    val rocPoints : Array[ValidationResult] = tdAnalyzer.get.performROCAnalysis(pepMatches, decoyPepMatches.get, validationFilter)
     
     if( rocPoints.length == 0 ) {
       this.logger.warn("ROC analysis returned empty results, validation filter has not been applied")
-      ValidationResults(ValidationResult(pepMatches.count(_.isValidated),Some(pepMatches.count(_.isValidated)),None))
+      ValidationResults(ValidationResult(pepMatches.count(_.isValidated),Some(decoyPepMatches.get.count(_.isValidated)),None))
     } else {
       
-      val expectedFdrValue = expectedFdr.get
+
       val fdrThreshold = 0.95 * expectedFdrValue
       
       // Retrieve the nearest ROC point of the expected FDR and associated threshold
@@ -33,19 +42,24 @@ class TDPepMatchValidatorWithFDROptimization(
       val rocPointsNearExpectedFdr = rocPointsLowerThanExpectedFdr.filter( _.fdr.get >= fdrThreshold )
       
       // If we have defined ROC points lower than expected FDR and higher than 0.95 of this value
-      val expectedRocPoint = if (rocPointsNearExpectedFdr.isEmpty == false) {
+      val expectedRocPoint = if (!rocPointsNearExpectedFdr.isEmpty) {
         // Select the ROC point with maximum number of target matches
         rocPointsNearExpectedFdr.maxBy( _.targetMatchesCount )
       }
       else {
         val filteredRocPoints = if (rocPointsLowerThanExpectedFdr.isEmpty) rocPointsWithDefinedFdr
         else rocPointsLowerThanExpectedFdr
+        logger.debug(" Choose fdr in all defined fdr : "+rocPointsLowerThanExpectedFdr.isEmpty)
         
         // If filteredRocPoints is empty => NO Valid FDR
         if (filteredRocPoints.isEmpty) null
         else {
-        // Else if no FDR lower than expected one => retrieve the nearest FDR compared to the expected value
-          filteredRocPoints.reduce { (a, b) => if ((a.fdr.get - expectedFdrValue).abs < (b.fdr.get - expectedFdrValue).abs) a else b }
+          // Else if no FDR lower than expected one => retrieve the nearest FDR compared to the expected value
+          //VDS get the one maximizing the nbr of target if search in rocPointsLowerThanExpectedFdr
+          val reducesRP: ValidationResult = filteredRocPoints.reduce { (a, b) => if ((a.fdr.get - expectedFdrValue).abs < (b.fdr.get - expectedFdrValue).abs) a else b }
+
+          logger.debug("  search nearest FDR "+reducesRP)
+          reducesRP
         }
       }
       
