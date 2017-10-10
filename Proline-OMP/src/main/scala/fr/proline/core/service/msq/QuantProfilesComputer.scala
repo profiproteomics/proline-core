@@ -113,7 +113,7 @@ class QuantProfilesComputer(
     )
     // Note that it is important to load the Result Set to have all required information
     val quantRSM = quantRsmProvider.getQuantResultSummary(quantRsmId, qcIds, loadResultSet = true).get
-    logger.info("Before Feature summarizer mqPep with selection level == 0 : "+quantRSM.masterQuantPeptides.withFilter(_.selectionLevel == 0).map(_.id).length)
+    logger.info("Before Feature summarizer mqPep with selection level == 1 : "+quantRSM.masterQuantPeptides.count(_.selectionLevel == 1))
 
     // !!! STILL EXPERIMENTAL !!!
     val summarizeFeatures = false

@@ -116,7 +116,7 @@ class Profilizer( expDesign: ExperimentalDesign, groupSetupNumber: Int = 1, mast
     require( masterQuantPeptides.length >= 10, "at least 10 peptides are required for profile analysis")
     
     logger.info("computing master quant peptide profiles...")
-    
+
     // --- Reset some values ---
     for( mqPep <- masterQuantPeptides ) {
               
@@ -147,7 +147,7 @@ class Profilizer( expDesign: ExperimentalDesign, groupSetupNumber: Int = 1, mast
       require( config.oxidizedPeptideFilteringMethod.isDefined, "config.oxidizedPeptideFilteringMethod is empty")
       OxidizedPeptideFilterer.discardPeptides(masterQuantPeptides, config.oxidizedPeptideFilteringMethod.get)
     }
-        
+
     // Keep master quant peptides passing all filters (i.e. have a selection level higher than 1)
     //
     // val( mqPepsAfterAllFilters, deselectedMqPeps ) = masterQuantPeptides.partition( _.selectionLevel >= 2 )
@@ -177,7 +177,7 @@ class Profilizer( expDesign: ExperimentalDesign, groupSetupNumber: Int = 1, mast
     val psmCountMatrix = mqPepsAfterAllFilters.map( _.getPepMatchesCountsForQuantChannels(expDesignSetup.qcIds) ).toArray
     
     // --- Compute the abundance matrix ---
-    val rawAbundanceMatrix = mqPepsAfterAllFilters.map( _.getRawAbundancesForQuantChannels(expDesignSetup.qcIds) ).toArray
+    val rawAbundanceMatrix: Array[Array[Float]] = mqPepsAfterAllFilters.map( _.getRawAbundancesForQuantChannels(expDesignSetup.qcIds) ).toArray
     
     // --- Normalize the abundance matrix ---
     //
@@ -317,9 +317,9 @@ class Profilizer( expDesign: ExperimentalDesign, groupSetupNumber: Int = 1, mast
       mqPep.properties = Some(mqPepProps)
     }
     
-    logger.info("After computeMasterQuantPeptideProfiles mqPep with selection level == 0 : "+masterQuantPeptides.withFilter(_.selectionLevel == 0).map(_.id).length)
-    logger.info("After computeMasterQuantPeptideProfiles mqPep with selection level == 2 : "+masterQuantPeptides.withFilter(_.selectionLevel == 2).map(_.id).length)
-    
+    logger.info("After computeMasterQuantPeptideProfiles mqPep with selection level == 1 : "+masterQuantPeptides.count(_.selectionLevel == 1))
+    logger.info("After computeMasterQuantPeptideProfiles mqPep with selection level == 2 : "+masterQuantPeptides.count(_.selectionLevel == 2))
+
     ()
   }
   
