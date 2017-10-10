@@ -218,9 +218,6 @@ class ExtractMapSet(
     // do not re-compute the alignments because they could be different with the tmpAlignemnt 
     AlignMapSet(lcmsDbCtx, finalMapSet, alnResult)
     //AlignMapSet(lcmsDbCtx, finalMapSet, alnMethodName, alnParams)
-   
-    // CBY: commented = could not find usage of this value .... ??
-    //val finalAlnResult = mapAligner.computeMapAlignments(finalMapSet.childMaps, alnParams)
 
     // --- Normalize the processed maps ---
     if (normalizationMethod.isDefined && finalMapSet.childMaps.length > 1) {
@@ -350,7 +347,7 @@ class ExtractMapSet(
       ftMappingParams,
       clusteringParams
     )
-    //mapSet.toTsvFile("D:/proline/data/test/quanti/debug/master_map_"+ (-mapSet.masterMap.id) +".tsv")
+    //tmpMapSet.toTsvFile("C:/Local/data/test/quanti/debug/master_map_"+ (-tmpMapSet.masterMap.id) +".tsv")
 
     // --- Re-build master map if peptide sequences have been provided ---
     for (pepMap <- peptideByRunIdAndScanNumber) {
@@ -376,7 +373,7 @@ class ExtractMapSet(
       }
 
       this._rebuildMasterMapUsingPeptides(tmpMapSet, peptideByScanId.result, ftClustererByMapId)
-      //mapSet.toTsvFile("D:/proline/data/test/quanti/debug/master_map_with_peps_"+ (-mapSet.masterMap.id) +".tsv")
+      //tmpMapSet.toTsvFile("D:/proline/data/test/quanti/debug/master_map_with_peps_"+ (-tmpMapSet.masterMap.id) +".tsv")
     }
 
     // Re-build child maps in order to be sure they contain master feature children (including clusters)
@@ -915,7 +912,7 @@ class ExtractMapSet(
           mapSetId = tmpMapSet.id,
           rawMapReferences = tmpMapSet.getRawMapIds().map(RawMapIdentifier(_))
         )
-        
+                
         // Re-build child maps in order to be sure they contain master feature children (including clusters)
         tmpMapSet = tmpMapSet.rebuildChildMaps()
     
@@ -924,7 +921,7 @@ class ExtractMapSet(
           val runId = processedMap.runId.get
           processedMap.rawMapReferences = Array(x2RawMapByRunId(runId))
         }
-        
+              
         (tmpMapSet,x2RawMaps)
       } // End of Future
       
@@ -976,6 +973,7 @@ class ExtractMapSet(
       // Synchronize map set detection operations
       val (tmpMapSet,x2RawMaps) = Await.result(mapSetDetectionFuture, Duration.Inf)
       
+      
       // Update feature peakel item IDs
       for (
         x2RawMap <- x2RawMaps;
@@ -992,7 +990,7 @@ class ExtractMapSet(
       
       // Storing features of each detected raw map
       for ((x2RawMap,idx) <- x2RawMaps.zipWithIndex) {
-        logger.info(s"Storing features of raw map #${idx+1} (id=${x2RawMap.id})...")
+        logger.info(s"Storing features of raw map #${idx+1} (id=${x2RawMap.id}, name=${x2RawMap.name})...")
         
         rawMapStorer.featureWriter.insertFeatures(x2RawMap.features, x2RawMap.id, linkToPeakels = true)
         
@@ -1003,11 +1001,11 @@ class ExtractMapSet(
       }
       
       // Memorize processed maps temporary ID
-      val procMapTmpIdByRawMapId = new LongMap[Long](detectorEntityCache.runsCount)
-      for ( (x2RawMap,processedMap) <- x2RawMaps.zip(tmpMapSet.childMaps) ) {
-        procMapTmpIdByRawMapId.put(x2RawMap.id, processedMap.id)
+      val procMapTmpIdByRawMapId = new LongMap[Long](detectorEntityCache.runsCount)      
+      for ( processedMap <- tmpMapSet.childMaps ) {
+        procMapTmpIdByRawMapId.put(processedMap.getRawMaps().head.get.id, processedMap.id)
       }
-  
+
       // --- Persist the corresponding map set ---
       val x2MapSet = CreateMapSet(lcmsDbCtx, mapSetName, tmpMapSet.childMaps)
       
