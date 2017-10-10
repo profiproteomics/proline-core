@@ -37,7 +37,7 @@ object OxidizedPeptideFilterer {
 
 trait IOxidizedPeptideFilter extends IMasterQuantPeptideFiltering with StrictLogging {
   
-  val pattern = """\[O\]""".r.pattern
+  val pattern = """.*\[O\]""".r.pattern
   
   def foreachOxidizedPeptide( masterQuantPeptides: Seq[MasterQuantPeptide])(callback: (MasterQuantPeptide,Peptide) => Unit ): Unit = {
     
