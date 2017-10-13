@@ -238,8 +238,13 @@ class LabelFreeEntitiesSummarizer(
       // Compute the total number of peptide matches
       val pepMatchesCount = qPepIons.map( _.peptideMatchesCount ).sum
       
+      var bestPeptideMatchScore = 0f
+      var bestPeptideMatchId = 0L
+      
       // If a peptide instance id defined for this ion
       val propsOpt = masterPepInstAsOpt.map { masterPepInst =>
+        
+        val peptideId = masterPepInst.peptide.id
         
         // Retrieve the best peptide match id for each quantitative channel
         val bestPeptideMatchIdMapBuilder = scala.collection.immutable.HashMap.newBuilder[Long,Long]
@@ -248,12 +253,18 @@ class LabelFreeEntitiesSummarizer(
           val qcId = qcIdByIdentRsmId(identResultSummary.id)
           val qcIdentPepInstByPepId = identPepInstByQcIdAndPepId(qcId)
           
-          if( qcIdentPepInstByPepId.contains(masterPepInst.peptide.id) ) {
-            val qcIdentPepInst = qcIdentPepInstByPepId(masterPepInst.peptide.id)
+          if(qcIdentPepInstByPepId.contains(peptideId) ) {
+            val qcIdentPepInst = qcIdentPepInstByPepId(peptideId)
             val sameChargePepMatches = qcIdentPepInst.peptideMatches.filter(_.charge == masterFtCharge)
             
             if (sameChargePepMatches.nonEmpty) {
-              bestPeptideMatchIdMapBuilder += qcId -> sameChargePepMatches.maxBy(_.score).id
+              val qcBestPeptideMatch = sameChargePepMatches.maxBy(_.score)
+              bestPeptideMatchIdMapBuilder += qcId -> qcBestPeptideMatch.id
+              
+              if (qcBestPeptideMatch.score > bestPeptideMatchScore) {
+                bestPeptideMatchScore = qcBestPeptideMatch.score
+                bestPeptideMatchId = qcBestPeptideMatch.id
+              }
             }
           }
         }
@@ -272,7 +283,7 @@ class LabelFreeEntitiesSummarizer(
         masterQuantPeptideId = 0,
         resultSummaryId = quantMergedRsmId,
         peptideInstanceId = masterPepInstAsOpt.map(_.id),
-        bestPeptideMatchId = masterPepInstAsOpt.map(_.bestPeptideMatchId),
+        bestPeptideMatchId = if (bestPeptideMatchId > 0) Some(bestPeptideMatchId) else None,
         lcmsMasterFeatureId = Some(masterFt.id),
         selectionLevel = masterFt.selectionLevel,
         quantPeptideIonMap = qPepIonByQcId,

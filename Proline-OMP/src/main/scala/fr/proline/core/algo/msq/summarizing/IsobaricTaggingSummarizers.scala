@@ -133,7 +133,7 @@ class IsobaricTaggingEntitiesSummarizer(
             masterQuantPeptideId = 0,
             resultSummaryId = mergedRsmId,
             peptideInstanceId = masterPepInstIdOpt,
-            bestPeptideMatchId = Some(masterPepInst.bestPeptideMatchId),
+            bestPeptideMatchId = Some(bestPepMatch.id),
             lcmsMasterFeatureId = None,
             unmodifiedPeptideIonId = None,
             selectionLevel = 2,
