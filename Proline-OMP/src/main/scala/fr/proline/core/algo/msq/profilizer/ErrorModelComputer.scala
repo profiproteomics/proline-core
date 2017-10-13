@@ -85,9 +85,17 @@ class AbsoluteErrorModel( val errorDistribution: Seq[AbsoluteErrorBin] ) extends
     val estimatedCv = 100 * this.getStdevForAbundance(mean) / mean
     
     //println("estimatedCv : " + estimatedCv )
+    val log10Mean = math.log10(mean)
+    val intensityCorrFactor = if (log10Mean < 6) 7 - log10Mean else 1 / (1 + log10Mean - 6)
+    println("math.log10(mean) : " + math.log10(mean))
+    println("intensityCorrFactor : " + intensityCorrFactor)
+
     val corrFactor = _calcSigmoidCorrectionFactor(cv, estimatedCv) / fc
     //println("corrFactor : " + corrFactor)
     val correctedCv = cv + corrFactor
+
+    // TODO: add a param in config for intensity based correction
+    //val correctedCv = (cv + corrFactor) * intensityCorrFactor
     //println("correctedCv : " + correctedCv)
     
     //println( List(cv,correctedCv).mkString("\t"))
