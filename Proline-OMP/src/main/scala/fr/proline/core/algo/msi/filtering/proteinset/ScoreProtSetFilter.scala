@@ -21,7 +21,7 @@ class ScoreProtSetFilter(
   val filterParameter = ProtSetFilterParams.SCORE.toString
   val filterDescription = "protein set score filter"
     
-  def getProteinSetValueForFiltering( protSet: ProteinSet ): AnyVal = {
+  def getProteinSetValueForFiltering( protSet: ProteinSet ): Any = {
     protSet.peptideSet.score
   }
   
@@ -39,13 +39,13 @@ class ScoreProtSetFilter(
     props.toMap
   }
 
-  def getNextValue( currentVal: AnyVal ) = currentVal.asInstanceOf[Float] + ScoreProtSetFilter.thresholdIncreaseValue
+  def getNextValue( currentVal: Any ): Any = currentVal.asInstanceOf[Float] + ScoreProtSetFilter.thresholdIncreaseValue
   
-  def getThresholdStartValue(): AnyVal = ScoreProtSetFilter.thresholdStartValue
+  def getThresholdStartValue(): Any = ScoreProtSetFilter.thresholdStartValue
   
-  def getThresholdValue(): AnyVal = scoreThreshold
+  def getThresholdValue(): Any = scoreThreshold
   
-  def setThresholdValue( currentVal: AnyVal ){
+  def setThresholdValue( currentVal: Any ): Unit ={
     scoreThreshold = toFloat(currentVal)
   }
 }

@@ -13,7 +13,7 @@ class PepSeqLengthPSMFilter( var minSeqLength: Int = 0 ) extends IPeptideMatchFi
 
   def getPeptideMatchSequenceLength(pepMatch: PeptideMatch): Int = pepMatch.peptide.sequence.length
   
-  def getPeptideMatchValueForFiltering(pepMatch: PeptideMatch): AnyVal = getPeptideMatchSequenceLength(pepMatch)
+  def getPeptideMatchValueForFiltering(pepMatch: PeptideMatch): Any = getPeptideMatchSequenceLength(pepMatch)
     
   def filterPeptideMatches(pepMatches: Seq[PeptideMatch],incrementalValidation: Boolean,traceability: Boolean ): Unit = {
 
@@ -34,9 +34,9 @@ class PepSeqLengthPSMFilter( var minSeqLength: Int = 0 ) extends IPeptideMatchFi
     props.toMap
   }
   
-  def getThresholdValue(): AnyVal = minSeqLength
+  def getThresholdValue(): Any = minSeqLength
   
-  def setThresholdValue( currentVal: AnyVal ){
+  def setThresholdValue( currentVal: Any ): Unit = {
     minSeqLength = toInt(currentVal)
   }
    

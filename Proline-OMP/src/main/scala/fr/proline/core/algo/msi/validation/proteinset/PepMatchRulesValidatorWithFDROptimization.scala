@@ -141,8 +141,8 @@ class PepMatchRulesValidatorWithFDROptimization(
     
     // Set validation rules probability thresholds using the previously obtained expected ROC point
     val rocPointProps = expectedRocPoint.properties.get
-    pepMatchFilterRule1.setThresholdValue( rocPointProps(ValidationPropertyKeys.RULE_1_THRESHOLD_VALUE).asInstanceOf[AnyVal] )
-    pepMatchFilterRule2.setThresholdValue( rocPointProps(ValidationPropertyKeys.RULE_2_THRESHOLD_VALUE).asInstanceOf[AnyVal] )
+    pepMatchFilterRule1.setThresholdValue(rocPointProps(ValidationPropertyKeys.RULE_1_THRESHOLD_VALUE).asInstanceOf[AnyVal])
+    pepMatchFilterRule2.setThresholdValue(rocPointProps(ValidationPropertyKeys.RULE_2_THRESHOLD_VALUE).asInstanceOf[AnyVal])
     
     // Update validatedProteinSetsCount of peptide instances
     ProteinSetFiltering.updateValidatedProteinSetsCount(targetProtSets)

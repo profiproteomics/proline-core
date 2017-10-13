@@ -434,7 +434,7 @@ class WeightedSpectralCountQuantifier(
             if(pepSet != null) {
 	            pepSet.getPeptideInstances.foreach( pepInst =>{
 	            	val proSetIds = protSetIdByPepIdPerRSMId.getOrElseUpdate(rsmId, new HashMap[Long, ArrayBuffer[Long]]()).getOrElseUpdate(pepInst.peptideId, new ArrayBuffer[Long])
-	    			proSetIds += protSet.id
+	    			    proSetIds += protSet.id
 	    		
 	              if(protSetSCDescr.refRSMPeptidesInfo.pepSpecificIds.contains(pepInst.peptideId)){ //Seen as specific in ref RSM
 	                currentRSMpepSpecif += pepInst.peptideId
@@ -532,7 +532,8 @@ class WeightedSpectralCountQuantifier(
   private def getPeptideSet(rsm : ResultSummary, typicalProteinAcc : String ) : PeptideSet = {
     
       //--- Get RSM Peptide Match/Protein Match information 	     
-      // map : list of ProtMatch Id,accession by PeptideSet     
+      // map : list of ProtMatch Id,accession by PeptideSet
+    //VDS TODO : SHOULD be done once !
       val protMatchesAccListByPepSet: Map[PeptideSet, Seq[(Long, String)]] = createProtMatchesAccByPeptideSet(rsm)
 
 	  var peptideSetForPM: PeptideSet = null
@@ -652,8 +653,8 @@ class WeightedSpectralCountQuantifier(
     val refPepInstanceByPepId = quantClonedMergedRSM.peptideInstances.map(pi => pi.peptideId -> pi).toMap
 
     //     val qPepIonsMapsByrsmId = new HashMap[Long,Map[Long, Array[QuantPeptideIon]]]
-    val forMasterQPepByPepId = new HashMap[Long, scala.collection.mutable.LongMap[QuantPeptide]]
-    val forMasterQProtSetByProtSet = new HashMap[ProteinSet, scala.collection.mutable.LongMap[QuantProteinSet]]
+    val quantPepByQChIdsByPepId = new HashMap[Long, scala.collection.mutable.LongMap[QuantPeptide]]
+    val quantProtSetByQChIdsByProtSet = new HashMap[ProteinSet, scala.collection.mutable.LongMap[QuantProteinSet]]
 
     // returnesValues
     val mqPeptides = new ArrayBuffer[MasterQuantPeptide]
@@ -744,7 +745,7 @@ class WeightedSpectralCountQuantifier(
                 quantPepByPepID.put(pepInst.peptideId, qp)
 
                 //Update complete Map to be used for MasterQuantPeptide creation
-                forMasterQPepByPepId.getOrElseUpdate(pepInst.peptideId, new LongMap[QuantPeptide]()).put(qcId, qp)
+                quantPepByQChIdsByPepId.getOrElseUpdate(pepInst.peptideId, new LongMap[QuantPeptide]()).put(qcId, qp)
 
                 qp
               }
@@ -773,7 +774,7 @@ class WeightedSpectralCountQuantifier(
           )
 
           //Update complete Map to be used for MasterQuantProtei	nSet creation
-          forMasterQProtSetByProtSet.getOrElseUpdate(currentProteinSetWeightStruct.proteinSet, new LongMap[QuantProteinSet]()).put(qcId, quantProteinSet)
+          quantProtSetByQChIdsByProtSet.getOrElseUpdate(currentProteinSetWeightStruct.proteinSet, new LongMap[QuantProteinSet]()).put(qcId, quantProteinSet)
 
         } //End Protein identified in current RSM
         else {
@@ -789,7 +790,7 @@ class WeightedSpectralCountQuantifier(
 
     //Create MasterQuant Object
     logger.debug("  --- Create MasterQuantPeptide  ")
-    forMasterQPepByPepId.foreach(entry => {
+    quantPepByQChIdsByPepId.foreach(entry => {
       mqPeptides += new MasterQuantPeptide(
         id = MasterQuantPeptide.generateNewId,
         peptideInstance = Some(refPepInstanceByPepId(entry._1)),
@@ -801,7 +802,7 @@ class WeightedSpectralCountQuantifier(
     })
 
     logger.debug("  --- Create MasterQuantProteinSet  ")
-    forMasterQProtSetByProtSet.foreach(entry => {
+    quantProtSetByQChIdsByProtSet.foreach(entry => {
       mqProtSets += new MasterQuantProteinSet(
         proteinSet = entry._1,
         quantProteinSetMap = entry._2,

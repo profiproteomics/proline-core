@@ -1,19 +1,13 @@
 package fr.proline.core.algo.msi.filtering.pepmatch
 
-import scala.collection.mutable.HashMap
-import scala.collection.Seq
-import fr.proline.core.algo.msi.validation.MascotValidationHelper
-import fr.proline.core.om.model.msi.{ PeptideMatch }
 import com.typesafe.scalalogging.LazyLogging
-import fr.proline.core.om.model.msi.MsQueryDbSearchProperties
-import scala.collection.script.Reset
-import fr.proline.core.om.model.msi.MsQueryProperties
-import fr.proline.core.algo.msi.filtering.PepMatchFilterParams
-import fr.proline.core.algo.msi.filtering.IOptimizablePeptideMatchFilter
-import fr.proline.core.algo.msi.filtering.FilterPropertyKeys
-import fr.proline.core.algo.msi.filtering.PeptideMatchFiltering
 import fr.profi.util.primitives._
-import fr.proline.core.algo.msi.validation.MascotIonsScoreThresholds
+import fr.proline.core.algo.msi.filtering.{FilterPropertyKeys, IOptimizablePeptideMatchFilter, PepMatchFilterParams, PeptideMatchFiltering}
+import fr.proline.core.algo.msi.validation.MascotValidationHelper
+import fr.proline.core.om.model.msi.{MsQueryProperties, PeptideMatch}
+
+import scala.collection.Seq
+import scala.collection.mutable.HashMap
 
 // TODO: use MascotThresholdTypes enumeration value instead of useHomologyThreshold
 // TODO: usefilterPeptideMatchesDBO
@@ -26,8 +20,8 @@ class MascotPValuePSMFilter(var pValue: Float = 0.05f, var useHomologyThreshold:
 
   val filterDescription = if (useHomologyThreshold) "peptide match Mascot homology thresholds filter using p-value" else "peptide match identity threshold filter using p-value"
 
-  def getPeptideMatchValueForFiltering(pepMatch: PeptideMatch): AnyVal = {
-    if (!pepMatch.msQuery.properties.isDefined  ) {
+  def getPeptideMatchValueForFiltering(pepMatch: PeptideMatch): Any = {
+    if (pepMatch.msQuery.properties.isEmpty  ) {
     	logger.warn(" Filtering error, UNABLE TO CALCULATE P VALUE  (No msQuery.properties) for peptide " + pepMatch.id+" Use pValue = 0.05 ")
     	return 0.05
     }
@@ -36,7 +30,7 @@ class MascotPValuePSMFilter(var pValue: Float = 0.05f, var useHomologyThreshold:
     var useTargetProp = !pepMatch.isDecoy
     
     if(!useTargetProp)  {
-       if(! pepMatch.msQuery.properties.get.getDecoyDbSearch.isDefined ) {
+       if(pepMatch.msQuery.properties.get.getDecoyDbSearch.isEmpty ) {
 		  logger.warn(" Filtering error,  UNABLE TO CALCULATE P VALUE  (No Decoy Search properties) for peptide  " + pepMatch.id+" Use associated target search properties if exist. ")
 		  useTargetProp = true
 		  
@@ -47,7 +41,7 @@ class MascotPValuePSMFilter(var pValue: Float = 0.05f, var useHomologyThreshold:
     }
     
     if(useTargetProp)  {
-    	if(! pepMatch.msQuery.properties.get.getTargetDbSearch.isDefined ) {
+    	if(pepMatch.msQuery.properties.get.getTargetDbSearch.isEmpty ) {
     		logger.warn("Filtering error, UNABLE TO CALCULATE P VALUE  (No Target Search properties ) for peptide  " + pepMatch.id+" Use pValue = 0.05 ")    		
     	} else {
 		  val tRSCandPSM = pepMatch.msQuery.properties.get.getTargetDbSearch.get.getCandidatePeptidesCount
@@ -69,19 +63,19 @@ class MascotPValuePSMFilter(var pValue: Float = 0.05f, var useHomologyThreshold:
 
     val pepMatchesByMsqId = pepMatches.groupBy(_.msQueryId)
     pepMatchesByMsqId.foreach(entry => {
-      if (entry._2 != null && entry._2(0).msQuery.properties.isDefined) {
-        val msQProp: MsQueryProperties = entry._2(0).msQuery.properties.get
+      if (entry._2 != null && entry._2.head.msQuery.properties.isDefined) {
+        val msQProp: MsQueryProperties = entry._2.head.msQuery.properties.get
 
         //---- get Threshold ------
         var targetTh = 0.0
         var decoyTh = 0.0
 
         //Infer IT 
-        if (!msQProp.getTargetDbSearch.isDefined) {
-          logger.warn(" UNABLE TO CALCULATE P VALUE  !getTargetDbSearch!" + entry._2(0).msQueryId)
+        if (msQProp.getTargetDbSearch.isEmpty) {
+          logger.warn(" UNABLE TO CALCULATE P VALUE  !getTargetDbSearch!" + entry._2.head.msQueryId)
         } else {
 
-          val thresholds = MascotValidationHelper.calcPeptideMatchTDThresholds(entry._2(0), pValue)
+          val thresholds = MascotValidationHelper.calcPeptideMatchTDThresholds(entry._2.head, pValue)
 
           if (!useHomologyThreshold) {
             targetTh = thresholds._1.identityThreshold
@@ -99,9 +93,9 @@ class MascotPValuePSMFilter(var pValue: Float = 0.05f, var useHomologyThreshold:
         // !!! Should only set isValidated when false !
         entry._2.foreach(psm => {
           if (psm.isDecoy)
-            psm.isValidated = (psm.isValidated  && psm.score >= decoyTh)
+            psm.isValidated = psm.isValidated && psm.score >= decoyTh
           else
-            psm.isValidated = (psm.isValidated  && psm.score >= targetTh)
+            psm.isValidated = psm.isValidated && psm.score >= targetTh
         })
 
       } // PSM for query exist
@@ -152,7 +146,7 @@ class MascotPValuePSMFilter(var pValue: Float = 0.05f, var useHomologyThreshold:
     props.toMap
   }
 
-  def getNextValue(currentVal: AnyVal) = {
+  def getNextValue(currentVal: Any): Any = {
     if( toFloat(currentVal)<= 0.1f){
        toFloat(currentVal) - minPValuethresholdIncreaseValue
     } else {
@@ -160,11 +154,11 @@ class MascotPValuePSMFilter(var pValue: Float = 0.05f, var useHomologyThreshold:
     }
   }
 
-  def getThresholdStartValue(): AnyVal = pValueStartValue
+  def getThresholdStartValue(): Any = pValueStartValue
 
-  def getThresholdValue(): AnyVal = pValue
+  def getThresholdValue(): Any = pValue
 
-  def setThresholdValue(currentVal: AnyVal) {
+  def setThresholdValue(currentVal: Any): Unit ={
     pValue = toFloat(currentVal)
   }
 }

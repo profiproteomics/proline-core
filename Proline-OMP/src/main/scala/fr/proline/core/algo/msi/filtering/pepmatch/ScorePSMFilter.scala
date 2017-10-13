@@ -1,12 +1,12 @@
 package fr.proline.core.algo.msi.filtering.pepmatch
 
-import scala.collection.mutable.HashMap
-import scala.collection.Seq
 import com.typesafe.scalalogging.LazyLogging
-import fr.proline.core.algo.msi.filtering._
-import fr.proline.core.algo.msi.validation.MascotValidationHelper
-import fr.proline.core.om.model.msi.{PeptideMatch}
 import fr.profi.util.primitives._
+import fr.proline.core.algo.msi.filtering._
+import fr.proline.core.om.model.msi.PeptideMatch
+
+import scala.collection.Seq
+import scala.collection.mutable.HashMap
 
 object ScorePSMFilter {
   val thresholdIncreaseValue = 0.1f
@@ -17,7 +17,7 @@ class ScorePSMFilter(var scoreThreshold: Float = 0.0f, var thresholdStartValue :
   val filterParameter = PepMatchFilterParams.SCORE.toString
   val filterDescription = "peptide match score filter"
     
-  def getPeptideMatchValueForFiltering(pepMatch: PeptideMatch): AnyVal = pepMatch.score
+  def getPeptideMatchValueForFiltering(pepMatch: PeptideMatch): Any = pepMatch.score
   
   def filterPeptideMatches( pepMatches: Seq[PeptideMatch], incrementalValidation: Boolean, traceability: Boolean ): Unit = {
     
@@ -41,13 +41,13 @@ class ScorePSMFilter(var scoreThreshold: Float = 0.0f, var thresholdStartValue :
     props.toMap
   }
 
-  def getNextValue( currentVal: AnyVal ) = toFloat(currentVal) + ScorePSMFilter.thresholdIncreaseValue
+  def getNextValue( currentVal: Any): Any = toFloat(currentVal) + ScorePSMFilter.thresholdIncreaseValue
   
-  def getThresholdStartValue(): AnyVal = thresholdStartValue
+  def getThresholdStartValue(): Any = thresholdStartValue
   
-  def getThresholdValue(): AnyVal = scoreThreshold
+  def getThresholdValue(): Any = scoreThreshold
   
-  def setThresholdValue( currentVal: AnyVal ){    
+  def setThresholdValue( currentVal: Any ): Unit ={
     scoreThreshold = toFloat(currentVal)
   }
 }

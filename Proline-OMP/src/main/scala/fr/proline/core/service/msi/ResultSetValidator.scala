@@ -227,6 +227,7 @@ class ResultSetValidator(
 
     //-- Propagate Validation if asked
     if (propagatePepMatchValidation || propagateProtSetValidation) {
+      appliedPSMFilters.foreach( _.setPropagateMode(true)) // Specify set Propagation mode
       val propagatedPSMFilters =if(propagatePepMatchValidation) Some(appliedPSMFilters) else None
       val propagatedProtSetFilters =if(propagateProtSetValidation) protSetFilters else None
       _propagateToChilds(propagatedPSMFilters, propagatedProtSetFilters, targetRs.id)

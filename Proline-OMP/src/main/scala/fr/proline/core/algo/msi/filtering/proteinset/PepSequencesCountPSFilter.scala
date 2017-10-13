@@ -22,9 +22,9 @@ class PepSequencesCountPSFilter(
     props.toMap
   }
 
-  def getThresholdValue(): AnyVal = minNbrSeq
+  def getThresholdValue(): Any = minNbrSeq
 
-  def setThresholdValue(currentVal: AnyVal) {
+  def setThresholdValue(currentVal: Any): Unit ={
     minNbrSeq = toInt(currentVal)
   }
 

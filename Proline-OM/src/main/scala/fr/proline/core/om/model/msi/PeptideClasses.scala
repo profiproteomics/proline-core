@@ -1,21 +1,19 @@
 package fr.proline.core.om.model.msi
 
-import java.util.regex.Pattern
-import scala.annotation.meta.field
-import scala.beans.BeanProperty
-import scala.collection.mutable.ArrayBuffer
-import scala.collection.mutable.HashMap
-import scala.collection.mutable.ListBuffer
 import com.fasterxml.jackson.annotation.JsonProperty
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize
 import com.fasterxml.jackson.core.`type`.TypeReference
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize
 import com.fasterxml.jackson.module.scala.JsonScalaEnumeration
 import com.typesafe.scalalogging.LazyLogging
+import fr.profi.chemistry.algo.DigestionUtils
+import fr.profi.chemistry.model.Enzyme
 import fr.profi.util.StringUtils.isNotEmpty
 import fr.profi.util.misc.InMemoryIdGen
 import fr.profi.util.ms.massToMoz
-import fr.profi.chemistry.model.Enzyme
-import fr.profi.chemistry.algo.DigestionUtils
+
+import scala.annotation.meta.field
+import scala.beans.BeanProperty
+import scala.collection.mutable.{ArrayBuffer, ListBuffer}
 
 object Peptide extends InMemoryIdGen with LazyLogging {
   
@@ -84,7 +82,7 @@ object Peptide extends InMemoryIdGen with LazyLogging {
           case _ => positionConstraints.get(seqPos)
         }
         
-        if( posConstraint == true ) filteredLocatedPtms += tmpLocatedPtm
+        if( posConstraint ) filteredLocatedPtms += tmpLocatedPtm
       }
       
       filteredLocatedPtms
@@ -100,7 +98,7 @@ object Peptide extends InMemoryIdGen with LazyLogging {
     require( locatedPtms != null, "locatedPtms is null" )
     
     // Return null if no located PTM
-    if( locatedPtms.length == 0 ) {
+    if( locatedPtms.isEmpty ) {
       return ""
       //throw new IllegalArgumentException("can't compute a PTM string using an empty list of located PTMs")
     }
@@ -137,7 +135,7 @@ object Peptide extends InMemoryIdGen with LazyLogging {
     for(seqPos <- putativeSeqPositions ) {
       val locatedPtmStringsOpt = locatedPtmStringBySeqPos.get(seqPos)
       if( locatedPtmStringsOpt.isDefined ) {
-        ptmStringBuilder ++= locatedPtmStringsOpt.get.map( _.toPtmString ).sorted.mkString("")          
+        ptmStringBuilder ++= locatedPtmStringsOpt.get.map( _.toPtmString() ).sorted.mkString("")
       }
     }
     
@@ -176,7 +174,7 @@ object Peptide extends InMemoryIdGen with LazyLogging {
       case e: Exception => Double.NaN
     }
 
-    if (mass.isNaN()) {
+    if (mass.isNaN) {
       throw new Exception("can't compute peptide mass for sequence=" + sequence)
     }
 
@@ -327,26 +325,26 @@ case class PeptideMatch(
   val deltaMoz: Float, // deltaMoz = expMoz - calcMoz
   val isDecoy: Boolean,
   @transient val peptide: Peptide,
-  
+
   // Immutable optional fields
   @JsonProperty val missedCleavage: Int = 0,
   val fragmentMatchesCount: Int = 0,
-  
+
   @transient val msQuery: MsQuery = null, // TODO: require ?
-  
+
   // Mutable optional fields
   var isValidated: Boolean = true, // only defined in the model
   var resultSetId: Long = 0,
   var cdPrettyRank: Int = 0,
   var sdPrettyRank: Int = 0,
-  
+
   protected val childrenIds: Array[Long] = null,
   @transient var children: Option[Array[PeptideMatch]] = null,
-  
+
   var bestChildId: Long = 0,
-  
+
   var properties: Option[PeptideMatchProperties] = None,
-  
+
   @transient var validationProperties: Option[PeptideMatchResultSummaryProperties] = None
   
 ) {
@@ -357,8 +355,8 @@ case class PeptideMatch(
   require( peptide != null, "peptide is null" )
   
   // Define proxy defs (mainly used for serialization purpose)
-  @JsonProperty def msQueryId = this.msQuery.id
-  @JsonProperty def peptideId = this.peptide.id
+  @JsonProperty def msQueryId: Long = this.msQuery.id
+  @JsonProperty def peptideId: Long = this.peptide.id
   
   // Related objects ID getters
   def getChildrenIds(): Array[Long] = { if(children != null && children.isDefined) children.get.map(_.id) else childrenIds  }

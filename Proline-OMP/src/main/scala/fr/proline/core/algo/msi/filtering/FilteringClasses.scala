@@ -57,11 +57,12 @@ trait IFilter extends IFilterConfig {
   
   val filterParameter: String
   val filterDescription: String
+  var isPropagating : Boolean = false
 
   /**
    * Returns the Threshold value that has been set.
    */
-  def getThresholdValue(): AnyVal
+  def getThresholdValue(): Any
 
   /**
    * Returns the Threshold value that has been set with conversion to a Double.
@@ -75,7 +76,17 @@ trait IFilter extends IFilterConfig {
    * is useful for ComputedValidationPSMFilter in order to determine
    * best threshold value to reach specified FDR
    */
-  def setThresholdValue(currentVal: AnyVal)
+  def setThresholdValue(currentVal: Any): Unit
+
+  /**
+    * Specify if the Filter is used in Propagation process. Some definition or
+    * threshold adjustment may be needed
+    *
+    * @param isPropagatingMode
+    */
+  def setPropagateMode(isPropagatingMode : Boolean ): Unit = {
+    this.isPropagating = isPropagatingMode
+  }
 
 }
 
@@ -84,14 +95,14 @@ trait IOptimizableFilter extends IFilter {
   /**
    * Get the higher or lowest (depending on the filter type) threshold value for this filter.
    */
-  def getThresholdStartValue(): AnyVal
+  def getThresholdStartValue(): Any
 
   /**
    * Given a current Threshold value, return the next possible value. This
    * is useful for ComputedValidationPSMFilter in order to determine
    * best threshold value to reach specified FDR
    */
-  def getNextValue(currentVal: AnyVal): AnyVal
+  def getNextValue(currentVal: Any): Any
 
 }
 
@@ -144,7 +155,7 @@ trait IPeptideMatchFilter extends IFilter  {
   /**
    * Returns the value that will be used to filter the peptide match.
    */
-  def getPeptideMatchValueForFiltering(pepMatch: PeptideMatch): AnyVal
+  def getPeptideMatchValueForFiltering(pepMatch: PeptideMatch): Any
 
   
   /**
@@ -236,7 +247,6 @@ trait IProteinSetFilter extends IFilter {
    *
    * Default behavior will be to exclude ProteinSet which do not pass filter parameters
    *
-   * @param proteinSets : All proteinSets.
    * @param incrementalValidation : if incrementalValidation is set to false,
    * all ProteinSet's isValidated property will be explicitly set to true or false.
    * Otherwise, only excluded ProteinSet will be changed by setting their isValidated property to false
@@ -289,7 +299,7 @@ trait IOptimizableProteinSetFilter extends IProteinSetFilter with IOptimizableFi
   /**
    * Returns the value that will be used to filter the protein set.
    */
-  def getProteinSetValueForFiltering(protSet: ProteinSet): AnyVal
+  def getProteinSetValueForFiltering(protSet: ProteinSet): Any
 }
 
 object ResultSummaryFilterBuilder {

@@ -150,8 +150,8 @@ class ProtSetRulesValidatorWithFDROptimization(
     // Set validation rules probability thresholds using the previously obtained expected ROC point
     if(expectedRocPoint.properties.isDefined) {
       val rocPointProps = expectedRocPoint.properties.get
-      protSetFilterRule1.setThresholdValue( rocPointProps(ValidationPropertyKeys.RULE_1_THRESHOLD_VALUE).asInstanceOf[AnyVal] )
-      protSetFilterRule2.setThresholdValue( rocPointProps(ValidationPropertyKeys.RULE_2_THRESHOLD_VALUE).asInstanceOf[AnyVal] )
+      protSetFilterRule1.setThresholdValue(rocPointProps(ValidationPropertyKeys.RULE_1_THRESHOLD_VALUE).asInstanceOf[AnyVal])
+      protSetFilterRule2.setThresholdValue(rocPointProps(ValidationPropertyKeys.RULE_2_THRESHOLD_VALUE).asInstanceOf[AnyVal])
     }
     
     // Validate protein sets identified with a single peptide 
@@ -209,9 +209,7 @@ class ProtSetRulesValidatorWithFDROptimization(
     
     if( rule1ValResults.isDefined ) {
       // --- Set validation rules probability thresholds using the previously obtained expected ROC point ---
-      protSetFilterRule1.setThresholdValue(
-        rule1ValResults.get.finalResult.properties.get(ValidationPropertyKeys.THRESHOLD_VALUE).asInstanceOf[AnyVal]
-      )
+      protSetFilterRule1.setThresholdValue(rule1ValResults.get.finalResult.properties.get(ValidationPropertyKeys.THRESHOLD_VALUE).asInstanceOf[AnyVal])
       
       // Validate protein sets identified with a single peptide 
       protSetFilterRule1.filterProteinSets(singlePepProtSets,true,true)
@@ -221,9 +219,7 @@ class ProtSetRulesValidatorWithFDROptimization(
     }
     
     if( rule2ValResults.isDefined ) {
-      protSetFilterRule2.setThresholdValue(
-        rule2ValResults.get.finalResult.properties.get(ValidationPropertyKeys.THRESHOLD_VALUE).asInstanceOf[AnyVal]
-      )
+      protSetFilterRule2.setThresholdValue(rule2ValResults.get.finalResult.properties.get(ValidationPropertyKeys.THRESHOLD_VALUE).asInstanceOf[AnyVal])
       
       // Validate protein sets identified with multiple peptides
       protSetFilterRule2.filterProteinSets(multiPepProtSets,true,true)
@@ -264,9 +260,7 @@ class ProtSetRulesValidatorWithFDROptimization(
     
     // Apply filter for rule 2 if we have validation results
     if( rule2ValResults.isDefined ) {
-      protSetFilterRule2.setThresholdValue(
-        rule2ValResults.get.finalResult.properties.get(ValidationPropertyKeys.THRESHOLD_VALUE).asInstanceOf[AnyVal]
-      )
+      protSetFilterRule2.setThresholdValue(rule2ValResults.get.finalResult.properties.get(ValidationPropertyKeys.THRESHOLD_VALUE).asInstanceOf[AnyVal])
       
       // Validate protein sets identified with multiple peptides
       protSetFilterRule2.filterProteinSets(multiPepProtSets,true,true)
@@ -295,9 +289,7 @@ class ProtSetRulesValidatorWithFDROptimization(
     // Apply filter for rule 1 if we have validation results
     if( rule1ValResults.isDefined ) {
       // --- Set validation rules probability thresholds using the previously obtained expected ROC point ---
-      protSetFilterRule1.setThresholdValue(
-        rule1ValResults.get.finalResult.properties.get(ValidationPropertyKeys.THRESHOLD_VALUE).asInstanceOf[AnyVal]
-      )
+      protSetFilterRule1.setThresholdValue(rule1ValResults.get.finalResult.properties.get(ValidationPropertyKeys.THRESHOLD_VALUE).asInstanceOf[AnyVal])
       
       // Validate protein sets identified with a single peptide 
       protSetFilterRule1.filterProteinSets(remainingProtSets,true,true)

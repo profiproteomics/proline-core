@@ -22,9 +22,9 @@ class SpecificPeptidesPSFilter(
     props.toMap
   }
 
-  def getThresholdValue(): AnyVal = minNbrPep
+  def getThresholdValue(): Any = minNbrPep
 
-  def setThresholdValue(currentVal: AnyVal) {
+  def setThresholdValue(currentVal: Any): Unit= {
     minNbrPep = toInt(currentVal)
   }
 

@@ -21,9 +21,9 @@ class PeptidesCountPSFilter(var minNbrPep: Int = 1) extends IProteinSetFilter wi
     props.toMap
   }
 
-  def getThresholdValue(): AnyVal = minNbrPep
+  def getThresholdValue(): Any = minNbrPep
 
-  def setThresholdValue(currentVal: AnyVal) {
+  def setThresholdValue(currentVal: Any): Unit ={
     minNbrPep = toInt(currentVal)
   }
 

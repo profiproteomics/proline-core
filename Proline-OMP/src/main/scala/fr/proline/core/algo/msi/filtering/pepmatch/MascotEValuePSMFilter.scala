@@ -11,11 +11,11 @@ abstract class AbstractMascotEValueFilter extends IOptimizablePeptideMatchFilter
   
   var eValueThreshold: Double
   
-  def getPeptideMatchValueForFiltering( pepMatch: PeptideMatch ): AnyVal  
+  def getPeptideMatchValueForFiltering( pepMatch: PeptideMatch ): Any
   protected def updatePeptideMatchProperties( pepMatch: PeptideMatch ): Unit
   
   def getPeptideMatchEValue( pepMatch: PeptideMatch ): Double = {    
-    toDouble(getPeptideMatchValueForFiltering( pepMatch ))
+    toDouble(getPeptideMatchValueForFiltering(pepMatch))
   }
   
   // TODO: maybe we can move this method in IOptimizablePeptideMatchFilter
@@ -60,15 +60,15 @@ abstract class AbstractMascotEValueFilter extends IOptimizablePeptideMatchFilter
     props.toMap
   }
 
-  def getNextValue( currentVal: AnyVal ) = {
+  def getNextValue( currentVal: Any ): Any = {
     toDouble(currentVal) * 0.95
   }
 
-  def getThresholdStartValue(): AnyVal = 1.0
+  def getThresholdStartValue(): Any = 1.0
   
-  def getThresholdValue(): AnyVal = eValueThreshold
+  def getThresholdValue(): Any = eValueThreshold
 
-  def setThresholdValue( currentVal : AnyVal ) = {
+  def setThresholdValue( currentVal : Any ): Unit = {
     eValueThreshold = toDouble(currentVal)
   }
   
@@ -79,7 +79,7 @@ class MascotAdjustedEValuePSMFilter( var eValueThreshold: Double = 1.0 ) extends
   val filterParameter = PepMatchFilterParams.MASCOT_ADJUSTED_EVALUE.toString
   val filterDescription = "peptide match mascot adjusted e-value filter"
     
-  def getPeptideMatchValueForFiltering( pepMatch: PeptideMatch ): AnyVal = {
+  def getPeptideMatchValueForFiltering( pepMatch: PeptideMatch ): Any = {
     MascotValidationHelper.calcPepMatchEvalue( pepMatch )
   }
 

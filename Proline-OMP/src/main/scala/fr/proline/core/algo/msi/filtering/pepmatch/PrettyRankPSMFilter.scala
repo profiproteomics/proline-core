@@ -30,7 +30,7 @@ object PrettyRankPSMFilter {
       val sortedPepmatches = pepMatches.sortWith( _.score > _.score )
       
       var rank = 1
-      var refScore = sortedPepmatches(0).score
+      var refScore = sortedPepmatches.head.score
       
       sortedPepmatches.foreach { pm =>
         // Increase rank if score is too far from reference
@@ -58,7 +58,7 @@ class PrettyRankPSMFilter( var maxPrettyRank: Int = 1 ) extends IPeptideMatchFil
   val filterParameter = PepMatchFilterParams.RANK.toString
   val filterDescription = "peptide match rank filter"
     
-  def getPeptideMatchValueForFiltering(pepMatch: PeptideMatch): AnyVal = pepMatch.rank
+  def getPeptideMatchValueForFiltering(pepMatch: PeptideMatch): Any = pepMatch.rank
 
   // TODO: rerank outside the filter ???
   def filterPeptideMatches( pepMatches: Seq[PeptideMatch], incrementalValidation: Boolean, traceability: Boolean ): Unit = {
@@ -104,9 +104,9 @@ class PrettyRankPSMFilter( var maxPrettyRank: Int = 1 ) extends IPeptideMatchFil
     props.toMap
   }
   
-  def getThresholdValue(): AnyVal = maxPrettyRank
+  def getThresholdValue(): Any = maxPrettyRank
   
-  def setThresholdValue( currentVal : AnyVal ) {
+  def setThresholdValue( currentVal : Any ): Unit= {
     maxPrettyRank = toInt(currentVal)
   }
 
