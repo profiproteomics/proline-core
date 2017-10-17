@@ -1,5 +1,6 @@
 package fr.proline.core.algo.msi.scoring
 
+import fr.proline.core.algo.msi.validation.MascotValidationHelper
 import fr.proline.core.om.model.msi.ResultSummary
 
 /**
@@ -25,6 +26,18 @@ import fr.proline.core.om.model.msi.ResultSummary
 class MascotMudpitScoreUpdater extends IPeptideSetScoreUpdater {
   
   def updateScoreOfPeptideSets( rsm: ResultSummary, params:Any*) {
+    val bestPepMatchesByPepSetId = rsm.getBestValidatedPepMatchesByPepSetId()
+
+    for (peptideSet <- rsm.peptideSets) {
+
+      val peptideSetId = peptideSet.id
+      val bestPepMatches = bestPepMatchesByPepSetId(peptideSetId)
+
+      val pepSetScore = MascotValidationHelper.calcMascotMudpitScore(bestPepMatches)
+      peptideSet.score = pepSetScore
+      peptideSet.scoreType = PepSetScoring.MASCOT_MUDPIT_SCORE.toString
+    }
+
     ()
   }
 }
