@@ -1,7 +1,6 @@
 package fr.proline.core.service.uds
 
 import javax.persistence.EntityManager
-
 import scala.collection.JavaConversions.collectionAsScalaIterable
 import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.LongMap
@@ -9,6 +8,8 @@ import scala.collection.mutable.HashMap
 
 import com.typesafe.scalalogging.LazyLogging
 
+import fr.profi.util.collection._
+import fr.profi.util.primitives._
 import fr.proline.api.service.IService
 import fr.proline.context.{IExecutionContext, DatabaseConnectionContext}
 import fr.proline.core.algo.msi._
@@ -21,6 +22,7 @@ import fr.proline.core.om.model.msi._
 import fr.proline.core.om.provider.msi.impl.SQLResultSetProvider
 import fr.proline.core.orm.uds.{Dataset => UdsDataset}
 import fr.proline.core.service.msi.{ResultSetValidator, ResultSetMerger, ResultSummaryMerger, ValidationConfig}
+import fr.proline.core.om.provider.msi.ResultSetFilter
 
 // Singleton for Proline-Cortex
 object IdentificationTreeValidator {
@@ -91,74 +93,92 @@ class IdentificationTreeValidator(
 
     // Retrieve identification datasets ids
     val udsIdentTreeDS = udsEM.find(classOf[UdsDataset], identTreeId)
+    //println("udsIdentTreeDS.getChildren",udsIdentTreeDS.getChildren)
     val projectId = udsIdentTreeDS.getProject.getId
     val udsIdentDatasets = udsIdentTreeDS.getIdentificationDatasets()
 
     // Retrieve target result sets ids
-    val targetRsIds: Array[Long] = udsIdentDatasets.map(_.getResultSetId.longValue).toArray
+    val targetRsIds = udsIdentDatasets.map(_.getResultSetId.longValue).toArray
     this.logger.debug("TARGET RS ids count = " + targetRsIds.length)
-    this.logger.debug("first RS id = " + targetRsIds(0))
+    this.logger.debug("First TARGET RS id = " + targetRsIds(0))
 
     // Retrieve decoy RS ids if they exists
-    val decoyRsIdsAsOpts = targetRsIds.map { msiDbHelper.getDecoyRsId(_) } filter { _.isDefined }
+    val decoyRsIdByTargetRsId = msiDbHelper.getDecoyRsIdByTargetRsId(targetRsIds)
+    val decoyRsIdsAsOpts = targetRsIds.map { decoyRsIdByTargetRsId.get(_) } filter { _.isDefined }
 
     // Check that if we have decoy data we have the same number of target and decoy result sets
     val (nbTargetRs, nbDecoyRs) = (targetRsIds.length, decoyRsIdsAsOpts.length)
-    if (nbDecoyRs > 0 && nbDecoyRs != nbTargetRs) {
-      throw new Exception("missing decoy result set for one of the provided result sets")
-    }
     this.logger.debug("DECOY RS ids count = " + nbDecoyRs)
+    require(
+      nbDecoyRs == nbTargetRs || nbDecoyRs == 0,
+      "missing decoy result set for one of the provided result sets"
+    )
+    
+    // Try to retrieve the pretty rank filter
+    val rsFilterOpt = if (pepMatchFilters.isEmpty) None
+    else {
+      pepMatchFilters.get.find { filter =>
+        // TODO: rename RANK to PRETTY_RANK
+        filter.filterParameter == PepMatchFilterParams.RANK.toString()
+      } map { rankFilter =>
+        val maxPrettyRank = toInt(rankFilter.getThresholdValue())
+        new ResultSetFilter(maxPeptideMatchPrettyRank = Some(maxPrettyRank))
+      }
+    }
+    if (rsFilterOpt.nonEmpty) logger.debug("Will load result sets using rank filter = "+rsFilterOpt.get.maxPeptideMatchPrettyRank)
+    else logger.debug("Unable to retrieve a rank filter")
     
     // Load result sets
     val rsProvider = new SQLResultSetProvider(msiDbCtx, psDbCtx, udsDbCtx)
     
-    val rsIds = targetRsIds ++ decoyRsIdsAsOpts.map { _.get }
-    // TODO: use the maxRank filter here
-    val (targetRsList, decoyRsList) = rsProvider.getResultSets(rsIds).partition { _.isDecoy == false }
-    val decoyRsById = decoyRsList.map(drs => drs.id -> drs).toMap
-
-    // Link decoy RS to target RS and map RSM by RS id
+    // Create a mapping between result set ids and computed result summaries
     val rsmByRsId = new LongMap[ResultSummary]
-    /*for (targetRsId <- targetRsIds) {
-      val decoyRsIdOpt = msiDbHelper.getDecoyRsId(targetRsId)
-      require( decoyRsIdOpt.isDefined, "decoyrRsIdOpt is not defined" )
-      
-      // TODO: use the maxRank filter here
-      val tdResultSets = rsProvider.getResultSets( Array(targetRsId,decoyRsIdOpt.get) )
-      require( tdResultSets.length == 2, "target/decoy results have not been fetched from MSIdb")
-      */
     
-    for (targetRS <- targetRsList) {
+    // Group target result set ids 3 by 3 (to avoid loading too many result sets at a time)
+    for (targetRsIdGroup <- targetRsIds.grouped(3)) {
       
-      // Link decoy RS to target RS
-      targetRS.decoyResultSet = decoyRsById.get(targetRS.getDecoyResultSetId)
+      val decoyRsIdGroup = targetRsIdGroup.map( decoyRsIdByTargetRsId.get(_) ).withFilter(_.isDefined).map(_.get)
+      val rsIds = targetRsIdGroup ++ decoyRsIdGroup
       
-      this.logger.debug("validating target RS")
-      val rsm = this._validateResultSet(targetRS)
+      logger.info(s"Loading one group of ${rsIds.length} result sets...")
       
-      if( mergeResultSets == false ) {
+      val (targetRsList, decoyRsList) = rsProvider.getResultSets(rsIds, rsFilterOpt).partition { _.isDecoy == false }
+      val decoyRsById = decoyRsList.mapByLong(_.id)
+      
+      for (targetRS <- targetRsList) {
         
-        this.logger.debug("remove non-validated entities from RS and decoy RS")
-
-        val validatedRsOpt = rsm.getValidatedResultSet()
+        val targetRsId = targetRS.id
+        this.logger.debug(s"Current TARGET RS (id=$targetRsId) contains ${targetRS.peptideMatches.length} peptide matches (after filtering).")
         
-        // Replace the result set by the validated one
-        rsm.resultSet = validatedRsOpt
+        // Link decoy RS to target RS
+        targetRS.decoyResultSet = decoyRsById.get(targetRS.getDecoyResultSetId)
         
-        val decoyRsm = rsm.decoyResultSummary.get
-        val validatedDecoyRsOpt = decoyRsm.getValidatedResultSet()
+        this.logger.debug("Validating target result set...")
+        val rsm = this._validateResultSet(targetRS)
         
-        // Set the decoy result set as the validated decoy one
-        validatedRsOpt.get.decoyResultSet = validatedDecoyRsOpt
+        if (mergeResultSets == false) {
+          
+          this.logger.debug("Removing non-validated entities from target RS and decoy RS...")
+          val validatedRsOpt = rsm.getValidatedResultSet()
+          
+          // Replace the result set by the validated one
+          rsm.resultSet = validatedRsOpt
+          
+          val decoyRsm = rsm.decoyResultSummary.get
+          val validatedDecoyRsOpt = decoyRsm.getValidatedResultSet()
+          
+          // Set the decoy result set as the validated decoy one
+          validatedRsOpt.get.decoyResultSet = validatedDecoyRsOpt
+          
+          // Do the same in the decoy result summary
+          decoyRsm.resultSet = validatedDecoyRsOpt
+        }
         
-        // Do the same in the decoy result summary
-        decoyRsm.resultSet = validatedDecoyRsOpt
+        rsmByRsId += targetRsId -> rsm
       }
-      
-      rsmByRsId += targetRS.id -> rsm
     }
 
-    // Link result summaries to the corresponding dataset id
+    // Link result summaries to the corresponding dataset id in UDSdb
     for (udsIdentDataset <- udsIdentDatasets) {
       val rsId = udsIdentDataset.getResultSetId
       udsIdentDataset.setResultSummaryId(rsmByRsId(rsId).id)
@@ -179,17 +199,16 @@ class IdentificationTreeValidator(
     } else {
       BuildTDAnalyzer(useTdCompetition, rs, None)
     }
+    
+    val linkTargetRsToFilter = (filter: IPeptideMatchFilter) => _linkTargetRsToFilter(filter, rs)
 
-    //Test if there are some IFilterNeedingResultSet in Flilters.
-    if(pepMatchFilters.isDefined){
-      pepMatchFilters.get.foreach(currentFilter=>{
-        if(currentFilter.isInstanceOf[IFilterNeedingResultSet])
-          currentFilter.asInstanceOf[IFilterNeedingResultSet].setTargetRS(rs)
-      })
-    }    
-    if(pepMatchValidator.isDefined && pepMatchValidator.get.validationFilter.isInstanceOf[IFilterNeedingResultSet])
-      pepMatchValidator.get.validationFilter.asInstanceOf[IFilterNeedingResultSet].setTargetRS(rs)
-      
+    // Test if there are some IFilterNeedingResultSet in Flilters.
+    if (pepMatchFilters.isDefined) {
+      pepMatchFilters.get.foreach(linkTargetRsToFilter)
+    }
+    
+    if(pepMatchValidator.isDefined) linkTargetRsToFilter(pepMatchValidator.get.validationFilter)
+    
     // Instantiate a result set validator
     val rsValidator = new ResultSetValidator(
       execContext = execContext,
@@ -206,6 +225,13 @@ class IdentificationTreeValidator(
 
     rsValidator.validatedTargetRsm
   }
+  
+  private def _linkTargetRsToFilter(filter: IPeptideMatchFilter, rs: ResultSet) {
+    filter match {
+      case filterNeedingRS: IFilterNeedingResultSet => filterNeedingRS.setTargetRS(rs)
+      case _ => ()
+    }
+  }
 
   /**
    * Validates dataset tree recursively from leaves to root
@@ -213,7 +239,7 @@ class IdentificationTreeValidator(
   private def _validateDatasetTree(udsEM: EntityManager, udsDatasets: List[UdsDataset], rsmByRsId: LongMap[ResultSummary]) {
     if (udsDatasets.length == 1 && udsDatasets(0).getParentDataset == null) return
 
-    this.logger.warn("Validating tree node with " + udsDatasets.length + " dataset(s)")
+    this.logger.info(s"Validating tree node with ${udsDatasets.length} dataset(s)")
 
     // Group RSMs by parent DS id
     val rsmsByUdsParentDs = new HashMap[UdsDataset, ArrayBuffer[ResultSummary]]
@@ -277,12 +303,7 @@ class IdentificationTreeValidator(
         BuildTDAnalyzer(useTdCompetition, mergedTargetRs, None)
       }
       
-      def linkTargetRsToFilter(filter: IPeptideMatchFilter) {
-        filter match {
-          case filterNeedingRS: IFilterNeedingResultSet => filterNeedingRS.setTargetRS(mergedTargetRs)
-          case _ => ()
-        }
-      }
+      val linkTargetRsToFilter = (filter: IPeptideMatchFilter) => _linkTargetRsToFilter(filter, mergedTargetRs)
 
       // Test if there are some IFilterNeedingResultSet in Filters
       if (pepMatchFilters.isDefined) {
