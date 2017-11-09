@@ -54,11 +54,9 @@ case class ExperimentalDesignSetup(
     
     val gNumBySNum = (for( (gNum,sNums) <- sampleNumbersByGroupNumber; sNum <- sNums) yield sNum -> gNum).toMap
 
-    quantChannelsBySampleNumber.flatMap { case (sNum,qcs) =>
-      val gNum = gNumBySNum(sNum)
-      qcs.map { qc => gNum }
-    }
+    qcSampleNumbers.map(gNumBySNum(_))
   } toArray
+  
   val sampleCount = expDesign.biologicalSamples.length
   val samplesQcCount = expDesign.biologicalSamples.map( s => quantChannelsBySampleNumber(s.number).length )
 
