@@ -106,8 +106,11 @@ class PgPeakelWriter(lcmsDbCtx: LcMsDbConnectionContext) extends IPeakelWriter w
       
       // End of BULK copy
       val nbInsertedPeakels = pgBulkLoader.endCopy()
+      assert( nbInsertedPeakels == peakelsCount, "nbInsertedPeakels != peakelsCount")
       
       logger.info(s"BULK insert of $nbInsertedPeakels peakels completed !")
+      
+      if (nbInsertedPeakels == 0) return LongMap.empty[LongMap[Long]]
 
       // Move TMP table content to MAIN table
       /*logger.info(s"move TMP table $tmpPeakelTableName into MAIN ${LcmsDbPeakelTable.name} table")
@@ -125,6 +128,7 @@ class PgPeakelWriter(lcmsDbCtx: LcMsDbConnectionContext) extends IPeakelWriter w
       val whereClause = rawMapIds.map(id => s"map_id=$id").mkString(" OR ")
       
       var idMzPairIdx = 0
+      
       lcmsEzDBC.selectAndProcess(
         s"SELECT id, moz, map_id FROM ${LcmsDbPeakelTable.name} WHERE $whereClause"
       ) { r =>
