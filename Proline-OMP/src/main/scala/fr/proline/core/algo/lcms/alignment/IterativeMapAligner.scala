@@ -1,5 +1,7 @@
 package fr.proline.core.algo.lcms.alignment
 
+import scala.collection.mutable.LongMap
+
 import com.typesafe.scalalogging.LazyLogging
 
 import fr.profi.util.math.getMedianObject
@@ -8,17 +10,21 @@ import fr.proline.core.om.model.lcms._
 
 class IterativeMapAligner extends AbstractLcmsMapAligner with LazyLogging {
 
-  def computeMapAlignments(lcmsMaps: Seq[ProcessedMap], alnParams: AlignmentParams): AlignmentResult = {
+  def computeMapAlignmentsUsingCustomFtMapper(
+    lcmsMaps: Seq[ProcessedMap],
+    alnParams: AlignmentParams
+  )(ftMapper: (Seq[Feature],Seq[Feature]) => LongMap[_ <: Seq[Feature]]): AlignmentResult = {
 
     // Select randomly a reference map
     val refMapRandomIndex = (math.random * lcmsMaps.length).toInt
     val randomRefMap = lcmsMaps(refMapRandomIndex)
 
-    this.findBestMapAlignments(lcmsMaps, randomRefMap, alnParams, 1)
+    this.findBestMapAlignments(lcmsMaps, ftMapper, randomRefMap, alnParams, 1)
   }
 
   private def findBestMapAlignments(
     lcmsMaps: Seq[ProcessedMap],
+    ftMapper: (Seq[Feature],Seq[Feature]) => LongMap[_ <: Seq[Feature]],
     alnRefMap: ProcessedMap,
     alnParams: AlignmentParams,
     iterationNum: Int
@@ -29,7 +35,7 @@ class IterativeMapAligner extends AbstractLcmsMapAligner with LazyLogging {
     val alnRefMapId = alnRefMap.id
 
     // Iterate over maps to compute alignments with the random or new reference map
-    val mapAlnSets = this.computeMapAlnSets(lcmsMaps, alnRefMap, alnParams)
+    val mapAlnSets = this.computeMapAlnSets(lcmsMaps, ftMapper, alnRefMap, alnParams)
 
     // Determine the best alignment reference map using the previously computed alignements
     logger.info("determining best alignment reference map (#iteration=" + iterationNum + ")...")
@@ -40,19 +46,20 @@ class IterativeMapAligner extends AbstractLcmsMapAligner with LazyLogging {
     if (newAlnRefMap.id == alnRefMapId) {
       return AlignmentResult(newAlnRefMap.id, mapAlnSets.toArray)
     } else if (iterationNum >= maxIterNum) {
-      // Compute the feature alignments again using the new reference map      
-      val mapAlnSets = this.computeMapAlnSets(lcmsMaps, newAlnRefMap, alnParams)
+      // Compute the feature alignments again using the new reference map
+      val mapAlnSets = this.computeMapAlnSets(lcmsMaps, ftMapper, newAlnRefMap, alnParams)
       return AlignmentResult(newAlnRefMap.id, mapAlnSets.toArray)
     } else {
 
       // Compute the map alignments again using the new reference map
-      return this.findBestMapAlignments(lcmsMaps, newAlnRefMap, alnParams, iterationNum + 1)
+      return this.findBestMapAlignments(lcmsMaps, ftMapper, newAlnRefMap, alnParams, iterationNum + 1)
     }
 
   }
 
   private def computeMapAlnSets(
     lcmsMaps: Seq[ProcessedMap],
+    ftMapper: (Seq[Feature],Seq[Feature]) => LongMap[_ <: Seq[Feature]],
     alnRefMap: ProcessedMap,
     alnParams: AlignmentParams
   ): Seq[MapAlignmentSet] = {
@@ -61,7 +68,7 @@ class IterativeMapAligner extends AbstractLcmsMapAligner with LazyLogging {
     // Iterate over maps to compute alignments with the random or new reference map
     lcmsMaps
       .withFilter { _.id != alnRefMap.id }
-      .map { this.computePairwiseAlnSet(alnRefMap, _, alnParams) }
+      .map { this.computePairwiseAlnSet(alnRefMap, _, ftMapper, alnParams) }
       .withFilter { _.isDefined }
       .map { _.get }
   }

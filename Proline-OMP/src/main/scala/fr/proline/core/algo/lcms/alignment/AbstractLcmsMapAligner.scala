@@ -1,34 +1,67 @@
 package fr.proline.core.algo.lcms.alignment
 
+import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.HashMap
+import scala.collection.mutable.LongMap
+
 import com.typesafe.scalalogging.LazyLogging
+
+import fr.profi.util.collection._
 import fr.proline.core.algo.lcms.AlignmentParams
+import fr.proline.core.algo.lcms.AlnSmoother
+import fr.proline.core.algo.lcms.FeatureMapper
 import fr.proline.core.algo.lcms.FeatureMappingParams
 import fr.proline.core.om.model.lcms._
 
 case class AlignmentResult( alnRefMapId: Long, mapAlnSets: Array[MapAlignmentSet] )
 
 abstract class AbstractLcmsMapAligner extends LazyLogging {
-  
-  import scala.collection.mutable.ArrayBuffer
-  import fr.proline.core.algo.lcms.AlnSmoother
-  import fr.proline.core.algo.lcms.FeatureMapper
 
-  def computeMapAlignments( lcmsMaps: Seq[ProcessedMap], alnParams: AlignmentParams ): AlignmentResult
-  def determineAlnReferenceMap(lcmsMaps: Seq[ProcessedMap], mapAlnSets: Seq[MapAlignmentSet], currentRefMap: ProcessedMap): ProcessedMap
+  def computeMapAlignmentsUsingCustomFtMapper(
+    lcmsMaps: Seq[ProcessedMap],
+    alnParams: AlignmentParams
+  )(ftMapper: (Seq[Feature],Seq[Feature]) => LongMap[_ <: Seq[Feature]]): AlignmentResult
   
-  def computePairwiseAlnSet( map1: ProcessedMap, map2: ProcessedMap, alnParams: AlignmentParams ): Option[MapAlignmentSet] = {
+  def determineAlnReferenceMap(
+    lcmsMaps: Seq[ProcessedMap],
+    mapAlnSets: Seq[MapAlignmentSet],
+    currentRefMap: ProcessedMap
+  ): ProcessedMap
+  
+  def computeMapAlignments(
+    lcmsMaps: Seq[ProcessedMap],
+    alnParams: AlignmentParams
+  ): AlignmentResult = {
+    this.computeMapAlignmentsUsingCustomFtMapper(lcmsMaps,alnParams) { (map1Features, map2Features) =>
+      FeatureMapper.computePairwiseFtMapping( map1Features, map2Features, alnParams.ftMappingParams )
+    }
+  }
+  
+  protected def computePairwiseAlnSet(
+    map1: ProcessedMap,
+    map2: ProcessedMap,
+    ftMapper: (Seq[Feature],Seq[Feature]) => LongMap[_ <: Seq[Feature]],
+    alnParams: AlignmentParams
+  ): Option[MapAlignmentSet] = {
     
     val massInterval = alnParams.massInterval
     //val timeInterval = alnParams.timeInterval
     
     val( map1Features, map2Features ) = ( map1.features, map2.features )
-    val ftMapping = FeatureMapper.computePairwiseFtMapping( map1Features, map2Features, alnParams.ftMappingParams )
+    val ftMapping = ftMapper( map1Features, map2Features)
     
-    val map1FtById = map1Features.map { ft => (ft.id -> ft) } toMap
+    val map1FtById = map1Features.mapByLong(_.id)
+    
+    /*
+    println("*****")
+    for ((map1FtId,matchingFts) <- ftMapping; val map1Ft = map1FtById(map1FtId); matchingFt <- matchingFts) {
+     println(s"${map1Ft.elutionTime}\t${matchingFt.elutionTime}")
+    }
+    println("#####")
+    */
         
     // two possibilities: keep nearest mass match or exclude matching conflicts (more than one match)
-    val landmarksByMassIdx = new HashMap[Long,ArrayBuffer[Landmark]]
+    val landmarksByMassIdx = new LongMap[ArrayBuffer[Landmark]]
     
     for( (map1FtId, matchingFeatures) <- ftMapping ) {
       // method 2: exclude conflicts
@@ -48,7 +81,7 @@ abstract class AbstractLcmsMapAligner extends LazyLogging {
     // Compute feature alignments
     val ftAlignments = new ArrayBuffer[MapAlignment](0)
    
-    for( (massRangeIdx,landmarks) <- landmarksByMassIdx if landmarks.isEmpty == false ) {
+    for ((massRangeIdx,landmarks) <- landmarksByMassIdx if landmarks.isEmpty == false) {
       
       val landmarksSortedByTime = landmarks.sortBy( _.time )
       var smoothedLandmarks = alnSmoother.smoothLandmarks( landmarksSortedByTime, alnParams.smoothingParams )
@@ -86,7 +119,7 @@ abstract class AbstractLcmsMapAligner extends LazyLogging {
     }
     
     if( ftAlignments.isEmpty ) {
-      this.logger.warn("can't compute map alignment set between map #"+ map1.id +" and map#"+ map2.id)
+      this.logger.warn(s"can't compute map alignment set between map #${map1.id}and map #${map2.id}")
       None
     }
     else Some(

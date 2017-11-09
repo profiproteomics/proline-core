@@ -20,7 +20,7 @@ class TimeWindowSmoother extends IAlnSmoother {
     // last landmark time
     val totalTime = landmarksSortedByTime(nbLandmarks-1).time
     
-    val newLandmarks = new ArrayBuffer[Landmark](0)
+    val newLandmarks = new ArrayBuffer[Landmark](nbLandmarks)
     
     // Define an anonymous function for time window processing
     val processWindowFn = new Function2[Float, Float, Unit] {
@@ -30,17 +30,17 @@ class TimeWindowSmoother extends IAlnSmoother {
         var nextLandmarkTime = minVal
         var landmarkIdx = landmarksSortedByTime.indexWhere(_.time >= minVal)
         
-        val landmarkGroup = new ArrayBuffer[Landmark](0)
-        while( landmarkIdx < nbLandmarks && landmarksSortedByTime(landmarkIdx).time < maxVal ) {
-          
+        val landmarkGroup = new ArrayBuffer[Landmark](100)
+        while (landmarkIdx < nbLandmarks && landmarksSortedByTime(landmarkIdx).time < maxVal) {
+
           landmarkGroup += landmarksSortedByTime(landmarkIdx)
-          
+
           landmarkIdx += 1
         }
-      
+
         // If the landmark group is filled enough
-        if( landmarkGroup.length >= minWindowLandmarks ) {        
-          val medianLm = computeMedianLandmark( landmarkGroup )
+        if (landmarkGroup.length >= minWindowLandmarks) {
+          val medianLm = computeMedianLandmark(landmarkGroup)
           newLandmarks += medianLm
         }
       }

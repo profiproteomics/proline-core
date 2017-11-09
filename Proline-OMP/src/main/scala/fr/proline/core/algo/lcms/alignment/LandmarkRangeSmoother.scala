@@ -16,7 +16,7 @@ class LandmarkRangeSmoother extends IAlnSmoother {
     val nbLandmarks = landmarks.length
     val landmarksSortedByTime = landmarks.toList.sortBy( _.time )
     
-    val newLandmarks = new ArrayBuffer[Landmark](0)
+    val newLandmarks = new ArrayBuffer[Landmark](nbLandmarks)
     
     // Define an anonymous function for landmark window processing
     val processWindowFn = new Function2[Float, Float, Unit] {
@@ -24,18 +24,17 @@ class LandmarkRangeSmoother extends IAlnSmoother {
       def apply(minVal: Float, maxVal: Float): Unit = {
         
         val minIndex = minVal.toInt
-        val maxIndex = if( maxVal < nbLandmarks ) maxVal.toInt else nbLandmarks
-        
-        val landmarkGroup = new ArrayBuffer[Landmark](0)
-        for( index <- minIndex until maxIndex ) {
+        val maxIndex = if (maxVal < nbLandmarks) maxVal.toInt else nbLandmarks
+
+        val landmarkGroup = new ArrayBuffer[Landmark](1 + maxIndex - minIndex)
+        for (index <- minIndex until maxIndex) {
           landmarkGroup += landmarksSortedByTime(index)
         }
-        
+
         // If the landmark group is completely filled
-        if( landmarkGroup.length == smoothingWindowSize ) {
-        
-          val medianLm = computeMedianLandmark( landmarkGroup )
-          newLandmarks += medianLm          
+        if (landmarkGroup.length == smoothingWindowSize) {
+          val medianLm = computeMedianLandmark(landmarkGroup)
+          newLandmarks += medianLm
         }
         
         ()

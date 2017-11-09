@@ -2,6 +2,7 @@ package fr.proline.core.algo.lcms.alignment
 
 import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.HashMap
+import scala.collection.mutable.LongMap
 
 import fr.profi.util.collection._
 import fr.profi.util.math.combinations
@@ -11,7 +12,10 @@ import fr.proline.core.om.model.lcms._
 
 class ComprehensiveMapAligner extends AbstractLcmsMapAligner {
 
-  def computeMapAlignments( lcmsMaps: Seq[ProcessedMap], alnParams: AlignmentParams ): AlignmentResult = {
+  def computeMapAlignmentsUsingCustomFtMapper(
+    lcmsMaps: Seq[ProcessedMap],
+    alnParams: AlignmentParams
+  )(ftMapper: (Seq[Feature],Seq[Feature]) => LongMap[_ <: Seq[Feature]]): AlignmentResult = {
     
     val nbMaps = lcmsMaps.length
     
@@ -26,7 +30,7 @@ class ComprehensiveMapAligner extends AbstractLcmsMapAligner {
       val map1 = mapById(mapIdPair(0))
       val map2 = mapById(mapIdPair(1))
       
-      val mapAlnSetOpt = this.computePairwiseAlnSet( map1, map2, alnParams )
+      val mapAlnSetOpt = this.computePairwiseAlnSet( map1, map2, ftMapper, alnParams )
       if (mapAlnSetOpt.isDefined) mapAlnSets += mapAlnSetOpt.get
     }
     

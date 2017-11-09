@@ -1,41 +1,47 @@
 package fr.proline.core.algo.lcms
 
+import scala.collection.mutable.LongMap
+
+import fr.profi.util.collection._
+
 object FeatureMapper {
   
   import scala.collection.mutable.ArrayBuffer
   import fr.proline.core.om.model.lcms._
   import fr.profi.util.ms.calcMozTolInDalton
   
-  def computePairwiseFtMapping ( map1Features: Seq[Feature],
-                                 map2Features: Seq[Feature],
-                                 methodParams: FeatureMappingParams,
-                                 isChargeTolerant: Boolean = false ): Map[Long,Seq[Feature]]=  {
+  def computePairwiseFtMapping(
+    map1Features: Seq[Feature],
+    map2Features: Seq[Feature],
+    methodParams: FeatureMappingParams,
+    isChargeTolerant: Boolean = false
+  ): LongMap[ArrayBuffer[Feature]] = {
     
     val mozTol = methodParams.mozTol
     val mozTolUnit = methodParams.mozTolUnit
     val timeTol = methodParams.timeTol
     
     // Group features by charge
-    var map1FtsByCharge = Map.empty[Int,Seq[Feature]]
-    var map2FtsByCharge = Map.empty[Int,Seq[Feature]]
-    var chargeStates = Array.empty[Int]
+    var map1FtsByCharge = LongMap.empty[Seq[Feature]]
+    var map2FtsByCharge = LongMap.empty[Seq[Feature]]
+    var chargeStates = Array.empty[Long]
     
-    if( isChargeTolerant == false ) {
-      map1FtsByCharge = map1Features.groupBy( _.charge )
-      map2FtsByCharge = map2Features.groupBy( _.charge )
+    if (isChargeTolerant == false) {
+      map1FtsByCharge = map1Features.groupByLong( _.charge )
+      map2FtsByCharge = map2Features.groupByLong( _.charge )
       chargeStates = (map1FtsByCharge.keys.toArray ++ map2FtsByCharge.keys).distinct
     } else {
       // Use a zero charge to marge all charge states
-      map1FtsByCharge = Map( 0 -> map1Features )
-      map2FtsByCharge = Map( 0 -> map2Features ) 
-      chargeStates = Array( 0 )
+      map1FtsByCharge = LongMap( 0L -> map1Features )
+      map2FtsByCharge = LongMap( 0L -> map2Features ) 
+      chargeStates = Array( 0L )
     }
     
-    val ftMapping = new collection.mutable.HashMap[Long,ArrayBuffer[Feature]] // ft1Id => Array(ft2) 
+    val ftMapping = new collection.mutable.LongMap[ArrayBuffer[Feature]] // ft1Id => Array(ft2) 
 
-    for( chargeState <- chargeStates ) {
+    for (chargeState <- chargeStates) {
 
-      if( map1FtsByCharge.contains(chargeState) && map2FtsByCharge.contains(chargeState) ) {
+      if (map1FtsByCharge.contains(chargeState) && map2FtsByCharge.contains(chargeState)) {
         
         val map1SameChargeFts = map1FtsByCharge(chargeState)
         val map2SameChargeFts = map2FtsByCharge(chargeState)
@@ -45,9 +51,9 @@ object FeatureMapper {
         //print "nb m2 ft: ". scalar(map2_ftGroup) ."\n"
       
         // Group map2 features by m/z integer (truncated, not rounded)
-        val map2FtsGroupedByMoz = map2SameChargeFts.groupBy( _.moz.toInt )
+        val map2FtsGroupedByMoz = map2SameChargeFts.groupByLong( _.moz.toInt )
         
-        for( map1Ft <- map1SameChargeFts ) {
+        for (map1Ft <- map1SameChargeFts) {
           
           // Define some vars
           val map1FtId = map1Ft.id
@@ -77,7 +83,7 @@ object FeatureMapper {
           // Compute m/z tolerance in daltons
           val mozTolInDalton = calcMozTolInDalton( map1FtMoz, mozTol, mozTolUnit )
           
-          for( map2Ft <- sameMozRangeMap2Fts ) {
+          for (map2Ft <- sameMozRangeMap2Fts) {
             
             val deltaMoz = math.abs(map1FtMoz - map2Ft.moz)
             val deltaTime = math.abs(map1FtTime - map2Ft.getCorrectedElutionTimeOrElutionTime)
@@ -94,7 +100,7 @@ object FeatureMapper {
       }
     }
     
-    ftMapping.toMap
+    ftMapping
   }
 
 }
