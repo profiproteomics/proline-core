@@ -46,7 +46,7 @@ trait MasterQuantComponent[A <: QuantComponent] extends Item {
     if( quantCompOpt.isEmpty ) 0 else quantCompOpt.get.peptideMatchesCount
   }
   
-  protected def getQuantComponentRawAbundance(quantChannelId: Long, applySelectionFilter: Boolean = false): Float = {
+  protected def getQuantComponentRawAbundance(quantChannelId: Long, applySelectionFilter: Boolean): Float = {
     val quantCompOpt = this.getQuantComponentMap.get(quantChannelId)
     if (quantCompOpt.isEmpty) Float.NaN
     else {
@@ -65,7 +65,7 @@ trait MasterQuantComponent[A <: QuantComponent] extends Item {
     quantChannelIds.map( getQuantComponentPepMatchesCount(_) )
   }
   
-  def getRawAbundancesForQuantChannels(quantChannelIds: Array[Long], applySelectionFilter: Boolean = true): Array[Float] = {   
+  def getRawAbundancesForQuantChannels(quantChannelIds: Array[Long], applySelectionFilter: Boolean = false): Array[Float] = {
     quantChannelIds.map( getQuantComponentRawAbundance(_, applySelectionFilter) )
   }
   
@@ -428,7 +428,7 @@ case class MasterQuantPeptide(
     this.getQuantPeptidePepMatchesCount(quantChannelId)
   }
   
-  def getQuantPeptideRawAbundance( quantChannelId: Long, applySelectionFilter: Boolean = true ): Float = {
+  def getQuantPeptideRawAbundance( quantChannelId: Long, applySelectionFilter: Boolean = false ): Float = {
     this.getQuantComponentRawAbundance(quantChannelId, applySelectionFilter)
   }
   
