@@ -46,10 +46,10 @@ class SQLQuantResultSummaryProvider(
   }*/
   
   // TODO: find a way to handle master quant reporter ions
-  def getQuantResultSummaries( quantRsmIds: Seq[Long], quantChannelIds: Seq[Long], loadResultSet: Boolean ): Array[QuantResultSummary] = {
+  def getQuantResultSummaries( quantRsmIds: Seq[Long], quantChannelIds: Seq[Long], loadResultSet: Boolean, loadProteinMatches: Option[Boolean] = None): Array[QuantResultSummary] = {
     if( quantRsmIds.isEmpty ) return Array()
     
-    val rsms = this.getResultSummaries(quantRsmIds, loadResultSet)
+    val rsms = this.getResultSummaries(quantRsmIds, loadResultSet, loadProteinMatches)
     
     val pepInstByMQPepId = ( for( 
       rsm <- rsms; 

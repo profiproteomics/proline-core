@@ -1,5 +1,6 @@
 package fr.proline.core.om.provider.msi.impl
 
+import fr.profi.util.collection._
 import fr.profi.util.serialization.ProfiJson
 import fr.profi.util.misc.MapIfNotNull
 import fr.proline.context._
@@ -9,11 +10,7 @@ import fr.proline.core.dal.tables.msi.MsiDbResultSummaryTable
 import fr.proline.core.dal.tables.SelectQueryBuilder2
 import fr.proline.core.dal.tables.SelectQueryBuilder._
 import fr.proline.core.dal.helper.MsiDbHelper
-import fr.proline.core.om.model.msi.ProteinSet
-import fr.proline.core.om.model.msi.ResultSet
-import fr.proline.core.om.model.msi.ResultSummary
-import fr.proline.core.om.model.msi.ResultSummaryProperties
-import fr.proline.core.om.model.msi.ValidatedResultSetBuilder
+import fr.proline.core.om.model.msi._
 import fr.proline.core.om.provider.msi.IResultSummaryProvider
 
 class SQLResultSummaryProvider(
@@ -28,11 +25,13 @@ class SQLResultSummaryProvider(
 
   val RSMCols = MsiDbResultSummaryTable.columns
 
-  def getResultSummaries(rsmIds: Seq[Long], loadResultSet: Boolean): Array[ResultSummary] = {
+  def getResultSummaries(rsmIds: Seq[Long], loadResultSet: Boolean, loadProteinMatches: Option[Boolean] = None): Array[ResultSummary] = {
     if (rsmIds.isEmpty) return Array()
 
     import fr.profi.util.primitives._
     import fr.profi.util.sql.StringOrBoolAsBool._
+    
+    val loadProtMatches = loadProteinMatches.getOrElse(loadResultSet)
 
     val pepMatchProvider = new SQLPeptideMatchProvider(msiDbCtx, psDbCtx)
     val protMatchProvider = new SQLProteinMatchProvider(msiDbCtx)
@@ -74,21 +73,11 @@ class SQLResultSummaryProvider(
         val propertiesAsJSON = r.getString(RSMCols.SERIALIZED_PROPERTIES)
         val properties = MapIfNotNull(propertiesAsJSON) { ProfiJson.deserialize[ResultSummaryProperties](_) }
         
-        val rsId = toLong(r.getAny(RSMCols.RESULT_SET_ID))
-        
-        var rsAsOpt = Option.empty[ResultSet]
-        if (loadResultSet) {
-          require(udsDbCtx != null, "An UDSdb context must be provided")
-          
-          val pepMatches = pepMatchProvider.getResultSummaryPeptideMatches(rsmId)
-          val pepMatchById = pepMatches.view.map( p => p.id -> p ).toMap
+        // Load protein matches if requested
+        val protMatches = if (!loadProtMatches) Array.empty[ProteinMatch]
+        else {
           val protMatches = protMatchProvider.getResultSummariesProteinMatches(Array(rsmId))
-          val protMatchById = protMatches.view.map( p => p.id -> p ).toMap
-         
-          // Link peptide matches to peptide instances
-          rsmPepInsts.foreach { pepInst =>
-            pepInst.peptideMatches = pepInst.getPeptideMatchIds.map( pepMatchById(_) )
-          }
+          val protMatchById = protMatches.mapByLong(_.id)
           
           // Link protein matches to protein sets
           rsmProtSets.foreach { protSet =>
@@ -104,6 +93,23 @@ class SQLResultSummaryProvider(
             } else {
               logger.warn(s"Representative ProteinMatch (id=$reprProtMatchId) should belong to this ProteinSet sameset !")
             }
+          }
+          
+          protMatches
+        }
+        
+        val rsId = r.getLong(RSMCols.RESULT_SET_ID)
+        
+        var rsAsOpt = Option.empty[ResultSet]
+        if (loadResultSet) {
+          require(udsDbCtx != null, "An UDSdb context must be provided")
+          
+          val pepMatches = pepMatchProvider.getResultSummaryPeptideMatches(rsmId)
+          val pepMatchById = pepMatches.mapByLong(_.id)
+         
+          // Link peptide matches to peptide instances
+          rsmPepInsts.foreach { pepInst =>
+            pepInst.peptideMatches = pepInst.getPeptideMatchIds.map( pepMatchById(_) )
           }
           
           // Note: we set isValidatedContent to false here because we may have loaded matches belonging non-validated protein sets
@@ -134,19 +140,19 @@ class SQLResultSummaryProvider(
 
   }
 
-  def getResultSummariesAsOptions(rsmIds: Seq[Long], loadResultSet: Boolean): Array[Option[ResultSummary]] = {
+  def getResultSummariesAsOptions(rsmIds: Seq[Long], loadResultSet: Boolean, loadProteinMatches: Option[Boolean] = None): Array[Option[ResultSummary]] = {
     if (rsmIds.isEmpty) return Array()
     
-    val rsms = this.getResultSummaries(rsmIds, loadResultSet)
-    val rsmById = rsms.map { rsm => rsm.id -> rsm } toMap;
-    rsmIds.map { rsmById.get(_) } toArray
+    val rsms = this.getResultSummaries(rsmIds, loadResultSet, loadProteinMatches)
+    val rsmById = rsms.mapByLong(_.id)
+    rsmIds.toArray.map(rsmById.get(_))
   }
 
-  def getResultSetsResultSummaries(rsIds: Seq[Long], loadResultSet: Boolean): Array[ResultSummary] = {
+  /*def getResultSetsResultSummaries(rsIds: Seq[Long], loadResultSet: Boolean): Array[ResultSummary] = {
     if (rsIds.isEmpty) return Array()
     
     throw new Exception("NYI")
     null
-  }
+  }*/
 
 }
