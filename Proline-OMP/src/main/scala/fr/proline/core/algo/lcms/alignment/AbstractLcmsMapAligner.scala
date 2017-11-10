@@ -11,6 +11,7 @@ import fr.proline.core.algo.lcms.AlignmentParams
 import fr.proline.core.algo.lcms.AlnSmoother
 import fr.proline.core.algo.lcms.FeatureMapper
 import fr.proline.core.algo.lcms.FeatureMappingParams
+import fr.proline.core.algo.msq.profilizer.CommonsStatHelper
 import fr.proline.core.om.model.lcms._
 
 case class AlignmentResult( alnRefMapId: Long, mapAlnSets: Array[MapAlignmentSet] )
@@ -119,7 +120,7 @@ abstract class AbstractLcmsMapAligner extends LazyLogging {
     }
     
     if( ftAlignments.isEmpty ) {
-      this.logger.warn(s"can't compute map alignment set between map #${map1.id}and map #${map2.id}")
+      this.logger.warn(s"can't compute map alignment set between map #${map1.id} and map #${map2.id}")
       None
     }
     else Some(
@@ -130,6 +131,69 @@ abstract class AbstractLcmsMapAligner extends LazyLogging {
       )
     )
     
+  }
+  
+  protected def removeAlignmentOutliers(alnResult: AlignmentResult): AlignmentResult = {
+    
+    val filteredMapAlnSets = alnResult.mapAlnSets.map { mapAlnSet =>
+      val filteredMapAlns = mapAlnSet.mapAlignments.map { mapAln =>
+        
+        val timeList = mapAln.timeList
+        val deltaTimeList = mapAln.deltaTimeList
+        
+        val deltaTimeDiffs = deltaTimeList.sliding(2).map { deltaTimePair =>
+          (deltaTimePair(1) - deltaTimePair(0)).toDouble
+        } toArray
+        
+        // Compute delta time difference statistics and determine outlier threshold
+        val deltaTimeStatSummary = CommonsStatHelper.calcExtendedStatSummary(deltaTimeDiffs)
+        val lowerInnerFence = deltaTimeStatSummary.getLowerInnerFence()
+        val upperInnerFence = deltaTimeStatSummary.getUpperInnerFence()
+        val maxAbsDiff = math.max( math.abs(lowerInnerFence), math.abs(upperInnerFence) )
+        
+        // Create new lists
+        val dataPointsCount = timeList.length
+        val newTimeList = new ArrayBuffer[Float](dataPointsCount)
+        val newDeltaTimeList = new ArrayBuffer[Float](dataPointsCount)
+        
+        // Add first data point to the new list
+        newTimeList += timeList(0)
+        newDeltaTimeList += deltaTimeList(0)
+        
+        // Check for outliers
+        for ( (deltaTimeDiff,i) <- deltaTimeDiffs.zipWithIndex) {
+          val dataPointIdx = i + 1
+          
+          val isOutlier = math.abs(deltaTimeDiff) > maxAbsDiff
+          
+          if (!isOutlier) {
+            newTimeList += timeList(i)
+            newDeltaTimeList += deltaTimeList(i)
+          }
+        }
+        
+        // Create a copy of map alignment only if outliers were found
+        if (newTimeList.length == dataPointsCount) mapAln
+        else {
+          val map1 = mapAln.refMapId
+          val map2 = mapAln.targetMapId
+          
+          val outliersCount = dataPointsCount - newTimeList.length
+          logger.debug(
+            s"Removed $outliersCount outlier(s) in LC-MS alignment between map with ID=$map1 and map with ID=$map2"
+          )
+          
+          mapAln.copy(
+            timeList = newTimeList.toArray,
+            deltaTimeList = newDeltaTimeList.toArray
+          )
+        }
+      }
+      
+      mapAlnSet.copy( mapAlignments = filteredMapAlns)
+    }
+    
+    alnResult.copy(mapAlnSets = filteredMapAlnSets)
   }
 
 }

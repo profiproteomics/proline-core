@@ -36,7 +36,13 @@ class ComprehensiveMapAligner extends AbstractLcmsMapAligner {
     
     val refMap = this.determineAlnReferenceMap( lcmsMaps, mapAlnSets )
     
-    AlignmentResult( refMap.id, mapAlnSets.toArray )
+    val alnResult = AlignmentResult( refMap.id, mapAlnSets.toArray )
+    
+    val removeOutliers = alnParams.removeOutliers.getOrElse(false)
+    if (!removeOutliers) alnResult
+    else {
+      this.removeAlignmentOutliers(alnResult)
+    }
   }
   
   def determineAlnReferenceMap(

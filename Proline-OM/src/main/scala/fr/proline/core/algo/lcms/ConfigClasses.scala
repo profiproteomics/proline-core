@@ -16,7 +16,8 @@ case class AlignmentParams(
   smoothingMethodName: String,
   smoothingParams: AlnSmoothingParams,
   ftMappingParams: FeatureMappingParams,
-  maxIterations: Int = 3
+  maxIterations: Int = 3,
+  removeOutliers: Option[Boolean] = None
 )
 
 object AlnSmoothing extends Enumeration {

@@ -19,7 +19,13 @@ class IterativeMapAligner extends AbstractLcmsMapAligner with LazyLogging {
     val refMapRandomIndex = (math.random * lcmsMaps.length).toInt
     val randomRefMap = lcmsMaps(refMapRandomIndex)
 
-    this.findBestMapAlignments(lcmsMaps, ftMapper, randomRefMap, alnParams, 1)
+    val alnResult = this.findBestMapAlignments(lcmsMaps, ftMapper, randomRefMap, alnParams, 1)
+    
+    val removeOutliers = alnParams.removeOutliers.getOrElse(false)
+    if (!removeOutliers) alnResult
+    else {
+      this.removeAlignmentOutliers(alnResult)
+    }
   }
 
   private def findBestMapAlignments(
