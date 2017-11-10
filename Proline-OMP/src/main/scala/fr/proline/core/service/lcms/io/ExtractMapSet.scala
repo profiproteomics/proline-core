@@ -115,12 +115,12 @@ class ExtractMapSet(
   val peptideByRunIdAndScanNumber: Option[LongMap[LongMap[Peptide]]] = None, // sequence data may or may not be provided
   val peptideMatchByRunIdAndScanNumber: Option[LongMap[LongMap[ArrayBuffer[PeptideMatch]]]] = None
 ) extends ILcMsService with LazyLogging {
-
+  
   // Do some requirements
   require(quantConfig.extractionParams.mozTolUnit matches "(?i)PPM")
   
   require(
-    lcMsRuns.map(_.number).filter(_ > 0) == lcMsRuns.length,
+    lcMsRuns.map(_.number).filter(_ > 0).distinct.length == lcMsRuns.length,
     "Invalid LC-MS run numbers: numbers should distinct and strictly positive"
   )
   protected val sortedLcMsRuns = lcMsRuns.sortBy(_.number)
