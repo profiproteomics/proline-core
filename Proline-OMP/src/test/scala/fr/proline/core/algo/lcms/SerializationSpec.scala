@@ -36,6 +36,7 @@ class SerializationSpec extends AbstractSerializationSpec {
         windowOverlap = 20, // percents
         minWindowLandmarks = 50
       ),
+      ftMappingMethodName = None,
       ftMappingParams = FeatureMappingParams(
         mozTol = 5.0,
         mozTolUnit = MassTolUnit.PPM.toString,
