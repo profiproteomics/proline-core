@@ -15,10 +15,16 @@ case class AlignmentParams(
   massInterval: Int,
   smoothingMethodName: String,
   smoothingParams: AlnSmoothingParams,
+  ftMappingMethodName: Option[String],
   ftMappingParams: FeatureMappingParams,
   maxIterations: Int = 3,
   removeOutliers: Option[Boolean] = None
-)
+) {
+  def getFeatureMappingMethod(): FeatureMappingMethod.Value = {
+    if (ftMappingMethodName.isEmpty) FeatureMappingMethod.FEATURE_COORDINATES
+    else FeatureMappingMethod.withName(ftMappingMethodName.get)
+  }
+}
 
 object AlnSmoothing extends Enumeration {
   val LANDMARK_RANGE = Value("LANDMARK_RANGE")
@@ -42,5 +48,9 @@ case class ClusteringParams(
   timeComputation: String
 ) extends IMzTimeTolerant
 
+object FeatureMappingMethod extends Enumeration {
+  val FEATURE_COORDINATES = Value("FEATURE_COORDINATES")
+  val PEPTIDE_IDENTITY = Value("PEPTIDE_IDENTITY")
+}
 
 case class FeatureMappingParams( mozTol: Double, mozTolUnit: String, timeTol: Float ) extends IMzTimeTolerant
