@@ -15,7 +15,7 @@ object LFQSummarizer extends LazyLogging {
   }
 
   def summarize(abundanceMatrix: Array[Array[Float]]): Array[Float] = {
-    RatioFitting.fit(abundanceMatrix)
+    RatioFitting.fitWithoutImputation(abundanceMatrix)
   }
 
 }
