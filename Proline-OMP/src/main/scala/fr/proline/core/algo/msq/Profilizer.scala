@@ -2,11 +2,8 @@ package fr.proline.core.algo.msq
 
 import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.HashMap
-
 import org.apache.commons.math3.stat.StatUtils
-
 import com.typesafe.scalalogging.LazyLogging
-
 import fr.profi.util.collection._
 import fr.profi.util.lang.EnhancedEnum
 import fr.profi.util.math.median
@@ -19,7 +16,9 @@ import fr.proline.core.om.model.msq._
 import fr.proline.core.om.model.msq.MasterQuantComponent
 import fr.proline.core.om.model.msq.MasterQuantComponent
 import fr.proline.core.om.model.msq.MasterQuantComponent
-import fr.proline.core.om.model.SelectionLevel 
+import fr.proline.core.om.model.SelectionLevel
+
+import scala.collection.mutable
 
 // TODO: recompute raw abundances from peakels
 // (smoothing methods, area VS apex intensity, first isotope vs max one vs isotope pattern fitting)
@@ -339,8 +338,8 @@ class Profilizer( expDesign: ExperimentalDesign, groupSetupNumber: Int = 1, mast
     // Compute the intersection of filtered masterQuantPeptides and mqPeptideSelLevelById
     for (mqProtSet <- masterQuantProtSets) {
 
-      val datasetSelLvlMap = mqProtSet.masterQuantPeptides.toLongMapWith(a => a.id -> a.selectionLevel)
-      val protSetSelLvlMap = mqProtSet.properties.get.getSelectionLevelByMqPeptideId().getOrElse({
+      val datasetSelLvlMap: mutable.LongMap[Int] = mqProtSet.masterQuantPeptides.toLongMapWith(a => a.id -> a.selectionLevel)
+      val protSetSelLvlMap: HashMap[Long, Int] = mqProtSet.properties.get.getSelectionLevelByMqPeptideId().getOrElse({
         // Note: this default map construction is kept for backward compatibility,
         // it should be now computed during the quantitation phase
         val defaultSelLvlMap: HashMap[Long, Int] = datasetSelLvlMap.map{case (k ,v) => 
@@ -365,8 +364,8 @@ class Profilizer( expDesign: ExperimentalDesign, groupSetupNumber: Int = 1, mast
           protSetSelLvlMap.update(mqPepId, newAutoSelLvl)
         }
       }
-
-      mqProtSet.properties.get.mqPeptideSelLevelById = protSetSelLvlMap
+      
+      mqProtSet.properties.get.setSelectionLevelByMqPeptideId(Some(protSetSelLvlMap))
     }
 
     // Clusterize MasterQuantPeptides according to the provided method

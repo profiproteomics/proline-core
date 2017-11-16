@@ -140,8 +140,13 @@ class MasterQuantPeptidesClustererTest {
     )
   }
   
-  val masterQuantPeptides = peptides.map( buildMqPep(_) )
- 
+  val masterQuantPeptides: Array[MasterQuantPeptide] = peptides.map( buildMqPep(_) )
+
+  val mqProtSetProp = MasterQuantProteinSetProperties()
+  val mqSelectLevelByPepId : HashMap[Long, Int]= HashMap[Long, Int]()
+  mqSelectLevelByPepId ++= masterQuantPeptides.map(mqp => (mqp.id -> 2))
+  mqProtSetProp.setSelectionLevelByMqPeptideId(Some(mqSelectLevelByPepId))
+
   val masterQuantProtSet = MasterQuantProteinSet(
     proteinSet = ProteinSet(
       id = mqProtSetId,
@@ -162,7 +167,7 @@ class MasterQuantPeptidesClustererTest {
     masterQuantPeptides = masterQuantPeptides,
     
     selectionLevel = 2,
-    properties = Some(MasterQuantProteinSetProperties( mqPeptideSelLevelById = HashMap[Long, Int]() ++ masterQuantPeptides.map(mqp => (mqp.id -> 2)).toMap ))
+    properties = Some(mqProtSetProp)
   )
   
   @Test

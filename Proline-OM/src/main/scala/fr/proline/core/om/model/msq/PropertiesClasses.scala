@@ -115,11 +115,11 @@ case class MasterQuantProteinSetProperties(
   
   // TODO: use LongMap if possible
   @JsonDeserialize( keyAs = classOf[java.lang.Long], contentAs = classOf[java.lang.Integer] )
-  var mqPeptideSelLevelById: HashMap[Long, Int] = null,
+  protected var mqPeptideSelLevelById: HashMap[Long, Int] = null,
   
   // TODO: use LongMap if possible
   @JsonDeserialize( keyAs = classOf[java.lang.Long], contentAs = classOf[java.lang.Integer] )
-  var mqPeptideIonSelLevelById: HashMap[Long, Int] = null
+  protected var mqPeptideIonSelLevelById: HashMap[Long, Int] = null
 ) {
   
   /* --- Getter/setter for mqProtSetProfilesByGroupSetupNumber --- */
@@ -136,14 +136,12 @@ case class MasterQuantProteinSetProperties(
   }
   
   /* --- Getter/setter for mqPeptideSelLevelById --- */
-  
+
+  //Comment next line (#16906) Getter used to access data
   // Workaround for lack of default values support in jackson
-  if( mqPeptideSelLevelById == null ) mqPeptideSelLevelById = HashMap()
+  // if( mqPeptideSelLevelById == null ) mqPeptideSelLevelById = HashMap()
   
   def getSelectionLevelByMqPeptideId(): Option[HashMap[Long, Int]] = {
-    if(mqPeptideSelLevelById == null || mqPeptideSelLevelById.isEmpty)
-      None
-    else  
       Option(mqPeptideSelLevelById)
   }
   
@@ -152,14 +150,11 @@ case class MasterQuantProteinSetProperties(
   }
   
   /* --- Getter/setter for mqPeptideIonSelLevelById --- */
-  
+  //Comment next line (#16906) Getter used to access data
   // Workaround for lack of default values support in jackson
-  if( mqPeptideIonSelLevelById == null ) mqPeptideIonSelLevelById = HashMap()
+  //  if( mqPeptideIonSelLevelById == null ) mqPeptideIonSelLevelById = HashMap()
   
   def getSelectionLevelByMqPeptideIonId(): Option[HashMap[Long, Int]] = {
-     if(mqPeptideIonSelLevelById == null || mqPeptideIonSelLevelById.isEmpty)
-      None
-    else  
       Option(mqPeptideIonSelLevelById)
   }
   
