@@ -50,13 +50,14 @@ class IterativeMapAligner extends AbstractLcmsMapAligner with LazyLogging {
     // Return if the new reference map is identical to the previous one
     // or if the maximum number of iterations has been reached
     if (newAlnRefMap.id == alnRefMapId) {
+      logger.info(s"convergence to reference map is ${newAlnRefMap.name}")
       return AlignmentResult(newAlnRefMap.id, mapAlnSets.toArray)
     } else if (iterationNum >= maxIterNum) {
-      // Compute the feature alignments again using the new reference map
+      // Compute the feature alignments again using the new reference map      
       val mapAlnSets = this.computeMapAlnSets(lcmsMaps, ftMapper, newAlnRefMap, alnParams)
+      logger.info(s"Max iteration reference map is ${newAlnRefMap.name}")
       return AlignmentResult(newAlnRefMap.id, mapAlnSets.toArray)
     } else {
-
       // Compute the map alignments again using the new reference map
       return this.findBestMapAlignments(lcmsMaps, ftMapper, newAlnRefMap, alnParams, iterationNum + 1)
     }
