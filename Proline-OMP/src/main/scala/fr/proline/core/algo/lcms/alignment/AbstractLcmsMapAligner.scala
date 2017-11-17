@@ -162,13 +162,13 @@ abstract class AbstractLcmsMapAligner extends LazyLogging {
         
         // Check for outliers
         for ( (deltaTimeDiff,i) <- deltaTimeDiffs.zipWithIndex) {
-          val dataPointIdx = i + 1
           
           val isOutlier = math.abs(deltaTimeDiff) > maxAbsDiff
           
           if (!isOutlier) {
-            newTimeList += timeList(i)
-            newDeltaTimeList += deltaTimeList(i)
+            val dataPointIdx = i + 1
+            newTimeList += timeList(dataPointIdx)
+            newDeltaTimeList += deltaTimeList(dataPointIdx)
           }
         }
         
