@@ -1,11 +1,7 @@
 package fr.proline.core.orm.msi.dto;
 
 
-import fr.proline.core.orm.msi.MasterQuantComponent;
-import fr.proline.core.orm.msi.ResultSummary;
-import fr.proline.core.orm.msi.dto.DPeptideInstance;
-import fr.proline.core.orm.msi.dto.DQuantPeptideIon;
-
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -13,12 +9,13 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import fr.proline.core.orm.msi.MasterQuantComponent;
 import fr.proline.core.orm.msi.MasterQuantPeptideIon;
 import fr.proline.core.orm.msi.Peptide;
 import fr.proline.core.orm.msi.PeptideInstance;
+import fr.proline.core.orm.msi.PeptideMatch;
+import fr.proline.core.orm.msi.ResultSummary;
 import fr.proline.core.orm.util.JsonSerializer;
-
-import java.util.HashMap;
 
 /**
  *
@@ -31,6 +28,7 @@ public class DMasterQuantPeptideIon {
     private DPeptideInstance m_peptideInstance;   
     private Map<Long, DQuantPeptideIon> m_quantPeptideIonByQchIds = null;
     private MasterQuantComponent m_masterQuantComponent;
+    private DPeptideMatch m_bestPeptideMatch; 
     
     private int m_charge;
     private double m_moz;
@@ -52,7 +50,7 @@ public class DMasterQuantPeptideIon {
         m_lcmsMasterFeatureId = mqpi.getLcmsMasterFeatureId();
     }
     
-    public DMasterQuantPeptideIon(PeptideInstance pi, MasterQuantPeptideIon mqpi, Peptide p) {
+    public DMasterQuantPeptideIon(PeptideInstance pi, MasterQuantPeptideIon mqpi, Peptide p, PeptideMatch bpm) {
         m_id = mqpi.getId();
         m_resultSummary = mqpi.getResultSummary();
         m_quantPeptideIonByQchIds = mqpi.getQuantPeptideIonByQchIds();
@@ -62,6 +60,9 @@ public class DMasterQuantPeptideIon {
         m_elutionTime = mqpi.getElutionTime();
         m_peptideInstance = new DPeptideInstance(pi.getId(), p.getId(), pi.getValidatedProteinSetCount(), pi.getElutionTime());
         m_peptideInstance.setPeptide(p);
+        m_bestPeptideMatch = new DPeptideMatch(bpm.getId(), bpm.getRank(), bpm.getCharge(), bpm.getDeltaMoz(), bpm.getExperimentalMoz(), bpm.getMissedCleavage(), bpm.getScore(), bpm.getResultSet().getId(), bpm.getCDPrettyRank(), bpm.getSDPrettyRank(), bpm.getIsDecoy());
+        m_bestPeptideMatch.setPeptide(p);
+        
         m_lcmsMasterFeatureId = mqpi.getLcmsMasterFeatureId();
     }
     
@@ -138,7 +139,16 @@ public class DMasterQuantPeptideIon {
         this.m_masterQuantComponent = masterQuantComponent;
     }
     
-    public Map<Long, DQuantPeptideIon> parseQuantPeptideIonFromProperties(String quantPeptideIonData) {
+    
+    public DPeptideMatch getBestPeptideMatch() {
+		return m_bestPeptideMatch;
+	}
+
+	public void setBestPeptideMatch(DPeptideMatch m_bestPeptideMatch) {
+		this.m_bestPeptideMatch = m_bestPeptideMatch;
+	}
+
+	public Map<Long, DQuantPeptideIon> parseQuantPeptideIonFromProperties(String quantPeptideIonData) {
 
         try {
         	ObjectMapper objectMapper = JsonSerializer.getMapper();
