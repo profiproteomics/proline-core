@@ -82,19 +82,18 @@ object FeatureMapper {
           
           // Compute m/z tolerance in daltons
           val mozTolInDalton = calcMozTolInDalton( map1FtMoz, mozTol, mozTolUnit )
-          // Compute the shortest duration which will be used to adjust the time tolerance window
-          if (!sameMozRangeMap2Fts.isEmpty) {
-            val shortestDuration = math.min(map1FtDuration, sameMozRangeMap2Fts.minBy(_.duration).duration)
-            for (map2Ft <- sameMozRangeMap2Fts) {
-
-              val deltaMoz = math.abs(map1FtMoz - map2Ft.moz)
-              val deltaTime = math.abs(map1FtTime - map2Ft.getCorrectedElutionTimeOrElutionTime)
-              val map2FtDuration = map2Ft.duration
-
-              // If the m/z falls in the m/z and time tol windows
-              if (deltaMoz < mozTolInDalton && deltaTime < (shortestDuration + timeTol)) {
-                ftMapping.getOrElseUpdate(map1FtId, new ArrayBuffer[Feature](1)) += map2Ft
-              }
+          
+          for (map2Ft <- sameMozRangeMap2Fts) {
+            
+            val deltaMoz = math.abs(map1FtMoz - map2Ft.moz)
+            val deltaTime = math.abs(map1FtTime - map2Ft.getCorrectedElutionTimeOrElutionTime)
+            val map2FtDuration = map2Ft.duration
+            // Compute the shortest duration which will be used to adjust the time tolerance window
+            val shortestDuration = if (map1FtDuration < map2FtDuration) map1FtDuration else map2FtDuration
+            
+            // If the m/z falls in the m/z and time tol windows
+            if( deltaMoz < mozTolInDalton && deltaTime < (shortestDuration + timeTol) ) {
+              ftMapping.getOrElseUpdate(map1FtId,new ArrayBuffer[Feature](1)) += map2Ft
             }
           }
         }
