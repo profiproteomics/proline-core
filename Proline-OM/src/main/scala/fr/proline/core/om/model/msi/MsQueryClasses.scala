@@ -12,10 +12,12 @@ trait MsQuery {
   
   // Required fields
   var id: Long
-  val initialId: Int
-  val moz: Double
-  val charge: Int
-  val msLevel: Int
+  def initialId: Int
+  def moz: Double
+  def charge: Int
+  def msLevel: Int
+  
+  def msiSearchId: Long
   
   var properties: Option[MsQueryProperties]
   def newProperties: Option[MsQueryProperties] = {
@@ -63,6 +65,7 @@ case class Ms1Query (
   val charge: Int,
  
   // Mutable optional fields
+  var msiSearchId: Long = 0,
   var properties: Option[MsQueryProperties] = None
 
 ) extends MsQuery {
@@ -70,7 +73,8 @@ case class Ms1Query (
   // Requirements
   require( moz > 0, "MsQuery moz must be positive" )
   
-  val msLevel = 1
+  @JsonProperty
+  def msLevel = 1
   
 }
 
@@ -89,7 +93,7 @@ object Ms2Query extends InMemoryIdGen {
   }*/
   
   // Needed for Jacks deserializer
-  @JsonCreator
+  /*@JsonCreator
   def createFromJSON(
     @JsonProperty("id") id: Long,
     @JsonProperty("initial_id") initialId: Int,
@@ -98,7 +102,7 @@ object Ms2Query extends InMemoryIdGen {
     @JsonProperty("spectrum_title") spectrumTitle: String,
     @JsonProperty("spectrum_id") spectrumId: Long = 0,
     @JsonProperty("properties") properties: Option[MsQueryProperties] = None
-  ): Ms2Query = Ms2Query(id,initialId,moz,charge,spectrumTitle,spectrumId,properties)
+  ): Ms2Query = Ms2Query(id,initialId,moz,charge,spectrumTitle,spectrumId,properties)*/
   
 }
 
@@ -112,6 +116,7 @@ case class Ms2Query(
   
   // Mutable optional fields
   var spectrumId: Long = 0,
+  var msiSearchId: Long = 0,
   var properties: Option[MsQueryProperties] = None
  
 ) extends MsQuery {
@@ -119,7 +124,8 @@ case class Ms2Query(
   // Requirements
   require( StringUtils.isNotEmpty( spectrumTitle ), "spectrum title is empty" )
   
-  val msLevel = 2
+  @JsonProperty
+  def msLevel = 2
   
   /*override def toSerializer(): serializer.MsQuery = {
     

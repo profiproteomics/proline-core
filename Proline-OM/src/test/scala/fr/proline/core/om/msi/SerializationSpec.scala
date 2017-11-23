@@ -168,7 +168,7 @@ class SerializationSpec extends AbstractSerializationSpec {
       "A Ms2Query object with defined properties",
       profiDeserializer = Some( jsonData => ProfiJson.deserialize[Ms2Query](jsonData) ),
       ms2Query,
-      """{"id":-1,"initial_id":1,"moz":333.33,"charge":3,"spectrum_title":"scan id=2","spectrum_id":1,"""+
+      """{"id":-1,"initial_id":1,"moz":333.33,"charge":3,"spectrum_title":"scan id=2","spectrum_id":1,"msi_search_id":0,"""+
       """"properties":{"target_db_search":{"candidate_peptides_count":100,"mascot_identity_threshold":25.001,"""+
       """"mascot_homology_threshold":20.002}},"ms_level":2}"""
     ),

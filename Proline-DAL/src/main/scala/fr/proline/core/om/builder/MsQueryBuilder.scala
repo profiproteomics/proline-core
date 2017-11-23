@@ -27,6 +27,7 @@ object MsQueryBuilder {
       initialId = r.getInt(MsQueryCols.INITIAL_ID),
       moz = r.getDouble(MsQueryCols.MOZ),
       charge = r.getInt(MsQueryCols.CHARGE),
+      msiSearchId = r.getLong(MsQueryCols.MSI_SEARCH_ID),
       properties = r.getStringOption(MsQueryCols.SERIALIZED_PROPERTIES).map(ProfiJson.deserialize[MsQueryProperties](_))
     )
   }
@@ -44,6 +45,7 @@ object MsQueryBuilder {
       charge = r.getInt(MsQueryCols.CHARGE),
       spectrumTitle = spectrumTitle,
       spectrumId = spectrumId,
+      msiSearchId = r.getLong(MsQueryCols.MSI_SEARCH_ID),
       properties = r.getStringOption(MsQueryCols.SERIALIZED_PROPERTIES).map(ProfiJson.deserialize[MsQueryProperties](_))
     )
   }

@@ -407,13 +407,16 @@ class ORMResultSetProvider(val msiDbCtx: DatabaseConnectionContext,
           Some(ProfiJson.deserialize[MsQueryProperties](serializedProperties))
         }
 
-        val msQuery = new Ms2Query(msiMsQueryId,
-          msiMsQuery.getInitialId,
-          msiMsQuery.getMoz,
-          msiMsQuery.getCharge,
-          spectrumTitle,
-          spectrumId,
-          msQueryProperties)
+        val msQuery = new Ms2Query(
+         id = msiMsQueryId,
+         initialId = msiMsQuery.getInitialId,
+         moz = msiMsQuery.getMoz,
+         charge = msiMsQuery.getCharge,
+         spectrumTitle = spectrumTitle,
+         spectrumId = spectrumId,
+         msiSearchId = msiMsQuery.getMsiSearch.getId.longValue(),
+         properties = msQueryProperties
+       )
 
         knownMsQueries += msiMsQueryId -> msQuery
 
