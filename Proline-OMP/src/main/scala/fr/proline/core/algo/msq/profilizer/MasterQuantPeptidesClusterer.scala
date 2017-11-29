@@ -74,18 +74,17 @@ trait IMqPeptidesClusterer {
       }*/
       
       // Retrieve selected master quant peptides in this protein set
-      val selMqPepIdSet = if( masterQuantProtSet.properties.get.getSelectionLevelByMqPeptideId.isDefined) masterQuantProtSet.properties.get.getSelectionLevelByMqPeptideId.get.filter(_._2 >= 2).keySet else Set.empty[Long]
+      val selLvlByMqPepIdOpt = masterQuantProtSet.properties.get.getSelectionLevelByMqPeptideId
+      val selMqPepIdSet = if (selLvlByMqPepIdOpt.isEmpty) Set.empty[Long]
+      else selLvlByMqPepIdOpt.get.filter(_._2 >= 2).keySet
       
       // Keep only selected master quant peptides
       val selectedMqPeps = masterQuantProtSet.masterQuantPeptides.filter { mqPep =>
-        val isSelectedInDataset = mqPep.selectionLevel >= 2
-        val isSelectedInProtSet = selMqPepIdSet.contains(mqPep.id)
-        
-        ( isSelectedInDataset && isSelectedInProtSet )
+        selMqPepIdSet.contains(mqPep.id)
       }
 
       // Compute clusters if we have at least one selected peptide
-      if( selectedMqPeps.isEmpty == false ) {
+      if (selectedMqPeps.nonEmpty) {
         this.computeMqPeptidesClusters(masterQuantProtSet, selectedMqPeps, clustersBuffer)
       }
       
