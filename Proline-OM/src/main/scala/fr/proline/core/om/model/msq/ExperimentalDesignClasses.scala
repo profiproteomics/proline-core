@@ -29,10 +29,12 @@ case class SimplifiedExperimentalDesign(
   }
 }
 
+// TODO: rename MasterQuantChannelExpDesign
 case class ExperimentalDesignSetup(
   val expDesign: ExperimentalDesign,
   val groupSetupNumber: Int = 1, // CBy : dont know where the param comes from ??
-  val masterQCNumber: Int) {
+  val masterQCNumber: Int
+) {
   
   val groupSetup = expDesign.groupSetups(groupSetupNumber-1)
   val sampleNumbersByGroupNumber = expDesign.getSampleNumbersByGroupNumber(groupSetupNumber)
@@ -97,6 +99,14 @@ case class ExperimentalDesign(
       bg.number ->  bg.sampleNumbers
     }
     
+  }
+  
+  def getMasterQuantChannelExpDesign(masterQcNumber: Int, groupSetupNumber: Int): ExperimentalDesignSetup = {
+    ExperimentalDesignSetup(
+      expDesign = this,
+      groupSetupNumber = groupSetupNumber,
+      masterQCNumber = masterQcNumber
+    )
   }
   
 }
