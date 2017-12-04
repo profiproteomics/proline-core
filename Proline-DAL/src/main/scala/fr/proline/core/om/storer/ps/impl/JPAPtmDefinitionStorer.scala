@@ -49,7 +49,9 @@ object JPAPtmDefinitionStorer extends IPtmDefinitionStorer with LazyLogging {
     // Retrieve the list of existing PTM classifications
     val allPtmClassifs = psEM.createQuery("SELECT e FROM fr.proline.core.orm.ps.PtmClassification e", classOf[PsPtmClassification]).getResultList().toList
     val psPtmClassifByUpperName = Map() ++ allPtmClassifs.map(classif => classif.getName.toUpperCase() -> classif)
-
+    val psOtherPtmClassifName = PsPtmClassification.PtmClassificationName.OTHER.toString().toUpperCase()
+    val psOtherPtmClassif = psPtmClassifByUpperName(psOtherPtmClassifName)
+    
     /**
      * Persists or merges a sequence of PtmDefinition objects into PS Db.
      *
@@ -195,7 +197,13 @@ object JPAPtmDefinitionStorer extends IPtmDefinitionStorer with LazyLogging {
 
       // Retrieve the corresponding classification
       // TODO: create an enumeration of classifications
-      val psPtmClassif = psPtmClassifByUpperName(ptmDef.classification.toUpperCase())
+      val psPtmClassifOpt = psPtmClassifByUpperName.get(ptmDef.classification.toUpperCase())
+      if (psPtmClassifOpt.isEmpty) {
+        logger.warn(
+          s"Can't find a PTM classification corresponding to '${ptmDef.classification}', will fallback to 'Other'."
+        )
+      }
+      val psPtmClassif = psPtmClassifOpt.getOrElse(psOtherPtmClassif)
 
       val psPtmSpecificity = new PsPtmSpecificity()
       psPtmSpecificity.setLocation(ptmDef.location)
