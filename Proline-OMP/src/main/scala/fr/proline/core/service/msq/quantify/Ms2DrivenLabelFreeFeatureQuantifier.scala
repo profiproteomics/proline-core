@@ -28,6 +28,9 @@ class Ms2DrivenLabelFreeFeatureQuantifier(
   val quantConfig: LabelFreeQuantConfig
 ) extends AbstractLabelFreeFeatureQuantifier {
   
+  private val groupSetupNumber = 1
+  private val masterQcExpDesign = experimentalDesign.getMasterQuantChannelExpDesign(udsMasterQuantChannel.getNumber, groupSetupNumber)
+  
   // Extract the LC-MS map set
   lazy val lcmsMapSet: MapSet = {
     
@@ -36,6 +39,7 @@ class Ms2DrivenLabelFreeFeatureQuantifier(
       this.lcmsDbCtx,
       this.udsMasterQuantChannel.getName,
       this.entityCache.getLcMsRuns(),
+      masterQcExpDesign,
       quantConfig,
       Some(pepByRunAndScanNbr),
       Some(psmByRunAndScanNbr)

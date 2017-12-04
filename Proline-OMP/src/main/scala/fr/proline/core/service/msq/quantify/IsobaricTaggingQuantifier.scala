@@ -32,6 +32,9 @@ class IsobaricTaggingQuantifier(
   val quantConfig: IsobaricTaggingQuantConfig
 ) extends AbstractMasterQuantChannelQuantifier with LazyLogging {
   
+  private val groupSetupNumber = 1
+  private val masterQcExpDesign = experimentalDesign.getMasterQuantChannelExpDesign(udsMasterQuantChannel.getNumber, groupSetupNumber)
+  
   private val masterQc = experimentalDesign.masterQuantChannels.find(_.number == udsMasterQuantChannel.getNumber).get
   private val quantChannelsByIdentRsmId = masterQc.quantChannels.groupBy( _.identResultSummaryId )
   private val tagById = quantMethod.tagById
@@ -125,6 +128,7 @@ class IsobaricTaggingQuantifier(
         executionContext.getLCMSDbConnectionContext,
         udsMasterQuantChannel.getName,
         entityCache.getLcMsRuns(),
+        masterQcExpDesign,
         lfqConfig,
         Some(pepByRunAndScanNbr),
         Some(psmByRunAndScanNbr)
