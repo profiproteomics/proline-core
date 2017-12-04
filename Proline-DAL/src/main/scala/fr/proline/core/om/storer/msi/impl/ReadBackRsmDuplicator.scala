@@ -549,6 +549,7 @@ class RsmDuplicator(rsmProvider: IResultSummaryProvider) extends IRsmDuplicator 
     val msiMasterPepInstByPepInstId = new HashMap[Long, MsiPeptideInstance] //could be by initial SourcePeptideInsID or by update SourcePeptideInsID (ResetID)
 
     var cumul1 = 0l
+    var cumul1a = 0l
     var cumul2 = 0l
     var cumul3 = 0l
     for (sourcePepInstance <- sourcePepInstances) {
@@ -617,6 +618,7 @@ class RsmDuplicator(rsmProvider: IResultSummaryProvider) extends IRsmDuplicator 
           mergedPepMatch.id = msiMasterPepMatchId
 
         // Map this quant peptide match to identified child peptide matches
+        val start1a = System.currentTimeMillis()
         if (mergedPepMatch.getChildrenIds != null) {
           for (childPepMatchId <- mergedPepMatch.getChildrenIds) {
 
@@ -635,6 +637,8 @@ class RsmDuplicator(rsmProvider: IResultSummaryProvider) extends IRsmDuplicator 
 
           }
         }
+        val end1a = System.currentTimeMillis()
+        cumul1a = cumul1a + (end1a-start1a)
 
       } //End go through peptideInstance's peptideMatch
       var end1  = System.currentTimeMillis()
@@ -712,7 +716,7 @@ class RsmDuplicator(rsmProvider: IResultSummaryProvider) extends IRsmDuplicator 
     } //--- End go through PepInstance
 
     end  = System.currentTimeMillis()
-    this.logger.debug(" ---  End go through PepInstance; duration "+(end-start)+" with cumulating values cumul1 (pepMatch): "+cumul1+" msiEm.find: "+cumul2+" pepInst: "+cumul3 )
+    this.logger.debug(" ---  End go through PepInstance; duration "+(end-start)+" with cumulative values cumul1 / cumul1a (pepMatch/childPepMaches): "+cumul1+"/"+cumul1a+"; msiEm.find: "+cumul2+"; pepInst: "+cumul3 )
     start = end
     // Retrieve some vars
     val sourcePeptideSets = sourceRSM.peptideSets
@@ -852,7 +856,6 @@ class RsmDuplicator(rsmProvider: IResultSummaryProvider) extends IRsmDuplicator 
       val protSetsToLinkTo: ArrayBuffer[MsiProteinSet] = masterProtSetsByMergedSubPepSetId.getOrElse(sourcePeptideSet.id, ArrayBuffer.empty[MsiProteinSet])
       // Store peptide set
       val msiMasterPeptideSet = createMsiPepSetAndItems(msiEm, quantRsmId, emptyRSM, sourcePeptideSet, None, msiPepSetScoringId, peptideSetItems, msiMasterPepInstByPepInstId, masterPepSetsByMergedPepSetId, eraseSourceIds)
-      logger.debug("**** Created subset PeptideSet "+msiMasterPeptideSet.getId+ " from "+sourcePeptideSet.id)
       // Link master peptide set to master protein matches
       createProteinMatchesLinks(msiEm, msiMasterProtMatches, protSetsToLinkTo, msiMasterPeptideSet,
         sourceProtMatchIdByMasterId, sourceProtMatchById, masterQuantPepMatchIdByMergedPepMatchId,
@@ -865,7 +868,6 @@ class RsmDuplicator(rsmProvider: IResultSummaryProvider) extends IRsmDuplicator 
     start = end
     //Create PeptideSet Relations
     for(sourcePepSet <- sourcePeptideSets){
-      this.logger.info("Create PeptideSet Relations : "+sourcePepSet +" ID "+sourcePepSet.id+" eraseSourceIds "+eraseSourceIds+" "+masterPepSetsByMergedPepSetId.contains(sourcePepSet.id))
       val msiPepSet : MsiPeptideSet = if(eraseSourceIds) masterPepSetsByMergedPepSetId.values.filter(_.getId.equals(sourcePepSet.id)).head else masterPepSetsByMergedPepSetId(sourcePepSet.id)
 
       val subSetIds = if(sourcePepSet.strictSubsetIds != null) sourcePepSet.strictSubsetIds else Array.empty[Long]
