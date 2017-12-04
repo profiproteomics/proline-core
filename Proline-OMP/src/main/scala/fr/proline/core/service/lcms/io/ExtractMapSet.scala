@@ -68,6 +68,7 @@ import rx.lang.scala.schedulers
 import rx.lang.scala.Subject
 import rx.lang.scala.subjects.PublishSubject
 import rx.exceptions.Exceptions
+import fr.proline.core.om.model.msq.ExperimentalDesignSetup
 
 /**
  * @author David Bouyssie
@@ -115,6 +116,7 @@ class ExtractMapSet(
   val lcmsDbCtx: LcMsDbConnectionContext,
   val mapSetName: String,
   val lcMsRuns: Seq[LcMsRun],
+  val masterQcExpDesign: ExperimentalDesignSetup,
   val quantConfig: ILcMsQuantConfig,
   val peptideByRunIdAndScanNumber: Option[LongMap[LongMap[Peptide]]] = None, // sequence data may or may not be provided
   val peptideMatchByRunIdAndScanNumber: Option[LongMap[LongMap[ArrayBuffer[PeptideMatch]]]] = None
@@ -456,8 +458,8 @@ class ExtractMapSet(
     
     val procMapIdByTmpId = new LongMap[Long](sortedLcMsRuns.length)
     for (processedMap <- x2ProcessedMaps) {
-      val rawMap = processedMap.getRawMaps().head.get
-      val oldProcessedMapId = procMapTmpIdByRawMapId.get(rawMap.id).get
+      val rawMapId = processedMap.getRawMapIds.head
+      val oldProcessedMapId = procMapTmpIdByRawMapId.get(rawMapId).get
       procMapIdByTmpId.put(oldProcessedMapId, processedMap.id )
     }
 
@@ -631,6 +633,13 @@ class ExtractMapSet(
   ): (MapSet, AlignmentResult) = {
     
     val sortedLcMsRuns = this.sortedLcMsRuns
+    assert(sortedLcMsRuns.length == this.masterQcExpDesign.qcGroupNumbers.length)
+    val lcMsRunBioGroupNumPairs = this.sortedLcMsRuns.zip(this.masterQcExpDesign.qcGroupNumbers)
+    
+    val bioGroupNumAndLcMsRunsTuples = lcMsRunBioGroupNumPairs.groupByLong(_._2).toSeq.map { case (groupNum, lcmsRunsBioGroupTuples) =>
+      val bioGroupLcMsRuns = lcmsRunsBioGroupTuples.map(_._1)
+      (groupNum -> bioGroupLcMsRuns)
+    }
     
     val intensityComputationMethod = ClusterIntensityComputation.withName(
       clusteringParams.intensityComputation.toUpperCase()
@@ -735,12 +744,7 @@ class ExtractMapSet(
         val mzDbPeakelIdsByPeptideAndChargeByRunId = detectorEntityCache.mzDbPeakelIdsByPeptideAndChargeByRunId
     
         // Define some data structures
-        // TODO: add these structures to detectorEntityCache
         val mftBuilderByPeptideAndCharge = new HashMap[(Peptide, Int), MasterFeatureBuilder]()
-        val putativeFtsByRunId = new LongMap[ArrayBuffer[PutativeFeature]]()
-        val putativeFtsByPeptideAndRunId = new HashMap[(Peptide, Long), ArrayBuffer[PutativeFeature]]()
-        val peptideByPutativeFtId = new LongMap[Peptide]()
-        val multiMatchedMzDbPeakelIdsByPutativeFtId = new LongMap[ArrayBuffer[Int]]()
         
         this.logger.info("Building the master map...")
     
@@ -850,8 +854,14 @@ class ExtractMapSet(
           mapAlnSets = alnResult.mapAlnSets
         )
         
-        this.logger.info("Predicting missing features coordinates...")
+        // Define some data structures
+        val putativeFtsByRunId = new LongMap[ArrayBuffer[PutativeFeature]]()
+        val putativeFtsByPeptideAndRunId = new HashMap[(Peptide, Long), ArrayBuffer[PutativeFeature]]()
+        val peptideByPutativeFtId = new LongMap[Peptide]()
+        val multiMatchedMzDbPeakelIdsByPutativeFtId = new LongMap[ArrayBuffer[Int]]()
 
+        this.logger.info("Predicting missing features coordinates...")
+        
         // Iterate create master features to predict missing ones
         for (((peptide, charge), mftBuilder) <- mftBuilderByPeptideAndCharge) {
           
@@ -881,19 +891,54 @@ class ExtractMapSet(
           }
           
           val childFtByProcMapId = masterFtChildren.mapByLong { ft => ft.relations.processedMapId }
-          val runsWithMissingFt = sortedLcMsRuns.filterNot { lcMsRun =>
-            childFtByProcMapId.contains(processedMapByRunId(lcMsRun.id).id)
+
+          val missingRunAndRefFtPairs = if (
+            quantConfig.performCrossAssignmentInsideGroupsOnly == false ||
+            masterQcExpDesign.groupSetup.biologicalGroups.length == 1
+          ) {
+            sortedLcMsRuns.withFilter { lcMsRun =>
+              childFtByProcMapId.contains(processedMapByRunId(lcMsRun.id).id) == false
+            } map { lcMsRun =>
+              (lcMsRun, bestFt)
+            }
+          } else {
+            
+            bioGroupNumAndLcMsRunsTuples.flatMap { case (bioGroupNum,lcMsRuns) =>
+              
+              // Retrieve detected child features in this group
+              val detectedChildFtsInGroup = lcMsRuns.withFilter { lcMsRun =>
+                childFtByProcMapId.contains(processedMapByRunId(lcMsRun.id).id)
+              } map { lcMsRun =>
+                childFtByProcMapId(processedMapByRunId(lcMsRun.id).id)
+              }
+              
+              // Disable cross assignment if we have not detected features in this group
+              if (detectedChildFtsInGroup.isEmpty) {
+                println("will not perform cross assignment")
+                Seq()
+              }
+              else {
+                // Else determine a reference for this group
+                val refFt = detectedChildFtsInGroup.maxBy(_.intensity)
+                
+                lcMsRuns.withFilter { lcMsRun =>
+                  childFtByProcMapId.contains(processedMapByRunId(lcMsRun.id).id) == false
+                } map { lcMsRun =>
+                  (lcMsRun, refFt)
+                }
+              }
+            }
           }
-    
+          
           // Create a putative feature for each missing one
-          for (lcMsRun <- runsWithMissingFt) {
+          for ((lcMsRun,refFt) <- missingRunAndRefFtPairs) {
     
             val lcMsRunId = lcMsRun.id
             val currentProcMapId = processedMapByRunId(lcMsRunId).id
             
             var predictedTime = tmpMapSet.convertElutionTime(
-              bestFt.elutionTime,
-              bestFtProcMapId,
+              refFt.elutionTime,
+              refFt.relations.processedMapId,
               currentProcMapId
             )
             
@@ -904,13 +949,13 @@ class ExtractMapSet(
     
             val pf = new PutativeFeature(
               id = PutativeFeature.generateNewId,
-              mz = bestFt.moz,
-              charge = bestFt.charge,
+              mz = refFt.moz,
+              charge = refFt.charge,
               elutionTime = predictedTime,
               evidenceMsLevel = 2
             )
             pf.isPredicted = true
-            pf.maxObservedIntensity = bestFt.apexIntensity
+            pf.maxObservedIntensity = refFt.apexIntensity
             
             val multiMatchedMzDbPeakelIds = ArrayBuffer.empty[Int]
             val conflictingPeptides = detectorEntityCache.getConflictedPeptides((peptide, charge)).orNull
@@ -1108,8 +1153,8 @@ class ExtractMapSet(
       // Map processed map id by corresponding temp id
       val procMapIdByTmpId = new LongMap[Long](sortedLcMsRuns.length)
       for (processedMap <- tmpMapSet.childMaps) {
-        val rawMap = processedMap.getRawMaps().head.get
-        val oldProcessedMapId = procMapTmpIdByRawMapId.get(rawMap.id).get
+        val rawMapId = processedMap.getRawMapIds.head
+        val oldProcessedMapId = procMapTmpIdByRawMapId.get(rawMapId).get
         procMapIdByTmpId.put(oldProcessedMapId,processedMap.id )
       }
       
@@ -2422,7 +2467,7 @@ class ExtractMapSet(
   ): Seq[Feature] = {
 
     val procMapId = processedMap.id
-    val rawMapId = processedMap.getRawMapIds().head
+    val rawMapId = processedMap.getRawMapIds.head
     val masterMap = mapSet.masterMap
     val nbMaps = mapSet.childMaps.length
 
