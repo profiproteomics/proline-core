@@ -20,10 +20,13 @@ public final class DatabaseConnectorFactory {
 	}
 
 	/* Public class methods */
-	public static IDatabaseConnector createDatabaseConnectorInstance(
+	/*public static IDatabaseConnector createDatabaseConnectorInstance(
 		final ProlineDatabaseType database,
 		final Map<Object, Object> properties, 
-		IDatabaseConnector.ConnectionPoolType poolType) {
+		IDatabaseConnector.ConnectionPoolType poolType) {*/
+	public static IDatabaseConnector createDatabaseConnectorInstance(
+			final ProlineDatabaseType database,
+			final Map<Object, Object> properties) {
 
 		if (database == null) {
 			throw new IllegalArgumentException("Database is null");
@@ -49,7 +52,7 @@ public final class DatabaseConnectorFactory {
 
 		/* Parametric factory based on normalizedDatabaseURL : add new supported Database protocols here */
 		if (normalizedDatabaseURL.contains(JDBC_SCHEME + ':' + DriverType.POSTGRESQL.getJdbcURLProtocol())) {
-			result = new PostgresDatabaseConnector(database, properties, poolType );
+			result = new PostgresDatabaseConnector(database, properties, IDatabaseConnector.DEFAULT_POOL_TYPE);// VDS #16961 : poolType );
 		} else if (normalizedDatabaseURL.contains(JDBC_SCHEME + ':' + DriverType.SQLITE.getJdbcURLProtocol())) {
 			result = new SQLiteDatabaseConnector(database, properties);
 		} else if (normalizedDatabaseURL.contains(JDBC_SCHEME + ':' + DriverType.H2.getJdbcURLProtocol())) {
@@ -73,9 +76,11 @@ public final class DatabaseConnectorFactory {
 			throw new IllegalArgumentException("Invalid propertiesFileName");
 		}
 
-		return createDatabaseConnectorInstance(database, PropertiesUtils.loadProperties(propertiesFileName), IDatabaseConnector.DEFAULT_POOL_TYPE);//IDatabaseConnector.ConnectionPoolType.HIGH_PERF_POOL_MANAGEMENT);
+//VDS #16961		return createDatabaseConnectorInstance(database, PropertiesUtils.loadProperties(propertiesFileName), IDatabaseConnector.DEFAULT_POOL_TYPE);//IDatabaseConnector.ConnectionPoolType.HIGH_PERF_POOL_MANAGEMENT);
+		return createDatabaseConnectorInstance(database, PropertiesUtils.loadProperties(propertiesFileName));
 	}
 	
+	/*VDS #16961
 	public static IDatabaseConnector createDatabaseConnectorInstance(
 		final ProlineDatabaseType database,
 		final String propertiesFileName, 
@@ -90,8 +95,9 @@ public final class DatabaseConnectorFactory {
 		}
 
 		return createDatabaseConnectorInstance(database, PropertiesUtils.loadProperties(propertiesFileName), poolType);
-	}
+	}*/
 
+/*VDS #16961
 	public static IDatabaseConnector createDatabaseConnectorInstance(
 		final ProlineDatabaseType database,
 		final Map<Object, Object> properties) {
@@ -101,5 +107,5 @@ public final class DatabaseConnectorFactory {
 		}
 
 		return createDatabaseConnectorInstance(database, properties, IDatabaseConnector.DEFAULT_POOL_TYPE);//IDatabaseConnector.ConnectionPoolType.HIGH_PERF_POOL_MANAGEMENT);
-	}
+	}*/
 }
