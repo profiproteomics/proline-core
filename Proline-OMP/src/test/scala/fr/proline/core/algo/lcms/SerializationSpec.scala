@@ -70,7 +70,7 @@ class SerializationSpec extends AbstractSerializationSpec {
       """"max_iterations":3},"ft_filter":{"name":"INTENSITY","operator":"GT","value":0.0},"ft_mapping_params":"""+
       """{"moz_tol":5.0,"moz_tol_unit":"ppm","time_tol":30.0},"normalization_method":"MEDIAN_RATIO","""+
       """"detect_features":false,"detect_peakels":false,"start_from_validated_peptides":true,"""+
-      """"use_last_peakel_detection":false,"perform_cross_assignment_inside_groups_only":false}"""
+      """"use_last_peakel_detection":false,"perform_cross_assignment_inside_groups_only":false, "restrain_cross_assignment_to_reliable_features":false}"""
     )
   )
   
