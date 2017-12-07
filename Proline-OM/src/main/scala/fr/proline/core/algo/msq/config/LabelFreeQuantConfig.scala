@@ -16,6 +16,7 @@ trait ILcMsQuantConfig extends IMsQuantConfig {
   val startFromValidatedPeptides: Boolean
   val useLastPeakelDetection: Boolean
   val performCrossAssignmentInsideGroupsOnly: Boolean
+  val restrainCrossAssignmentToReliableFeatures: Boolean
 }
 
 trait ILabelFreeQuantConfig extends ILcMsQuantConfig
@@ -33,5 +34,6 @@ case class LabelFreeQuantConfig(
   detectPeakels: Boolean = false, // false implies feature extraction instead of detection
   startFromValidatedPeptides: Boolean = true, // only checked if detectFeatures is false
   useLastPeakelDetection: Boolean = false,
-  performCrossAssignmentInsideGroupsOnly: Boolean = false
+  performCrossAssignmentInsideGroupsOnly: Boolean = false, 
+  restrainCrossAssignmentToReliableFeatures: Boolean = false
 ) extends ILabelFreeQuantConfig

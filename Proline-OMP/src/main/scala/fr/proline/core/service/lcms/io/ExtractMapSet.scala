@@ -1896,7 +1896,9 @@ class ExtractMapSet(
             (putativeFt,mftBuilder,missingPeakelOpt) <- putativeFtAndMissingPeakelOptTuples.toArray;
             (missingPeakel, isReliable) <- missingPeakelOpt
           ) {
-    
+            
+           if (!quantConfig.restrainCrossAssignmentToReliableFeatures || isReliable) {
+                          
             val mzDbFt = _createMzDbFeature(
               inMemoryPeakelDb,
               Some(rTree),
@@ -1962,6 +1964,9 @@ class ExtractMapSet(
             val deltaRt = newLcmsFeature.elutionTime - putativeFt.elutionTime
             runMetrics.storeValue("missing predicted retention time", deltaRt) 
             
+
+            }  
+
           } // end for each found peakel
 
           logger.info("Missing features search has finished !")
