@@ -62,9 +62,10 @@ object PgMsiSearchWriter extends AbstractSQLMsiSearchWriter() with LazyLogging {
               if(!context.spectrumIdByTitle.contains(ms2Query.spectrumTitle)){
                 scoringErr = true
                 errMsg = s"Unable to found spectrum with title ${ms2Query.spectrumTitle}"
+              } else {
+                ms2Query.spectrumId = context.spectrumIdByTitle(ms2Query.spectrumTitle)
+                spectrumId = Some(ms2Query.spectrumId)
               }
-              ms2Query.spectrumId = context.spectrumIdByTitle(ms2Query.spectrumTitle)
-              spectrumId = Some(ms2Query.spectrumId)
             }
             else {
               scoringErr = true
