@@ -3,11 +3,13 @@ package fr.proline.core.om.model.lcms
 import java.util.Date
 
 import scala.beans.BeanProperty
-import scala.collection.mutable.HashMap
 import scala.collection.mutable.ArrayBuffer
+import scala.collection.mutable.HashMap
+import scala.collection.mutable.LongMap
 
 import com.typesafe.scalalogging.LazyLogging
 
+import fr.profi.util.collection._
 import fr.profi.util.misc.InMemoryIdGen
 
 // TODO:  move in Scala Commons ???
@@ -28,7 +30,6 @@ case class FeatureScoring(
   
 )
 
-//@JsonInclude( Include.NON_NULL )
 case class FeatureScoringProperties()
 
 object PeakPickingSoftware extends InMemoryIdGen
@@ -46,7 +47,6 @@ case class PeakPickingSoftware(
 
 )
 
-//@JsonInclude( Include.NON_NULL )
 case class PeakPickingSoftwareProperties()
 
 case class PeakelFittingModel( 
@@ -60,7 +60,6 @@ case class PeakelFittingModel(
   
 )
 
-//@JsonInclude( Include.NON_NULL )
 case class PeakelFittingModelProperties()
 
 case class MapMozCalibration( 
@@ -83,7 +82,6 @@ case class MapMozCalibration(
   
 }
 
-//@JsonInclude( Include.NON_NULL )
 case class MapMozCalibrationProperties()
 
 
@@ -213,7 +211,6 @@ case class MapAlignment(
   
 }
 
-//@JsonInclude( Include.NON_NULL )
 case class MapAlignmentProperties()
 
 case class MapAlignmentSet(
@@ -267,7 +264,6 @@ case class MapAlignmentSet(
   
 }
 
-//@JsonInclude( Include.NON_NULL )
 case class MapAlignmentSetProperties()
 
 object MapSet extends InMemoryIdGen
@@ -293,7 +289,7 @@ case class MapSet(
   require( creationTimestamp != null, "creationTimestamp is null" )
   require( childMaps != null, "childMaps is null" )
   
-  private lazy val _mapAlnSetByMapIdPair: Map[Pair[Long,Long],MapAlignmentSet] = {
+  private lazy val _mapAlnSetByMapIdPair: Map[(Long,Long),MapAlignmentSet] = {
     val allMapAlnSets = mapAlnSets ++ mapAlnSets.map(_.getReversedAlnSet)
     Map() ++ allMapAlnSets.map( alnSet => (alnSet.refMapId,alnSet.targetMapId) -> alnSet )    
   }
@@ -315,8 +311,8 @@ case class MapSet(
     (for( childMap <- childMaps; if childMap.isProcessed; rawMapId <- childMap.getRawMapIds ) yield rawMapId -> childMap.id).toMap
   }
 
-  def getNormalizationFactorByMapId: Map[Long,Float] = {
-    childMaps.map( childMap => ( childMap.id -> childMap.normalizationFactor ) ).toMap
+  def getNormalizationFactorByMapId: LongMap[Float] = {
+    childMaps.toLongMapWith( childMap => ( childMap.id -> childMap.normalizationFactor ) )
   }
   
   def getAlnReferenceMap(): Option[ProcessedMap] = {
@@ -335,7 +331,7 @@ case class MapSet(
     alnRefMapOpt.get.isAlnReference = true
   }
   
-  def convertElutionTime( time: Float, refMapId: Long, targetMapId: Long, mass: Option[Double] = None): Float = {
+  def convertElutionTime( time: Float, refMapId: Long, targetMapId: Long, mass: Option[Double] = None): Option[Float] = {
     require( mapAlnSets != null, "can't convert elution time without map alignments" )
     require( refMapId != 0, "refMapId must be different than zero")
     require( targetMapId != 0, "targetMapId must be different than zero")
@@ -344,21 +340,24 @@ case class MapSet(
     require( alnRefMapId != 0, "can't convert elution time without a defined alnRefMapId" )
     
     // If the reference is the target map => returns the provided time
-    if( refMapId == targetMapId ) return time
+    if (refMapId == targetMapId) return Some(time)
     
     // If we have an alignment between the reference and the target
     if( _mapAlnSetByMapIdPair.contains(refMapId->targetMapId) ) {
       val mapAlnSet = _mapAlnSetByMapIdPair(refMapId->targetMapId)
-      mapAlnSet.calcTargetMapElutionTime(time, mass)
+      Some(mapAlnSet.calcTargetMapElutionTime(time, mass))
     // Else we need to make to consecutive time conversions
     } else {
       // Convert time into the reference map scale
-      val toRefMapAlnSet = _mapAlnSetByMapIdPair(refMapId -> alnRefMapId)
-      val refMapTime = toRefMapAlnSet.calcTargetMapElutionTime(time, mass)
-     
-      // Convert reference map time into the target map scale
-      val mapAlnSet = _mapAlnSetByMapIdPair(alnRefMapId -> targetMapId)
-      mapAlnSet.calcTargetMapElutionTime(refMapTime, mass)
+      val toRefMapAlnSetOpt = _mapAlnSetByMapIdPair.get(refMapId -> alnRefMapId)
+      if (toRefMapAlnSetOpt.isEmpty) None
+      else {
+        val refMapTime = toRefMapAlnSetOpt.get.calcTargetMapElutionTime(time, mass)
+       
+        // Convert reference map time into the target map scale
+        val mapAlnSetOpt = _mapAlnSetByMapIdPair.get(alnRefMapId -> targetMapId)
+        mapAlnSetOpt.map(_.calcTargetMapElutionTime(refMapTime, mass))
+      }
     }
 
   }
@@ -399,23 +398,23 @@ case class MapSet(
     val masterFeatures = this.masterMap.features
     
     // --- Update the map set processed maps ---
-    val ftsByChildMapId = new HashMap[Long,ArrayBuffer[Feature]]
-    val childMapById = new HashMap[Long,ProcessedMap]
+    val ftsByChildMapId = new LongMap[ArrayBuffer[Feature]]
+    val childMapById = new LongMap[ProcessedMap]
     
-    for( childMap <- childMaps ) {
+    for (childMap <- childMaps) {
       childMapById += childMap.id -> childMap
       ftsByChildMapId += childMap.id -> new ArrayBuffer(masterFeatures.length)
     }
     
     // Group master features children by child map id
-    for( mft <- masterFeatures; childFt <- mft.children ) {
+    for (mft <- masterFeatures; childFt <- mft.children) {
       require( childFt.relations.processedMapId != 0, "processedMapId must be different than zero" )
       ftsByChildMapId(childFt.relations.processedMapId) += childFt
     }
     
     // Re-build the processed maps
     val newChildMaps = new ArrayBuffer[ProcessedMap]
-    for( (childMapId,features) <- ftsByChildMapId ) {
+    for ((childMapId,features) <- ftsByChildMapId) {
       
       features.foreach { ft =>
         ft.eachSubFeatureOrThisFeature { subFt =>
@@ -475,31 +474,9 @@ case class MapSet(
     writer.close()
   }
   
-  /*
-  @deprecated("0.0.9","use map set convertElutionTime method instead")
-  def getRefMapAlnSetByMapId(): Option[Map[Long,MapAlignmentSet]] = {
-    if( this.alnReferenceMapId == 0 ) return None
-    
-    val refMapAlnSetByMapId = this._getRefMapAlnSets.map( alnSet => ( alnSet.targetMapId -> alnSet ) ).toMap
-    
-    Some(refMapAlnSetByMapId)
-  }
-  
-  private def _getRefMapAlnSets(): Array[MapAlignmentSet] = {    
-    
-    // Retrieve alignments of the reference map
-    val refMapAlnSets = mapAlnSets filter { _.refMapId == alnReferenceMapId }
-    val revRefMapAlnSets = mapAlnSets . 
-                           filter { _.targetMapId == alnReferenceMapId } . 
-                           map { _.getReversedAlnSet }
-    
-    ( refMapAlnSets ++ revRefMapAlnSets )
-    
-  }*/
 
 }
 
-//@JsonInclude( Include.NON_NULL )
 case class MapSetProperties()
 
 object RawMap extends InMemoryIdGen
@@ -648,7 +625,6 @@ case class ProcessedMap(
   
 }
 
-//@JsonInclude( Include.NON_NULL )
 case class LcMsMapProperties( @BeanProperty var ipDeviationUpperBound: Option[Float] = None )
 
 abstract class ILcMsMap {

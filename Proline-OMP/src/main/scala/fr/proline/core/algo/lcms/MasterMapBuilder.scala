@@ -171,7 +171,7 @@ class MasterMapBuilder(
       if( childMapId != mapSet.getAlnReferenceMapId ) {
         // Calculate corrected elution time using the elution time alignment
         val correctedTime = mapSet.convertElutionTime(childFt.elutionTime, childMapId, mapSet.getAlnReferenceMapId)
-        childFt.correctedElutionTime = Some(correctedTime)
+        childFt.correctedElutionTime = correctedTime
       }
 
     }

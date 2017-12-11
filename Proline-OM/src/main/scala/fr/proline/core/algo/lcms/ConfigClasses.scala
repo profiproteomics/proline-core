@@ -18,7 +18,8 @@ case class AlignmentParams(
   ftMappingMethodName: Option[String],
   ftMappingParams: FeatureMappingParams,
   maxIterations: Int = 3,
-  removeOutliers: Option[Boolean] = None
+  removeOutliers: Option[Boolean] = None, // getOrElse(false)
+  ignoreErrors: Option[Boolean] = None    // getOrElse(false) 
 ) {
   def getFeatureMappingMethod(): FeatureMappingMethod.Value = {
     if (ftMappingMethodName.isEmpty) FeatureMappingMethod.FEATURE_COORDINATES

@@ -875,16 +875,16 @@ class ExtractMapSet(
             if (feature != bestFt) {
               val bestFtProcMapId = bestFt.relations.processedMapId
               val ftProcMapId = feature.relations.processedMapId
-              val predictedRt = tmpMapSet.convertElutionTime(
+              val predictedRtOpt = tmpMapSet.convertElutionTime(
                 bestFt.elutionTime,
                 bestFtProcMapId,
                 ftProcMapId
               )
     
-              if (predictedRt <= 0) {
+              if (predictedRtOpt.isEmpty || predictedRtOpt.get <= 0) {
                 metricsByRunId(bestFtLcMsRun.id).incr("unpredictable peptide elution time")
               } else {
-                val deltaRt = feature.elutionTime - predictedRt
+                val deltaRt = feature.elutionTime - predictedRtOpt.get
                 metricsByRunId(bestFtLcMsRun.id).storeValue("assigned peptides predicted retention time", (deltaRt))
               }
             }
@@ -936,44 +936,46 @@ class ExtractMapSet(
             val lcMsRunId = lcMsRun.id
             val currentProcMapId = processedMapByRunId(lcMsRunId).id
             
-            var predictedTime = tmpMapSet.convertElutionTime(
+            val predictedTimeOpt = tmpMapSet.convertElutionTime(
               refFt.elutionTime,
               refFt.relations.processedMapId,
               currentProcMapId
             )
             
-            predictedTime = math.round(predictedTime).toFloat
+            if (predictedTimeOpt.isDefined) {
             
-            // Fix negative predicted times
-            if (predictedTime <= 0) predictedTime = 1f
-    
-            val pf = new PutativeFeature(
-              id = PutativeFeature.generateNewId,
-              mz = refFt.moz,
-              charge = refFt.charge,
-              elutionTime = predictedTime,
-              evidenceMsLevel = 2
-            )
-            pf.isPredicted = true
-            pf.maxObservedIntensity = refFt.apexIntensity
-            
-            val multiMatchedMzDbPeakelIds = ArrayBuffer.empty[Int]
-            val conflictingPeptides = detectorEntityCache.getConflictedPeptides((peptide, charge)).orNull
-            val mzDbPeakelIdsByPeptideAndCharge = mzDbPeakelIdsByPeptideAndChargeByRunId.getOrElse(lcMsRunId, null)
-            
-            if (conflictingPeptides != null && mzDbPeakelIdsByPeptideAndCharge != null) {
-              for (conflictingPeptide <- conflictingPeptides) {
-                val mzDbPeakelIds = mzDbPeakelIdsByPeptideAndCharge.getOrElse((conflictingPeptide, charge), null)
-                if (mzDbPeakelIds != null) {
-                  multiMatchedMzDbPeakelIds ++= mzDbPeakelIds
+              // Fix negative predicted times and remove decimals
+              val predictedTime = if (predictedTimeOpt.get <= 0) 1f
+              else math.round(predictedTimeOpt.get).toFloat
+      
+              val pf = new PutativeFeature(
+                id = PutativeFeature.generateNewId,
+                mz = refFt.moz,
+                charge = refFt.charge,
+                elutionTime = predictedTime,
+                evidenceMsLevel = 2
+              )
+              pf.isPredicted = true
+              pf.maxObservedIntensity = refFt.apexIntensity
+              
+              val multiMatchedMzDbPeakelIds = ArrayBuffer.empty[Int]
+              val conflictingPeptides = detectorEntityCache.getConflictedPeptides((peptide, charge)).orNull
+              val mzDbPeakelIdsByPeptideAndCharge = mzDbPeakelIdsByPeptideAndChargeByRunId.getOrElse(lcMsRunId, null)
+              
+              if (conflictingPeptides != null && mzDbPeakelIdsByPeptideAndCharge != null) {
+                for (conflictingPeptide <- conflictingPeptides) {
+                  val mzDbPeakelIds = mzDbPeakelIdsByPeptideAndCharge.getOrElse((conflictingPeptide, charge), null)
+                  if (mzDbPeakelIds != null) {
+                    multiMatchedMzDbPeakelIds ++= mzDbPeakelIds
+                  }
                 }
               }
+                
+              putativeFtsByRunId.getOrElseUpdate(lcMsRunId, new ArrayBuffer[PutativeFeature]) += pf
+              putativeFtsByPeptideAndRunId.getOrElseUpdate((peptide, lcMsRunId), new ArrayBuffer[PutativeFeature]) += pf
+              peptideByPutativeFtId(pf.id) = peptide
+              multiMatchedMzDbPeakelIdsByPutativeFtId(pf.id) = multiMatchedMzDbPeakelIds
             }
-              
-            putativeFtsByRunId.getOrElseUpdate(lcMsRunId, new ArrayBuffer[PutativeFeature]) += pf
-            putativeFtsByPeptideAndRunId.getOrElseUpdate((peptide, lcMsRunId), new ArrayBuffer[PutativeFeature]) += pf
-            peptideByPutativeFtId(pf.id) = peptide
-            multiMatchedMzDbPeakelIdsByPutativeFtId(pf.id) = multiMatchedMzDbPeakelIds
           }
           
         } // ends for (((peptide, charge), mftBuilder) <- mftBuilderByPeptideAndCharge)
@@ -1006,12 +1008,10 @@ class ExtractMapSet(
           require(mft.children.length <= sortedLcMsRuns.length, "master feature contains more child features than maps")
           
           def updateCorrectedElutionTime(ft: Feature) {
-            ft.correctedElutionTime = Some(
-                tmpMapSet.convertElutionTime(
-                ft.elutionTime,
-                ft.relations.processedMapId,
-                alnRefMapId
-              )
+            ft.correctedElutionTime = tmpMapSet.convertElutionTime(
+              ft.elutionTime,
+              ft.relations.processedMapId,
+              alnRefMapId
             )
           }
           
@@ -1351,7 +1351,11 @@ class ExtractMapSet(
       val runMetrics = metricsByRunId(lcMsRunId)
       
       // Search for existing Peakel file
-      val existingPeakelFiles = ExtractMapSet.tempDir.listFiles.filter(_.getName.startsWith(s"${lcMsRun.getRawFileName}-"))
+      val existingPeakelFiles = ExtractMapSet.tempDir.listFiles.filter { file =>
+        val isFileNameMatching = file.getName.startsWith(s"${lcMsRun.getRawFileName}-")
+        val isFileNonEmpty = file.length > 0
+        isFileNameMatching && isFileNonEmpty
+      }
       val needPeakelDetection = (quantConfig.useLastPeakelDetection == false || existingPeakelFiles.isEmpty)
       
       val futurePeakelDetectionResult = if (needPeakelDetection) {
@@ -1360,6 +1364,8 @@ class ExtractMapSet(
         existingPeakelFiles.foreach { peakelFile =>
           if (peakelFile.delete() == false) {
             this.logger.warn("Can't delete peakelDB file located at: "+  peakelFile)
+          } else {
+            this.logger.info("Successfully deleted peakelDB file located at: "+  peakelFile)
           }
         }
         
@@ -2510,36 +2516,36 @@ class ExtractMapSet(
 
           //val childMapAlnSet = revRefMapAlnSetByMapId(bestChildMapId)
           //val predictedTime = childMapAlnSet.calcReferenceElutionTime(mft.elutionTime, mft.mass)
-          var predictedTime = mapSet.convertElutionTime(bestChild.elutionTime, bestChildProcMapId, procMapId)
+          val predictedTimeOpt = mapSet.convertElutionTime(bestChild.elutionTime, bestChildProcMapId, procMapId)
           //println( "ftTime="+ mft.elutionTime +" and predicted time (in "+mzDbMapId+")="+predictedTime)    
           
-          predictedTime = math.round(predictedTime).toFloat
-          
-          // Fix negative predicted times
-          if (predictedTime <= 0) predictedTime = 1f
-
-          // Note: we can have multiple missing features for a given MFT
-          // However we assume there a single missing feature for a given map
-          val missingFtId = PutativeFeature.generateNewId
-          missingFtIdByMftId += (mft.id -> missingFtId)
-
-          val pf = new PutativeFeature(
-            id = missingFtId,
-            mz = mft.moz,
-            charge = mft.charge,
-            elutionTime = predictedTime,
-            evidenceMsLevel = 2
-          )
-
-          pf.isPredicted = true
-          
-          // TODO: check the usage of these values
-          pf.durations = mft.children.map(_.duration)
-          pf.areas = mft.children.map(_.intensity)
-          pf.mozs = mft.children.map(_.moz)
-
-          pfs += pf
-
+          if (predictedTimeOpt.isDefined) {
+            // Fix negative predicted times and remove decimals
+            val predictedTime = if (predictedTimeOpt.get <= 0) 1f
+            else math.round(predictedTimeOpt.get).toFloat
+            
+            // Note: we can have multiple missing features for a given MFT
+            // However we assume there a single missing feature for a given map
+            val missingFtId = PutativeFeature.generateNewId
+            missingFtIdByMftId += (mft.id -> missingFtId)
+  
+            val pf = new PutativeFeature(
+              id = missingFtId,
+              mz = mft.moz,
+              charge = mft.charge,
+              elutionTime = predictedTime,
+              evidenceMsLevel = 2
+            )
+  
+            pf.isPredicted = true
+            
+            // TODO: check the usage of these values
+            pf.durations = mft.children.map(_.duration)
+            pf.areas = mft.children.map(_.intensity)
+            pf.mozs = mft.children.map(_.moz)
+  
+            pfs += pf
+          }
         }
       }
 

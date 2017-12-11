@@ -121,10 +121,14 @@ abstract class AbstractLcmsMapAligner extends LazyLogging {
     }
     
     if( ftAlignments.isEmpty ) {
-      this.logger.warn(s"can't compute map alignment set between map #${map1.id} and map #${map2.id}")
-      None
-    }
-    else Some(
+      val errorMsg = s"Can't compute map alignment set between map #${map1.id} and map #${map2.id}"
+      if (alnParams.ignoreErrors.getOrElse(false)) {
+        this.logger.warn(errorMsg)
+        None
+      } else {
+        throw new Exception(errorMsg)
+      }
+    } else Some(
       new MapAlignmentSet(
         refMapId = map1.id,
         targetMapId = map2.id,
