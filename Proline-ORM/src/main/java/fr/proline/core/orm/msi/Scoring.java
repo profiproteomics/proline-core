@@ -111,10 +111,10 @@ public class Scoring implements Serializable {
 			"omssa", "expect value",
 			"The -log10(E-value) provided by OMSSA for a peptide match."
 		),
-    PEPTIDE_SHAKER_PSM_SCORE(
-      "peptide_shaker", "psm score",
-      "The score provided by PeptideShaker for a peptide match."
-    ),
+	    PEPTIDE_SHAKER_PSM_SCORE(
+	      "peptide_shaker", "psm score",
+	      "The score provided by PeptideShaker for a peptide match."
+	    ),
 		MSGF_EVALUE_LOG_SCALED(
 			"msgf", "evalue log scaled",
 			"The -log10(EValue) provided by MS-GF for a peptide match."
@@ -130,7 +130,7 @@ public class Scoring implements Serializable {
 		XTANDEM_EXPECT_LOG_SCALED(
       "xtandem", "expect log scaled",
       "The -log10(expect) provided by X!Tandem for a peptide match."
-    ),
+		),
 		XTANDEM_HYPERSCORE(
 			"xtandem", "hyperscore",
 			"The hyperscore provided by X!Tandem for a peptide match."
