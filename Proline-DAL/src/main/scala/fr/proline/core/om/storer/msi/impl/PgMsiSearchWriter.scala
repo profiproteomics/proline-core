@@ -41,13 +41,16 @@ object PgMsiSearchWriter extends AbstractSQLMsiSearchWriter() with LazyLogging {
       */
 
       // Bulk insert of MS queries
+      var scoringErr = false
+      var errMsg : String = ""
+
       logger.info("BULK insert of MS queries")
 
       val bulkCopyManager =  PostgresUtils.getCopyManager(con)
       //val pgBulkLoader = bulkCopyManager.copyIn("COPY " + tmpMsQueryTableName + " ( id, " + msQueryTableCols + " ) FROM STDIN")
       val pgBulkLoader = bulkCopyManager.copyIn(s"COPY ${MsiDbMsQueryTable.name} ($msQueryTableColsWithoutPK) FROM STDIN")
       
-      for (msQuery <- msQueries) {
+      for (msQuery <- msQueries if !scoringErr) {
 
         msQuery.msLevel match {
           case 1 => _copyMsQuery(pgBulkLoader, msQuery.asInstanceOf[Ms1Query], msiSearchId, Option.empty[Long])
@@ -56,19 +59,29 @@ object PgMsiSearchWriter extends AbstractSQLMsiSearchWriter() with LazyLogging {
             // FIXME: it should not be null
             var spectrumId = Option.empty[Long]
             if (context.spectrumIdByTitle != null) {
+              if(!context.spectrumIdByTitle.contains(ms2Query.spectrumTitle)){
+                scoringErr = true
+                errMsg = s"Unable to found spectrum with title ${ms2Query.spectrumTitle}"
+              }
               ms2Query.spectrumId = context.spectrumIdByTitle(ms2Query.spectrumTitle)
               spectrumId = Some(ms2Query.spectrumId)
             }
             else {
-              throw new Exception("spectrumIdByTitle must not be null")
+              scoringErr = true
+              errMsg = "UspectrumIdByTitle must not be null"
             }
             _copyMsQuery(pgBulkLoader, msQuery, msiSearchId, spectrumId)
           }
         }
-
       }
 
       // End of BULK copy
+
+      if(scoringErr){
+        //Error : Cancel copy and throw exception
+        pgBulkLoader.cancelCopy()
+        throw new Exception(s"insert query error : $errMsg")
+      }
       val nbInsertedMsQueries = pgBulkLoader.endCopy()
 
       /*// Move TMP table content to MAIN table

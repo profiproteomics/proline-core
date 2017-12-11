@@ -323,7 +323,10 @@ private[msi] object PgRsWriter extends AbstractSQLRsWriter() {
   
       // Bulk insert of protein matches
       logger.info("BULK insert of protein matches")
-  
+
+      var scoringErr = false
+      var scoreType : String = ""
+
       //val pgBulkLoader = bulkCopyManager.copyIn("COPY " + tmpProtMatchTableName + " ( id, " + protMatchTableColsWithoutPK + " ) FROM STDIN")
       val pgBulkLoader = bulkCopyManager.copyIn(
         s"COPY ${MsiDbProteinMatchTable.name} ($protMatchTableColsWithoutPK) FROM STDIN"
@@ -334,11 +337,16 @@ private[msi] object PgRsWriter extends AbstractSQLRsWriter() {
       proteinMatchByAcc.sizeHint(proteinMatches.length)
       
       // Iterate protein matches to store them
-      for (proteinMatch <- proteinMatches) {
+      for (proteinMatch <- proteinMatches if !scoringErr) {
         proteinMatchByAcc.put(proteinMatch.accession, proteinMatch)
   
-        val scoreType = proteinMatch.scoreType  
+        scoreType = proteinMatch.scoreType.toString
         val scoringId = scoringIdByType.get(scoreType)
+        if(!scoringId.isDefined)
+          scoringErr = true
+        else {
+
+          val scoringId = scoringIdByType.get(scoreType)
         require(scoringId.isDefined,"can't find a scoring id for the score type '" + scoreType + "'")
         //val pepMatchPropsAsJSON = if( peptideMatch.properties.isDefined ) ProfiJson.serialize(peptideMatch.properties.get) else ""
   
@@ -367,9 +375,16 @@ private[msi] object PgRsWriter extends AbstractSQLRsWriter() {
         val protMatchBytes = encodeRecordForPgCopy(protMatchValues)
         pgBulkLoader.writeToCopy(protMatchBytes, 0, protMatchBytes.length)
       }
-  
+    } // end go through protMatch or until scoringErr !
+
+    if(scoringErr){
+      //Error : Cancel copy and throw exception
+      pgBulkLoader.cancelCopy()
+      throw new IllegalArgumentException("requirement failed: "+ "can't find a scoring id for the score type '" + scoreType + "'")
+    }
+
       // End of BULK copy
-      val nbInsertedProtMatches = pgBulkLoader.endCopy()
+    val nbInsertedProtMatches = pgBulkLoader.endCopy()
   
       // Move TMP table content to MAIN table
       /*logger.info("move TMP table " + tmpProtMatchTableName + " into MAIN protein_match table")
