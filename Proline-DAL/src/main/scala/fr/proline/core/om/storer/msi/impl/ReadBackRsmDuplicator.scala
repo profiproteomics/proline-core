@@ -1,9 +1,11 @@
 package fr.proline.core.om.storer.msi.impl
 
+import java.util
+
 import scala.collection.mutable.{ArrayBuffer, HashMap, HashSet}
 import com.typesafe.scalalogging.LazyLogging
 import fr.profi.util.serialization.ProfiJson
-import fr.proline.core.om.model.msi.{PeptideInstance, ProteinMatch, PeptideMatch, ResultSummary, PeptideSet, PeptideSetItem}
+import fr.proline.core.om.model.msi.{PeptideInstance, PeptideMatch, PeptideSet, PeptideSetItem, ProteinMatch, ResultSummary}
 import fr.proline.core.om.provider.msi.IResultSummaryProvider
 import fr.proline.core.om.storer.msi.IRsmDuplicator
 import fr.proline.core.orm.msi.Peptide
@@ -35,9 +37,10 @@ import fr.proline.core.orm.msi.{Scoring => MsiScoring}
 import fr.proline.core.orm.msi.{SequenceMatch => MsiSequenceMatch}
 import fr.proline.core.orm.msi.SequenceMatchPK
 import fr.proline.core.util.ResidueUtils.scalaCharToCharacter
-import javax.persistence.EntityManager
-
+import javax.persistence.{EntityManager, TypedQuery}
 import fr.proline.core.orm.msi.repository.ScoringRepository
+
+import scala.collection.mutable
 
 
 
@@ -305,9 +308,6 @@ class RsmDuplicator(rsmProvider: IResultSummaryProvider) extends IRsmDuplicator 
       if (eraseSourceIds)
         sourcePeptideSet.proteinMatchIds = sourcePeptideSet.proteinMatchIds.map(msiMasterProtMatchIdBySourceId(_))
 
-      // TODO: find what to do with subsets
-      if(sourcePeptideSet.id == 662632)
-        logger.info(" FOUND 662632 : "+sourcePeptideSet.isSubset)
 
       if (!sourcePeptideSet.isSubset) {
 
@@ -548,12 +548,44 @@ class RsmDuplicator(rsmProvider: IResultSummaryProvider) extends IRsmDuplicator 
     val masterQuantPepMatchIdByMergedPepMatchId = new HashMap[Long, Long]
     val msiMasterPepInstByPepInstId = new HashMap[Long, MsiPeptideInstance] //could be by initial SourcePeptideInsID or by update SourcePeptideInsID (ResetID)
 
-    var cumul1 = 0l
-    var cumul1a = 0l
-    var cumul2 = 0l
-    var cumul3 = 0l
+
+    //--- create Map of needed peptide and peptide match id in few queries instead of query in loop
+    val peptideByIds = new mutable.HashMap[Long, Peptide]()
+    val peptideMatchByIds = new mutable.HashMap[Long, MsiPeptideMatch]()
+
+    val pepIds = new ArrayBuffer[Long]()
+    val pepMatchIds = new ArrayBuffer[Long]()
     for (sourcePepInstance <- sourcePepInstances) {
-      var start1  = System.currentTimeMillis()
+      pepIds+=sourcePepInstance.peptide.id
+      val sourcePepInstPepMatchIds = sourcePepInstance.getPeptideMatchIds()
+      for (mergedPepMatchId <- sourcePepInstPepMatchIds) {
+        val childIds =  sourcePepMatchById(mergedPepMatchId).getChildrenIds
+        if(childIds !=null && childIds.length>0)
+          pepMatchIds ++= childIds
+      }
+    }
+
+    val pepQuery: TypedQuery[Peptide] = msiEm.createQuery("Select p FROM fr.proline.core.orm.msi.Peptide p WHERE id in ( "+ pepIds.mkString(",") +" )",classOf[Peptide])
+    val queryPeptideIt: util.Iterator[Peptide] = pepQuery.getResultList.iterator()
+    while(queryPeptideIt.hasNext){
+      val qPep  = queryPeptideIt.next()
+      peptideByIds += (qPep.getId -> qPep)
+    }
+
+    val pepMatchQuery: TypedQuery[MsiPeptideMatch] = msiEm.createQuery("Select pm FROM PeptideMatch pm WHERE id in ( "+ pepMatchIds.mkString(",") +" )",classOf[MsiPeptideMatch])
+    val queryPeptideMatchIt: util.Iterator[MsiPeptideMatch] = pepMatchQuery.getResultList.iterator()
+    while(queryPeptideMatchIt.hasNext){
+      val qPepMatch = queryPeptideMatchIt.next()
+      peptideMatchByIds += (qPepMatch.getId -> qPepMatch)
+    }
+
+    end  = System.currentTimeMillis()
+    this.logger.debug("getting all peptides ("+ pepIds.length+") and child peptidesMatch in 2 queries... (" + pepMatchIds.length + "). duration "+(end-start))
+    start = end
+
+    var cumul1 = 0l
+
+    for (sourcePepInstance <- sourcePepInstances) {
       val peptide = sourcePepInstance.peptide
       val peptideId = peptide.id
       val sourcePepInstPepMatchIds = sourcePepInstance.getPeptideMatchIds()
@@ -561,6 +593,8 @@ class RsmDuplicator(rsmProvider: IResultSummaryProvider) extends IRsmDuplicator 
       val msiPepMatches = new ArrayBuffer[MsiPeptideMatch]()
 
       var bestPepMatchId: Long= -1
+      //Get list of
+
       for (mergedPepMatchId <- sourcePepInstPepMatchIds) {
         val mergedPepMatch = sourcePepMatchById(mergedPepMatchId)
 
@@ -618,7 +652,6 @@ class RsmDuplicator(rsmProvider: IResultSummaryProvider) extends IRsmDuplicator 
           mergedPepMatch.id = msiMasterPepMatchId
 
         // Map this quant peptide match to identified child peptide matches
-        val start1a = System.currentTimeMillis()
         if (mergedPepMatch.getChildrenIds != null) {
           for (childPepMatchId <- mergedPepMatch.getChildrenIds) {
 
@@ -629,7 +662,8 @@ class RsmDuplicator(rsmProvider: IResultSummaryProvider) extends IRsmDuplicator 
             val msiPepMatchRelation = new MsiPeptideMatchRelation()
             msiPepMatchRelation.setId(msiPepMatchRelationPK)
             msiPepMatchRelation.setParentPeptideMatch(msiMasterPepMatch)
-            val childPM: MsiPeptideMatch = msiEm.find(classOf[MsiPeptideMatch], childPepMatchId)
+//            val childPM: MsiPeptideMatch = msiEm.find(classOf[MsiPeptideMatch], childPepMatchId)
+            val childPM: MsiPeptideMatch = peptideMatchByIds(childPepMatchId)
             msiPepMatchRelation.setChildPeptideMatch(childPM)
             msiPepMatchRelation.setParentResultSetId(emptyRS)
 
@@ -637,21 +671,11 @@ class RsmDuplicator(rsmProvider: IResultSummaryProvider) extends IRsmDuplicator 
 
           }
         }
-        val end1a = System.currentTimeMillis()
-        cumul1a = cumul1a + (end1a-start1a)
-
       } //End go through peptideInstance's peptideMatch
-      var end1  = System.currentTimeMillis()
-      cumul1 = cumul1+(end1-start1)
-      start1=end1
 
-      //Retrieve ORM Peptide
-      // TODO: DBO => avoid this because this is particularly slow
-      val msiPep = msiEm.find(classOf[Peptide], peptideId)
-      end1  = System.currentTimeMillis()
-      cumul2 = cumul2+(end1-start1)
-      start1=end1
 
+      //Retrieve ORM Peptide and create PeptideInstance
+      val msiPep = peptideByIds(peptideId)
       val msiMasterPepInstance = new MsiPeptideInstance()
       msiMasterPepInstance.setPeptideMatchCount(sourcePepInstPepMatchIds.length)
       msiMasterPepInstance.setProteinMatchCount(sourcePepInstance.proteinMatchesCount)
@@ -709,14 +733,11 @@ class RsmDuplicator(rsmProvider: IResultSummaryProvider) extends IRsmDuplicator 
         // Save PeptideReadablePTMString
         msiEm.persist(msiPeptideReadablePtmString)
       }
-      end1  = System.currentTimeMillis()
-      cumul3 = cumul3+(end1-start1)
-      start1=end1
 
     } //--- End go through PepInstance
 
     end  = System.currentTimeMillis()
-    this.logger.debug(" ---  End go through PepInstance; duration "+(end-start)+" with cumulative values cumul1 / cumul1a (pepMatch/childPepMaches): "+cumul1+"/"+cumul1a+"; msiEm.find: "+cumul2+"; pepInst: "+cumul3 )
+    this.logger.debug(" ---  End go through PepInstance; duration "+(end-start))
     start = end
     // Retrieve some vars
     val sourcePeptideSets = sourceRSM.peptideSets
