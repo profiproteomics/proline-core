@@ -30,7 +30,7 @@
     <mzdb.version>0.8.0-SNAPSHOT</mzdb.version>  <!-- Snapshot Trunk version -->
   </properties>
   <scm>
-    <connection>scm:svn:https://bioproj.extra.cea.fr/svn/proline/Proline-Core/trunk</connection>
+    <connection>scm:svn:https://bioproj.extra.cea.fr/svn/proline/Proline-Core/branches/1.2.0-RCandidates</connection>
   </scm>
 
   <dependencyManagement>
