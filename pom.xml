@@ -9,7 +9,7 @@
   </parent>
 
   <artifactId>Proline-Core</artifactId>
-  <version>1.2.0-SNAPSHOT</version>
+  <version>1.3.0-SNAPSHOT</version>
   <packaging>pom</packaging>
 
   <name>${project.artifactId}</name>
@@ -26,8 +26,8 @@
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <core.version>1.2.0-SNAPSHOT</core.version>  <!-- Snapshot Trunk version -->
-    <mzdb.version>0.8.0-SNAPSHOT</mzdb.version>  <!-- Snapshot Trunk version -->
+    <core.version>1.3.0-SNAPSHOT</core.version>  <!-- Snapshot Trunk version -->
+    <mzdb.version>0.9.0-SNAPSHOT</mzdb.version>  <!-- Snapshot Trunk version -->
   </properties>
   <scm>
     <connection>scm:svn:https://bioproj.extra.cea.fr/svn/proline/Proline-Core/trunk</connection>
