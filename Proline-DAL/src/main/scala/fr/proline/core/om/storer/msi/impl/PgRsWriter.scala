@@ -39,8 +39,8 @@ private[msi] object PgRsWriter extends AbstractSQLRsWriter() {
 
   //"SELECT ms_query_id, peptide_id, id FROM peptide_match WHERE result_set_id = " + rsId
   
-  private val pepMatchUniqueFKsQuery = new SelectQueryBuilder1(MsiDbPeptideMatchTable).mkSelectQuery( (t,c) => 
-    List(t.MS_QUERY_ID,t.PEPTIDE_ID,t.ID) -> "WHERE "~ t.RESULT_SET_ID ~" = ?"
+  private val pepMatchUniqueFKsQuery  = new SelectQueryBuilder1(MsiDbPeptideMatchTable).mkSelectQuery( (t,c) =>
+    List(t.MS_QUERY_ID,t.RANK,t.PEPTIDE_ID,t.ID) -> "WHERE "~ t.RESULT_SET_ID ~" = ?"
   )
   private val protMatchUniqueFKQuery = new SelectQueryBuilder1(MsiDbProteinMatchTable).mkSelectQuery( (t,c) => 
     List(t.ACCESSION,t.ID) -> "WHERE "~ t.RESULT_SET_ID ~" = ?"
@@ -253,12 +253,14 @@ private[msi] object PgRsWriter extends AbstractSQLRsWriter() {
       */
       
       // Retrieve generated peptide match ids
+      //Same peptide could be identified by two PSMs from same query if seq contains X that could be replaced by I/L for instance
+      // Get PepMatch MS_QUERY_ID, RANK, PEPTIDE_ID, ID for RS
       val pepMatchIdByKey = msiEzDBC.select( pepMatchUniqueFKsQuery, rsId) { r =>
-        (r.nextLong + "%" + r.nextLong -> r.nextLong)
+        (r.nextLong+"_"+r.nextInt+ "%" + r.nextLong -> r.nextLong)
       } toMap
         
       // Iterate over peptide matches to update them
-      peptideMatches.foreach { pepMatch => pepMatch.id = pepMatchIdByKey(pepMatch.msQuery.id + "%" + pepMatch.peptide.id) }
+      peptideMatches.foreach { pepMatch => pepMatch.id = pepMatchIdByKey(pepMatch.msQuery.id +"_"+pepMatch.rank + "%" + pepMatch.peptide.id) }
   
       this._linkPeptideMatchesToChildren(peptideMatches, bulkCopyManager)
   
