@@ -49,48 +49,67 @@ trait IPepInstanceSpectralCountUpdater {
 class PepInstanceFilteringLeafSCUpdater extends IPepInstanceSpectralCountUpdater with LazyLogging {
 
   val loadedRSMByID = new HashMap[Long, LazyResultSummary]()
-  val isChildByRSMID = new HashMap[Long, Boolean]()
+  val isChildOrUnionMergeByRSMID = new HashMap[Long, Boolean]()
   val loadedRSByID = new HashMap[Long, LazyResultSet]()
-  
-  
-  def getIsLeaveRSM(rsmID: Long, execContext: IExecutionContext): Boolean = {
-    
-    if(! isChildByRSMID.contains(rsmID)) {   
-	   
+
+  /**
+    * Verify if specified RSM is a leave RSM or issued from a merge RS AND the merge was done using Union Mode.
+    * The verification is done by testing if more that one peptide Match could be specified for
+    * peptide Instance ...
+    * TODO #17738 workaround. To be update once more information will be stored in properties
+    * @return
+    */
+  def getIsLeaveRSMOrUnionRSMerge(rsmID: Long, execContext: IExecutionContext): Boolean = {
+
+    val start = System.currentTimeMillis()
+
+    if(! isChildOrUnionMergeByRSMID.contains(rsmID)) { //not stored in cache
+
 	    val rsId = getRSIdForRsmID(rsmID, execContext)
-      val isSearchRS =  if (loadedRSByID.contains(rsId)) loadedRSByID(rsId).descriptor.isSearchResult 
-         else {
-           
-            var rsType: String = null       
-      	    val jdbcWork = new JDBCWork() {
-      	      override def execute(con: Connection) {
-        	        
-        	        val pStmt = con.prepareStatement("SELECT type from result_set WHERE id = ?")
-        	        pStmt.setLong(1, rsId)
-        	        val sqlResultSet = pStmt.executeQuery()
-        	        if (sqlResultSet.next)
-        	          rsType = sqlResultSet.getString(1)
-        	        pStmt.close()
-        	      }
-        	
-      	    } // End of jdbcWork anonymous inner class    	 
-  	
-      	  execContext.getMSIDbConnectionContext().doWork(jdbcWork, false)
+      val isChildOrUnionMerge = if (loadedRSByID.contains(rsId)) {
+        val fewPepMatchByPepId = loadedRSByID(rsId).peptideMatches.groupBy(_.peptideId).filter(_._2.length>1)
+        val isSearchRS = loadedRSByID(rsId).descriptor.isSearchResult
+        ( !fewPepMatchByPepId.isEmpty || isSearchRS)
+
+      } else {
+        //Don't have access to RS. Get Information fro DB
+        var rsType: String = null
+        var multiPSM = false
+        val jdbcWork = new JDBCWork() {
+            override def execute(con: Connection) {
+
+              var pStmt = con.prepareStatement("SELECT type from result_set WHERE id = ?")
+              pStmt.setLong(1, rsId)
+              var sqlResultSet = pStmt.executeQuery()
+              if (sqlResultSet.next)
+                rsType = sqlResultSet.getString(1)
+              pStmt.close()
+              val time1 = System.currentTimeMillis()
+              pStmt = con.prepareStatement("SELECT 1 WHERE EXISTS(SELECT countPM FROM (SELECT count(pm.id) as countPM FROM peptide_match pm WHERE pm.result_set_id = 10  GROUP BY pm.peptide_id) as countQuery WHERE countQuery.countPM>1)")
+              pStmt.setLong(1, rsId)
+              sqlResultSet = pStmt.executeQuery()
+              val time2 = System.currentTimeMillis()
+              logger.debug(" TEST if Merge UNION ! "+(time2-time1)+" ms")
+              multiPSM=sqlResultSet.next
+              pStmt.close()
+            }
+
+        } // End of jdbcWork anonymous inner class
+
+          execContext.getMSIDbConnectionContext().doWork(jdbcWork, false)
           if(rsType == null)
             throw new IllegalArgumentException("Unable to get Result Set Type for ResultSummary ID " + rsmID)
-    	    if ((rsType matches "SEARCH") || (rsType matches "DECOY_SEARCH")){
-  	        true
-  	      } else{
-  	        false
-  	      }
+
+          ( multiPSM || ((rsType matches "SEARCH") || (rsType matches "DECOY_SEARCH")))
        }
-      isChildByRSMID += rsmID -> isSearchRS       
+      isChildOrUnionMergeByRSMID += rsmID -> isChildOrUnionMerge
     }
-    
-    return isChildByRSMID(rsmID);
+    val end = System.currentTimeMillis()
+    logger.debug(" TEST isChildOrUnionMergeByRSMID : "+(end-start)+" ms")
+    return isChildOrUnionMergeByRSMID(rsmID);
   }
 
-  def getRSIdForRsmID(rsmID: Long, execContext: IExecutionContext): Long = {
+    def getRSIdForRsmID(rsmID: Long, execContext: IExecutionContext): Long = {
     if(loadedRSMByID.contains(rsmID))
       return loadedRSMByID(rsmID).resultSetId
 
@@ -107,10 +126,10 @@ class PepInstanceFilteringLeafSCUpdater extends IPepInstanceSpectralCountUpdater
           pStmt.close()
         }
       }
-    } // End of jdbcWork anonymous inner class    	 
+    } // End of jdbcWork anonymous inner class
 
     execContext.getMSIDbConnectionContext().doWork(jdbcWork, false)
-    if (rsID > 0) 
+    if (rsID > 0)
       return rsID
     else
       throw new IllegalArgumentException("Unable to get Result Set ID for ResultSummary ID " + rsmID)
@@ -127,13 +146,13 @@ class PepInstanceFilteringLeafSCUpdater extends IPepInstanceSpectralCountUpdater
    * In case of RSM (RSM.Y) issued from a mergeRSM service, the following computation will be done :
    *  - Get the leave RSM and compute SC (  basic SC = valid PSM count)
    *  - update RSM.Y peptide instance SC using the sum of leave RSM peptide instance SC
-   *  
-   *  
+   *
+   *
    */
     def updatePepInstanceSC(rsm: LazyResultSummary, execContext: IExecutionContext): Unit = {
-      updatePepInstanceSC(Seq(rsm), execContext)      
-  	}	
-    
+      updatePepInstanceSC(Seq(rsm), execContext)
+  	}
+
   /**
    * *
    * Update Peptide Instances basic SC using filtering information for specified RSMs
@@ -145,36 +164,36 @@ class PepInstanceFilteringLeafSCUpdater extends IPepInstanceSpectralCountUpdater
    * In case of RSM (RSM.Y) issued from a mergeRSM service, the following computation will be done :
    *  - Get the leave RSM and compute SC (  basic SC = valid PSM count)
    *  - update RSM.Y peptide instance SC using the sum of leave RSM peptide instance SC
-   *  
-   *  
+   *
+   *
    */
   def updatePepInstanceSC(rsms: Seq[IResultSummaryLike], execContext: IExecutionContext): Unit = {
-    
+
     val lazyRsms = rsms.map { rsmLike =>
       val lazyRsm = rsmLike match {
         case lazyRsm: LazyResultSummary => lazyRsm
         case rsm: ResultSummary => rsm.toLazyResultSummary(false, false)
       }
-      
+
       loadedRSMByID += (lazyRsm.id -> lazyRsm)
       loadedRSByID += (lazyRsm.resultSetId -> lazyRsm.lazyResultSet)
-      
+
       lazyRsm
     }
-    
+
     for( rsm <- lazyRsms) {
 	    val startTime = System.currentTimeMillis()
-		
+
 	    val spectralCountByPepId :HashMap[Long, Int] = getRSMSpectralCountByPepId(rsm, rsm.id, rsm.peptideInstances.map(_.peptideId),  execContext)
-	
+
 	    val endTime = System.currentTimeMillis()
 	    logger.debug(" Needed Time to calculate SC (RSM) "+rsm.id+" for " +spectralCountByPepId.size+" =  " + (endTime - startTime) + " ms")
-	
+
 	    val tmpPepInstByPepIdBuilder = Map.newBuilder[Long,PeptideInstance]
-	    rsm.peptideInstances.foreach(pepInst => { 
-	    	tmpPepInstByPepIdBuilder += pepInst.peptideId -> pepInst 
+	    rsm.peptideInstances.foreach(pepInst => {
+	    	tmpPepInstByPepIdBuilder += pepInst.peptideId -> pepInst
 	      })
-	      
+
 	  	val tmpPepInstByPepId = tmpPepInstByPepIdBuilder.result
 	    spectralCountByPepId.foreach(pepSc => {
 	      if (tmpPepInstByPepId.get(pepSc._1).isDefined) {
@@ -184,11 +203,11 @@ class PepInstanceFilteringLeafSCUpdater extends IPepInstanceSpectralCountUpdater
 	      }
 	    })
     }
-    
+
     //Clear Cache Map
     loadedRSByID.clear
     loadedRSMByID.clear
-    isChildByRSMID.clear
+    isChildOrUnionMergeByRSMID.clear
     
   }
   
@@ -196,8 +215,8 @@ class PepInstanceFilteringLeafSCUpdater extends IPepInstanceSpectralCountUpdater
     val scByPepID = new HashMap[Long, Int]()
 
     //***** RSM is leave : COUNT Valid PSM
-    if (getIsLeaveRSM(rsmID, execContext)) {
-      logger.trace(" RSM "+rsmID+" is leave RSM ")
+    if (getIsLeaveRSMOrUnionRSMerge(rsmID, execContext)) {
+      logger.trace(" RSM "+rsmID+" is leave RSM - Or validation of union RS merge")
 
       val rsm = if (loadedRSMByID.contains(rsmID))
        loadedRSMByID(rsmID)
