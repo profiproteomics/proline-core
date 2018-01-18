@@ -85,7 +85,7 @@ class PepInstanceFilteringLeafSCUpdater extends IPepInstanceSpectralCountUpdater
                 rsType = sqlResultSet.getString(1)
               pStmt.close()
               val time1 = System.currentTimeMillis()
-              pStmt = con.prepareStatement("SELECT 1 WHERE EXISTS(SELECT countPM FROM (SELECT count(pm.id) as countPM FROM peptide_match pm WHERE pm.result_set_id = 10  GROUP BY pm.peptide_id) as countQuery WHERE countQuery.countPM>1)")
+              pStmt = con.prepareStatement("SELECT 1 WHERE EXISTS(SELECT countPM FROM (SELECT count(pm.id) as countPM FROM peptide_match pm WHERE pm.result_set_id = ?  GROUP BY pm.peptide_id) as countQuery WHERE countQuery.countPM>1)")
               pStmt.setLong(1, rsId)
               sqlResultSet = pStmt.executeQuery()
               val time2 = System.currentTimeMillis()
