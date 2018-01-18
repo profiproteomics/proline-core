@@ -536,12 +536,12 @@ class RsmDuplicator(rsmProvider: IResultSummaryProvider) extends IRsmDuplicator 
     // Get Default Scoring : Mascot Standard
     //VDS FIXME which default ?!
     MsiScoring.Type.MASCOT_STANDARD_SCORE.toString
-    val defaultScoringId =  ScoringRepository.getScoringIdForType(msiEm,MsiScoring.Type.MASCOT_STANDARD_SCORE.toString)
+    val defaultScoringId = ScoringRepository.getScoringIdForType(msiEm, MsiScoring.Type.MASCOT_STANDARD_SCORE.toString)
 
 
     // Iterate over merged peptide instances to create quant peptide instances
-    var end  = System.currentTimeMillis()
-    this.logger.info("cloning master quant peptide instances... (" + sourcePepInstances.length + "). From start method "+(end-start))
+    var end = System.currentTimeMillis()
+    this.logger.info("cloning master quant peptide instances... (" + sourcePepInstances.length + "). From start method " + (end - start))
     start = end
 
     // Define some vars
@@ -556,27 +556,29 @@ class RsmDuplicator(rsmProvider: IResultSummaryProvider) extends IRsmDuplicator 
     val pepIds = new ArrayBuffer[Long]()
     val pepMatchIds = new ArrayBuffer[Long]()
     for (sourcePepInstance <- sourcePepInstances) {
-      pepIds+=sourcePepInstance.peptide.id
+      pepIds += sourcePepInstance.peptide.id
       val sourcePepInstPepMatchIds = sourcePepInstance.getPeptideMatchIds()
       for (mergedPepMatchId <- sourcePepInstPepMatchIds) {
-        val childIds =  sourcePepMatchById(mergedPepMatchId).getChildrenIds
-        if(childIds !=null && childIds.length>0)
+        val childIds = sourcePepMatchById(mergedPepMatchId).getChildrenIds
+        if (childIds != null && childIds.length > 0)
           pepMatchIds ++= childIds
       }
     }
 
-    val pepQuery: TypedQuery[Peptide] = msiEm.createQuery("Select p FROM fr.proline.core.orm.msi.Peptide p WHERE id in ( "+ pepIds.mkString(",") +" )",classOf[Peptide])
+    val pepQuery: TypedQuery[Peptide] = msiEm.createQuery("Select p FROM fr.proline.core.orm.msi.Peptide p WHERE id in ( " + pepIds.mkString(",") + " )", classOf[Peptide])
     val queryPeptideIt: util.Iterator[Peptide] = pepQuery.getResultList.iterator()
-    while(queryPeptideIt.hasNext){
-      val qPep  = queryPeptideIt.next()
+    while (queryPeptideIt.hasNext) {
+      val qPep = queryPeptideIt.next()
       peptideByIds += (qPep.getId -> qPep)
     }
 
-    val pepMatchQuery: TypedQuery[MsiPeptideMatch] = msiEm.createQuery("Select pm FROM PeptideMatch pm WHERE id in ( "+ pepMatchIds.mkString(",") +" )",classOf[MsiPeptideMatch])
-    val queryPeptideMatchIt: util.Iterator[MsiPeptideMatch] = pepMatchQuery.getResultList.iterator()
-    while(queryPeptideMatchIt.hasNext){
-      val qPepMatch = queryPeptideMatchIt.next()
-      peptideMatchByIds += (qPepMatch.getId -> qPepMatch)
+    if (!pepMatchIds.isEmpty) {
+      val pepMatchQuery: TypedQuery[MsiPeptideMatch] = msiEm.createQuery("Select pm FROM PeptideMatch pm WHERE id in ( " + pepMatchIds.mkString(",") + " )", classOf[MsiPeptideMatch])
+      val queryPeptideMatchIt: util.Iterator[MsiPeptideMatch] = pepMatchQuery.getResultList.iterator()
+      while (queryPeptideMatchIt.hasNext) {
+        val qPepMatch = queryPeptideMatchIt.next()
+        peptideMatchByIds += (qPepMatch.getId -> qPepMatch)
+      }
     }
 
     end  = System.currentTimeMillis()
@@ -663,7 +665,7 @@ class RsmDuplicator(rsmProvider: IResultSummaryProvider) extends IRsmDuplicator 
             msiPepMatchRelation.setId(msiPepMatchRelationPK)
             msiPepMatchRelation.setParentPeptideMatch(msiMasterPepMatch)
 //            val childPM: MsiPeptideMatch = msiEm.find(classOf[MsiPeptideMatch], childPepMatchId)
-            val childPM: MsiPeptideMatch = peptideMatchByIds(childPepMatchId)
+            val childPM: MsiPeptideMatch = peptideMatchByIds.getOrElse(childPepMatchId, null)
             msiPepMatchRelation.setChildPeptideMatch(childPM)
             msiPepMatchRelation.setParentResultSetId(emptyRS)
 
