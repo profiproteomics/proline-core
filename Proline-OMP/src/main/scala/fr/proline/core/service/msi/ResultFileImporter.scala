@@ -102,7 +102,7 @@ class ResultFileImporter(
       }
       executeOnProgress() //execute registered action during progress
 
-      //--- READ FILE BEFORE STIRE
+      //--- READ FILE BEFORE STORE
       resultFile.parseResultSet(false) //read target
       if(resultFile.hasDecoyResultSet)
         resultFile.parseResultSet(true)
