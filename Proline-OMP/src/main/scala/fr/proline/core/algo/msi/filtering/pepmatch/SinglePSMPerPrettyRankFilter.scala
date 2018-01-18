@@ -98,7 +98,7 @@ class SinglePSMPerPrettyRankFilter(var targetRs: IResultSetLike = null) extends 
             currentRankPsms.foreach(currentPsm => {
               if (bestRankPsm == null) {
                 bestRankPsm = currentPsm
-                logger.debug("**** more than One PSMs... Start with first "+bestRankPsm.peptide.sequence+" for "+entry._1+"-"+sameRankPSMs._1)
+                logger.trace("**** more than One PSMs... Start with first "+bestRankPsm.peptide.sequence+" for "+entry._1+"-"+sameRankPSMs._1)
               } else {
                 val protMatchesOpt = protMatchesByPepMatchId.get(currentPsm.id)
                 val bestPsmProtMatchesOpt = protMatchesByPepMatchId.get(bestRankPsm.id)
@@ -107,7 +107,7 @@ class SinglePSMPerPrettyRankFilter(var targetRs: IResultSetLike = null) extends 
                   (bestPsmProtMatchesOpt.isEmpty
                     || (getMaxNbrPepForProtMatches(protMatchesOpt.get) > getMaxNbrPepForProtMatches(bestPsmProtMatchesOpt.get))))
                   bestRankPsm = currentPsm
-                  logger.debug("**** more than One PSMs... Found new best "+bestRankPsm.peptide.sequence+" for "+entry._1+"-"+sameRankPSMs._1)
+                  logger.trace("**** more than One PSMs... Found new best "+bestRankPsm.peptide.sequence+" for "+entry._1+"-"+sameRankPSMs._1)
               }
             }) //end go through all equals PSMs
           } //End more than one PSM
