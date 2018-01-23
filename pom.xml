@@ -5,7 +5,7 @@
   <parent>
     <artifactId>ProFI-Pom</artifactId>
     <groupId>fr.proline</groupId>
-    <version>0.4.0-SNAPSHOT</version>  <!-- Snapshot Trunk version -->
+    <version>0.4.0</version>  <!-- Snapshot Trunk version -->
   </parent>
 
   <artifactId>Proline-Core</artifactId>
@@ -40,12 +40,12 @@
       <dependency>
         <groupId>fr.proline.util</groupId>
         <artifactId>ProFI-Commons-Scala</artifactId>
-        <version>0.7.0-SNAPSHOT</version> <!-- Snapshot Trunk version -->
+        <version>0.7.0</version> <!-- Snapshot Trunk version -->
       </dependency>
       <dependency>
         <groupId>fr.profi</groupId>
         <artifactId>ProFI-Proteomics</artifactId>
-        <version>0.3.0-SNAPSHOT</version>
+        <version>0.3.0</version>
       </dependency>
       
       <!-- MzDB access and processing -->
@@ -118,7 +118,7 @@
     <dependency>
       <groupId>fr.proline.util</groupId>
       <artifactId>ProFI-Commons-Java</artifactId>
-      <version>0.6.0-SNAPSHOT</version> <!-- Snapshot Trunk version -->
+      <version>0.6.0</version> <!-- Snapshot Trunk version -->
     </dependency>
 
     <!-- JUnit tests -->
