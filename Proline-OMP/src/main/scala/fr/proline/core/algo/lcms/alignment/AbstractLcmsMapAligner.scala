@@ -142,7 +142,7 @@ abstract class AbstractLcmsMapAligner extends LazyLogging {
     
     val filteredMapAlnSets = alnResult.mapAlnSets.map { mapAlnSet =>
       val filteredMapAlns = mapAlnSet.mapAlignments.map { mapAln =>
-        this._removeMapAlnOutliers(mapAln)
+        this._removeMapAlnOutliers(mapAln, remainingIterations = 3)
       }
       mapAlnSet.copy( mapAlignments = filteredMapAlns)
     }
@@ -152,7 +152,8 @@ abstract class AbstractLcmsMapAligner extends LazyLogging {
   
   // Remove outliers recursively
   @tailrec
-  private def _removeMapAlnOutliers(mapAln: MapAlignment): MapAlignment = {
+  private def _removeMapAlnOutliers(mapAln: MapAlignment, remainingIterations: Int): MapAlignment = {
+    if (remainingIterations == 0) return mapAln
     
     val timeList = mapAln.timeList
     val deltaTimeList = mapAln.deltaTimeList
@@ -163,8 +164,8 @@ abstract class AbstractLcmsMapAligner extends LazyLogging {
     
     // Compute delta time difference statistics and determine outlier threshold
     val deltaTimeStatSummary = CommonsStatHelper.calcExtendedStatSummary(deltaTimeDiffs)
-    val lowerInnerFence = deltaTimeStatSummary.getLowerInnerFence()
-    val upperInnerFence = deltaTimeStatSummary.getUpperInnerFence()
+    val lowerInnerFence = deltaTimeStatSummary.getLowerOuterFence()
+    val upperInnerFence = deltaTimeStatSummary.getUpperOuterFence()
     val maxAbsDiff = math.max( math.abs(lowerInnerFence), math.abs(upperInnerFence) )
     
     // Create new lists
@@ -210,7 +211,7 @@ abstract class AbstractLcmsMapAligner extends LazyLogging {
       deltaTimeList = newDeltaTimeList.toArray
     )
     
-    this._removeMapAlnOutliers(filteredMapAln)
+    this._removeMapAlnOutliers(filteredMapAln, remainingIterations - 1)
   }
 
 }
