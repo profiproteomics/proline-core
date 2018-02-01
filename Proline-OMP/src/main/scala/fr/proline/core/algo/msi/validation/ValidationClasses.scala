@@ -103,6 +103,7 @@ object BuildPeptideMatchFilter {
       case PepMatchFilterParams.SCORE_HT_PVALUE => new MascotPValuePSMFilter(useHomologyThreshold = true)
       case PepMatchFilterParams.SINGLE_PSM_PER_QUERY => new SinglePSMPerQueryFilter()
       case PepMatchFilterParams.SINGLE_PSM_PER_RANK=> new SinglePSMPerPrettyRankFilter()
+      case PepMatchFilterParams.ISOTOPE_OFFSET => new IsotopeOffsetPSMFilter()
     }
   }
 } 

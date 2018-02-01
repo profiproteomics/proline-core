@@ -25,6 +25,7 @@ object PepMatchFilterParams extends Enumeration {
   val SCORE_HT_PVALUE = Value("SCORE_HT_P-VALUE")
   val SINGLE_PSM_PER_QUERY = Value("SINGLE_PSM_PER_QUERY")
   val SINGLE_PSM_PER_RANK = Value("SINGLE_PSM_PER_RANK")  // TODO: rename SINGLE_PSM_PER_PRETTY_RANK
+  val ISOTOPE_OFFSET= Value("ISOTOPE_OFFSET")
 }
 
 object ProtSetFilterParams extends Enumeration {
@@ -71,12 +72,8 @@ trait IFilter extends IFilterConfig {
     toDouble(this.getThresholdValue)
   }
 
-  /**
-   * Given a current Threshold value, return the next possible value. This
-   * is useful for ComputedValidationPSMFilter in order to determine
-   * best threshold value to reach specified FDR
-   */
-  def setThresholdValue(currentVal: Any): Unit
+
+  def setThresholdValue(newThreshold: Any): Unit
 
   /**
     * Specify if the Filter is used in Propagation process. Some definition or
