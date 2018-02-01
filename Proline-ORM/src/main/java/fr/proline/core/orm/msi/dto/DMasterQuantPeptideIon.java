@@ -60,7 +60,7 @@ public class DMasterQuantPeptideIon {
         m_elutionTime = mqpi.getElutionTime();
         m_peptideInstance = new DPeptideInstance(pi.getId(), p.getId(), pi.getValidatedProteinSetCount(), pi.getElutionTime());
         m_peptideInstance.setPeptide(p);
-        m_bestPeptideMatch = new DPeptideMatch(bpm.getId(), bpm.getRank(), bpm.getCharge(), bpm.getDeltaMoz(), bpm.getExperimentalMoz(), bpm.getMissedCleavage(), bpm.getScore(), bpm.getResultSet().getId(), bpm.getCDPrettyRank(), bpm.getSDPrettyRank(), bpm.getIsDecoy());
+        m_bestPeptideMatch = new DPeptideMatch(bpm.getId(), bpm.getRank(), bpm.getCharge(), bpm.getDeltaMoz(), bpm.getExperimentalMoz(), bpm.getMissedCleavage(), bpm.getScore(), bpm.getResultSet().getId(), bpm.getCDPrettyRank(), bpm.getSDPrettyRank(), bpm.getIsDecoy(), bpm.getSerializedProperties());
         m_bestPeptideMatch.setPeptide(p);
         
         m_lcmsMasterFeatureId = mqpi.getLcmsMasterFeatureId();

@@ -1,15 +1,22 @@
 package fr.proline.core.orm.msi.dto;
 
+import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Map;
 
 import fr.proline.core.orm.msi.Peptide;
 import fr.proline.core.orm.msi.SequenceMatch;
+import fr.proline.core.orm.util.JsonSerializer;
 
 /**
  *
  * @author JM235353
  */
 public class DPeptideMatch implements Comparable<DPeptideMatch> {
+
+    public static final String ISOTOPE_OFFSET_KEY = "isotope_offset";
+
+
     private long m_id;
     private Integer m_rank;
     private int m_charge;
@@ -42,8 +49,34 @@ public class DPeptideMatch implements Comparable<DPeptideMatch> {
     
     private ArrayList<DPeptidePTM> m_peptidePTMArray = null;
     private DPtmSiteProperties m_ptmSiteProperties = null;
-    
-    
+    private Integer m_isotopeOff = 0;
+
+
+    public DPeptideMatch(long id, Integer rank, int charge, Float deltaMoz, double experimentalMoz, int missedCleavage, Float score, long resultSetId, Integer cdPrettyRank, Integer sdPrettyRank, String serializedProperties) {
+        m_id = id;
+        m_rank = rank;
+        m_charge = charge;
+        m_deltaMoz = deltaMoz;
+        m_experimentalMoz = experimentalMoz;
+        m_missedCleavage = missedCleavage;
+        m_score = score;
+        m_resultSetId = resultSetId;
+
+        m_peptide = null;
+        m_msQuery = null;
+        m_msQuerySet = false;
+        m_sequenceMatch = null;
+        m_proteinMatchArray = null;
+
+        m_cdPrettyRank = cdPrettyRank;
+        m_sdPrettyRank = sdPrettyRank;
+        m_isDecoy = false;
+        m_isValidated = false;
+        m_serializedProperties = serializedProperties;
+        setIsotopeOffFromSerializedProperties();
+
+    }
+
     public DPeptideMatch(long id, Integer rank, int charge, Float deltaMoz, double experimentalMoz, int missedCleavage, Float score, long resultSetId, Integer cdPrettyRank, Integer sdPrettyRank) {
         m_id = id;
         m_rank = rank;
@@ -85,6 +118,31 @@ public class DPeptideMatch implements Comparable<DPeptideMatch> {
         m_cdPrettyRank = cdPrettyRank;
         m_sdPrettyRank = sdPrettyRank;
         m_isDecoy = isDecoy;
+
+    }
+
+    public DPeptideMatch(long id, Integer rank, int charge, Float deltaMoz, double experimentalMoz, int missedCleavage, Float score, long resultSetId, Integer cdPrettyRank, Integer sdPrettyRank, Boolean isDecoy, String serializedProperties) {
+        m_id = id;
+        m_rank = rank;
+        m_charge = charge;
+        m_deltaMoz = deltaMoz;
+        m_experimentalMoz = experimentalMoz;
+        m_missedCleavage = missedCleavage;
+        m_score = score;
+        m_resultSetId = resultSetId;
+
+        m_peptide = null;
+        m_msQuery = null;
+        m_msQuerySet = false;
+        m_sequenceMatch = null;
+        m_proteinMatchArray = null;
+
+        m_cdPrettyRank = cdPrettyRank;
+        m_sdPrettyRank = sdPrettyRank;
+        m_isDecoy = isDecoy;
+        m_serializedProperties = serializedProperties;
+        setIsotopeOffFromSerializedProperties();
+
     }
     
     public long getId() {
@@ -105,6 +163,7 @@ public class DPeptideMatch implements Comparable<DPeptideMatch> {
 
 	public void setSerializedProperties(String serializedProperties) {
 		m_serializedProperties = serializedProperties;
+        setIsotopeOffFromSerializedProperties();
 	}
     
     public void setSequenceMatch(SequenceMatch sequenceMatch) {
@@ -228,6 +287,10 @@ public class DPeptideMatch implements Comparable<DPeptideMatch> {
 		return m_peptidePTMArray;
 	}
 
+	public Integer getIsotopeOffset(){
+        return  m_isotopeOff;
+    }
+
 	public void setPeptidePTMArray(ArrayList<DPeptidePTM> peptidePTMArray) {
 		m_peptidePTMArray = peptidePTMArray;
 	}
@@ -240,6 +303,22 @@ public class DPeptideMatch implements Comparable<DPeptideMatch> {
 		this.m_ptmSiteProperties = m_ptmSiteProperties;
 	}
 	
-	
+	private void setIsotopeOffFromSerializedProperties() {
+        m_isotopeOff = 0;
+        try {
+            if (m_serializedProperties != null) {
+                Map<String, Object> pmqSerializedMap = JsonSerializer.getMapper().readValue(m_serializedProperties, Map.class);
+                if (pmqSerializedMap != null) {
+                    Object value = pmqSerializedMap.get(ISOTOPE_OFFSET_KEY);
+                    if (value != null) {
+                        m_isotopeOff = Integer.parseInt(value.toString());
+                    }
+                }
+            }
+        } catch (IOException ie) {
+        }
+    }
+
+
 
 }
