@@ -385,7 +385,8 @@ case class PeptideMatchProperties (
   @BeanProperty var omssaProperties: Option[PeptideMatchOmssaProperties] = None,
   @BeanProperty var xtandemProperties: Option[PeptideMatchXtandemProperties] = None,
   @BeanProperty var ptmSiteProperties: Option[PeptideMatchPtmSiteProperties] = None,
-  @BeanProperty var spectralCount: Option[Int] = None
+  @BeanProperty var spectralCount: Option[Int] = None,
+  @BeanProperty var isotopeOffset: Option[Int] = None
 )
 
 case class PeptideMatchMascotProperties (

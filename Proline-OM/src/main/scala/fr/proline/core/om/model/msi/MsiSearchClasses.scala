@@ -61,7 +61,9 @@ case class SearchSettings(
   
 )
 
-case class SearchSettingsProperties()
+case class SearchSettingsProperties(
+  var  isotopeOffsetRange: Array[Int] = Array(0,0)
+)
 
 case class MSMSSearchSettings(
   // MS/MS search settings
