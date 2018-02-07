@@ -589,7 +589,7 @@ case class ProcessedMap(
   
   // Requirements
   require( modificationTimestamp != null, "modificationTimestamp is null" )
-  if( !isMaster ) require( rawMapReferences.length == 1, "invalid rawMapReferences count" )
+  if( !isMaster ) require( (rawMapReferences != null) &&  (rawMapReferences.length == 1), "invalid rawMapReferences count" )
   
   def getRawMapIds(): Seq[Long] = rawMapReferences.map(_.id)
   
