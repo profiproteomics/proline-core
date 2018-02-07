@@ -2,13 +2,11 @@ package fr.proline.core.service.msq.quantify
 
 import com.typesafe.scalalogging.LazyLogging
 import fr.proline.context.MsiDbConnectionContext
-import fr.proline.core.algo.msq.config.ILabelFreeQuantConfig
 import fr.proline.core.algo.msq.summarizing.LabelFreeEntitiesSummarizer
 import fr.proline.core.om.model.lcms.MapSet
 import fr.proline.core.om.model.msi.ResultSummary
 import fr.proline.core.om.model.msq.ExperimentalDesign
 import fr.proline.core.orm.msi.ObjectTreeSchema.SchemaName
-import fr.proline.core.orm.msi.{ ResultSet => MsiResultSet }
 import fr.proline.core.orm.msi.{ ResultSummary => MsiResultSummary }
 import fr.proline.core.orm.msi.repository.ObjectTreeSchemaRepository
 import fr.proline.core.om.provider.msi.impl.SQLResultSummaryProvider
@@ -17,7 +15,6 @@ import fr.proline.core.om.storer.msi.impl.RsmDuplicator
 abstract class AbstractLabelFreeFeatureQuantifier extends AbstractMasterQuantChannelQuantifier with LazyLogging {
   
   val experimentalDesign: ExperimentalDesign
-  val quantConfig: ILabelFreeQuantConfig
   val lcmsMapSet: MapSet
   
   protected val lcmsDbCtx = executionContext.getLCMSDbConnectionContext

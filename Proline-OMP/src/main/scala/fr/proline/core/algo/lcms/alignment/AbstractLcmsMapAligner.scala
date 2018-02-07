@@ -61,7 +61,7 @@ abstract class AbstractLcmsMapAligner extends LazyLogging {
     }
     println("#####")
     */
-        
+
     // two possibilities: keep nearest mass match or exclude matching conflicts (more than one match)
     val landmarksByMassIdx = new LongMap[ArrayBuffer[Landmark]]
     
@@ -88,11 +88,14 @@ abstract class AbstractLcmsMapAligner extends LazyLogging {
       val landmarksSortedByTime = landmarks.sortBy( _.time )
       var smoothedLandmarks = alnSmoother.smoothLandmarks( landmarksSortedByTime, alnParams.smoothingParams )
       // FIXME: this should not be empty
-      if( smoothedLandmarks.isEmpty ) smoothedLandmarks = landmarksSortedByTime
+      if( smoothedLandmarks.isEmpty ) {
+        logger.warn("Empty array of smoothed Landmarks, use the original landmarks instead")
+        smoothedLandmarks = landmarksSortedByTime
+      }
       
       /*val timeList = landmarksSortedByTime.map { _.time }
       val deltaTimeList = landmarksSortedByTime.map { _.deltaTime }*/
-      
+
       val( timeList, deltaTimeList ) = ( new ArrayBuffer[Float](smoothedLandmarks.length), new ArrayBuffer[Float](smoothedLandmarks.length) )
       var prevTimePlusDelta = smoothedLandmarks(0).time + smoothedLandmarks(0).deltaTime - 1
       var prevTime = -1f
