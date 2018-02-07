@@ -1,17 +1,22 @@
 package fr.proline.core.orm.uds.dto;
 
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+import fr.proline.core.orm.lcms.MapAlignment;
+import fr.proline.core.orm.lcms.MapAlignmentPK;
+import fr.proline.core.orm.lcms.MapTime;
+import fr.proline.core.orm.lcms.ProcessedMap;
 import fr.proline.core.orm.msi.ResultSet;
 import fr.proline.core.orm.msi.ResultSummary;
 import fr.proline.core.orm.uds.Aggregation;
+import fr.proline.core.orm.uds.Dataset.DatasetType;
 import fr.proline.core.orm.uds.GroupSetup;
 import fr.proline.core.orm.uds.ObjectTree;
-import fr.proline.core.orm.uds.QuantitationMethod;
-import fr.proline.core.orm.uds.Dataset.DatasetType;
 import fr.proline.core.orm.uds.Project;
+import fr.proline.core.orm.uds.QuantitationMethod;
 import fr.proline.core.orm.util.JsonSerializer;
 
 /**
@@ -38,6 +43,11 @@ public class DDataset {
     private MergeInformation m_mergeInformation = MergeInformation.MERGE_UNKNOW;
     
     private List<DMasterQuantitationChannel> m_masterQuantitationChannels;
+    private List<MapAlignment> m_mapAlignments;
+    private List<MapAlignment> m_mapReversedAlignments;
+    private List<ProcessedMap> m_maps;
+    private Long m_alnReferenceMapId;
+    
     private ObjectTree m_postQuantProcessingConfig;
     private ObjectTree m_quantProcessingConfig;
     
@@ -217,6 +227,101 @@ public class DDataset {
 		this.groupSetup = groupSetup;
 	}
 	
+
+    public Long getAlnReferenceMapId() {
+		return m_alnReferenceMapId;
+	}
+
+	public void setAlnReferenceMapId(Long alnReferenceMapId) {
+		this.m_alnReferenceMapId = alnReferenceMapId;
+	}
+
+	public List<MapAlignment> getMapAlignments() {
+        return m_mapAlignments;
+    }
+
+    public void setMapAlignments(List<MapAlignment> allMapAlignments) {
+        this.m_mapAlignments = allMapAlignments;
+        updateReversedAlignments();
+    }
+
+    public void clearMapAlignments() {
+    	this.m_mapAlignments = null;
+    	this.m_mapReversedAlignments = null;
+    	this.m_alnReferenceMapId = -1L;
+    }
+    
+    public List<ProcessedMap> getMaps() {
+        return m_maps;
+    }
+
+    public void setMaps(List<ProcessedMap> allMaps) {
+        this.m_maps = allMaps;
+    }
+    
+	private void updateReversedAlignments() {
+		// add the reversed alignments
+		m_mapReversedAlignments = new ArrayList<>();
+//		m_mapReversedAlignments.addAll(m_mapAlignments);
+		for (MapAlignment ma : m_mapAlignments) {
+
+			MapAlignment reversedMap = new MapAlignment();
+			MapAlignmentPK mapKey = new MapAlignmentPK();
+			mapKey.setFromMapId(ma.getDestinationMap().getId());
+			mapKey.setToMapId(ma.getSourceMap().getId());
+			mapKey.setMassStart(ma.getId().getMassStart());
+			mapKey.setMassEnd(ma.getId().getMassEnd());
+			reversedMap.setId(mapKey);
+			reversedMap.setDestinationMap(ma.getSourceMap());
+			reversedMap.setSourceMap(ma.getDestinationMap());
+			reversedMap.setMapSet(ma.getMapSet());
+
+			int nbLandmarks = ma.getMapTimeList().size();
+			Double[] revTimeList = new Double[nbLandmarks];
+			Double[] revDeltaTimeList = new Double[nbLandmarks];
+			List<MapTime> revMapTimeList = new ArrayList<>();
+			for (int i = 0; i < nbLandmarks; i++) {
+				MapTime mapTime = ma.getMapTimeList().get(i);
+				Double deltaTime = mapTime.getDeltaTime();
+				Double targetMapTime = mapTime.getTime() + deltaTime;
+				revTimeList[i] = targetMapTime;
+				revDeltaTimeList[i] = -deltaTime;
+				MapTime rmp = new MapTime(revTimeList[i], revDeltaTimeList[i]);
+				revMapTimeList.add(rmp);
+			}
+			String deltaS = org.apache.commons.lang3.StringUtils.join(revDeltaTimeList, " ");
+			String timeS = org.apache.commons.lang3.StringUtils.join(revTimeList, " ");
+
+			reversedMap.setMapTimeList(revMapTimeList);
+			reversedMap.setDeltaTimeList(deltaS);
+			reversedMap.setTimeList(timeS);
+
+			m_mapReversedAlignments.add(reversedMap);
+		}
+	}
+
+    public List<MapAlignment> getMapReversedAlignments() {
+        return m_mapReversedAlignments;
+    }
+    
+    public List<MapAlignment> getMapAlignmentsFromMap(Long mapId) {
+    	List<MapAlignment> list = new ArrayList<>();
+    	for (MapAlignment ma : m_mapAlignments) {
+    		if (ma.getSourceMap().getId().equals(mapId)) {
+    			list.add(ma);
+    		}
+    	}
+
+    	for (MapAlignment ma : m_mapReversedAlignments) {
+    		if (ma.getSourceMap().getId().equals(mapId)) {
+    			list.add(ma);
+    		}    		
+    	}
+    	  	
+        return list;
+    }
+    
+    
 	/**
 	 * return true if the dataset is a XIC quantitation (type feature_intensity)
 	 * @return
