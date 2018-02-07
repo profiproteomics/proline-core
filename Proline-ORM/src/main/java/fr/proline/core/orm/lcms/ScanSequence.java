@@ -3,6 +3,7 @@ package fr.proline.core.orm.lcms;
 import javax.persistence.*;
 
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.List;
 
 
@@ -114,17 +115,21 @@ public class ScanSequence implements Serializable {
 	}
 
 	public Scan addScan(Scan scan) {
-		getScans().add(scan);
+		if (scans == null) {
+			scans = new ArrayList<>();
+		}
+		scans.add(scan);
 		scan.setScanSequence(this);
-
 		return scan;
 	}
 
 	public Scan removeScan(Scan scan) {
-		getScans().remove(scan);
-		scan.setScanSequence(null);
-
-		return scan;
+		if (scans != null) {
+			scans.remove(scan);
+			scan.setScanSequence(null);
+			return scan;
+		}
+		return null;
 	}
 
 	public Instrument getInstrument() {
