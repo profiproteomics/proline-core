@@ -781,7 +781,6 @@ class ExtractMapSet(
                   timeComputationMethod,
                   lcMsRun.scanSequence.get.scanById
                 )
-                
                 masterFtChildren += clusterFeature
                 metricsByRunId(lcMsRunId).storeValue("cluster feature duration", clusterFeature.duration)
               }
@@ -808,14 +807,23 @@ class ExtractMapSet(
             mapAligner.computeMapAlignments(processedMaps, alnParams)
           }
           case FeatureMappingMethod.PEPTIDE_IDENTITY => {
-            
+
             // Map mftBuilder by the feature id
             val mftBuilderByFtId = new LongMap[MasterFeatureBuilder](processedMaps.foldLeft(0)(_ + _.features.length))
             for (
               mftBuilder <- mftBuilderByPeptideAndCharge.values;
               childFt <- mftBuilder.children
-            ) mftBuilderByFtId.put(childFt.id, mftBuilder)
-    
+            ) {
+              if (childFt.isCluster) {
+                val bestFt = childFt.subFeatures.maxBy(_.intensity)
+                mftBuilderByFtId.put(bestFt.id, mftBuilder)
+              } else {
+                mftBuilderByFtId.put(childFt.id, mftBuilder)
+              }
+            }
+
+            logger.debug("peptide identity feature size = "+mftBuilderByFtId.size)
+
             // Create a new map aligner algo starting from existing master features
             mapAligner.computeMapAlignmentsUsingCustomFtMapper(processedMaps, alnParams) { (map1Features, map2Features) =>
               
@@ -826,7 +834,7 @@ class ExtractMapSet(
                 val mftBuilderOpt = mftBuilderByFtId.get(map2Ft.id);
                 if mftBuilderOpt.isDefined
               ) yield (mftBuilderOpt.get, map2Ft))
-              
+
              for (
                 map1Ft <- map1Features;
                 val mftBuilderOpt = mftBuilderByFtId.get(map1Ft.id);
@@ -836,7 +844,7 @@ class ExtractMapSet(
               ) {
                 ftMapping.getOrElseUpdate(map1Ft.id, new ArrayBuffer[Feature]) += map2FtOpt.get
               }
-              
+
               ftMapping
             }
             
