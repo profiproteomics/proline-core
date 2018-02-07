@@ -11,18 +11,12 @@ import fr.proline.context.IExecutionContext
 import fr.proline.core.algo.msq.config._
 import fr.proline.core.dal.BuildLazyExecutionContext
 import fr.proline.core.dal.context.execCtxToTxExecCtx
-import fr.proline.core.om.provider.lcms.impl.SQLRunProvider
 import fr.proline.core.om.model.msq._
 import fr.proline.core.om.model.msq.QuantMethodType._
-import fr.proline.core.om.provider.ProviderDecoratedExecutionContext
-import fr.proline.core.om.provider.lcms.IRunProvider
-import fr.proline.core.om.provider.lcms.impl.SQLRunProvider
-import fr.proline.core.om.provider.lcms.impl.SQLScanSequenceProvider
 import fr.proline.core.orm.uds.{Dataset => UdsDataset}
 import fr.proline.core.orm.uds.{MasterQuantitationChannel => UdsMasterQuantChannel}
 import fr.proline.core.orm.uds.{QuantitationMethod => UdsQuantMethod}
 import fr.proline.core.orm.uds.ObjectTree
-import fr.proline.core.orm.uds.ObjectTreeSchema
 import fr.proline.core.orm.uds.ObjectTreeSchema.{ SchemaName => UdsSchemaName }
 import fr.proline.core.orm.uds.repository.ObjectTreeSchemaRepository
 import fr.proline.core.service.msq.quantify.BuildMasterQuantChannelQuantifier
@@ -215,28 +209,6 @@ class Quantifier(
 
     }
   }
-  
-  /*protected def finalizeLabelFreeQuantConfig(
-    udsMasterQuantChannel: UdsMasterQuantChannel,
-    lfQuantConfig: LabelFreeQuantConfig,
-    lcMsRunProvider: IRunProvider
-  ): LabelFreeQuantConfig = {
-    
-   // Retrieve master quant channels sorted by their number
-    val sortedQuantChannels = udsMasterQuantChannel.getQuantitationChannels()
-
-    // Retrieve run ids
-    val runIds = sortedQuantChannels.map(_.getRun.getId).distinct
-
-    // Load the LC-MS runs
-    val runs = lcMsRunProvider.getRuns(runIds, loadScanSequence = false)
-
-    // Clone the config and inject the missing parameters
-    lfQuantConfig.copy(
-      mapSetName = udsMasterQuantChannel.getName(),
-      lcMsRuns = runs
-    )
-  }*/
 
   protected def getQuantConfigSchemaName(methodType: QuantMethodType.Value, abundanceUnit: AbundanceUnit.Value): UdsSchemaName = {
     methodType match {
