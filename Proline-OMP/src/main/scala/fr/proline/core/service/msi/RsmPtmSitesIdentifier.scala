@@ -2,11 +2,8 @@ package fr.proline.core.service.msi
 
 import com.typesafe.scalalogging.LazyLogging
 
-import fr.profi.jdbc.easy._
-import fr.profi.util.regex.RegexUtils._
 import fr.proline.api.service.IService
 import fr.proline.context.IExecutionContext
-import fr.proline.context.MsiDbConnectionContext
 import fr.proline.core.algo.msi.PtmSitesIdentifier
 import fr.proline.core.dal._
 import fr.proline.core.dal.tables.SelectQueryBuilder._
@@ -14,7 +11,6 @@ import fr.proline.core.dal.tables.SelectQueryBuilder1
 import fr.proline.core.dal.tables.msi.MsiDbResultSummaryObjectTreeMapTable
 import fr.proline.core.om.model.msi.PtmSite
 import fr.proline.core.om.model.msi.ResultSummary
-import fr.proline.core.om.model.msi.SpectrumTitleFields.RAW_FILE_IDENTIFIER
 import fr.proline.core.om.provider.msi.impl.SQLProteinMatchProvider
 import fr.proline.core.om.provider.msi.impl.SQLResultSummaryProvider
 import fr.proline.core.om.storer.msi.RsmStorer
@@ -24,7 +20,6 @@ import fr.proline.core.dal.tables.msi.MsiDbObjectTreeTable
 import scala.collection.mutable.ArrayBuffer
 import fr.profi.util.serialization.ProfiJson
 import fr.proline.core.dal.tables.msi.MsiDbResultSummaryRelationTable
-import fr.proline.core.om.provider.msi.impl.SQLPeptideMatchProvider
 import fr.proline.core.dal.tables.msi.MsiDbPeptideMatchTable
 
 object RsmPtmSitesIdentifier extends LazyLogging {
@@ -87,9 +82,6 @@ class RsmPtmSitesIdentifier(
       val rsm = RsmPtmSitesIdentifier.loadResultSummary(resultSummaryId, execContext)
       _getOrIdentifyPtmSites(rsm)
       
-      //val ptmSites = ptmSitesIdentifier.identifyPtmSites(rsm, proteinMatchProvider.getResultSummariesProteinMatches(List(resultSummaryId)))
-      //rsmStorer.storePtmSites(rsm.id, ptmSites, execContext)
-
       // Commit transaction if it was initiated locally
       if (!wasInTransaction) msiDbContext.commitTransaction()
 
