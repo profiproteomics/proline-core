@@ -38,15 +38,24 @@ class SQLPeaklistSoftwareProvider(val udsDbCtx: UdsDbConnectionContext) extends 
 
   }
   
-  def getPeaklistSoftware( softName: String, softVersion: String ): Option[PeaklistSoftware] = {
+  def getPeaklistSoftware( softName: String, softVersion: String): Option[PeaklistSoftware] = {
     
     val specRuleById = _getSpectrumTitleParsingRuleById()
-    
-    DoJDBCReturningWork.withEzDBC(udsDbCtx) { udsEzDBC =>
-      udsEzDBC.selectHeadOption(
-        "SELECT * FROM peaklist_software WHERE name= ? and version= ? ", softName, softVersion) { r =>
+
+    if (softVersion == null) {
+      DoJDBCReturningWork.withEzDBC(udsDbCtx) { udsEzDBC =>
+        udsEzDBC.selectHeadOption(
+          "SELECT * FROM peaklist_software WHERE name= ? and version is null ", softName) { r =>
           _buildNewPeaklistSoftware( r, specRuleById )
         }
+      }
+    } else {
+      DoJDBCReturningWork.withEzDBC(udsDbCtx) { udsEzDBC =>
+        udsEzDBC.selectHeadOption(
+          "SELECT * FROM peaklist_software WHERE name= ? and version= ? ", softName, softVersion) { r =>
+          _buildNewPeaklistSoftware( r, specRuleById )
+        }
+      }
     }
   }
   
