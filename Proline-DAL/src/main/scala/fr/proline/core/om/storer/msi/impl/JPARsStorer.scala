@@ -807,8 +807,7 @@ class JPARsStorer(override val pklWriter: Option[IPeaklistWriter] = None) extend
    * @param seqDatabase SeqDatabase object, must not be {{{null}}}.
    * @return Msi SeqDatabase entity or {{{null}}} if SeqDatabase does not exist in Pdi Db.
    */
-  def loadOrCreateSeqDatabase(storerContext: StorerContext,
-                              seqDatabase: SeqDatabase): MsiSeqDatabase = {
+  def loadOrCreateSeqDatabase(storerContext: StorerContext, seqDatabase: SeqDatabase): MsiSeqDatabase = {
 
     checkStorerContext(storerContext)
 
@@ -817,11 +816,8 @@ class JPARsStorer(override val pklWriter: Option[IPeaklistWriter] = None) extend
     }
 
     val msiEm = storerContext.getMSIDbConnectionContext.getEntityManager
-
     val omSeqDatabaseId = seqDatabase.id
-
     val knownSeqDatabases = storerContext.getEntityCache(classOf[MsiSeqDatabase])
-
     val knownMsiSeqDatabase = knownSeqDatabases.get(omSeqDatabaseId)
 
     if (knownMsiSeqDatabase.isDefined) {
