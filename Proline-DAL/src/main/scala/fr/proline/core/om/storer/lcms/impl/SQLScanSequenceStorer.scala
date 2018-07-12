@@ -55,7 +55,7 @@ class SQLScanSequenceStorer(lcmsDbCtx: LcMsDbConnectionContext) extends IScanSeq
         )
       }
       // Store the scans
-......// TODO: use PgCopy to make this insert faster
+      // TODO: use PgCopy to make this insert faster
       lcmsEzDBC.executeInBatch(LcmsDbScanTable.mkInsertQuery( (t,c) => c.filter(_ != t.ID))) { statement =>
         scanSeq.scans.foreach { scan =>
           statement.executeWith(
