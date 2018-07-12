@@ -1,9 +1,11 @@
 package fr.proline.core.om.storer.lcms.impl
 
 import fr.profi.jdbc.easy._
+import fr.profi.util.collection._
 import fr.profi.util.serialization.ProfiJson
 import fr.proline.context.LcMsDbConnectionContext
 import fr.proline.core.dal.DoJDBCWork
+import fr.proline.core.dal.tables.SelectQueryBuilder._
 import fr.proline.core.dal.tables.lcms.{ LcmsDbInstrumentTable, LcmsDbScanTable, LcmsDbScanSequenceTable }
 import fr.proline.core.om.model.msi.Instrument
 import fr.proline.core.om.model.lcms.LcMsScanSequence
@@ -15,7 +17,7 @@ class SQLScanSequenceStorer(lcmsDbCtx: LcMsDbConnectionContext) extends IScanSeq
   
   val instrumentProvider = new SQLInstrumentProvider(lcmsDbCtx)
 
-  def storeScanSequence(scanSeq: LcMsScanSequence) = {    
+  def storeScanSequence(scanSeq: LcMsScanSequence) = {
     require(scanSeq.instrument.isDefined, "an instrument must be specified for this scan sequence")
 
     DoJDBCWork.withEzDBC(lcmsDbCtx) { lcmsEzDBC =>
@@ -52,9 +54,9 @@ class SQLScanSequenceStorer(lcmsDbCtx: LcMsDbConnectionContext) extends IScanSeq
           scanSeq.instrument.get.id
         )
       }
-  
       // Store the scans
-      lcmsEzDBC.executePrepared(LcmsDbScanTable.mkInsertQuery( (t,c) => c.filter(_ != t.ID)), true) { statement =>
+......// TODO: use PgCopy to make this insert faster
+      lcmsEzDBC.executeInBatch(LcmsDbScanTable.mkInsertQuery( (t,c) => c.filter(_ != t.ID))) { statement =>
         scanSeq.scans.foreach { scan =>
           statement.executeWith(
             scan.initialId,
@@ -70,8 +72,19 @@ class SQLScanSequenceStorer(lcmsDbCtx: LcMsDbConnectionContext) extends IScanSeq
             scanSeq.runId
           )
           
-          scan.id = statement.generatedLong
+          //scan.id = statement.generatedLong
         }
+      }
+      
+      // Prepare SQL query to retrieve generated scan IDs
+      val scanIdSqlQuery = new fr.proline.core.dal.tables.SelectQueryBuilder1(LcmsDbScanTable).mkSelectQuery { (t,c) =>
+        List(t.INITIAL_ID, t.ID) -> " WHERE " ~ t.SCAN_SEQUENCE_ID ~ " = "~ scanSeq.runId
+      }
+
+      // Retrieve and update scan.id property
+      val scanByInitialId = scanSeq.scans.mapByLong(_.initialId)
+      lcmsEzDBC.selectAndProcess(scanIdSqlQuery) { r =>
+        scanByInitialId(r.nextInt).id = r.nextLong
       }
     
     }
