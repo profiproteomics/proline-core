@@ -171,6 +171,8 @@ class ExtractMapSet(
     if (!wasInTransaction) lcmsDbCtx.beginTransaction()
 
     val tmpMapSetId = MapSet.generateNewId()
+    
+    this.logger.info("Updating MS and MS/MS scan information in the LC-MS database...")
 
     val mzDbFileByLcMsRunId = new LongMap[File](mapCount)
     for (lcmsRun <- sortedLcMsRuns) {
@@ -516,48 +518,57 @@ class ExtractMapSet(
     else {
 
       val mzDb = new MzDbReader(mzDbFile, true)
-      val mzDbScans = mzDb.getSpectrumHeaders()
-      val scans = mzDbScans.map { mzDbScan =>
-
-        val precMz = mzDbScan.getPrecursorMz
-        val precCharge = mzDbScan.getPrecursorCharge
-
-        new LcMsScan(
-          id = LcMsScan.generateNewId(),
-          initialId = mzDbScan.getInitialId,
-          cycle = mzDbScan.getCycle,
-          time = mzDbScan.getTime,
-          msLevel = mzDbScan.getMsLevel,
-          tic = mzDbScan.getTIC,
-          basePeakMoz = mzDbScan.getBasePeakMz,
-          basePeakIntensity = mzDbScan.getBasePeakIntensity,
+      try {
+        // Call getLcMsRunSliceIterator to trigger a first reading of the whole mzDB file => make the next step faster
+        // FIXME: remove this hack and call readWholeFile directly in the getSpectrumHeaders method or in the mzDB constructor
+        if (mzDb.getPwizMzDbVersion == "0.9.7") mzDb.getLcMsRunSliceIterator()
+        
+        val mzDbScans = mzDb.getSpectrumHeaders()
+        
+        val scans = mzDbScans.map { mzDbScan =>
+  
+          val precMz = mzDbScan.getPrecursorMz
+          val precCharge = mzDbScan.getPrecursorCharge
+  
+          new LcMsScan(
+            id = LcMsScan.generateNewId(),
+            initialId = mzDbScan.getInitialId,
+            cycle = mzDbScan.getCycle,
+            time = mzDbScan.getTime,
+            msLevel = mzDbScan.getMsLevel,
+            tic = mzDbScan.getTIC,
+            basePeakMoz = mzDbScan.getBasePeakMz,
+            basePeakIntensity = mzDbScan.getBasePeakIntensity,
+            runId = lcmsRun.id,
+            precursorMoz = if (precMz > 0) Some(precMz) else None,
+            precursorCharge = if (precCharge > 0) Some(precCharge) else None
+          )
+        } sortBy(_.time) // FIXME: why scans are not sorted after call to mzDb.getScanHeaders ???
+  
+        val ms1ScansCount = scans.count(_.msLevel == 1)
+        val ms2ScansCount = scans.count(_.msLevel == 2)
+  
+        val scanSeq = new LcMsScanSequence(
           runId = lcmsRun.id,
-          precursorMoz = if (precMz > 0) Some(precMz) else None,
-          precursorCharge = if (precCharge > 0) Some(precCharge) else None
+          rawFileIdentifier = rawFileIdentifier,
+          minIntensity = 0.0, // TODO: compute this value ???
+          maxIntensity = 0.0, // TODO: compute this value ???
+          ms1ScansCount = ms1ScansCount,
+          ms2ScansCount = ms2ScansCount,
+          instrument = lcmsRun.rawFile.instrument,
+          scans = scans
         )
-      } sortBy(_.time) // FIXME: why scans are not sorted after call to mzDb.getScanHeaders ???
+  
+        val scanSeqStorer = new SQLScanSequenceStorer(lcmsDbCtx)
+        scanSeqStorer.storeScanSequence(scanSeq)
+        
+        return scanSeq
+        
+      } finally {
+        // Close the mzDB file
+        mzDb.close()
+      }
 
-      val ms1ScansCount = scans.count(_.msLevel == 1)
-      val ms2ScansCount = scans.count(_.msLevel == 2)
-
-      val scanSeq = new LcMsScanSequence(
-        runId = lcmsRun.id,
-        rawFileIdentifier = rawFileIdentifier,
-        minIntensity = 0.0, // TODO: compute this value ???
-        maxIntensity = 0.0, // TODO: compute this value ???
-        ms1ScansCount = ms1ScansCount,
-        ms2ScansCount = ms2ScansCount,
-        instrument = lcmsRun.rawFile.instrument,
-        scans = scans
-      )
-
-      val scanSeqStorer = new SQLScanSequenceStorer(lcmsDbCtx)
-      scanSeqStorer.storeScanSequence(scanSeq)
-
-      // Close the mzDB file
-      mzDb.close()
-
-      scanSeq
     }
 
   }
@@ -596,13 +607,58 @@ class ExtractMapSet(
     }
     
     private val rTreeByRunId_lock = new Object()
-    private val rTreeByRunId = new LongMap[PeakelRTree](runsCount)
-
-    def getRTree(lcMsRunId: Long): Option[PeakelRTree] = rTreeByRunId.get(lcMsRunId)
-    def addRTree(runId: Long, rTree: PeakelRTree) {
-      rTreeByRunId_lock.synchronized {
-        rTreeByRunId += runId -> rTree
+    private val rTreeByRunId = new LongMap[Future[PeakelRTree]](runsCount)
+    
+    private val rTreeSerializer: Serializer[java.lang.Integer,geometry.Point] = {
+      import com.github.davidmoten.rtree.fbs.SerializerFlatBuffers
+      val ser = new Object with rx.functions.Func1[java.lang.Integer, Array[Byte]]() {
+        override def call(i: java.lang.Integer): Array[Byte] = {
+          java.nio.ByteBuffer.allocate(4).putInt(i).array()
+        }
       }
+
+      val deser = new Object with rx.functions.Func1[Array[Byte], java.lang.Integer]() {
+        override def call(bytes: Array[Byte]): java.lang.Integer = {
+          require(bytes.length == 4,s"Invalid number of bytes for an integer: got ${bytes.length} but expect 4")
+          java.nio.ByteBuffer.wrap(bytes).getInt
+        }
+      }
+      
+      SerializerFlatBuffers.create[java.lang.Integer,geometry.Point](ser, deser)
+    }
+
+    def getRTree(lcMsRunId: Long): Option[Future[PeakelRTree]] = rTreeByRunId.get(lcMsRunId)
+    def addRTree(runId: Long, rTree: PeakelRTree)(implicit execCtx: ExecutionContext): Future[PeakelRTree] = {
+      val futureRTree = Future {
+    
+        import java.io.ByteArrayInputStream
+        import java.io.ByteArrayOutputStream
+        import com.github.davidmoten.rtree.Serializers
+        
+        //TODO: check if serializing/deserializing to/from disk can be another improvement
+        //val serializer: Serializer[String,geometry.Point] = Serializers.flatBuffers().utf8()
+        //val epoch = java.time.Instant.now().getEpochSecond
+        //val file = new File(ExtractMapSet.tempDir + "/tmp_peakel_rtree_run_id_$runId_t$epoch.rtree")
+        
+        // Serialize RTree
+        val baos = new ByteArrayOutputStream()
+        rTreeSerializer.write(rTree, baos)
+        baos.close()
+        
+        // Deserialize RTree using compact FLAT BUFFERS representation
+        val bytes = baos.toByteArray()
+        val bais = new ByteArrayInputStream(bytes)
+        val rTree2 = rTreeSerializer.read(bais, bytes.length, InternalStructure.SINGLE_ARRAY)
+        bais.close()
+        
+        rTree2
+      }
+      
+      rTreeByRunId_lock.synchronized {
+        rTreeByRunId += runId -> futureRTree
+      }
+      
+      futureRTree
     }
     
     private val featureTuples_lock = new Object()
@@ -785,7 +841,7 @@ class ExtractMapSet(
                 metricsByRunId(lcMsRunId).storeValue("cluster feature duration", clusterFeature.duration)
               }
             }
-          }      
+          }
           
           // Create TMP master feature builders
           val bestFt = masterFtChildren.maxBy(_.intensity)
@@ -922,7 +978,7 @@ class ExtractMapSet(
               
               // Disable cross assignment if we have not detected features in this group
               if (detectedChildFtsInGroup.isEmpty) {
-                println("will not perform cross assignment")
+                logger.trace("will not perform cross assignment")
                 Seq()
               }
               else {
@@ -1334,7 +1390,15 @@ class ExtractMapSet(
     
     val groupedParLcMsRuns = lcMsRuns.sortBy(_.number).grouped(ExtractMapSet.mzdbMaxParallelism).map(_.par).toList
     
+    var processedMapsCount = new java.util.concurrent.atomic.AtomicInteger()
+    
     val parProcessedMaps = for (parLcMsRuns <- groupedParLcMsRuns; lcMsRun <- parLcMsRuns) yield {
+      
+      // For each batch of 40 processed maps (thus when dealing with large datasets)
+      if (processedMapsCount.incrementAndGet() % 40 == 0) {
+        // Call the garbage collector explicitly
+        System.gc()
+      }
       
       val mapNumber = lcMsRun.number
       val lcMsRunId = lcMsRun.id
@@ -1744,8 +1808,10 @@ class ExtractMapSet(
 
       // Return the created processed map
       processedMap
+    }
     
-    } // ends lcmsRun iteration loop
+    // Call the garbage collector explicitly
+    System.gc()
     
     parProcessedMaps.toArray.sortBy(_.number)
   }
@@ -1822,7 +1888,8 @@ class ExtractMapSet(
         var inMemoryPeakelDb: SQLiteConnection = null
         
         // Retrieve corresponding R*Tree
-        val rTree = entityCache.getRTree(lcMsRunId).get
+        val futureRTree = entityCache.getRTree(lcMsRunId).get
+        val rTree = Await.result(futureRTree, Duration.Inf)
 
         // Retrieve the map avoiding the creation of duplicated peakels
         val peakelIdByMzDbPeakelId = entityCache.peakelIdByMzDbPeakelIdByRunId(lcMsRunId)
