@@ -62,7 +62,7 @@ class PtmSitesIdentifier() extends LazyLogging {
           }
 
           val sequenceMatchesByPeptideId: Map[Long, SequenceMatch] = proteinMatchesById(proteinMatchId).sequenceMatches.map { sm => (sm.getPeptideId() -> sm) }.toMap
-          val proteinMatchSites = scala.collection.mutable.Map[(PtmDefinition, Int), ArrayBuffer[PeptideInstancePtm]]()
+          val proteinMatchSites = scala.collection.mutable.Map[(Long, Int), ArrayBuffer[PeptideInstancePtm]]()
           val peptideInstanceIdsBySeqPtm = scala.collection.mutable.Map[String, ArrayBuffer[Long]]()
           val peptideInstancesById = peptideSet.getPeptideInstances().map(pi => (pi.id -> pi)).toMap
 
@@ -73,7 +73,7 @@ class PtmSitesIdentifier() extends LazyLogging {
             val seqMatch = sequenceMatchesByPeptideId(peptideInstance.peptide.id)
             for (ptm <- peptideInstance.peptide.ptms) {
               if (isModificationProbabilityDefined(peptideInstance.peptideMatches.head, ptm)) {
-                proteinMatchSites.getOrElseUpdate((ptm.definition, ptm.seqPosition + seqMatch.start - 1), ArrayBuffer.empty[PeptideInstancePtm]) += PeptideInstancePtm(peptideInstance, ptm)
+                proteinMatchSites.getOrElseUpdate((ptm.definition.id, ptm.seqPosition + seqMatch.start - 1), ArrayBuffer.empty[PeptideInstancePtm]) += PeptideInstancePtm(peptideInstance, ptm)
               }
             }
           }
@@ -97,24 +97,24 @@ class PtmSitesIdentifier() extends LazyLogging {
               //  Should order by score before getting max value. maxBy don't respect "first for equal order" ! 
               val bestPMs = peptideInstances.map(t =>
                 {
-                  var bestProba: Float = 0.00f;
-                  var bestPM: PeptideMatch = null;
+                  var bestProba: Float = 0.00f
+                  var bestPM: PeptideMatch = null
                   val sortedPepMatches: Array[PeptideMatch] = t.peptideInstance.peptideMatches.sortBy(_.score).reverse
                   sortedPepMatches.foreach { pepM =>
-                    val proba = modificationProbability(pepM, t.ptm);
+                    val proba = modificationProbability(pepM, t.ptm)
                     if (proba > bestProba) {
                       bestPM = pepM
                       bestProba = proba
                     }
                   }
                   (bestPM -> t.ptm)
-                });
+                })
 
               var bestPeptideMatch: PeptideMatch = null
-              var bestProba: Float = 0.00f;
+              var bestProba: Float = 0.00f
               val sortedBestPMs = bestPMs.sortBy(_._1.score).reverse
               sortedBestPMs.foreach(f => {
-                val proba = modificationProbability(f._1, f._2);
+                val proba = modificationProbability(f._1, f._2)
                 if (proba > bestProba) {
                   bestPeptideMatch = f._1
                   bestProba = proba
@@ -133,7 +133,7 @@ class PtmSitesIdentifier() extends LazyLogging {
 
               PtmSite(
                 proteinMatchId = proteinMatchId,
-                ptmDefinitionId = k._1.id,
+                ptmDefinitionId = k._1,
                 seqPosition = k._2,
                 bestPeptideMatchId = bestPeptideMatch.id,
                 localizationConfidence = bestProba,
