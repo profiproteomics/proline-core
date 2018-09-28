@@ -2,11 +2,12 @@ package fr.proline.core.om.storer.lcms.impl
 
 import com.typesafe.scalalogging.LazyLogging
 import fr.profi.jdbc.easy._
+import fr.profi.util.collection._
 import fr.profi.util.serialization.ProfiJson
 import fr.proline.context.LcMsDbConnectionContext
 import fr.proline.core.dal.DoJDBCWork
 import fr.proline.core.dal.tables.SelectQueryBuilder._
-import fr.proline.core.dal.tables.lcms.{ LcmsDbInstrumentTable, LcmsDbScanTable, LcmsDbScanSequenceTable }
+import fr.proline.core.dal.tables.lcms.{  LcmsDbScanTable, LcmsDbScanSequenceTable }
 import fr.proline.core.om.model.lcms.LcMsScanSequence
 import fr.proline.core.om.provider.uds.impl.SQLInstrumentProvider
 import fr.proline.core.om.storer.lcms.IScanSequenceStorer
