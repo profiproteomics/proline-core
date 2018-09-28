@@ -18,38 +18,40 @@ import javax.persistence.Table;
  * 
  */
 @Entity
-@NamedQueries({ @NamedQuery(name = "findAggregationByType", query = "SELECT aggreg FROM fr.proline.core.orm.uds.Aggregation aggreg WHERE aggreg.childNature = :child_nature") })
+@NamedQueries({
+	@NamedQuery(name = "findAggregationByType", query = "SELECT aggreg FROM fr.proline.core.orm.uds.Aggregation aggreg WHERE aggreg.childNature = :child_nature")
+})
 @Table(name = "aggregation")
 public class Aggregation implements Serializable {
 
-    private static final long serialVersionUID = 1L;
+	private static final long serialVersionUID = 1L;
 
-    public enum ChildNature {
-	SAMPLE_ANALYSIS, QUANTITATION_FRACTION, BIOLOGICAL_SAMPLE, BIOLOGICAL_GROUP, OTHER
-    };
+	public enum ChildNature {
+		SAMPLE_ANALYSIS, QUANTITATION_FRACTION, BIOLOGICAL_SAMPLE, BIOLOGICAL_GROUP, OTHER
+	};
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
-    private long id;
+	@Id
+	@GeneratedValue(strategy = GenerationType.AUTO)
+	private long id;
 
-    @Column(name = "child_nature")
-    @Enumerated(value = EnumType.STRING)
-    private ChildNature childNature;
+	@Column(name = "child_nature")
+	@Enumerated(value = EnumType.STRING)
+	private ChildNature childNature;
 
-    public long getId() {
-	return id;
-    }
+	public long getId() {
+		return id;
+	}
 
-    public void setId(final long pId) {
-	id = pId;
-    }
+	public void setId(final long pId) {
+		id = pId;
+	}
 
-    public ChildNature getChildNature() {
-	return childNature;
-    }
+	public ChildNature getChildNature() {
+		return childNature;
+	}
 
-    public void setChildNature(ChildNature childNature) {
-	this.childNature = childNature;
-    }
+	public void setChildNature(ChildNature childNature) {
+		this.childNature = childNature;
+	}
 
 }

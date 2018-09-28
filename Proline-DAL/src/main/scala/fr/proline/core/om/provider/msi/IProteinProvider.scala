@@ -53,8 +53,6 @@ trait IProteinProvider {
  */
 class ProteinEmptyFakeProvider extends IProteinProvider {
   
-  val pdiDbCtx = null
-  
    def getProteinsAsOptions( protIds: Seq[Long] ): Array[Option[Protein]] = {
    val retArray =  new Array[Option[Protein]](1)
 	retArray.update(0, Option.empty[Protein])	

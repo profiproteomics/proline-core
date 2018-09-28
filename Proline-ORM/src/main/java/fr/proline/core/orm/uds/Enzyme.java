@@ -20,87 +20,87 @@ import javax.persistence.OneToMany;
 	+ " where upper(e.name) = :name")
 public class Enzyme implements Serializable {
 
-    private static final long serialVersionUID = 1L;
+	private static final long serialVersionUID = 1L;
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
-    private long id;
+	@Id
+	@GeneratedValue(strategy = GenerationType.AUTO)
+	private long id;
 
-    @Column(name = "cleavage_regexp")
-    private String cleavageRegexp;
+	@Column(name = "cleavage_regexp")
+	private String cleavageRegexp;
 
-    @Column(name = "is_independant")
-    private boolean isIndependant;
+	@Column(name = "is_independant")
+	private boolean isIndependant;
 
-    @Column(name = "is_semi_specific")
-    private boolean isSemiSpecific;
+	@Column(name = "is_semi_specific")
+	private boolean isSemiSpecific;
 
-    private String name;
+	private String name;
 
-    @Column(name = "serialized_properties")
-    private String serializedProperties;
+	@Column(name = "serialized_properties")
+	private String serializedProperties;
 
-    // bi-directional many-to-one association to EnzymeCleavage
-    @OneToMany(mappedBy = "enzyme")
-    private Set<EnzymeCleavage> cleavages;
+	// bi-directional many-to-one association to EnzymeCleavage
+	@OneToMany(mappedBy = "enzyme")
+	private Set<EnzymeCleavage> cleavages;
 
-    public Enzyme() {
-    }
+	public Enzyme() {
+	}
 
-    public long getId() {
-	return id;
-    }
+	public long getId() {
+		return id;
+	}
 
-    public void setId(final long pId) {
-	id = pId;
-    }
+	public void setId(final long pId) {
+		id = pId;
+	}
 
-    public String getCleavageRegexp() {
-	return this.cleavageRegexp;
-    }
+	public String getCleavageRegexp() {
+		return this.cleavageRegexp;
+	}
 
-    public void setCleavageRegexp(String cleavageRegexp) {
-	this.cleavageRegexp = cleavageRegexp;
-    }
+	public void setCleavageRegexp(String cleavageRegexp) {
+		this.cleavageRegexp = cleavageRegexp;
+	}
 
-    public boolean getIsIndependant() {
-	return isIndependant;
-    }
+	public boolean getIsIndependant() {
+		return isIndependant;
+	}
 
-    public void setIsIndependant(final boolean pIsIndependant) {
-	isIndependant = pIsIndependant;
-    }
+	public void setIsIndependant(final boolean pIsIndependant) {
+		isIndependant = pIsIndependant;
+	}
 
-    public boolean getIsSemiSpecific() {
-	return isSemiSpecific;
-    }
+	public boolean getIsSemiSpecific() {
+		return isSemiSpecific;
+	}
 
-    public void setIsSemiSpecific(final boolean pIsSemiSpecific) {
-	isSemiSpecific = pIsSemiSpecific;
-    }
+	public void setIsSemiSpecific(final boolean pIsSemiSpecific) {
+		isSemiSpecific = pIsSemiSpecific;
+	}
 
-    public String getName() {
-	return this.name;
-    }
+	public String getName() {
+		return this.name;
+	}
 
-    public void setName(String name) {
-	this.name = name;
-    }
+	public void setName(String name) {
+		this.name = name;
+	}
 
-    public String getSerializedProperties() {
-	return this.serializedProperties;
-    }
+	public String getSerializedProperties() {
+		return this.serializedProperties;
+	}
 
-    public void setSerializedProperties(String serializedProperties) {
-	this.serializedProperties = serializedProperties;
-    }
+	public void setSerializedProperties(String serializedProperties) {
+		this.serializedProperties = serializedProperties;
+	}
 
-    public Set<EnzymeCleavage> getCleavages() {
-	return this.cleavages;
-    }
+	public Set<EnzymeCleavage> getCleavages() {
+		return this.cleavages;
+	}
 
-    public void setCleavages(Set<EnzymeCleavage> cleavages) {
-	this.cleavages = cleavages;
-    }
+	public void setCleavages(Set<EnzymeCleavage> cleavages) {
+		this.cleavages = cleavages;
+	}
 
 }

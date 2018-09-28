@@ -21,11 +21,11 @@ import fr.profi.util.StringUtils;
  */
 @Entity(name = "fr.proline.core.orm.uds.PeaklistSoftware")
 @NamedQueries({
-		@NamedQuery(name = "findUdsPeaklistSoftForName", query = "select pls from fr.proline.core.orm.uds.PeaklistSoftware pls"
-			+ " where (upper(pls.name) = :name) and (pls.version is null)"),
+	@NamedQuery(name = "findUdsPeaklistSoftForName", query = "select pls from fr.proline.core.orm.uds.PeaklistSoftware pls"
+		+ " where (upper(pls.name) = :name) and (pls.version is null)"),
 
-		@NamedQuery(name = "findUdsPeaklistSoftForNameAndVersion", query = "select pls from fr.proline.core.orm.uds.PeaklistSoftware pls"
-			+ " where (upper(pls.name) = :name) and (upper(pls.version) = :version)")
+	@NamedQuery(name = "findUdsPeaklistSoftForNameAndVersion", query = "select pls from fr.proline.core.orm.uds.PeaklistSoftware pls"
+		+ " where (upper(pls.name) = :name) and (upper(pls.version) = :version)")
 
 })
 @Table(name = "peaklist_software")
@@ -100,7 +100,7 @@ public class PeaklistSoftware implements Serializable {
 		MASCOT_DLL("mascot.dll"),
 		MASCOT_DISTILLER("Mascot Distiller"),
 		MAX_QUANT("MaxQuant"),
-		PROLINE("Proline","1.0"),
+		PROLINE("Proline", "1.0"),
 		PROTEIN_PILOT("Protein Pilot"),
 		PROTEOME_DISCOVER("Proteome Discoverer"),
 		PROTEO_WIZARD_2_0("ProteoWizard", "2.0"),

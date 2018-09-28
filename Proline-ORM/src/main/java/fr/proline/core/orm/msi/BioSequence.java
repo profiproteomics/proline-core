@@ -2,16 +2,7 @@ package fr.proline.core.orm.msi;
 
 import java.io.Serializable;
 
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.EnumType;
-import javax.persistence.Enumerated;
-import javax.persistence.Id;
-import javax.persistence.Table;
-
-import org.apache.commons.lang3.StringUtils;
-
-import fr.proline.core.orm.pdi.Alphabet;
+import javax.persistence.*;
 
 /**
  * The persistent class for the bio_sequence database table.
@@ -23,7 +14,6 @@ public class BioSequence implements Serializable {
 	private static final long serialVersionUID = 1L;
 
 	@Id
-	// MSI BioSequence Id are not generated (taken from Pdi BioSequence entity)
 	private long id;
 
 	@Enumerated(EnumType.STRING)
@@ -51,38 +41,38 @@ public class BioSequence implements Serializable {
 	 * @param pdiBioSequence
 	 *            BioSequence entity from pdiDb used to initialize Msi BioSequence fields (must not be <code>null</code>)
 	 */
-	public BioSequence(final fr.proline.core.orm.pdi.BioSequence pdiBioSequence) {
-
+	/**public BioSequence(final fr.proline.core.orm.pdi.BioSequence pdiBioSequence) {
+	
 		if (pdiBioSequence == null) {
 			throw new IllegalArgumentException("PdiBioSequence is null");
 		}
-
+	
 		setId(pdiBioSequence.getId());
 		setAlphabet(pdiBioSequence.getAlphabet());
 		setCrc64(pdiBioSequence.getCrc64());
-
+	
 		// FIXME LMN inconsistent nullable field "length"
 		final Integer pdiBioSequenceLength = pdiBioSequence.getLength();
-
+	
 		if (pdiBioSequenceLength == null) {
 			setLength(-1);
 		} else {
 			setLength(pdiBioSequenceLength.intValue());
 		}
-
+	
 		setMass(pdiBioSequence.getMass());
 		setPi(pdiBioSequence.getPi());
 		setSequence(pdiBioSequence.getSequence());
-
+	
 		final String pdiBioSequenceProps = pdiBioSequence.getSerializedProperties();
-
+	
 		if (StringUtils.isEmpty(pdiBioSequenceProps)) {
 			setSequence(null);
 		} else {
 			setSerializedProperties(pdiBioSequenceProps);
 		}
-
-	}
+	
+	}*/
 
 	public long getId() {
 		return id;

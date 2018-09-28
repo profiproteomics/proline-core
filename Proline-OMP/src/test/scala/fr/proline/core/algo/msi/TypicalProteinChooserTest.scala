@@ -1,23 +1,17 @@
 package fr.proline.core.algo.msi
 
-import org.junit.AfterClass
-import org.junit.Assert
-import org.junit.BeforeClass
-import org.junit.Test
 import com.typesafe.scalalogging.StrictLogging
-import fr.proline.context.IExecutionContext
 import fr.proline.core.dal._
-import fr.proline.repository.DriverType
 import fr.proline.core.dbunit.STR_F063442_F122817_MergedRSMs
-import fr.proline.core.dbunit.DbUnitSampleDataset
+import fr.proline.repository.DriverType
+import org.junit.{Assert, BeforeClass, Test}
 
-object TypicalProteinChooserTest extends AbstractResultSummaryTestCase with StrictLogging {
+object TypicalProteinChooserTest extends AbstractDatastoreTestCase with StrictLogging {
 
   // Define some vars
-  val driverType = DriverType.H2
-  val dbUnitResultFile = STR_F063442_F122817_MergedRSMs
-  val targetRSMId: Long = 33L
-  val useJPA = true
+  override val driverType = DriverType.H2
+  override val dbUnitResultFile = STR_F063442_F122817_MergedRSMs
+  override val useJPA = true
 
   @BeforeClass
   @throws(classOf[Exception])
@@ -27,27 +21,16 @@ object TypicalProteinChooserTest extends AbstractResultSummaryTestCase with Stri
     super.initDBsDBManagement(driverType)
 
     //Load Data
-    pdiDBTestCase.loadDataSet(DbUnitSampleDataset.PROTEINS.getResourcePath)
-    psDBTestCase.loadDataSet(dbUnitResultFile.psDbDatasetPath)
-    msiDBTestCase.loadCompositeDataSet(
-      Array(
-        dbUnitResultFile.msiDbDatasetPath,
-        "/fr/proline/core/algo/msi/Prot_ChangeTypical.xml"
-      )
-    )
+    msiDBTestCase.loadCompositeDataSet(Array(dbUnitResultFile.msiDbDatasetPath,"/fr/proline/core/algo/msi/Prot_ChangeTypical.xml"))
     udsDBTestCase.loadDataSet(dbUnitResultFile.udsDbDatasetPath)
-    
-    logger.info("PDI, PS, MSI and UDS dbs succesfully initialized !")
-    
-    val ctxAndProvider = buildJPAContext()
-    executionContext = ctxAndProvider._1 
-  }
-  
+    logger.info("MSI and UDS dbs succesfully initialized !")
+    executionContext = if( useJPA ) buildJPAContext() else buildSQLContext()  }
+
 }
 
 class TypicalProteinChooserTest extends StrictLogging {
 
-  val targetRSMId = TypicalProteinChooserTest.targetRSMId
+  val targetRSMId = 33L
   val executionContext = TypicalProteinChooserTest.executionContext
   val msiEM = executionContext.getMSIDbConnectionContext().getEntityManager()
 
@@ -60,7 +43,7 @@ class TypicalProteinChooserTest extends StrictLogging {
     // was P49064 now => P02770, was P54655 now => A5GMX4, was Q89MI0 now => Q07LX8, was Q8GBD4 now => A1JQE6, was Q9QXG2 now => P24386, was Q88X53 now => Q1WU48
     //VDS WARNING  change 1 : Was 4, after modifying algo, changed proteinset was 9 dur to incorrect IS_IN_SUBSET value in XML file :  
     // Allways FALSE even for subset. Should be changed back to 4 with corrected XML file !
-    
+
 
     val typicalChooser = new TypicalProteinChooser()
 

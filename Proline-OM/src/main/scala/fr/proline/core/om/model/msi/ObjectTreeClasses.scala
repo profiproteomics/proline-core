@@ -1,10 +1,6 @@
 package fr.proline.core.om.model.msi
 
-import scala.beans.BeanProperty
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize
-import com.fasterxml.jackson.annotation.JsonCreator
-import com.fasterxml.jackson.annotation.JsonIgnore
-import com.fasterxml.jackson.annotation.JsonProperty
 
 
 /**
@@ -32,7 +28,7 @@ case class FragmentMatch(
   // Plain constructor needed for MessagePack
   def this() = this("", None, Double.NaN, Double.NaN, Float.NaN, None)
 
-  @transient private var _ionSeries: String = null
+  @transient private var _ionSeries: String = _
   @transient private var _aaPosition: Int = 0
   @transient private var _charge: Int = 1
 
@@ -60,8 +56,8 @@ case class FragmentMatch(
 
 object FragmentMatchType extends Enumeration {
   type MatchType = Value
-  val INTERNAL = Value("IN")
-  val IMMONIUM = Value("IM")
+  val INTERNAL: FragmentMatchType.Value = Value("IN")
+  val IMMONIUM: FragmentMatchType.Value = Value("IM")
 }
 
 /**
@@ -70,10 +66,10 @@ object FragmentMatchType extends Enumeration {
  */
 //@Message
 case class SpectrumMatch(
-   @transient val msQueryInitialId: Int,
-   @transient val peptideMatchRank: Int,
-   var fragTable: Array[TheoreticalFragmentSeries],
-  var fragMatches: Array[FragmentMatch]
+            @transient msQueryInitialId: Int,
+            @transient peptideMatchRank: Int,
+            var fragTable: Array[TheoreticalFragmentSeries],
+            var fragMatches: Array[FragmentMatch]
 ) {
   // Plain constructor needed for MessagePack
   def this() = this(0, 0, Array.empty[TheoreticalFragmentSeries], Array.empty[FragmentMatch])
@@ -94,9 +90,9 @@ case class TheoreticalFragmentSeries(
     _charge = charge
   }
   
-  @transient lazy val isReverse = Fragmentation.isReverseSeries(fragSeries)
+  @transient lazy val isReverse: Boolean = Fragmentation.isReverseSeries(fragSeries)
 
-  @transient private var _ionSeries: String = null
+  @transient private var _ionSeries: String = _
   @transient private var _charge: Int = 1
 
   private def _parseFragSeriesIfNotDone() {
@@ -110,7 +106,7 @@ case class TheoreticalFragmentSeries(
         }
         z
       }
-      this._charge = if (z == 0) {1} else {z}
+      this._charge = if (z == 0) 1 else z
       val ionSeries = fragSeries.substring(0, fragSeries.length() - Math.max(0, z))
 
       // FIXME: why do we need to make this replacement here ?
@@ -121,7 +117,7 @@ case class TheoreticalFragmentSeries(
   // TODO: check usages
   //def ionSeries: String = { _parseFragSeriesIfNotDone(); this._ionSeries }
   def ionSeries: FragmentIonSeries.Value = { 
-    _parseFragSeriesIfNotDone();
+    _parseFragSeriesIfNotDone()
     FragmentIonSeries.withName(this._ionSeries) 
   }
   

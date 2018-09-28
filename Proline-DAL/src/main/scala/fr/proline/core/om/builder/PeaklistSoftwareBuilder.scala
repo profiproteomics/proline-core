@@ -24,7 +24,7 @@ object PeaklistSoftwareBuilder {
     new PeaklistSoftware(
       id = r.getLong(pklSoftCols.ID),
       name = r.getString(pklSoftCols.NAME),
-      version = r.getString(pklSoftCols.VERSION),
+      version = r.getStringOrElse(pklSoftCols.VERSION,""),
       properties = r.getStringOption(pklSoftCols.SERIALIZED_PROPERTIES).map( ProfiJson.deserialize[PeaklistSoftwareProperties](_) )
     )
 

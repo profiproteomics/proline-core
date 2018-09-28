@@ -1,10 +1,9 @@
 package fr.proline.core.om.provider.msq.impl
 
-import scala.collection.mutable.LongMap
 import fr.profi.jdbc.easy.EasyDBC
 import fr.profi.util.primitives._
 import fr.profi.util.serialization.ProfiJson
-import fr.proline.context._
+import fr.proline.context.MsiDbConnectionContext
 import fr.proline.core.dal.DoJDBCReturningWork
 import fr.proline.core.dal.tables.SelectQueryBuilder._
 import fr.proline.core.dal.tables.SelectQueryBuilder2
@@ -12,19 +11,23 @@ import fr.proline.core.dal.tables.msi.MsiDbMasterQuantComponentTable
 import fr.proline.core.dal.tables.msi.MsiDbObjectTreeTable
 import fr.proline.core.om.model.msi.PeptideInstance
 import fr.proline.core.om.model.msq._
+import fr.proline.core.om.provider.PeptideCacheExecutionContext
+import fr.proline.core.om.provider.msi.cache.IPeptideCache
 import fr.proline.core.om.provider.msi.impl.SQLPeptideInstanceProvider
 import fr.proline.core.om.provider.msi.impl.SQLPeptideProvider
 import fr.proline.core.orm.msi.ObjectTreeSchema.SchemaName
-import fr.proline.repository.ProlineDatabaseType
+import scala.collection.mutable.LongMap
 
 class SQLMasterQuantPeptideProvider(
   val msiDbCtx: MsiDbConnectionContext,
-  val psDbCtx: DatabaseConnectionContext
+  val peptideCache: IPeptideCache
 ) {
-  require( msiDbCtx.getProlineDatabaseType() == ProlineDatabaseType.MSI, "msiDbCtx must be of type MSI")
-  require( psDbCtx.getProlineDatabaseType() == ProlineDatabaseType.PS, "psDbCtx must be of type PS")
   
-  protected val pepProvider = new SQLPeptideProvider(psDbCtx)
+  def this(peptideCacheExecutionContext: PeptideCacheExecutionContext) = {
+    this(peptideCacheExecutionContext.getMSIDbConnectionContext, peptideCacheExecutionContext.getPeptideCache())
+  }
+
+  protected val pepProvider = new SQLPeptideProvider(msiDbCtx, peptideCache)
   protected val pepInstProvider = new SQLPeptideInstanceProvider(msiDbCtx,pepProvider)
   protected val mqPepIonsProvider = new SQLMasterQuantPeptideIonProvider(msiDbCtx)
   

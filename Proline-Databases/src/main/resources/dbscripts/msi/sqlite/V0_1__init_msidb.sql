@@ -1,9 +1,18 @@
-/* LAST Update : V0_8__core_0.4.0.sql */
+/* LAST Update : V0_9__core_0.6.0.sql */
 CREATE TABLE admin_infos (
                 model_version TEXT(1000) NOT NULL,
                 db_creation_date TEXT,
                 model_update_date TEXT,
                 PRIMARY KEY (model_version)
+);
+
+CREATE TABLE atom_label (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                name TEXT(100) NOT NULL,
+                symbol TEXT(2) NOT NULL,
+                mono_mass REAL NOT NULL,
+                average_mass REAL NOT NULL,
+                serialized_properties TEXT
 );
 
 CREATE TABLE bio_sequence (
@@ -214,12 +223,13 @@ CREATE TABLE peaklist_software (
 );
 
 CREATE TABLE peptide (
-                id INTEGER NOT NULL,
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
                 sequence TEXT NOT NULL,
                 ptm_string TEXT,
                 calculated_mass REAL NOT NULL,
                 serialized_properties TEXT,
-                PRIMARY KEY (id)
+                atom_label_id INTEGER,
+                FOREIGN KEY (atom_label_id) REFERENCES atom_label (id)
 );
 
 CREATE TABLE peptide_instance (
@@ -292,6 +302,20 @@ CREATE TABLE peptide_match_relation (
                 parent_result_set_id INTEGER NOT NULL,
                 PRIMARY KEY (parent_peptide_match_id, child_peptide_match_id),
                 FOREIGN KEY (parent_result_set_id) REFERENCES result_set (id)
+);
+
+CREATE TABLE peptide_ptm (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                seq_position INTEGER NOT NULL,
+                mono_mass REAL NOT NULL,
+                average_mass REAL NOT NULL,
+                serialized_properties TEXT,
+                peptide_id INTEGER NOT NULL,
+                ptm_specificity_id INTEGER NOT NULL,
+                atom_label_id INTEGER,
+                FOREIGN KEY (peptide_id) REFERENCES peptide (id),
+                FOREIGN KEY (ptm_specificity_id) REFERENCES ptm_specificity (id),
+                FOREIGN KEY (atom_label_id) REFERENCES atom_label (id)
 );
 
 CREATE TABLE peptide_readable_ptm_string (
@@ -407,12 +431,42 @@ CREATE TABLE protein_set_protein_match_item (
                 FOREIGN KEY (result_summary_id) REFERENCES result_summary (id)
 );
 
+CREATE TABLE ptm (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                unimod_id INTEGER NOT NULL,
+                full_name TEXT(1000) NOT NULL,
+                short_name TEXT(100) NOT NULL,
+                serialized_properties TEXT
+);
+
+CREATE TABLE ptm_classification (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                name TEXT(1000) NOT NULL
+);
+
+CREATE TABLE ptm_evidence (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                type TEXT(14) NOT NULL,
+                is_required TEXT NOT NULL,
+                composition TEXT(50) NOT NULL,
+                mono_mass REAL NOT NULL,
+                average_mass REAL NOT NULL,
+                serialized_properties TEXT,
+                specificity_id INTEGER,
+                ptm_id INTEGER NOT NULL,
+                FOREIGN KEY (specificity_id) REFERENCES ptm_specificity (id),
+                FOREIGN KEY (ptm_id) REFERENCES ptm (id)
+);
+
 CREATE TABLE ptm_specificity (
-                id INTEGER NOT NULL,
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
                 location TEXT(14) NOT NULL,
                 residue TEXT(1),
                 serialized_properties TEXT,
-                PRIMARY KEY (id)
+                ptm_id INTEGER NOT NULL,
+                classification_id INTEGER NOT NULL,
+                FOREIGN KEY (ptm_id) REFERENCES ptm (id),
+                FOREIGN KEY (classification_id) REFERENCES ptm_classification (id)
 );
 
 CREATE TABLE result_set (
@@ -491,6 +545,7 @@ CREATE TABLE search_settings (
                 is_decoy TEXT NOT NULL,
                 serialized_properties TEXT,
                 instrument_config_id INTEGER NOT NULL,
+                fragmentation_rule_set_id INTEGER,
                 FOREIGN KEY (instrument_config_id) REFERENCES instrument_config (id)
 );
 
@@ -547,9 +602,8 @@ CREATE TABLE spectrum (
                 peak_count INTEGER NOT NULL,
                 serialized_properties TEXT,
                 peaklist_id INTEGER NOT NULL,
-                instrument_config_id INTEGER NOT NULL,
-                FOREIGN KEY (peaklist_id) REFERENCES peaklist (id),
-                FOREIGN KEY (instrument_config_id) REFERENCES instrument_config (id)
+                fragmentation_rule_set_id INTEGER,
+                FOREIGN KEY (peaklist_id) REFERENCES peaklist (id)
 );
 
 CREATE TABLE used_enzyme (

@@ -246,6 +246,7 @@ case class ResultSet(
 
 case class ResultSetProperties(
   @BeanProperty var targetDecoyMode: Option[String] = None, // CONCATENATED | SEPARATED
+  @BeanProperty var mergeMode: Option[String] = None, // AGGREGATION | UNION
   @BeanProperty var mascotImportProperties: Option[MascotImportProperties] = None,
   @BeanProperty var omssaImportProperties: Option[OmssaImportProperties] = None,
   @BeanProperty var xtandemImportProperties: Option[XTandemImportProperties] = None
@@ -620,6 +621,7 @@ case class ResultSummary(
 // TODO: change privacy to protected => allows access only to getters/setters
 case class ResultSummaryProperties(
   @BeanProperty var isCoverageUpdated: Option[Boolean] = None,
+  @BeanProperty var mergeMode: Option[String] = None, // AGGREGATION | UNION
   @BeanProperty var validationProperties: Option[RsmValidationProperties] = None
 )
 

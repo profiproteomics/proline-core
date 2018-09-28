@@ -1,77 +1,33 @@
 package fr.proline.core.service.msq
 
-import java.util.ArrayList
-import org.junit.Assert._
-import org.junit.Test
+import java.util.{ArrayList, HashSet}
+
 import com.typesafe.scalalogging.StrictLogging
 import fr.proline.core.algo.msq.config._
-import fr.proline.core.dal.AbstractResultSummaryTestCase
+import fr.proline.core.dal.AbstractDatastoreTestCase
 import fr.proline.core.dbunit.STR_F063442_F122817_MergedRSMs
-import fr.proline.core.orm.uds.BiologicalSample
-import fr.proline.core.orm.uds.Dataset
-import fr.proline.core.orm.uds.MasterQuantitationChannel
-import fr.proline.core.orm.uds.Project
-import fr.proline.core.orm.uds.QuantitationChannel
-import fr.proline.core.orm.uds.SampleAnalysis
+import fr.proline.core.om.model.msq
+import fr.proline.core.om.model.msq.{BiologicalGroup, MasterQuantChannel, QuantChannel, SimplifiedExperimentalDesign}
+import fr.proline.core.orm.uds._
 import fr.proline.core.service.msq.quantify.WeightedSpectralCountQuantifier
 import fr.proline.repository.DriverType
-import fr.proline.core.orm.uds.BiologicalSplSplAnalysisMap
-import java.util.HashSet
+import org.junit.Assert._
+import org.junit.Test
 
-object WeightedSCQuantifierTest extends AbstractResultSummaryTestCase with StrictLogging {
+object WeightedSCQuantifierTest extends AbstractDatastoreTestCase with StrictLogging {
 
   // Define required parameters
-  val driverType = DriverType.H2
-  val dbUnitResultFile = STR_F063442_F122817_MergedRSMs
+  override val driverType = DriverType.H2
+  override val dbUnitResultFile = STR_F063442_F122817_MergedRSMs
+  override val useJPA = true
+
   val targetRSMId: Long = 33L
-  val useJPA = true
 
-  /*
-  // Define the interface to be implemented
-  val driverType = DriverType.H2
-  val fileName = "STR_F063442_F122817_MergedRSMs"
-  val targetRSMId: Long = 33
-
-  var executionContext: IExecutionContext = null
-
-  @Before
-  @throws(classOf[Exception])
-  def setUp() = {
-
-    logger.info("Initializing DBs")
-    super.initDBsDBManagement(driverType)
-
-    //Load Data
-    pdiDBTestCase.loadDataSet("/dbunit/datasets/pdi/Proteins_Dataset.xml")
-    psDBTestCase.loadDataSet("/dbunit_samples/" + fileName + "/ps-db.xml")
-    msiDBTestCase.loadDataSet("/dbunit_samples/" + fileName + "/msi-db.xml")
-    udsDBTestCase.loadDataSet("/dbunit_samples/" + fileName + "/uds-db.xml")
-
-    logger.info("PDI, PS, MSI and UDS dbs succesfully initialized !")
-
-    val execContext = buildJPAContext()
-    executionContext = execContext
-  }
-
-  @After
-  override def tearDown() {
-    if (executionContext != null) executionContext.closeAll()
-    super.tearDown()
-  }
-
-  def buildJPAContext() = {
-    val executionContext = ContextFactory.buildExecutionContext(dsConnectorFactoryForTest, 1, true) // Full JPA
-
-    executionContext
-  }*/
-  
 }
   
 class WeightedSCQuantifierTest extends StrictLogging {
   
   val executionContext = WeightedSCQuantifierTest.executionContext
-  require( executionContext != null, "executionContext is null")
-  
   val targetRSMId = WeightedSCQuantifierTest.targetRSMId
 
   @Test
@@ -140,17 +96,20 @@ class WeightedSCQuantifierTest extends StrictLogging {
     qCh1.setIdentResultSummaryId(1)
     qCh1.setContextKey("1.1")
     qCh1.setQuantitationDataset(qtDS)
+    qCh1.setName("QChannel 1.1")
 
     val qCh2 = new QuantitationChannel()
     qCh2.setIdentResultSummaryId(2)
     qCh2.setContextKey("1.2")
     qCh2.setQuantitationDataset(qtDS)
+    qCh2.setName("QChannel 1.2")
 
     val qCh3 = new QuantitationChannel()
     qCh3.setIdentResultSummaryId(targetRSMId)
     qCh3.setContextKey("1.3")
     qCh3.setQuantitationDataset(qtDS)
-    
+    qCh3.setName("QChannel 1.3")
+
     //Create MasterQuantitationChannel
     val mqCh = new MasterQuantitationChannel()
     mqCh.setName("WSC Test")
@@ -194,7 +153,17 @@ class WeightedSCQuantifierTest extends StrictLogging {
 
     udsEm.getTransaction().commit()
 
-    var wsCalculator = new WeightedSpectralCountQuantifier(executionContext = executionContext, udsMasterQuantChannel = mqCh, quantConfig = spCountCfg)
+    // build a fake OM experimental design. A better option should
+    val experimentalDesign = new SimplifiedExperimentalDesign(
+      biologicalSamples = Array.empty[msq.BiologicalSample],
+      biologicalGroups = Array.empty[BiologicalGroup],
+      masterQuantChannels = Array {
+        new MasterQuantChannel(id = 0, number = 1, identResultSummaryId = Some(targetRSMId), quantChannels = Array.empty[QuantChannel])
+      }
+    )
+
+    val wsCalculator = new WeightedSpectralCountQuantifier(executionContext = executionContext, experimentalDesign = experimentalDesign.toExperimentalDesign(), udsMasterQuantChannel = mqCh, quantConfig = spCountCfg)
+
     wsCalculator.quantify
     assertNotNull(mqCh.getQuantResultSummaryId())
 

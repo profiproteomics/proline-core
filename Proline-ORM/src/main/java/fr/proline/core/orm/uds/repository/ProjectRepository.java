@@ -46,7 +46,7 @@ public final class ProjectRepository {
 
 		return query.getResultList();
 	}
-	
+
 	public static List<Long> findAllActiveProjectIds(final EntityManager udsEm) {
 
 		JPAUtils.checkEntityManager(udsEm);

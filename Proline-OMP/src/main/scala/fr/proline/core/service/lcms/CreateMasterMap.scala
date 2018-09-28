@@ -1,19 +1,10 @@
 package fr.proline.core.service.lcms
 
-import scala.collection.mutable.ArrayBuffer
-
-import fr.profi.jdbc.easy._
-import fr.proline.api.service.IService
 import fr.proline.context.LcMsDbConnectionContext
 import fr.proline.core.algo.lcms._
-import fr.proline.core.dal.{ DoJDBCWork, DoJDBCReturningWork }
+import fr.proline.core.dal.DoJDBCWork
 import fr.proline.core.om.model.lcms._
-import fr.proline.core.om.provider.lcms.impl._
-import fr.proline.core.om.storer.lcms.MapAlnSetStorer
-import fr.proline.core.om.storer.lcms.MasterMapStorer
-import fr.proline.core.om.storer.lcms.ProcessedMapStorer
-import fr.proline.core.service.lcms._
-import fr.proline.repository.IDatabaseConnector
+import fr.proline.core.om.storer.lcms.{MapAlnSetStorer, MasterMapStorer, ProcessedMapStorer}
 
 object CreateMasterMap {
 
@@ -22,7 +13,7 @@ object CreateMasterMap {
     mapSet: MapSet,
     scanSeqs: Seq[LcMsScanSequence],
     alnMethodName: String,
-    alnParams: AlignmentParams,
+    alnConfig: AlignmentConfig,
     masterFtFilter: fr.proline.core.algo.lcms.filtering.Filter,
     ftMappingParams: FeatureMappingParams,
     ftClusteringParams: ClusteringParams,
@@ -34,7 +25,7 @@ object CreateMasterMap {
       mapSet,
       scanSeqs,
       alnMethodName,
-      alnParams,
+      alnConfig,
       masterFtFilter,
       ftMappingParams,
       ftClusteringParams,
@@ -53,7 +44,7 @@ class CreateMasterMap(
   mapSet: MapSet,
   scanSeqs: Seq[LcMsScanSequence],
   alnMethodName: String,
-  alnParams: AlignmentParams,
+  alnConfig: AlignmentConfig,
   masterFtFilter: fr.proline.core.algo.lcms.filtering.Filter,
   ftMappingParams: FeatureMappingParams,
   ftClusteringParams: ClusteringParams,
@@ -69,7 +60,7 @@ class CreateMasterMap(
     // --- Perform the LC-MS maps alignment ---
     val mapAligner = LcmsMapAligner( methodName = alnMethodName )
     val childMapsWithoutClusters = mapSet.childMaps.map { _.copyWithoutClusters }
-    val alnResult = mapAligner.computeMapAlignments( childMapsWithoutClusters, alnParams )
+    val alnResult = mapAligner.computeMapAlignments( childMapsWithoutClusters, alnConfig)
     
     // Update the maps the map set alignment sets
     val alnRefMapId = alnResult.alnRefMapId
@@ -128,7 +119,7 @@ class CreateMasterMap(
 
     // Build the master map
     logger.info("building master map...")
-    val newMasterMap = BuildMasterMap(mapSet, scanSeqs, masterFtFilter, ftMappingParams,ftClusteringParams)
+    val newMasterMap = BuildMasterMap(mapSet, scanSeqs, Some(masterFtFilter), ftMappingParams,ftClusteringParams)
 
     // Update map set
     mapSet.masterMap = newMasterMap

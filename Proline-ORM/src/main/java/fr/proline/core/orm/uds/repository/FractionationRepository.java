@@ -9,17 +9,17 @@ import fr.proline.repository.util.JPAUtils;
 
 public final class FractionationRepository {
 
-  private FractionationRepository() {
-  }
+	private FractionationRepository() {
+	}
 
-  public static Fractionation findFractionationByType(final EntityManager udsEm, final FractionationType fractionationType) {
+	public static Fractionation findFractionationByType(final EntityManager udsEm, final FractionationType fractionationType) {
 
-    JPAUtils.checkEntityManager(udsEm);
-    
-    final TypedQuery<Fractionation> query = udsEm.createNamedQuery("findFractionationByType", Fractionation.class);
-    query.setParameter("type", fractionationType);
-    // WARN Throws NoResultException if there is no result
-    return query.getSingleResult();
-  }
-  
+		JPAUtils.checkEntityManager(udsEm);
+
+		final TypedQuery<Fractionation> query = udsEm.createNamedQuery("findFractionationByType", Fractionation.class);
+		query.setParameter("type", fractionationType);
+		// WARN Throws NoResultException if there is no result
+		return query.getSingleResult();
+	}
+
 }

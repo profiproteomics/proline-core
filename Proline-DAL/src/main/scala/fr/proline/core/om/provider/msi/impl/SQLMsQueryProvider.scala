@@ -63,7 +63,7 @@ class SQLMsQueryProvider(val msiDbCtx: MsiDbConnectionContext) extends IMsQueryP
         // Retrieve child peaklist ids corresponding to the current peaklist id
         val childPeaklistIds = msiEzDBC.select(childPklIdQuery, parentPeaklistId) { _.nextLong }
         
-        if (childPeaklistIds.length > 0) { pklIds ++= childPeaklistIds }
+        if (childPeaklistIds.nonEmpty) { pklIds ++= childPeaklistIds }
         else { pklIds += parentPeaklistId }
       }
       
@@ -85,7 +85,7 @@ class SQLMsQueryProvider(val msiDbCtx: MsiDbConnectionContext) extends IMsQueryP
   
         // Build the MS query object
         val msQuery = if (spectrumId != 0) { // we can assume it is a MS2 query
-          val spectrumTitle = spectrumTitleById(spectrumId)
+          //val spectrumTitle = spectrumTitleById(spectrumId) //VDS not usefull ?!
           MsQueryBuilder.buildMs2Query(r, spectrumTitleById)  
         } else {
           MsQueryBuilder.buildMs1Query(r)
@@ -127,7 +127,7 @@ class SQLMsQueryProvider(val msiDbCtx: MsiDbConnectionContext) extends IMsQueryP
         
         // Build the MS query object
         val msQuery = if (spectrumId != 0) { // we can assume it is a MS2 query
-          val spectrumTitle = spectrumTitleById(spectrumId)
+//          val spectrumTitle = spectrumTitleById(spectrumId) //VDS Not usefull ?!
           MsQueryBuilder.buildMs2Query(r, spectrumTitleById)  
         } else {
           MsQueryBuilder.buildMs1Query(r)

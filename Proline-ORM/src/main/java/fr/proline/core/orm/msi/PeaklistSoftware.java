@@ -17,97 +17,101 @@ import fr.profi.util.StringUtils;
  */
 @Entity(name = "fr.proline.core.orm.msi.PeaklistSoftware")
 @NamedQueries({
-	@NamedQuery(name = "findMsiPeaklistSoftForName", query = "select pls from fr.proline.core.orm.msi.PeaklistSoftware pls"
-		+ " where (upper(pls.name) = :name) and (pls.version is null)"),
-
-	@NamedQuery(name = "findMsiPeaklistSoftForNameAndVersion", query = "select pls from fr.proline.core.orm.msi.PeaklistSoftware pls"
-		+ " where (upper(pls.name) = :name) and (upper(pls.version) = :version)")
-
+	@NamedQuery(
+		name = "findMsiPeaklistSoftForName",
+		query = "select pls from fr.proline.core.orm.msi.PeaklistSoftware pls"
+		+ " where (upper(pls.name) = :name) and (pls.version is null)"
+	),
+	@NamedQuery(
+		name = "findMsiPeaklistSoftForNameAndVersion",
+		query = "select pls from fr.proline.core.orm.msi.PeaklistSoftware pls"
+		+ " where (upper(pls.name) = :name) and (upper(pls.version) = :version)"
+	)
 })
 @Table(name = "peaklist_software")
 public class PeaklistSoftware implements Serializable {
 
-    private static final long serialVersionUID = 1L;
+	private static final long serialVersionUID = 1L;
 
-    @Id
-    // MSI PeaklistSoftware Id are not generated (taken from Uds PeaklistSoftware entity)
-    private long id;
+	@Id
+	// MSI PeaklistSoftware Id are not generated (taken from Uds PeaklistSoftware entity)
+	private long id;
 
-    private String name;
+	private String name;
 
-    @Column(name = "serialized_properties")
-    private String serializedProperties;
+	@Column(name = "serialized_properties")
+	private String serializedProperties;
 
-    private String version;
+	private String version;
 
-    public PeaklistSoftware() {
-    }
-
-    /**
-     * Create a Msi PeaklistSoftware entity from an Uds PeaklistSoftware entity. Created Msi PeaklistSoftware
-     * entity shares the same Id with given Uds PeaklistSoftware.
-     * 
-     * @param udsPeakListSoftware
-     *            PeaklistSoftware entity from udsDb used to initialize Msi PeaklistSoftware fields (must not
-     *            be <code>null</code>)
-     */
-    public PeaklistSoftware(final fr.proline.core.orm.uds.PeaklistSoftware udsPeakListSoftware) {
-
-	if (udsPeakListSoftware == null) {
-	    throw new IllegalArgumentException("UdsPeakListSoftware is null");
+	public PeaklistSoftware() {
 	}
 
-	setId(udsPeakListSoftware.getId());
-	setName(udsPeakListSoftware.getName());
+	/**
+	 * Create a Msi PeaklistSoftware entity from an Uds PeaklistSoftware entity. Created Msi PeaklistSoftware
+	 * entity shares the same Id with given Uds PeaklistSoftware.
+	 * 
+	 * @param udsPeakListSoftware
+	 *            PeaklistSoftware entity from udsDb used to initialize Msi PeaklistSoftware fields (must not
+	 *            be <code>null</code>)
+	 */
+	public PeaklistSoftware(final fr.proline.core.orm.uds.PeaklistSoftware udsPeakListSoftware) {
 
-	final String udsPeakListSoftwareProps = udsPeakListSoftware.getSerializedProperties();
+		if (udsPeakListSoftware == null) {
+			throw new IllegalArgumentException("UdsPeakListSoftware is null");
+		}
 
-	if (StringUtils.isEmpty(udsPeakListSoftwareProps)) {
-	    setSerializedProperties(null);
-	} else {
-	    setSerializedProperties(udsPeakListSoftwareProps);
+		setId(udsPeakListSoftware.getId());
+		setName(udsPeakListSoftware.getName());
+
+		final String udsPeakListSoftwareProps = udsPeakListSoftware.getSerializedProperties();
+
+		if (StringUtils.isEmpty(udsPeakListSoftwareProps)) {
+			setSerializedProperties(null);
+		} else {
+			setSerializedProperties(udsPeakListSoftwareProps);
+		}
+
+		final String udsPeakListSoftwareVersion = udsPeakListSoftware.getVersion();
+
+		if (StringUtils.isEmpty(udsPeakListSoftwareVersion)) {
+			setVersion(null);
+		} else {
+			setVersion(udsPeakListSoftwareVersion);
+		}
+
 	}
 
-	final String udsPeakListSoftwareVersion = udsPeakListSoftware.getVersion();
-
-	if (StringUtils.isEmpty(udsPeakListSoftwareVersion)) {
-	    setVersion(null);
-	} else {
-	    setVersion(udsPeakListSoftwareVersion);
+	public long getId() {
+		return id;
 	}
 
-    }
+	public void setId(final long pId) {
+		id = pId;
+	}
 
-    public long getId() {
-	return id;
-    }
+	public String getName() {
+		return this.name;
+	}
 
-    public void setId(final long pId) {
-	id = pId;
-    }
+	public void setName(String name) {
+		this.name = name;
+	}
 
-    public String getName() {
-	return this.name;
-    }
+	public String getSerializedProperties() {
+		return this.serializedProperties;
+	}
 
-    public void setName(String name) {
-	this.name = name;
-    }
+	public void setSerializedProperties(String serializedProperties) {
+		this.serializedProperties = serializedProperties;
+	}
 
-    public String getSerializedProperties() {
-	return this.serializedProperties;
-    }
+	public String getVersion() {
+		return this.version;
+	}
 
-    public void setSerializedProperties(String serializedProperties) {
-	this.serializedProperties = serializedProperties;
-    }
-
-    public String getVersion() {
-	return this.version;
-    }
-
-    public void setVersion(String version) {
-	this.version = version;
-    }
+	public void setVersion(String version) {
+		this.version = version;
+	}
 
 }

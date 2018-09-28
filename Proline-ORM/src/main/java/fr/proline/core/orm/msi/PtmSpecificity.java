@@ -1,127 +1,213 @@
 package fr.proline.core.orm.msi;
 
+import static javax.persistence.CascadeType.PERSIST;
+
 import java.io.Serializable;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Set;
 
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.Id;
-import javax.persistence.OneToMany;
-import javax.persistence.Table;
+import javax.persistence.*;
+
+import fr.profi.util.StringUtils;
 
 /**
  * The persistent class for the ptm_specificity database table.
  * 
  */
 @Entity(name = "fr.proline.core.orm.msi.PtmSpecificity")
+@NamedQueries({
+	@NamedQuery(name = "findMsiPtmSpecForNameLocResidue", query = "select ps from fr.proline.core.orm.msi.PtmSpecificity ps"
+		+ " where (upper(ps.location) = :location) and (ps.residue = :residue) and (upper(ps.ptm.shortName) = :ptmShortName)"),
+
+	@NamedQuery(name = "findMsiPtmSpecForNameAndLoc", query = "select ps from fr.proline.core.orm.msi.PtmSpecificity ps"
+		+ " where (upper(ps.location) = :location) and (ps.residue is null) and (upper(ps.ptm.shortName) = :ptmShortName)")
+
+})
 @Table(name = "ptm_specificity")
 public class PtmSpecificity implements Serializable {
 
-    private static final long serialVersionUID = 1L;
+	private static final long serialVersionUID = 1L;
 
-    @Id
-    // Msi PtmSpecificity Id are not generated (taken from Ps PtmSpecificity entity)
-    private long id;
+	@Id
+	@GeneratedValue(strategy = GenerationType.AUTO)
+	@Column(name = "id")
+	private long id;
 
-    private String location;
+	private String location;
 
-    private Character residue;
+	private Character residue;
 
-    @Column(name = "serialized_properties")
-    private String serializedProperties;
+	@Column(name = "serialized_properties")
+	private String serializedProperties;
 
-    // bi-directional many-to-one association to UsedPtm
-    @OneToMany(mappedBy = "ptmSpecificity")
-    private Set<UsedPtm> usedPtms;
+	// bi-directional many-to-one association to Ptm
+	@ManyToOne
+	@JoinColumn(name = "ptm_id")
+	private Ptm ptm;
 
-    /**
-     * Create a Msi PtmSpecificity entity from a Ps PtmSpecificity entity. Created Msi PtmSpecificity entity
-     * shares the same Id with given Ps PtmSpecificity.
-     * 
-     * @param psPtmSpecificity
-     *            PtmSpecificity entity from psDb used to initialize Msi PtmSpecificity fields (must not be
-     *            <code>null</code>)
-     */
-    public PtmSpecificity(final fr.proline.core.orm.ps.PtmSpecificity psPtmSpecificity) {
+	// uni-directional many-to-one association to PtmClassification
+	@ManyToOne(cascade = PERSIST)
+	@JoinColumn(name = "classification_id")
+	private PtmClassification classification;
 
-	if (psPtmSpecificity == null) {
-	    throw new IllegalArgumentException("PsPtmSpecificity is null");
+	@OneToMany(mappedBy = "specificity", cascade = PERSIST)
+	private Set<PtmEvidence> evidences;
+
+	// bi-directional many-to-one association to UsedPtm
+	@OneToMany(mappedBy = "ptmSpecificity")
+	private Set<UsedPtm> usedPtms;
+
+	public PtmSpecificity() {
 	}
 
-	setId(psPtmSpecificity.getId());
-	setLocation(psPtmSpecificity.getLocation().toString());
-	psPtmSpecificity.getResidue();
-
-	// TODO set SerializedProperties when fields is available in PS PtmSpecificity
-    }
-
-    public PtmSpecificity() {
-    }
-
-    public long getId() {
-	return id;
-    }
-
-    public void setId(final long pId) {
-	id = pId;
-    }
-
-    public String getLocation() {
-	return this.location;
-    }
-
-    public void setLocation(String location) {
-	this.location = location;
-    }
-
-    public Character getResidue() {
-	return residue;
-    }
-
-    public void setResidue(final Character pResidue) {
-	residue = pResidue;
-    }
-
-    public String getSerializedProperties() {
-	return this.serializedProperties;
-    }
-
-    public void setSerializedProperties(String serializedProperties) {
-	this.serializedProperties = serializedProperties;
-    }
-
-    public Set<UsedPtm> getUsedPtms() {
-	return this.usedPtms;
-    }
-
-    public void setUsedPtms(final Set<UsedPtm> pUsedPtms) {
-	usedPtms = pUsedPtms;
-    }
-
-    public void addUsedPtm(final UsedPtm usedPtm) {
-
-	if (usedPtm != null) {
-	    Set<UsedPtm> localUsedPtms = getUsedPtms();
-
-	    if (localUsedPtms == null) {
-		localUsedPtms = new HashSet<UsedPtm>();
-
-		setUsedPtms(localUsedPtms);
-	    }
-
-	    localUsedPtms.add(usedPtm);
+	public long getId() {
+		return id;
 	}
 
-    }
-
-    public void removeUsedPtms(final UsedPtm usedPtm) {
-
-	final Set<UsedPtm> localUsedPtms = getUsedPtms();
-	if (localUsedPtms != null) {
-	    localUsedPtms.remove(usedPtm);
+	public void setId(final long pId) {
+		id = pId;
 	}
 
-    }
+	public String getLocation() {
+		return this.location;
+	}
+
+	public void setLocation(String location) {
+		this.location = location;
+	}
+
+	public Character getResidue() {
+		return residue;
+	}
+
+	public void setResidue(final Character pResidue) {
+		residue = pResidue;
+	}
+
+	public Ptm getPtm() {
+		return this.ptm;
+	}
+
+	public void setPtm(Ptm ptm) {
+		this.ptm = ptm;
+	}
+
+	public PtmClassification getClassification() {
+		return this.classification;
+	}
+
+	public void setClassification(PtmClassification classification) {
+		this.classification = classification;
+	}
+
+	public void setEvidences(final Set<PtmEvidence> pEvidences) {
+		evidences = pEvidences;
+	}
+
+	public Set<PtmEvidence> getEvidences() {
+		return evidences;
+	}
+
+	public void addEvidence(final PtmEvidence evidence) {
+
+		if (evidence != null) {
+			Set<PtmEvidence> localEvidences = getEvidences();
+
+			if (localEvidences == null) {
+				localEvidences = new HashSet<PtmEvidence>();
+
+				setEvidences(localEvidences);
+			}
+
+			localEvidences.add(evidence);
+		}
+
+	}
+
+	public void removeEvidence(final PtmEvidence evidence) {
+
+		final Set<PtmEvidence> localEvidences = getEvidences();
+		if (localEvidences != null) {
+			localEvidences.remove(evidence);
+		}
+
+	}
+
+	public enum PtmLocation {
+
+		ANYWHERE("Anywhere"),
+		ANY_N_TERM("Any N-term"),
+		ANY_C_TERM("Any C-term"),
+		PROT_N_TERM("Protein N-term"),
+		PROT_C_TERM("Protein C-term");
+
+		private final String m_location;
+		private static HashMap<String, PtmLocation> ptmLocationByLocation = null;
+
+		private PtmLocation(final String location) {
+			assert (!StringUtils.isEmpty(location)) : "PtmSpecificity.Location() invalid location";
+
+			m_location = location;
+		}
+
+		public static PtmLocation withName(final String location) {
+			if (ptmLocationByLocation == null) {
+				ptmLocationByLocation = new HashMap<String, PtmLocation>();
+
+				for (PtmLocation ptmLoc : PtmLocation.values()) {
+					ptmLocationByLocation.put(ptmLoc.toString(), ptmLoc);
+				}
+			}
+
+			return ptmLocationByLocation.get(location);
+		}
+
+		@Override
+		public String toString() {
+			return m_location;
+		}
+	}
+
+	public String getSerializedProperties() {
+		return this.serializedProperties;
+	}
+
+	public void setSerializedProperties(String serializedProperties) {
+		this.serializedProperties = serializedProperties;
+	}
+
+	public Set<UsedPtm> getUsedPtms() {
+		return this.usedPtms;
+	}
+
+	public void setUsedPtms(final Set<UsedPtm> pUsedPtms) {
+		usedPtms = pUsedPtms;
+	}
+
+	public void addUsedPtm(final UsedPtm usedPtm) {
+
+		if (usedPtm != null) {
+			Set<UsedPtm> localUsedPtms = getUsedPtms();
+
+			if (localUsedPtms == null) {
+				localUsedPtms = new HashSet<UsedPtm>();
+
+				setUsedPtms(localUsedPtms);
+			}
+
+			localUsedPtms.add(usedPtm);
+		}
+
+	}
+
+	public void removeUsedPtms(final UsedPtm usedPtm) {
+
+		final Set<UsedPtm> localUsedPtms = getUsedPtms();
+		if (localUsedPtms != null) {
+			localUsedPtms.remove(usedPtm);
+		}
+
+	}
 
 }

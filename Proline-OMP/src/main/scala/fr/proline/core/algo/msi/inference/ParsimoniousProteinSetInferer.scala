@@ -34,8 +34,8 @@ class ParsimoniousProteinSetInferer() extends IProteinSetInferer with LazyLoggin
       val pepMatchIds = pepMatchGroup.map( _.id )
       
       // Build peptide instance
-      val bestPepMatch = if( pepMatchGroup.length == 1 ) pepMatchGroup(0)
-      else pepMatchGroup.maxBy(_.score)
+      // VDS: in order to ensure always same  best Peptide math use score AND deltaMoz
+      val bestPepMatch = PeptideMatch.getBestOnScoreDeltaMoZ(pepMatchGroup)
 
       val peptideInstance = new PeptideInstance(
         id = PeptideInstance.generateNewId(),

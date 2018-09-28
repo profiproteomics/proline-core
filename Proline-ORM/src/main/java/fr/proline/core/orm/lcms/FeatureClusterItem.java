@@ -4,14 +4,13 @@ import java.io.Serializable;
 
 import javax.persistence.*;
 
-
 /**
  * The persistent class for the feature_cluster_item database table.
  * 
  */
 @Entity
-@Table(name="feature_cluster_item")
-@NamedQuery(name="FeatureClusterItem.findAll", query="SELECT f FROM FeatureClusterItem f")
+@Table(name = "feature_cluster_item")
+@NamedQuery(name = "FeatureClusterItem.findAll", query = "SELECT f FROM FeatureClusterItem f")
 public class FeatureClusterItem implements Serializable {
 	private static final long serialVersionUID = 1L;
 
@@ -20,19 +19,19 @@ public class FeatureClusterItem implements Serializable {
 
 	//bi-directional many-to-one association to Feature
 	@ManyToOne
-	@JoinColumn(name="cluster_feature_id")
+	@JoinColumn(name = "cluster_feature_id")
 	@MapsId("clusterFeatureId")
 	private Feature clusterFeature;
 
 	//uni-directional many-to-one association to Feature
 	@ManyToOne
-	@JoinColumn(name="sub_feature_id")
+	@JoinColumn(name = "sub_feature_id")
 	@MapsId("subFeatureId")
 	private Feature subFeature;
 
 	//bi-directional many-to-one association to ProcessedMap
 	@ManyToOne
-	@JoinColumn(name="processed_map_id")
+	@JoinColumn(name = "processed_map_id")
 	private ProcessedMap processedMap;
 
 	public FeatureClusterItem() {

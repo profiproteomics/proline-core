@@ -1,28 +1,17 @@
 package fr.proline.core.om.provider.msq.impl
 
-import scala.collection.mutable.ArrayBuffer
-import scala.collection.mutable.HashSet
-import scala.collection.mutable.LongMap
-import fr.profi.util.collection._
-import fr.profi.util.primitives._
 import fr.proline.context.UdsDbConnectionContext
-import fr.proline.core.om.provider.msq.IExperimentalDesignProvider
-import fr.proline.core.om.model.msq._
 import fr.proline.core.dal.DoJDBCReturningWork
 import fr.proline.core.dal.tables.SelectQueryBuilder._
 import fr.proline.core.dal.tables.SelectQueryBuilder1
 import fr.proline.core.dal.tables.SelectQueryBuilder2
-import fr.proline.core.dal.tables.SelectQueryBuilder3
-import fr.proline.core.dal.tables.uds.UdsDbBiologicalGroupTable
-import fr.proline.core.dal.tables.uds.UdsDbBiologicalGroupBiologicalSampleItemTable
-import fr.proline.core.dal.tables.uds.UdsDbBiologicalSampleTable
-import fr.proline.core.dal.tables.uds.UdsDbBiologicalSampleSampleAnalysisMapTable
-import fr.proline.core.dal.tables.uds.UdsDbGroupSetupTable
-import fr.proline.core.dal.tables.uds.UdsDbGroupSetupBiologicalGroupMapTable
-import fr.proline.core.dal.tables.uds.UdsDbMasterQuantChannelTable
-import fr.proline.core.dal.tables.uds.UdsDbQuantChannelTable
-import fr.proline.core.dal.tables.uds.UdsDbSampleAnalysisTable
-import fr.proline.core.dal.tables.uds.UdsDbRatioDefinitionTable
+import fr.proline.core.dal.tables.uds._
+import fr.proline.core.om.model.msq._
+import fr.proline.core.om.provider.msq.IExperimentalDesignProvider
+
+import scala.collection.mutable.ArrayBuffer
+import scala.collection.mutable.HashSet
+import scala.collection.mutable.LongMap
 
 class SQLExperimentalDesignProvider(val udsDbCtx: UdsDbConnectionContext) extends IExperimentalDesignProvider {
 
@@ -56,7 +45,7 @@ class SQLExperimentalDesignProvider(val udsDbCtx: UdsDbConnectionContext) extend
           name = r.getString(BioSampleCols.NAME)
         )
       }
-      if( bioSampleById.size == 0 ) return None
+      if( bioSampleById.isEmpty ) return None
       
       val bioSamples = bioSampleById.values.toArray.sortBy( _.number )
       

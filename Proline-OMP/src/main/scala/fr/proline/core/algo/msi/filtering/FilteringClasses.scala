@@ -3,6 +3,7 @@ package fr.proline.core.algo.msi.filtering
 import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.HashMap
 import fr.proline.core.algo.msi.validation.BuildPeptideMatchFilter
+import fr.proline.core.algo.msi.validation.BuildProteinSetFilter
 import fr.proline.core.om.model.msi._
 import fr.profi.util.StringUtils
 import fr.profi.util.primitives.toDouble
@@ -19,7 +20,7 @@ object PepMatchFilterParams extends Enumeration {
   val MASCOT_EVALUE = Value("MASCOT_EVALUE")
   val MASCOT_ADJUSTED_EVALUE = Value("MASCOT_ADJUSTED_EVALUE")
   val PEPTIDE_SEQUENCE_LENGTH = Value("PEP_SEQ_LENGTH")
-  val RANK = Value("RANK") // TODO: rename pretty rank
+  val PRETTY_RANK = Value("PRETTY_RANK")
   val SCORE = Value("SCORE")
   val SCORE_IT_PVALUE = Value("SCORE_IT_P-VALUE")
   val SCORE_HT_PVALUE = Value("SCORE_HT_P-VALUE")
@@ -301,6 +302,18 @@ trait IOptimizableProteinSetFilter extends IProteinSetFilter with IOptimizableFi
 
 object ResultSummaryFilterBuilder {
 
+  def getPeptideExpectedFDR(rsm: IResultSummaryLike) : Option[Float] = {
+    require(rsm != null, "rsm is null")
+    if (rsm.properties.isEmpty || rsm.properties.get.validationProperties.isEmpty ) return None
+    return if(rsm.properties.get.validationProperties.get.params.peptideExpectedFdr.isDefined) Some(rsm.properties.get.validationProperties.get.params.peptideExpectedFdr.get) else None
+  }
+
+  def getProteinSetExpectedFDR(rsm: IResultSummaryLike) : Option[Float] = {
+    require(rsm != null, "rsm is null")
+    if (rsm.properties.isEmpty || rsm.properties.get.validationProperties.isEmpty ) return None
+    return if(rsm.properties.get.validationProperties.get.params.proteinExpectedFdr.isDefined) Some(rsm.properties.get.validationProperties.get.params.proteinExpectedFdr.get) else None
+  }
+
   def buildPeptideMatchFilters(rsm: IResultSummaryLike): Array[IPeptideMatchFilter] = {
     require(rsm != null, "rsm is null")
     if (rsm.properties.isEmpty) return Array()
@@ -344,6 +357,65 @@ object ResultSummaryFilterBuilder {
               result += nextFilter
             } else {
               val nextFilter = BuildPeptideMatchFilter(filterParameterStr)
+              if (nextFilter.isInstanceOf[IFilterNeedingResultSet])
+                nextFilter.asInstanceOf[IFilterNeedingResultSet].setTargetRS(rsm.getResultSet().get)
+              result += nextFilter
+            }
+
+          } // End (if filterParameterStr is not empty)
+
+        } // End loop for each peptideFilter
+
+      } // En if (peptideFilters is define)
+
+    } // End if (validationProperties is defined)
+
+    result.toArray
+  }
+
+  def buildProteinSetsFilters(rsm: IResultSummaryLike): Array[IProteinSetFilter] = {
+    require(rsm != null, "rsm is null")
+    if (rsm.properties.isEmpty) return Array()
+
+    val rsmProperties = rsm.properties.get
+
+    val result = new ArrayBuffer[IProteinSetFilter]()
+
+    val validationPropsOpt = rsmProperties.getValidationProperties
+    if (validationPropsOpt.isDefined) {
+      val validationProperties = validationPropsOpt.get
+
+      val params = validationProperties.getParams
+
+      val optionalProtSetFilters = params.getProteinFilters
+      if (optionalProtSetFilters.isDefined) {
+        val protSetFilters = optionalProtSetFilters.get
+
+        for (filterDescr <- protSetFilters) {
+          val filterParameterStr = filterDescr.getParameter
+
+          if (!StringUtils.isEmpty(filterParameterStr)) {
+            var optionalThresholdValue: Option[AnyVal] = None
+
+            val optionalFiltProperties = filterDescr.getProperties
+            if ((optionalFiltProperties != null) && optionalFiltProperties.isDefined) {
+              val filterProperties = optionalFiltProperties.get
+
+              val optionalRawValue = filterProperties.get(FilterPropertyKeys.THRESHOLD_VALUE)
+              if (optionalRawValue.isDefined) {
+                val threshold = optionalRawValue.get.asInstanceOf[AnyVal] // Force a cast to Scala Primitive wrapper
+                optionalThresholdValue = Some(threshold)
+              }
+
+            } // End if (filterProperties is defined)
+
+            if (optionalThresholdValue.isDefined) {
+              val nextFilter = BuildProteinSetFilter(filterParameterStr, optionalThresholdValue.get)
+              if (nextFilter.isInstanceOf[IFilterNeedingResultSet])
+                nextFilter.asInstanceOf[IFilterNeedingResultSet].setTargetRS(rsm.getResultSet().get)
+              result += nextFilter
+            } else {
+              val nextFilter = BuildProteinSetFilter(filterParameterStr)
               if (nextFilter.isInstanceOf[IFilterNeedingResultSet])
                 nextFilter.asInstanceOf[IFilterNeedingResultSet].setTargetRS(rsm.getResultSet().get)
               result += nextFilter

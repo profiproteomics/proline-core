@@ -20,7 +20,7 @@ import fr.proline.repository.util.PostgresUtils;
 import fr.proline.repository.util.DatabaseTestCase;
 
 /**
- * Manual test (must use a PosgreSQL server configured in "pg_ps.properties" file).
+ * Manual test (must use a PosgreSQL server configured in "pg_msi.properties" file).
  * 
  * @author LMN
  * 
@@ -28,87 +28,87 @@ import fr.proline.repository.util.DatabaseTestCase;
 @Ignore
 public class TestPostgresUtils extends DatabaseTestCase {
 
-    private static final Logger LOG = LoggerFactory.getLogger(TestPostgresUtils.class);
+	private static final Logger LOG = LoggerFactory.getLogger(TestPostgresUtils.class);
 
-    @Override
-    public ProlineDatabaseType getProlineDatabaseType() {
-	return ProlineDatabaseType.PS;
-    }
+	@Override
+	public ProlineDatabaseType getProlineDatabaseType() {
+		return ProlineDatabaseType.MSI;
+	}
 
-    @Override
-    public String getPropertiesFileName() {
-	return "pg_ps.properties";
-    }
+	@Override
+	public String getPropertiesFileName() {
+		return "pg_msi.properties";
+	}
 
-    public void testPostgresqlConnection() {
-	final IDatabaseConnector connector = getConnector();
+	public void testPostgresqlConnection() {
+		final IDatabaseConnector connector = getConnector();
 
-	Connection con = null;
+		Connection con = null;
 
-	EntityManager em = null;
+		EntityManager em = null;
 
-	try {
-	    con = connector.getDataSource().getConnection();
-
-	    assertNotNull("SQL connection", con);
-
-	    final CopyManager copyMgr = PostgresUtils.getCopyManager(con);
-
-	    assertNotNull("PG CopyManager", copyMgr);
-
-	    em = connector.createEntityManager();
-
-	    final JDBCWork copyManagerWork = new CopyManagerWork();
-
-	    JPAUtils.doWork(em, copyManagerWork);
-	} catch (SQLException sqlEx) {
-	    LOG.error("Error retrieving PostgreSQL Connection", sqlEx);
-
-	    fail(sqlEx.getMessage());
-	} finally {
-
-	    if (em != null) {
 		try {
-		    em.close();
-		} catch (Exception exClose) {
-		    LOG.error("Error closing EntityManager", exClose);
-		}
-	    }
+			con = connector.getDataSource().getConnection();
 
-	    if (con != null) {
+			assertNotNull("SQL connection", con);
+
+			final CopyManager copyMgr = PostgresUtils.getCopyManager(con);
+
+			assertNotNull("PG CopyManager", copyMgr);
+
+			em = connector.createEntityManager();
+
+			final JDBCWork copyManagerWork = new CopyManagerWork();
+
+			JPAUtils.doWork(em, copyManagerWork);
+		} catch (SQLException sqlEx) {
+			LOG.error("Error retrieving PostgreSQL Connection", sqlEx);
+
+			fail(sqlEx.getMessage());
+		} finally {
+
+			if (em != null) {
+				try {
+					em.close();
+				} catch (Exception exClose) {
+					LOG.error("Error closing EntityManager", exClose);
+				}
+			}
+
+			if (con != null) {
+				try {
+					con.close();
+				} catch (SQLException exClose) {
+					LOG.error("Error closing SQL JDBC connection", exClose);
+				}
+			}
+
+			connector.close();
+		}
+
+	}
+
+	public static void main(final String[] args) {
+		final TestPostgresUtils test = new TestPostgresUtils();
+
 		try {
-		    con.close();
-		} catch (SQLException exClose) {
-		    LOG.error("Error closing SQL JDBC connection", exClose);
+			test.testPostgresqlConnection();
+		} finally {
+			test.tearDown();
 		}
-	    }
 
-	    connector.close();
 	}
 
-    }
+	private static class CopyManagerWork implements JDBCWork {
 
-    public static void main(final String[] args) {
-	final TestPostgresUtils test = new TestPostgresUtils();
+		public void execute(final Connection paramConnection) throws SQLException {
+			assertNotNull("EntityManager wrapped SQL connection", paramConnection);
 
-	try {
-	    test.testPostgresqlConnection();
-	} finally {
-	    test.tearDown();
+			final CopyManager copyMgr = PostgresUtils.getCopyManager(paramConnection);
+
+			assertNotNull("PG CopyManager", copyMgr);
+		}
+
 	}
-
-    }
-
-    private static class CopyManagerWork implements JDBCWork {
-
-	public void execute(final Connection paramConnection) throws SQLException {
-	    assertNotNull("EntityManager wrapped SQL connection", paramConnection);
-
-	    final CopyManager copyMgr = PostgresUtils.getCopyManager(paramConnection);
-
-	    assertNotNull("PG CopyManager", copyMgr);
-	}
-
-    }
 
 }

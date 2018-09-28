@@ -14,58 +14,58 @@ import fr.profi.util.StringUtils;
 
 public final class ScoringRepository {
 
-    /* Static caches are updated by getScoringIdForType() and getScoreTypeForId() methods */
-    /* ScoreType -> Scoring.id , @GuardedBy("CACHE_LOCK") */
-    private static final Map<String, Long> SCORING_IDS_CACHE = new HashMap<String, Long>();
+	/* Static caches are updated by getScoringIdForType() and getScoreTypeForId() methods */
+	/* ScoreType -> Scoring.id , @GuardedBy("CACHE_LOCK") */
+	private static final Map<String, Long> SCORING_IDS_CACHE = new HashMap<String, Long>();
 
-    /* Scoring.id -> ScoreType , @GuardedBy("CACHE_LOCK") */
-    private static final Map<Long, String> SCORE_TYPES_CACHE = new HashMap<Long, String>();
+	/* Scoring.id -> ScoreType , @GuardedBy("CACHE_LOCK") */
+	private static final Map<Long, String> SCORE_TYPES_CACHE = new HashMap<Long, String>();
 
-    /**
-     * Lock object for caches.
-     */
-    private static final Object CACHE_LOCK = new Object();
+	/**
+	 * Lock object for caches.
+	 */
+	private static final Object CACHE_LOCK = new Object();
 
-    private ScoringRepository() {
-    }
-
-    /**
-     * Retrieves Scoring entity by <code>scoreType</code> string.
-     * 
-     * @param scoreType
-     *            Score type (in domain model) is <code>Scoring.searchEngine + ':' + Scoring.name</code> (must
-     *            be a non empty <code>String</code>).
-     * @return Scoring entity or <code>null</code> if not found
-     */
-    public static Scoring findScoringForType(final EntityManager msiEm, final String scoreType) {
-
-	JPAUtils.checkEntityManager(msiEm);
-
-	if (StringUtils.isEmpty(scoreType)) {
-	    throw new IllegalArgumentException("Invalid scoreType");
+	private ScoringRepository() {
 	}
 
-	Scoring result = null;
+	/**
+	 * Retrieves Scoring entity by <code>scoreType</code> string.
+	 * 
+	 * @param scoreType
+	 *            Score type (in domain model) is <code>Scoring.searchEngine + ':' + Scoring.name</code> (must
+	 *            be a non empty <code>String</code>).
+	 * @return Scoring entity or <code>null</code> if not found
+	 */
+	public static Scoring findScoringForType(final EntityManager msiEm, final String scoreType) {
 
-	final TypedQuery<Scoring> query = msiEm.createNamedQuery("findScoringForScoreType", Scoring.class);
-	query.setParameter("scoreType", scoreType);
+		JPAUtils.checkEntityManager(msiEm);
 
-	final List<Scoring> scorings = query.getResultList();
+		if (StringUtils.isEmpty(scoreType)) {
+			throw new IllegalArgumentException("Invalid scoreType");
+		}
 
-	if ((scorings != null) && !scorings.isEmpty()) {
+		Scoring result = null;
 
-	    if (scorings.size() == 1) {
-		result = scorings.get(0);
-	    } else {
-		throw new NonUniqueResultException("There are more than one Scoring for given scoreType");
-	    }
+		final TypedQuery<Scoring> query = msiEm.createNamedQuery("findScoringForScoreType", Scoring.class);
+		query.setParameter("scoreType", scoreType);
 
+		final List<Scoring> scorings = query.getResultList();
+
+		if ((scorings != null) && !scorings.isEmpty()) {
+
+			if (scorings.size() == 1) {
+				result = scorings.get(0);
+			} else {
+				throw new NonUniqueResultException("There are more than one Scoring for given scoreType");
+			}
+
+		}
+
+		return result;
 	}
 
-	return result;
-    }
-
-    /**
+	/**
 	 * Retrieves a cached Scoring.Id by given <code>scoreType</code>.
 	 * 
 	 * @param scoreType
@@ -115,49 +115,49 @@ public final class ScoringRepository {
 		return result;
 	}
 
-    /**
-     * Retrieves a cached <code>scoreType</code> by given <code>Scoring.id</code>.
-     * 
-     * @param scoringId
-     *            Primary key of <code>Scoring</code> Msi Entity.
-     * @return Score type (in domain model) is <code>Scoring.searchEngine + ':' + Scoring.name</code> (
-     *         <code>null</code>).
-     */
-    public static String getScoreTypeForId(final EntityManager msiEm, final long scoringId) {
+	/**
+	 * Retrieves a cached <code>scoreType</code> by given <code>Scoring.id</code>.
+	 * 
+	 * @param scoringId
+	 *            Primary key of <code>Scoring</code> Msi Entity.
+	 * @return Score type (in domain model) is <code>Scoring.searchEngine + ':' + Scoring.name</code> (
+	 *         <code>null</code>).
+	 */
+	public static String getScoreTypeForId(final EntityManager msiEm, final long scoringId) {
 
-	JPAUtils.checkEntityManager(msiEm);
+		JPAUtils.checkEntityManager(msiEm);
 
-	final Long scoringIdKey = Long.valueOf(scoringId);
+		final Long scoringIdKey = Long.valueOf(scoringId);
 
-	String result = null;
+		String result = null;
 
-	synchronized (CACHE_LOCK) {
-	    result = SCORE_TYPES_CACHE.get(scoringIdKey);
+		synchronized (CACHE_LOCK) {
+			result = SCORE_TYPES_CACHE.get(scoringIdKey);
 
-	    if (result == null) {
+			if (result == null) {
 
-		final Scoring foundScoring = msiEm.find(Scoring.class, scoringIdKey);
-		if (foundScoring != null) {
-		    final String searchEngine = foundScoring.getSearchEngine();
-		    final String name = foundScoring.getName();
+				final Scoring foundScoring = msiEm.find(Scoring.class, scoringIdKey);
+				if (foundScoring != null) {
+					final String searchEngine = foundScoring.getSearchEngine();
+					final String name = foundScoring.getName();
 
-		    if ((searchEngine != null) && (name != null)) {
-			final String scoreType = searchEngine + ':' + name;
-			/* Cache Scoring Id */
-			SCORING_IDS_CACHE.put(scoreType, scoringIdKey);
+					if ((searchEngine != null) && (name != null)) {
+						final String scoreType = searchEngine + ':' + name;
+						/* Cache Scoring Id */
+						SCORING_IDS_CACHE.put(scoreType, scoringIdKey);
 
-			/* Cache scoreType String */
-			SCORE_TYPES_CACHE.put(scoringIdKey, scoreType);
-			result = scoreType;
-		    }
+						/* Cache scoreType String */
+						SCORE_TYPES_CACHE.put(scoringIdKey, scoreType);
+						result = scoreType;
+					}
 
-		} // End if (foundScoring is not null)
+				} // End if (foundScoring is not null)
 
-	    } // End if (scoringId is not in SCORE_TYPES_CACHE)
+			} // End if (scoringId is not in SCORE_TYPES_CACHE)
 
-	} // End of synchronized block on CACHE_LOCK
+		} // End of synchronized block on CACHE_LOCK
 
-	return result;
-    }
+		return result;
+	}
 
 }

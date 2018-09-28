@@ -22,92 +22,91 @@ import javax.persistence.Table;
 @Table(name = "biological_sample")
 public class BiologicalSample implements Serializable {
 
-    private static final long serialVersionUID = 1L;
+	private static final long serialVersionUID = 1L;
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
-    private long id;
+	@Id
+	@GeneratedValue(strategy = GenerationType.AUTO)
+	private long id;
 
-    private String name;
+	private String name;
 
-    private int number;
+	private int number;
 
-    @Column(name = "serialized_properties")
-    private String serializedProperties;
+	@Column(name = "serialized_properties")
+	private String serializedProperties;
 
-    // bi-directional many-to-one association to Dataset
-    @ManyToOne
-    @JoinColumn(name = "quantitation_id")
-    private Dataset dataset;
+	// bi-directional many-to-one association to Dataset
+	@ManyToOne
+	@JoinColumn(name = "quantitation_id")
+	private Dataset dataset;
 
-    // bi-directional many-to-one association to QuantChannel
-    @OneToMany(mappedBy = "biologicalSample")
-    @OrderBy("number")
-    private List<QuantitationChannel> quantitationChannels;
+	// bi-directional many-to-one association to QuantChannel
+	@OneToMany(mappedBy = "biologicalSample")
+	@OrderBy("number")
+	private List<QuantitationChannel> quantitationChannels;
 
-    // bi-directional many-to-one association to BiologicalSplSplAnalysisMap
-    @OneToMany(mappedBy = "biologicalSample")
-    @OrderBy("sampleAnalysisNumber")
-    private List<BiologicalSplSplAnalysisMap> biologicalSplSplAnalysisMap;
+	// bi-directional many-to-one association to BiologicalSplSplAnalysisMap
+	@OneToMany(mappedBy = "biologicalSample")
+	@OrderBy("sampleAnalysisNumber")
+	private List<BiologicalSplSplAnalysisMap> biologicalSplSplAnalysisMap;
 
+	public BiologicalSample() {
+	}
 
-    public BiologicalSample() {
-    }
+	public long getId() {
+		return id;
+	}
 
-    public long getId() {
-	return id;
-    }
+	public void setId(final long pId) {
+		id = pId;
+	}
 
-    public void setId(final long pId) {
-	id = pId;
-    }
+	public String getName() {
+		return this.name;
+	}
 
-    public String getName() {
-	return this.name;
-    }
+	public void setName(String name) {
+		this.name = name;
+	}
 
-    public void setName(String name) {
-	this.name = name;
-    }
+	public int getNumber() {
+		return number;
+	}
 
-    public int getNumber() {
-	return number;
-    }
+	public void setNumber(final int pNumber) {
+		number = pNumber;
+	}
 
-    public void setNumber(final int pNumber) {
-	number = pNumber;
-    }
+	public String getSerializedProperties() {
+		return this.serializedProperties;
+	}
 
-    public String getSerializedProperties() {
-	return this.serializedProperties;
-    }
+	public void setSerializedProperties(String serializedProperties) {
+		this.serializedProperties = serializedProperties;
+	}
 
-    public void setSerializedProperties(String serializedProperties) {
-	this.serializedProperties = serializedProperties;
-    }
+	public Dataset getDataset() {
+		return this.dataset;
+	}
 
-    public Dataset getDataset() {
-	return this.dataset;
-    }
+	public void setDataset(Dataset dataset) {
+		this.dataset = dataset;
+	}
 
-    public void setDataset(Dataset dataset) {
-	this.dataset = dataset;
-    }
+	public List<QuantitationChannel> getQuantitationChannels() {
+		return quantitationChannels;
+	}
 
-    public List<QuantitationChannel> getQuantitationChannels() {
-	return quantitationChannels;
-    }
+	public void setQuantitationChannels(final List<QuantitationChannel> quantitationChannels) {
+		this.quantitationChannels = quantitationChannels;
+	}
 
-    public void setQuantitationChannels(final List<QuantitationChannel> quantitationChannels) {
-	this.quantitationChannels = quantitationChannels;
-    }
+	public List<BiologicalSplSplAnalysisMap> getBiologicalSplSplAnalysisMap() {
+		return biologicalSplSplAnalysisMap;
+	}
 
-    public List<BiologicalSplSplAnalysisMap> getBiologicalSplSplAnalysisMap() {
-	return biologicalSplSplAnalysisMap;
-    }
-
-    public void setBiologicalSplSplAnalysisMap(final List<BiologicalSplSplAnalysisMap> sampleReplicatesMap) {
-	this.biologicalSplSplAnalysisMap = sampleReplicatesMap;
-    }
+	public void setBiologicalSplSplAnalysisMap(final List<BiologicalSplSplAnalysisMap> sampleReplicatesMap) {
+		this.biologicalSplSplAnalysisMap = sampleReplicatesMap;
+	}
 
 }

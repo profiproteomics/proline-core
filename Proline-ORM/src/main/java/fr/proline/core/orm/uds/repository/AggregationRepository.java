@@ -9,17 +9,17 @@ import fr.proline.repository.util.JPAUtils;
 
 public final class AggregationRepository {
 
-  private AggregationRepository() {
-  }
+	private AggregationRepository() {
+	}
 
-  public static Aggregation findAggregationByType(final EntityManager udsEm, final ChildNature childNature) {
+	public static Aggregation findAggregationByType(final EntityManager udsEm, final ChildNature childNature) {
 
-    JPAUtils.checkEntityManager(udsEm);
-    
-    final TypedQuery<Aggregation> query = udsEm.createNamedQuery("findAggregationByType", Aggregation.class);
-    query.setParameter("child_nature", childNature);
-    // WARN Throws NoResultException if there is no result
-    return query.getSingleResult();
-  }
-  
+		JPAUtils.checkEntityManager(udsEm);
+
+		final TypedQuery<Aggregation> query = udsEm.createNamedQuery("findAggregationByType", Aggregation.class);
+		query.setParameter("child_nature", childNature);
+		// WARN Throws NoResultException if there is no result
+		return query.getSingleResult();
+	}
+
 }

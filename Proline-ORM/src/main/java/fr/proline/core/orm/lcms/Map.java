@@ -6,55 +6,54 @@ import java.io.Serializable;
 import java.sql.Timestamp;
 import java.util.List;
 
-
 /**
  * The persistent class for the map database table.
  * 
  */
 @Entity
-@NamedQuery(name="Map.findAll", query="SELECT m FROM Map m")
+@NamedQuery(name = "Map.findAll", query = "SELECT m FROM Map m")
 public class Map implements Serializable {
 	private static final long serialVersionUID = 1L;
 
 	@Id
 	private Long id;
 
-	@Column(name="creation_timestamp")
+	@Column(name = "creation_timestamp")
 	private Timestamp creationTimestamp;
 
 	private String description;
 
-	@Column(name="feature_scoring_id")
+	@Column(name = "feature_scoring_id")
 	private Long featureScoringId;
 
-	@Column(name="modification_timestamp")
+	@Column(name = "modification_timestamp")
 	private Timestamp modificationTimestamp;
 
 	private String name;
 
-	@Column(name="serialized_properties")
+	@Column(name = "serialized_properties")
 	private String serializedProperties;
 
 	private Integer type;
 
 	//bi-directional many-to-one association to Feature
-	@OneToMany(mappedBy="map")
+	@OneToMany(mappedBy = "map")
 	private List<Feature> features;
 
 	//bi-directional many-to-one association to FeaturePeakelItem
-	@OneToMany(mappedBy="map")
+	@OneToMany(mappedBy = "map")
 	private List<FeaturePeakelItem> featurePeakelItems;
 
 	//bi-directional many-to-one association to Peakel
-	@OneToMany(mappedBy="map")
+	@OneToMany(mappedBy = "map")
 	private List<Peakel> peakels;
 
 	//bi-directional one-to-one association to ProcessedMap
-	@OneToOne(mappedBy="map")
+	@OneToOne(mappedBy = "map")
 	private ProcessedMap processedMap;
 
 	//bi-directional one-to-one association to RawMap
-	@OneToOne(mappedBy="map")
+	@OneToOne(mappedBy = "map")
 	private RawMap rawMap;
 
 	public Map() {

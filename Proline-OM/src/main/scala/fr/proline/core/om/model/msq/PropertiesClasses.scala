@@ -1,8 +1,7 @@
 package fr.proline.core.om.model.msq
 
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize
-
 import scala.beans.BeanProperty
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize
 import scala.collection.mutable.HashMap
 
 case class ComputedRatio(
@@ -29,7 +28,10 @@ case class MasterQuantPeptideIonProperties(
   // Key = QuantChannel ID ; Value = PeptideMatch ID
   // TODO: use LongMap if possible
   @JsonDeserialize( keyAs = classOf[java.lang.Long], contentAs = classOf[java.lang.Long] )
-  @BeanProperty var bestPeptideMatchIdMap: scala.collection.immutable.HashMap[Long,Long] = scala.collection.immutable.HashMap()
+  @BeanProperty var bestPeptideMatchIdMap: scala.collection.immutable.HashMap[Long,Long] = scala.collection.immutable.HashMap(),
+
+  // As list of used isotopes indexes (starting from zero)
+  @BeanProperty var usedIsotopes: Option[Array[Long]] = None
 ) {
   if( bestPeptideMatchIdMap == null ) bestPeptideMatchIdMap = scala.collection.immutable.HashMap()
 }
@@ -86,7 +88,7 @@ case class MasterQuantProteinSetProfile(
   @BeanProperty var ratios: List[Option[ComputedRatio]] = List(),
   @BeanProperty var mqPeptideIds: Array[Long] = Array(),
   // TODO: fill me
-  @BeanProperty var peptideMatchesCounts: Array[Long] = Array()
+  @BeanProperty var peptideMatchesCounts: Array[Int] = Array()
 ) {
   if( name == null ) name = ""
   if( rawAbundances == null ) rawAbundances = Array()
@@ -98,20 +100,12 @@ case class MasterQuantProteinSetProfile(
  
 case class MasterQuantProteinSetProperties(
   
+  @BeanProperty var selectionChanged: Boolean = false,
+  
   // TODO: use LongMap if possible
   @JsonDeserialize( keyAs = classOf[java.lang.Integer], contentAs = classOf[Array[MasterQuantProteinSetProfile]] )
   var mqProtSetProfilesByGroupSetupNumber: HashMap[Int, Array[MasterQuantProteinSetProfile]] = null,
   //@BeanProperty var specificSampleId: Option[Long] = None, // defined if the protein has been seen in a single sample
-  
-  //TODO: to be removed and replaced by mqPeptideSelLevelById
-  @JsonDeserialize(contentAs = classOf[Array[Long]] )
-  @deprecated(message="Replaced by mqPeptideSelLevelById", since="1.1.0")
-  protected var selectedMasterQuantPeptideIds: Option[Array[Long]] = None,
-  
-  //TODO: to be removed and replaced by mqPeptideIonSelLevelById
-  @JsonDeserialize(contentAs = classOf[Array[Long]] )
-  @deprecated(message="Replaced by mqPeptideIonSelLevelById", since="1.1.0")
-  protected var selectedMasterQuantPeptideIonIds: Option[Array[Long]] = None,
   
   // TODO: use LongMap if possible
   @JsonDeserialize( keyAs = classOf[java.lang.Long], contentAs = classOf[java.lang.Integer] )
@@ -164,16 +158,7 @@ case class MasterQuantProteinSetProperties(
   
 }
 
-
 case class MasterQuantChannelProperties(
-  // TODO: add to table
-  @JsonDeserialize(contentAs = classOf[java.lang.Long])
-  @BeanProperty var identDatasetId: Option[Long] = None,
-  
-  // TODO: add to table
-  @JsonDeserialize(contentAs = classOf[java.lang.Long])
-  @BeanProperty var identResultSummaryId: Option[Long] = None,
-
   // TODO: remove me => it should be stored in dedicated object tree
   @JsonDeserialize(contentAs = classOf[SpectralCountProperties])
   @BeanProperty var spectralCountProperties: Option[SpectralCountProperties] = None
@@ -181,8 +166,7 @@ case class MasterQuantChannelProperties(
 
 case class SpectralCountProperties (
   //@JsonDeserialize(contentAs = classOf[java.lang.Long] )
-  // TODO: rename into weightsRefRsmIds => this is the correct CamelCase syntax
-  @BeanProperty var weightsRefRSMIds: Array[Long] = Array()
+  @BeanProperty var weightsRefRsmIds: Array[Long] = Array()
 ) {
-  if(weightsRefRSMIds == null) weightsRefRSMIds = Array()
+  if(weightsRefRsmIds == null) weightsRefRsmIds = Array()
 }

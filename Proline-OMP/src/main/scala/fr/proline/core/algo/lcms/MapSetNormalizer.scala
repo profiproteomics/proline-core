@@ -17,8 +17,12 @@ object MapSetNormalizer {
     } catch {
       case _ : Throwable=> throw new Exception(s"can't find an appropriate map set normalizer for method named '$methodName'")
     }
-    
-    normMethod match {
+
+    MapSetNormalizer(normMethod)
+  }
+
+  def apply(normalizationMethod: NormalizationMethod.Value): IMapSetNormalizer = {
+    normalizationMethod match {
       case NormalizationMethod.INTENSITY_SUM => new IntensitySumMapNormalizer()
       case NormalizationMethod.MEDIAN_INTENSITY => new MedianIntensityMapNormalizer()
       case NormalizationMethod.MEDIAN_RATIO => new MedianRatioNormalizer()

@@ -1,20 +1,21 @@
 package fr.proline.core.dal.helper
 
-import scala.annotation.tailrec
-import scala.collection.mutable.ArrayBuffer
-import scala.collection.mutable.HashMap
-import scala.collection.mutable.HashSet
-import scala.collection.mutable.LongMap
-
 import fr.profi.util.collection._
 import fr.profi.util.primitives._
 import fr.proline.context.DatabaseConnectionContext
-import fr.proline.core.dal.{ DoJDBCReturningWork, DoJDBCWork }
 import fr.proline.core.dal.tables.SelectQueryBuilder._
 import fr.proline.core.dal.tables.SelectQueryBuilder1
 import fr.proline.core.dal.tables.msi.MsiDbResultSetRelationTable
 import fr.proline.core.dal.tables.msi.MsiDbResultSummaryRelationTable
-import fr.proline.core.dal.tables.msi.MsiDbResultSummaryTable
+import fr.proline.core.dal.DoJDBCReturningWork
+import fr.proline.core.dal.DoJDBCWork
+
+import scala.annotation.tailrec
+import scala.collection.mutable
+import scala.collection.mutable.ArrayBuffer
+import scala.collection.mutable.HashMap
+import scala.collection.mutable.HashSet
+import scala.collection.mutable.LongMap
 
 class MsiDbHelper(msiDbCtx: DatabaseConnectionContext) {
 
@@ -343,7 +344,6 @@ class MsiDbHelper(msiDbCtx: DatabaseConnectionContext) {
 
     DoJDBCWork.withEzDBC(msiDbCtx) { ezDBC =>
       val maxNbIters = ezDBC.getInExpressionCountLimit
-
       // Iterate over groups of peptide ids
       bioSeqIds.grouped(maxNbIters).foreach { tmpBioSeqIds =>
         if ((tmpBioSeqIds != null) && !tmpBioSeqIds.isEmpty) {
@@ -378,4 +378,46 @@ class MsiDbHelper(msiDbCtx: DatabaseConnectionContext) {
     }
 
   }
+
+  def getSpectrumIndexByIdByPL(pklIds: Seq[Long]): mutable.LongMap[mutable.LongMap[Int]] = {
+
+    if (pklIds == null || pklIds.isEmpty) {
+      mutable.LongMap.empty[mutable.LongMap[Int]]
+    } else {
+      val specNumByIdByPeakList = new mutable.LongMap[mutable.LongMap[Int]]
+      val specCountByPL = new mutable.LongMap[Int]
+
+      DoJDBCWork.withEzDBC(msiDbCtx) { ezDBC =>
+        ezDBC.selectAndProcess("SELECT id, peaklist_id FROM spectrum  WHERE peaklist_id IN (" + pklIds.mkString(",") + ") ORDER BY peaklist_id, first_time, first_scan") { r =>
+          val spectrumId = r.nextLong
+          val plId = r.nextLong
+          val specNumById =specNumByIdByPeakList.getOrElseUpdate(plId,new mutable.LongMap[Int])
+          var specCount =specCountByPL.getOrElseUpdate(plId,1)
+          specNumById += (spectrumId -> specCount)
+          specCountByPL.put(plId,specCount+1)
+        }
+      }
+      specNumByIdByPeakList
+    }
+
+  }
+  
+    // Unimod Id are Long
+  def getUnimodIdByPtmId(): Map[Long,Long] = {
+     
+    val unimodIdByPtmId = new HashMap[Long,Long]
+     
+    DoJDBCWork.withEzDBC(msiDbCtx) { ezDBC => {
+      
+        ezDBC.selectAndProcess( "SELECT id, unimod_id FROM ptm" ) { r =>
+          val ptmId = toLong(r.nextAny)
+          val unimodId = r.nextAny
+          if(unimodId != null)
+    	      unimodIdByPtmId += (ptmId -> toLong(unimodId) )       
+  	      } 
+       } 
+    }
+    
+    Map() ++ unimodIdByPtmId
+  } 
 }

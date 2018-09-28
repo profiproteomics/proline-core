@@ -80,6 +80,11 @@ object ResultFileStorer extends LazyLogging {
       // Load target result set from result file
       val decoyRs = resultFile.getResultSet(true)
 
+      // Update result set properties using same value as for target
+      val rsProps = decoyRs.properties.getOrElse(new ResultSetProperties)
+      rsProps.setTargetDecoyMode(targetDecoyMode)
+      decoyRs.properties = Some(rsProps)
+
       checkResultSet(targetRs, true)
 
       // Link decoy RS to target RS

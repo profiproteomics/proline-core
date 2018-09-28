@@ -11,15 +11,23 @@ import fr.proline.core.algo.msi.filtering.IProteinSetFilter
 import fr.proline.core.algo.msi.filtering.PepMatchFilterParams
 import fr.proline.core.algo.msi.scoring.PepSetScoring
 import fr.proline.core.algo.msi.scoring.PeptideSetScoreUpdater
-import fr.proline.core.algo.msi.validation.{BuildTDAnalyzer, IPeptideMatchValidator, IProteinSetValidator, ITargetDecoyAnalyzer, TargetDecoyComputer, TargetDecoyModes, ValidationResult, ValidationResults}
 import fr.proline.core.algo.msi.validation.pepmatch.BasicPepMatchValidator
 import fr.proline.core.algo.msi.validation.proteinset.BasicProtSetValidator
+import fr.proline.core.algo.msi.validation.BuildTDAnalyzer
+import fr.proline.core.algo.msi.validation.IPeptideMatchValidator
+import fr.proline.core.algo.msi.validation.IProteinSetValidator
+import fr.proline.core.algo.msi.validation.ITargetDecoyAnalyzer
+import fr.proline.core.algo.msi.validation.TargetDecoyComputer
+import fr.proline.core.algo.msi.validation.TargetDecoyModes
+import fr.proline.core.algo.msi.validation.ValidationResult
+import fr.proline.core.algo.msi.validation.ValidationResults
 import fr.proline.core.algo.msq.spectralcount.PepInstanceFilteringLeafSCUpdater
 import fr.proline.core.dal.DoJDBCReturningWork
 import fr.proline.core.dal.tables.SelectQueryBuilder._
 import fr.proline.core.dal.tables.SelectQueryBuilder1
 import fr.proline.core.dal.tables.msi.MsiDbResultSetRelationTable
 import fr.proline.core.om.model.msi._
+import fr.proline.core.om.provider.PeptideCacheExecutionContext
 import fr.proline.core.om.provider.msi.IResultSetProvider
 import fr.proline.core.om.provider.msi.impl.ORMResultSetProvider
 import fr.proline.core.om.provider.msi.impl.SQLResultSetProvider
@@ -91,13 +99,9 @@ object ResultSetValidator {
   private def getResultSetProvider(execContext: IExecutionContext): IResultSetProvider = {
 
     if (execContext.isJPA) {
-      new ORMResultSetProvider(execContext.getMSIDbConnectionContext, execContext.getPSDbConnectionContext, execContext.getUDSDbConnectionContext)
+      new ORMResultSetProvider(execContext.getMSIDbConnectionContext)
     } else {
-      new SQLResultSetProvider(
-        execContext.getMSIDbConnectionContext,
-        execContext.getPSDbConnectionContext,
-        execContext.getUDSDbConnectionContext
-      )
+      new SQLResultSetProvider(PeptideCacheExecutionContext(execContext))
     }
 
   }
@@ -138,8 +142,8 @@ class ResultSetValidator(
   // WARNING: this is hack which enables TD competition when rank filtering is used
   // FIXME: find a better way to handle the TD competition
   var useTdCompetition = false
-  if( pepMatchPreFilters.isDefined ) {
-    val rankFilterAsStr = PepMatchFilterParams.RANK.toString
+  if (pepMatchPreFilters.isDefined) {
+    val rankFilterAsStr = PepMatchFilterParams.PRETTY_RANK.toString
     useTdCompetition = pepMatchPreFilters.get.exists(_.filterParameter == rankFilterAsStr)
     logger.debug(s"Auto-determination of 'useTdCompetition' gives '$useTdCompetition'")
   }
@@ -155,7 +159,7 @@ class ResultSetValidator(
   // Update the target analyzer of the validators
   pepMatchValidator.foreach(_.tdAnalyzer = finalTDAnalyzer)
 
-  override protected def beforeInterruption = {
+  override protected def beforeInterruption: Unit = {
   }
 
   def curTimeInSecs(): Long = System.currentTimeMillis() / 1000
@@ -321,7 +325,7 @@ class ResultSetValidator(
       	if(psmFilter.isInstanceOf[IFilterNeedingResultSet])
       		psmFilter.asInstanceOf[IFilterNeedingResultSet].setTargetRS(targetRs)
 
-        if (psmFilter.postValidationFilter) postValidationFilter += psmFilter
+        if (psmFilter.postValidationFilter()) postValidationFilter += psmFilter
         else {
           finalValidationResult = new BasicPepMatchValidator(psmFilter, finalTDAnalyzer).validatePeptideMatches(targetRs).finalResult
           logger.debug(
@@ -449,7 +453,7 @@ class ResultSetValidator(
     val rocCurveOpt = if (protSetValidator.isEmpty || fdrReached ) None
     else {
 
-      logger.debug("Run protein set validator: " + protSetValidator.get.toFilterDescriptor.parameter)
+      logger.debug("Run protein set validator: " + protSetValidator.get.toFilterDescriptor().parameter)
 
       // Update the target/decoy mode of the protein set validator for this RSM
       protSetValidator.get.targetDecoyMode = tdModeOpt
@@ -468,7 +472,6 @@ class ResultSetValidator(
 
     // Save final Protein Set Filtering result
     val protSetValResults = if (finalValidationResult == null) {
-      logger.debug("Final Validation Result is NULL")
 
       val fdr : Option[Float] = getFdrForRSM(targetRsm, tdModeOpt)
       val targetMatchesCount = targetRsm.proteinSets.count(_.isValidated)

@@ -1,31 +1,30 @@
 package fr.proline.core.service.msi
 
 import java.io.File
+
 import com.typesafe.scalalogging.LazyLogging
 import fr.profi.jdbc.easy._
 import fr.profi.util.serialization.ProfiJson
 import fr.proline.api.service.IService
-import fr.proline.context.DatabaseConnectionContext
 import fr.proline.context.IExecutionContext
 import fr.proline.core.algo.msi.TargetDecoyResultSetSplitter
 import fr.proline.core.algo.msi.validation.TargetDecoyModes
 import fr.proline.core.dal.DoJDBCWork
 import fr.proline.core.dal.tables.msi.MsiDbPeaklistSoftwareTable
-import fr.proline.core.om.model.msi.InstrumentConfig
+import fr.proline.core.om.model.msi.FragmentationRuleSet
+import fr.proline.core.om.model.msi.IResultFile
 import fr.proline.core.om.model.msi.PeaklistSoftware
+import fr.proline.core.om.model.msi.ResultSet
 import fr.proline.core.om.provider.ProviderDecoratedExecutionContext
 import fr.proline.core.om.provider.msi.IResultFileProvider
 import fr.proline.core.om.provider.msi.ResultFileProviderRegistry
+import fr.proline.core.om.provider.msi.impl.SQLFragmentationRuleProvider
 import fr.proline.core.om.provider.msi.impl.SQLInstrumentConfigProvider
-import fr.proline.core.om.provider.msi.impl.{ SQLPeaklistSoftwareProvider => MsiSQLPklSoftProvider }
-import fr.proline.core.om.provider.uds.impl.{ SQLPeaklistSoftwareProvider => UdsSQLPklSoftProvider }
-import fr.proline.core.om.storer.msi.IRsStorer
+import fr.proline.core.om.provider.msi.impl.{SQLPeaklistSoftwareProvider => MsiSQLPklSoftProvider}
+import fr.proline.core.om.provider.uds.impl.{SQLPeaklistSoftwareProvider => UdsSQLPklSoftProvider}
 import fr.proline.core.om.storer.msi.ResultFileStorer
 import fr.proline.core.om.storer.msi.RsStorer
 import fr.proline.core.om.storer.msi.impl.StorerContext
-import fr.proline.repository.DriverType
-import fr.proline.core.om.model.msi.IResultFile
-import fr.proline.core.om.model.msi.ResultSet
 
 class ResultFileImporter(
   executionContext: IExecutionContext,
@@ -37,14 +36,15 @@ class ResultFileImporter(
   acDecoyRegex: Option[util.matching.Regex] = None,
   storeSpectraData: Boolean = true,
   storeSpectrumMatches: Boolean = false,
-  useJpaStorer: Boolean = false // use of SQLRsStorer by default
+  useJpaStorer: Boolean = false, // use of SQLRsStorer by default
+  fragmentationRuleSetId : Option[Long] = None
 ) extends IService with LazyLogging {
 
   private var targetResultSetId: Long = 0L
   private var targetResultSet :Option[ResultSet] = None
 
   private var resultFile: IResultFile = null
-  
+
   override protected def beforeInterruption = {
     // Close result file if needed
     this.logger.info("releasing result file before service interruption...")
@@ -52,7 +52,7 @@ class ResultFileImporter(
       resultFile.close()
   }
 
-  def getTargetResultSetId = targetResultSetId  
+  def getTargetResultSetId : Long = targetResultSetId
   def getTargetResultSetOpt : Option[ResultSet] = targetResultSet
 
   def runService(): Boolean = {
@@ -60,7 +60,7 @@ class ResultFileImporter(
     // Check that a file is provided
     require(resultIdentFile != null, "ResultFileImporter service: No file specified.")
 
-    logger.info("Run service " + fileType + " ResultFileImporter on " + resultIdentFile.getAbsoluteFile())
+    logger.info("Run service " + fileType + " ResultFileImporter on " + resultIdentFile.getAbsoluteFile)
 
     val msiDbCtx = executionContext.getMSIDbConnectionContext
     var storerContext: StorerContext = null
@@ -92,6 +92,13 @@ class ResultFileImporter(
       val instConfigProvider = new SQLInstrumentConfigProvider(executionContext.getUDSDbConnectionContext)
       resultFile.instrumentConfig = instConfigProvider.getInstrumentConfig(instrumentConfigId)
 
+      // Retrieve the fragmentationRuleSet
+      val fragRuleSetOpt: Option[FragmentationRuleSet] = if (fragmentationRuleSetId.isDefined) {
+        val fragmentationRulesetProvider: SQLFragmentationRuleProvider = new SQLFragmentationRuleProvider(executionContext.getUDSDbConnectionContext)
+        fragmentationRulesetProvider.getFragmentationRuleSet(fragmentationRuleSetId.get)
+      }  else None
+      resultFile.fragmentationRuleSet = fragRuleSetOpt
+
       // Retrieve the peaklist software if needed
       if (resultFile.peaklistSoftware.isEmpty) {
 
@@ -107,7 +114,7 @@ class ResultFileImporter(
       if(resultFile.hasDecoyResultSet)
         resultFile.parseResultSet(true)
       executeOnProgress() //execute registered action during progress
-      
+
       storerContext = StorerContext(executionContext) // Use Object factory
 
       val tdMode = if (resultFile.hasDecoyResultSet) {
@@ -197,15 +204,15 @@ class ResultFileImporter(
     require(udsPklSoftOpt.isDefined, "can't find a peaklist software for id = " + peaklistSoftwareId)
 
     // Try to retrieve peaklist software from the MSidb
-    var msiPklSoftOpt = msiPklSoftProvider.getPeaklistSoftware(peaklistSoftwareId)
+    val msiPklSoftOpt = msiPklSoftProvider.getPeaklistSoftware(peaklistSoftwareId)
     if (msiPklSoftOpt.isEmpty) {
 
       // If it doesn't exist => retrieve from the UDSdb      
       val pklSoft = udsPklSoftOpt.get
 
       // Then insert it in the current MSIdb
-      DoJDBCWork.withEzDBC(msiDbCtx, { msiEzDBC =>
-        val peaklistInsertQuery = MsiDbPeaklistSoftwareTable.mkInsertQuery
+      DoJDBCWork.withEzDBC(msiDbCtx) { msiEzDBC =>
+        val peaklistInsertQuery = MsiDbPeaklistSoftwareTable.mkInsertQuery()
         msiEzDBC.execute(
           peaklistInsertQuery,
           pklSoft.id,
@@ -213,7 +220,7 @@ class ResultFileImporter(
           pklSoft.version,
           pklSoft.properties.map(ProfiJson.serialize(_))
         )
-      })
+      }
     }
 
     udsPklSoftOpt.get

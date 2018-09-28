@@ -5,6 +5,7 @@ import static org.junit.Assert.*;
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
 import java.sql.SQLException;
+import java.util.Map;
 
 import javax.sql.DataSource;
 
@@ -20,152 +21,92 @@ import fr.proline.repository.ProlineDatabaseType;
 
 public class ExternalDbTest {
 
-    private static final Logger LOG = LoggerFactory.getLogger(ExternalDbTest.class);
+	private static final Logger LOG = LoggerFactory.getLogger(ExternalDbTest.class);
+	private static final String userKey = fr.proline.repository.AbstractDatabaseConnector.PERSISTENCE_JDBC_USER_KEY;
+	private static final String passwordKey = fr.proline.repository.AbstractDatabaseConnector.PERSISTENCE_JDBC_PASSWORD_KEY;
 
-    @Test
-    public void testH2Mem() throws Exception {
-	final ExternalDb externalDb = new ExternalDb();
-	externalDb.setType(ProlineDatabaseType.UDS);
-	externalDb.setDriverType(DriverType.H2);
-	externalDb.setConnectionMode(ConnectionMode.MEMORY);
-	externalDb.setDbName("test_uds");
-	externalDb.setDbUser("sa");
-	externalDb.setDbPassword("");
+	@Test
+	public void testH2Mem() throws Exception {
+		final ExternalDb externalDb = new ExternalDb();
+		externalDb.setType(ProlineDatabaseType.UDS);
+		externalDb.setDriverType(DriverType.H2);
+		externalDb.setConnectionMode(ConnectionMode.MEMORY);
+		externalDb.setDbName("test_uds");
+		//externalDb.setDbUser("sa");
+		//externalDb.setDbPassword("");
 
-	final IDatabaseConnector connector = DatabaseConnectorFactory.createDatabaseConnectorInstance(
-		externalDb.getType(), externalDb.toPropertiesMap());
+		Map<Object, Object> connProps = externalDb.toPropertiesMap(DriverType.H2, "sa", "");
 
-	final DataSource ds = connector.getDataSource();
+		final IDatabaseConnector connector = DatabaseConnectorFactory.createDatabaseConnectorInstance(
+			externalDb.getType(),
+			connProps);
 
-	Connection con = ds.getConnection();
+		final DataSource ds = connector.getDataSource();
 
-	try {
-	    final DatabaseMetaData metaData = con.getMetaData();
+		Connection con = ds.getConnection();
 
-	    assertEquals("jdbc:h2:mem:test_uds", metaData.getURL());
-	    assertEquals("sa", metaData.getUserName().toLowerCase());
-	} finally {
+		try {
+			final DatabaseMetaData metaData = con.getMetaData();
 
-	    try {
-		con.close();
-	    } catch (SQLException exClose) {
-		LOG.error("Error closing SQL Connection", exClose);
-	    }
+			assertEquals("jdbc:h2:mem:test_uds", metaData.getURL());
+			assertEquals("sa", metaData.getUserName().toLowerCase());
+		} finally {
 
-	}
+			try {
+				con.close();
+			} catch (SQLException exClose) {
+				LOG.error("Error closing SQL Connection", exClose);
+			}
 
-    }
-
-    @Test
-    public void testH2File() throws Exception {
-	final ExternalDb externalDb = new ExternalDb();
-	externalDb.setType(ProlineDatabaseType.PDI);
-	externalDb.setDriverType(DriverType.H2);
-	externalDb.setConnectionMode(ConnectionMode.FILE);
-	externalDb.setDbName("./target/h2_pdi");
-	externalDb.setDbUser("sa");
-	externalDb.setDbPassword("");
-
-	final IDatabaseConnector connector = DatabaseConnectorFactory.createDatabaseConnectorInstance(
-		externalDb.getType(), externalDb.toPropertiesMap());
-
-	final DataSource ds = connector.getDataSource();
-
-	Connection con = ds.getConnection();
-
-	try {
-	    final DatabaseMetaData metaData = con.getMetaData();
-
-	    assertEquals("jdbc:h2:file:./target/h2_pdi", metaData.getURL());
-	    assertEquals("sa", metaData.getUserName().toLowerCase());
-	} finally {
-
-	    try {
-		con.close();
-	    } catch (SQLException exClose) {
-		LOG.error("Error closing SQL Connection", exClose);
-	    }
+		}
 
 	}
 
-    }
+	@Test
+	public void testSQLiteMem() throws Exception {
+		final ExternalDb externalDb = new ExternalDb();
+		externalDb.setType(ProlineDatabaseType.MSI);
+		externalDb.setDriverType(DriverType.SQLITE);
+		externalDb.setConnectionMode(ConnectionMode.MEMORY);
 
-    @Test
-    public void testSQLiteMem() throws Exception {
-	final ExternalDb externalDb = new ExternalDb();
-	externalDb.setType(ProlineDatabaseType.MSI);
-	externalDb.setDriverType(DriverType.SQLITE);
-	externalDb.setConnectionMode(ConnectionMode.MEMORY);
+		final IDatabaseConnector connector = DatabaseConnectorFactory.createDatabaseConnectorInstance(
+			externalDb.getType(), externalDb.toPropertiesMap(DriverType.SQLITE, "", ""));
 
-	final IDatabaseConnector connector = DatabaseConnectorFactory.createDatabaseConnectorInstance(
-		externalDb.getType(), externalDb.toPropertiesMap());
+		final DataSource ds = connector.getDataSource();
 
-	final DataSource ds = connector.getDataSource();
+		Connection con = ds.getConnection();
 
-	Connection con = ds.getConnection();
+		try {
+			final DatabaseMetaData metaData = con.getMetaData();
 
-	try {
-	    final DatabaseMetaData metaData = con.getMetaData();
+			assertEquals("jdbc:sqlite::memory:", metaData.getURL());
+		} finally {
 
-	    assertEquals("jdbc:sqlite::memory:", metaData.getURL());
-	} finally {
+			try {
+				con.close();
+			} catch (SQLException exClose) {
+				LOG.error("Error closing SQL Connection", exClose);
+			}
 
-	    try {
-		con.close();
-	    } catch (SQLException exClose) {
-		LOG.error("Error closing SQL Connection", exClose);
-	    }
-
-	}
-
-    }
-
-    @Test
-    public void testSQLiteFile() throws Exception {
-	final ExternalDb externalDb = new ExternalDb();
-	externalDb.setType(ProlineDatabaseType.PS);
-	externalDb.setDriverType(DriverType.SQLITE);
-	externalDb.setConnectionMode(ConnectionMode.FILE);
-	externalDb.setDbName("./target/pdi.sqlite");
-
-	final IDatabaseConnector connector = DatabaseConnectorFactory.createDatabaseConnectorInstance(
-		externalDb.getType(), externalDb.toPropertiesMap());
-
-	final DataSource ds = connector.getDataSource();
-
-	Connection con = ds.getConnection();
-
-	try {
-	    final DatabaseMetaData metaData = con.getMetaData();
-
-	    assertEquals("jdbc:sqlite:./target/pdi.sqlite", metaData.getURL());
-	} finally {
-
-	    try {
-		con.close();
-	    } catch (SQLException exClose) {
-		LOG.error("Error closing SQL Connection", exClose);
-	    }
+		}
 
 	}
 
-    }
+	@Test
+	public void testPGHost() throws Exception {
+		final ExternalDb externalDb = new ExternalDb();
+		externalDb.setType(ProlineDatabaseType.UDS);
+		externalDb.setDriverType(DriverType.POSTGRESQL);
+		externalDb.setConnectionMode(ConnectionMode.HOST);
+		externalDb.setHost("localhost");
+		externalDb.setDbName("uds");
+		//externalDb.setDbUser("bruley");
+		//externalDb.setDbPassword("toto");
 
-    @Test
-    public void testPGHost() throws Exception {
-	final ExternalDb externalDb = new ExternalDb();
-	externalDb.setType(ProlineDatabaseType.UDS);
-	externalDb.setDriverType(DriverType.POSTGRESQL);
-	externalDb.setConnectionMode(ConnectionMode.HOST);
-	externalDb.setHost("localhost");
-	externalDb.setDbName("uds");
-	externalDb.setDbUser("bruley");
-	externalDb.setDbPassword("toto");
+		final IDatabaseConnector connector = DatabaseConnectorFactory.createDatabaseConnectorInstance(
+			externalDb.getType(), externalDb.toPropertiesMap(DriverType.POSTGRESQL, null, null));
 
-	final IDatabaseConnector connector = DatabaseConnectorFactory.createDatabaseConnectorInstance(
-		externalDb.getType(), externalDb.toPropertiesMap());
-
-	assertEquals("Postgresql DB Connector", DriverType.POSTGRESQL, connector.getDriverType());
-    }
+		assertEquals("Postgresql DB Connector", DriverType.POSTGRESQL, connector.getDriverType());
+	}
 
 }

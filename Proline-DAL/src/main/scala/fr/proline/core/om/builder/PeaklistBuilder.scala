@@ -51,7 +51,7 @@ object PeaklistBuilder {
       id = r.getLong(peaklistCols.ID),
       fileType = r.getString(peaklistCols.TYPE),
       path = r.getString(peaklistCols.PATH),
-      rawFileIdentifier = r.getString(peaklistCols.RAW_FILE_IDENTIFIER),
+      rawFileIdentifier = r.getStringOrElse(peaklistCols.RAW_FILE_IDENTIFIER, ""),
       msLevel = r.getInt(peaklistCols.MS_LEVEL),
       properties = propsOpt
     )

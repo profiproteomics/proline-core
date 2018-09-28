@@ -1,40 +1,36 @@
 package fr.proline.core.om.provider.msq.impl
 
-import scala.collection.mutable.ArrayBuffer
-import scala.collection.mutable.LongMap
-
 import fr.profi.jdbc.easy.EasyDBC
 import fr.profi.util.primitives._
 import fr.profi.util.serialization.ProfiJson
-import fr.proline.context._
+import fr.proline.context.MsiDbConnectionContext
 import fr.proline.core.dal.DoJDBCReturningWork
 import fr.proline.core.dal.tables.SelectQueryBuilder._
-import fr.proline.core.dal.tables.SelectQueryBuilder1
 import fr.proline.core.dal.tables.SelectQueryBuilder3
 import fr.proline.core.dal.tables.msi.MsiDbMasterQuantComponentTable
 import fr.proline.core.dal.tables.msi.MsiDbObjectTreeTable
-import fr.proline.core.dal.tables.msi.MsiDbPeptideInstanceTable
 import fr.proline.core.dal.tables.msi.MsiDbProteinSetTable
 import fr.proline.core.om.model.msi.ProteinSet
 import fr.proline.core.om.model.msq._
-import fr.proline.core.om.provider.msi.impl.SQLPeptideInstanceProvider
-import fr.proline.core.om.provider.msi.impl.SQLPeptideProvider
-import fr.proline.core.om.provider.msi.impl.SQLPeptideSetProvider
-import fr.proline.core.om.provider.msi.impl.SQLProteinSetProvider
-import fr.proline.repository.ProlineDatabaseType
+import fr.proline.core.om.provider.PeptideCacheExecutionContext
+import fr.proline.core.om.provider.msi.cache.IPeptideCache
+import fr.proline.core.om.provider.msi.impl._
+import scala.collection.mutable.LongMap
 
 class SQLMasterQuantProteinSetProvider(
   val msiDbCtx: MsiDbConnectionContext,
-  val psDbCtx: DatabaseConnectionContext
+  val peptideCache: IPeptideCache
 ) {
-  require( msiDbCtx.getProlineDatabaseType() == ProlineDatabaseType.MSI, "msiDbCtx must be of type MSI")
-  require( psDbCtx.getProlineDatabaseType() == ProlineDatabaseType.PS, "psDbCtx must be of type PS")
   
-  protected val pepProvider = new SQLPeptideProvider(psDbCtx)
+  def this(peptideCacheExecutionContext: PeptideCacheExecutionContext) = {
+    this(peptideCacheExecutionContext.getMSIDbConnectionContext, peptideCacheExecutionContext.getPeptideCache())
+  }
+
+  protected val pepProvider = new SQLPeptideProvider(msiDbCtx, peptideCache)
   protected val pepInstProvider = new SQLPeptideInstanceProvider(msiDbCtx,pepProvider)
   protected val pepSetProvider = new SQLPeptideSetProvider(msiDbCtx,pepInstProvider)
-  protected val protSetProvider = new SQLProteinSetProvider(msiDbCtx,pepSetProvider)  
-  protected val mqPepProvider = new SQLMasterQuantPeptideProvider(msiDbCtx, psDbCtx)
+  protected val protSetProvider = new SQLProteinSetProvider(msiDbCtx,pepSetProvider)
+  protected val mqPepProvider = new SQLMasterQuantPeptideProvider(msiDbCtx, peptideCache)
   
   val MQComponentTable = MsiDbMasterQuantComponentTable
   val MQCompCols = MQComponentTable.columns
@@ -47,10 +43,10 @@ class SQLMasterQuantProteinSetProvider(
     val protSets = protSetProvider.getProteinSets(mqProtSetIds)
     val protSetById = protSets.map( protSet => protSet.id -> protSet ).toMap
     
-    val mqPeps = if( loadMQPeptides == false ) Array.empty[MasterQuantPeptide]
+    val mqPeps = if( !loadMQPeptides ) Array.empty[MasterQuantPeptide]
     else {
       // Retrieve master quant peptide ids corresponding to peptide instances
-      val mqPepIds = protSets.flatMap( _.peptideSet.getPeptideInstances.map(_.masterQuantComponentId) ).filter(_ > 0)
+      val mqPepIds = protSets.flatMap( _.peptideSet.getPeptideInstances().map(_.masterQuantComponentId) ).filter(_ > 0)
       
       /*val pepInstIds = protSets.flatMap( _.peptideSet.getPeptideInstances.map(_.id) )
       val mqPepIds = if( pepInstIds.isEmpty ) Array.empty[Long]
@@ -107,11 +103,11 @@ class SQLMasterQuantProteinSetProvider(
     val protSets = protSetProvider.getResultSummariesProteinSets(quantRsmIds)
     val protSetById = protSets.map( protSet => protSet.id -> protSet ).toMap
 
-    val mqPepByPepInstId = if( loadMQPeptides == false ) Map.empty[Long,MasterQuantPeptide]
+    val mqPepByPepInstId = if( !loadMQPeptides ) Map.empty[Long,MasterQuantPeptide]
     else {
       // Retrieve master quant peptide ids corresponding to peptide instances
-      val mqPepIds = protSets.flatMap( _.peptideSet.getPeptideInstances.map(_.masterQuantComponentId) ).filter(_ > 0)
-      /*val pepInstIds = protSets.flatMap( _.peptideSet.getPeptideInstances.map(_.id) )
+      /*val mqPepIds = protSets.flatMap( _.peptideSet.getPeptideInstances().map(_.masterQuantComponentId) ).filter(_ > 0)
+      val pepInstIds = protSets.flatMap( _.peptideSet.getPeptideInstances.map(_.id) )
 
       val mqPepIds = if( pepInstIds.isEmpty ) Array.empty[Long]
       else {
@@ -133,7 +129,7 @@ class SQLMasterQuantProteinSetProvider(
       }*/
 
       // Load master quant peptides
-      val mqPeps = mqPepProvider.getMasterQuantPeptides(mqPepIds)
+      val mqPeps = mqPepProvider.getQuantResultSummariesMQPeptides(quantRsmIds)
 
       mqPeps.map(mqp => mqp.peptideInstance.get.id -> mqp).toMap
     }
@@ -208,7 +204,7 @@ class SQLMasterQuantProteinSetProvider(
       val mqPeptides = if( mqPepByPepInstId.isEmpty ) Array.empty[MasterQuantPeptide]
       else { // Retrieve master quant peptides corresponding to this protein set
         //val mqPeptides = for( pepInst <- protSet.peptideSet.getPeptideInstances if mqPepByPepInstId.contains(pi.id) ) yield
-        protSet.peptideSet.getPeptideInstances
+        protSet.peptideSet.getPeptideInstances()
           .withFilter(pi => mqPepByPepInstId.contains(pi.id) )
           .map( pi => mqPepByPepInstId(pi.id) )
       }

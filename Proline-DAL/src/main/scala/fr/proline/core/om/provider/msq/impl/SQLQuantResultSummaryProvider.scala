@@ -1,35 +1,18 @@
 package fr.proline.core.om.provider.msq.impl
 
-import scala.collection.mutable.ArrayBuffer
-import scala.collection.mutable.HashMap
-
-import fr.profi.jdbc.easy.EasyDBC
-import fr.profi.util.serialization.ProfiJson
-import fr.proline.context._
-import fr.proline.core.dal.DoJDBCReturningWork
-import fr.proline.core.dal.tables.SelectQueryBuilder._
-import fr.proline.core.dal.tables.SelectQueryBuilder1
-import fr.proline.core.dal.tables.SelectQueryBuilder2
-import fr.proline.core.dal.tables.SelectQueryBuilder3
 import fr.proline.core.dal.tables.msi.MsiDbMasterQuantComponentTable
 import fr.proline.core.dal.tables.msi.MsiDbObjectTreeTable
-import fr.proline.core.dal.tables.msi.MsiDbPeptideInstanceTable
-import fr.proline.core.dal.tables.msi.MsiDbProteinSetTable
-import fr.proline.core.om.model.msi.PeptideInstance
-import fr.proline.core.om.model.msi.ProteinSet
 import fr.proline.core.om.model.msq._
+import fr.proline.core.om.provider.PeptideCacheExecutionContext
 import fr.proline.core.om.provider.msi.impl.SQLResultSummaryProvider
 import fr.proline.core.om.provider.msq.IQuantResultSummaryProvider
-import fr.profi.util.primitives._
 
 class SQLQuantResultSummaryProvider(
-  override val msiDbCtx: MsiDbConnectionContext,
-  override val psDbCtx: DatabaseConnectionContext,
-  override val udsDbCtx: UdsDbConnectionContext
-) extends SQLResultSummaryProvider(msiDbCtx,psDbCtx,udsDbCtx) with IQuantResultSummaryProvider {  
+  override val peptideCacheExecContext : PeptideCacheExecutionContext
+) extends SQLResultSummaryProvider(peptideCacheExecContext) with IQuantResultSummaryProvider {
   
-  protected val mqProtSetProvider = new SQLMasterQuantProteinSetProvider(msiDbCtx, psDbCtx)
-  protected val mqPepProvider = new SQLMasterQuantPeptideProvider(msiDbCtx, psDbCtx)
+  protected val mqProtSetProvider = new SQLMasterQuantProteinSetProvider(peptideCacheExecContext)
+  protected val mqPepProvider = new SQLMasterQuantPeptideProvider(peptideCacheExecContext)
   protected val mqPepIonProvider = new SQLMasterQuantPeptideIonProvider(msiDbCtx)
   
   val MQComponentTable = MsiDbMasterQuantComponentTable
@@ -53,7 +36,7 @@ class SQLQuantResultSummaryProvider(
     
     val pepInstByMQPepId = ( for( 
       rsm <- rsms; 
-      pepInst <- rsm.peptideInstances;
+      pepInst <- rsm.peptideInstances
       if pepInst.masterQuantComponentId > 0
     ) yield pepInst.masterQuantComponentId -> pepInst ).toMap
     

@@ -13,50 +13,48 @@ import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
 import javax.persistence.Table;
 
-
 /**
  * The persistent class for the fractionation database table.
  * 
  */
 @Entity
 @NamedQueries({
-  @NamedQuery(
-    name = "findFractionationByType",
-    query = "SELECT frac FROM fr.proline.core.orm.uds.Fractionation frac WHERE frac.type = :type"
-  )
+	@NamedQuery(
+		name = "findFractionationByType",
+		query = "SELECT frac FROM fr.proline.core.orm.uds.Fractionation frac WHERE frac.type = :type"
+	)
 })
-@Table(name="fractionation")
+@Table(name = "fractionation")
 public class Fractionation implements Serializable {
-    
-    private static final long serialVersionUID = 1L;
-    
-    public enum FractionationType {
-	    PROTEIN, PEPTIDE, OTHER, NONE
-    };
 
-    @Id
-    @GeneratedValue(strategy=GenerationType.AUTO)
-    private long id;
+	private static final long serialVersionUID = 1L;
 
-    @Column(name = "type")
-    @Enumerated(value = EnumType.STRING)    
-    private FractionationType type;
-    
-    public long getId() {
-        return id;
-    }
-    
-    public void setId(final long pId) {
-        id = pId;
-    }
+	public enum FractionationType {
+		PROTEIN, PEPTIDE, OTHER, NONE
+	};
 
-    public FractionationType getType() {
-        return type;
-    }
+	@Id
+	@GeneratedValue(strategy = GenerationType.AUTO)
+	private long id;
 
-    public void setType(FractionationType fractionationType) {
-        this.type = fractionationType;
-    }
-    
-        
+	@Column(name = "type")
+	@Enumerated(value = EnumType.STRING)
+	private FractionationType type;
+
+	public long getId() {
+		return id;
+	}
+
+	public void setId(final long pId) {
+		id = pId;
+	}
+
+	public FractionationType getType() {
+		return type;
+	}
+
+	public void setType(FractionationType fractionationType) {
+		this.type = fractionationType;
+	}
+
 }

@@ -1,29 +1,25 @@
 package fr.proline.core.om.provider
 
-import org.junit.Assert._
-import org.junit.After
-import org.junit.Before
-import org.junit.Test
 import com.typesafe.scalalogging.StrictLogging
-import fr.proline.core.om.provider.msi.IPTMProvider
-import fr.proline.core.om.provider.msi.IPeptideMatchProvider
-import fr.proline.core.dal.AbstractMultipleDBTestCase
+import fr.proline.core.dal.{AbstractDatastoreTestCase, BuildLazyExecutionContext}
+import fr.proline.core.om.provider.msi.{IPTMProvider, IPeptideMatchProvider}
 import fr.proline.repository.DriverType
-import fr.proline.core.dal.BuildLazyExecutionContext
+import org.junit.Assert._
+import org.junit.Test
 
-@Test
-class ProviderDecoratedExecutionContextTest extends AbstractMultipleDBTestCase with StrictLogging {
 
-  @Before
-  def initTests() = {
-    logger.info("Initializing Dbs")
+object ProviderDecoratedExecutionContextTest extends AbstractDatastoreTestCase {
 
-    super.initDBsDBManagement(DriverType.H2)
-  }
+  override val driverType: DriverType = DriverType.H2
+  override val useJPA: Boolean = true
+}
+
+
+class ProviderDecoratedExecutionContextTest extends StrictLogging {
 
   @Test
   def test() {
-    val executionContext = BuildLazyExecutionContext(dsConnectorFactoryForTest, 1, true)
+    val executionContext = BuildLazyExecutionContext(ProviderDecoratedExecutionContextTest.dsConnectorFactoryForTest, 1, true)
 
     val parserContext = ProviderDecoratedExecutionContext(executionContext)  // Use Object factory
 
@@ -50,11 +46,6 @@ class ProviderDecoratedExecutionContextTest extends AbstractMultipleDBTestCase w
     assertEquals("Second IPeptideMatchProvider", peptideMatchProvider, peptideMatchProvider2)
     
     executionContext.closeAll()
-  }
-
-  @After
-  override def tearDown() = {
-    super.tearDown()
   }
 
 }

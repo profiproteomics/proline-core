@@ -61,7 +61,7 @@ object ResultSetBuilder {
 
     new ResultSet(
       id = rsId,
-      name = r.getString(RSCols.NAME),
+      name = r.getStringOrElse(RSCols.NAME,null),
       description = r.getStringOrElse(RSCols.DESCRIPTION,null),
       peptides = rsPeptides,
       peptideMatches = rsPepMatches,

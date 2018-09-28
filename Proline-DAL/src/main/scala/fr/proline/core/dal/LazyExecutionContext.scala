@@ -1,13 +1,13 @@
 package fr.proline.core.dal
 
+import scala.beans.BeanProperty
 import com.typesafe.scalalogging.LazyLogging
 import fr.proline.context._
 
 class LazyExecutionContext(
+  @BeanProperty val projectId: Long,
   val isJPA: Boolean,
   buildUdsDbCtx: () => UdsDbConnectionContext,
-  buildPdiDbCtx: () => DatabaseConnectionContext,
-  buildPsDbCtx: () => DatabaseConnectionContext,
   buildMsiDbCtx: () => MsiDbConnectionContext,
   buildLcMsDbCtx: () => LcMsDbConnectionContext
 ) extends IExecutionContext with LazyLogging {
@@ -21,28 +21,6 @@ class LazyExecutionContext(
       val dbCtx = buildUdsDbCtx()
       _isJPACheck(dbCtx)
       udsDbCtxInitialized = true
-      dbCtx
-    }
-  }
-
-  private var pdiDbCtxInitialized = false
-  private lazy val pdiDbCtx: DatabaseConnectionContext = synchronized {
-    if(isClosed) null
-    else {
-      val dbCtx = buildPdiDbCtx()
-      _isJPACheck(dbCtx)
-      pdiDbCtxInitialized = true
-      dbCtx
-    }
-  }
-
-  private var psDbCtxInitialized = false
-  private lazy val psDbCtx: DatabaseConnectionContext = synchronized {
-    if(isClosed) null
-    else {
-      val dbCtx = buildPsDbCtx()
-      _isJPACheck(dbCtx)
-      psDbCtxInitialized = true
       dbCtx
     }
   }
@@ -74,15 +52,11 @@ class LazyExecutionContext(
   }
 
   override def getUDSDbConnectionContext(): UdsDbConnectionContext = udsDbCtx
-  override def getPDIDbConnectionContext(): DatabaseConnectionContext = pdiDbCtx
-  override def getPSDbConnectionContext(): DatabaseConnectionContext = psDbCtx
   override def getMSIDbConnectionContext(): MsiDbConnectionContext = msiDbCtx
   override def getLCMSDbConnectionContext(): LcMsDbConnectionContext = lcMsDbCtx
 
   override def closeAll() {
     if (udsDbCtxInitialized && udsDbCtx != null) udsDbCtx.close()
-    if (pdiDbCtxInitialized && pdiDbCtx != null) pdiDbCtx.close()
-    if (psDbCtxInitialized && psDbCtx != null) psDbCtx.close()
     if (msiDbCtxInitialized && msiDbCtx != null) msiDbCtx.close()
     if (lcMsDbCtxInitialized && lcMsDbCtx != null) lcMsDbCtx.close()
     

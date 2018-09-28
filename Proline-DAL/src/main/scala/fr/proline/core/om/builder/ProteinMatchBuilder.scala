@@ -113,10 +113,6 @@ object ProteinMatchBuilder extends LazyLogging {
       protMatch.scoreType = scoreTypeById(protMatchRecord.getLong(ProtMatchCols.SCORING_ID))
     }
 
-    protMatchRecord.getFloatOption(ProtMatchCols.COVERAGE).map { coverage =>
-      protMatch.coverage = coverage
-    }
-
     protMatchRecord.getIntOption(ProtMatchCols.PEPTIDE_MATCH_COUNT).map { pepMatchCount =>
       protMatch.peptideMatchesCount = pepMatchCount
     }

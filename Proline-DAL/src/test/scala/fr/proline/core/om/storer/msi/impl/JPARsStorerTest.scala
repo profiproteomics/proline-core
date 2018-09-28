@@ -6,6 +6,7 @@ import org.junit.After
 import org.junit.Before
 import org.junit.Test
 import com.typesafe.scalalogging.StrictLogging
+import fr.proline.context._
 import fr.proline.core.om.model.msi.Peptide
 import fr.proline.core.om.model.msi.PeptideMatch
 import fr.proline.core.om.model.msi.ProteinMatch
@@ -17,7 +18,6 @@ import fr.proline.repository.DriverType
 import fr.profi.util.MathUtils.EPSILON_HIGH_PRECISION
 import fr.profi.util.MathUtils.EPSILON_LOW_PRECISION
 import fr.profi.util.StringUtils
-import fr.proline.context.DatabaseConnectionContext
 
 @Test
 class JPARsStorerTest extends AbstractMultipleDBTestCase with StrictLogging {
@@ -29,72 +29,11 @@ class JPARsStorerTest extends AbstractMultipleDBTestCase with StrictLogging {
   @Before
   def initTests() = {
     logger.info("Initializing Dbs")
-
     super.initDBsDBManagement(DriverType.H2)
-
-    //Load Data
-    msiDBTestCase.loadDataSet("/dbunit/datasets/msi-db_init_dataset.xml")
-    msiDBTestCase.loadDataSet("/fr/proline/core/om/msi/Init_Dataset.xml")
-    psDBTestCase.loadDataSet("/dbunit/datasets/ps-db_init_dataset.xml")
-    udsDBTestCase.loadCompositeDataSet(Array("/dbunit/datasets/uds-db_init_dataset.xml", "/fr/proline/core/om/uds/UDS_Simple_Dataset.xml"))
-    pdiDBTestCase.loadDataSet("/dbunit/datasets/pdi/Proteins_Dataset.xml")
-
+    msiDBTestCase.loadCompositeDataSet(Array("/dbunit/Init/msi-db.xml","/dbunit/datasets/msi/Peaklist_Dataset.xml"))
+    udsDBTestCase.loadCompositeDataSet(Array("/dbunit/Init/uds-db.xml", "/fr/proline/core/om/uds/UDS_Simple_Dataset.xml"))
     logger.info("Dbs successfully initialized")
   }
-
-  /**
-   * Creates some ResultSets with {{{ResultSetFakeBuilder}}} from Proline-OM ''test'' project
-   * and persists them into Msi Db using a {{{JPARsStorer}}} instance.
-   */
-  //TODO : Creation d'un cas de figure qui leve une exception
-  //  @Test
-  //  def testRollBack() {
-  //    import scala.collection.JavaConversions.collectionAsScalaIterable
-  //
-  //    var start = System.nanoTime
-  //    val rsb = new ResultSetFakeBuilder( 10, 2 )
-  //
-  //    val resultSet = rsb.toResultSet()
-  //    var stop = System.nanoTime
-  //    logger.info( "ResultSet creation time: " + ( ( stop - start ) / milliToNanos ) )
-  //
-  //    start = System.nanoTime
-  //    storer.storeResultSet( resultSet, stContext )
-  //    stop = System.nanoTime
-  //
-  //    logger.info( "ResultSet " + resultSet.id + " persisted time: " + ( ( stop - start ) / milliToNanos ) )
-  //
-  //    start = System.nanoTime
-  //    val resultSet2 = new ResultSetFakeBuilder( 10, 2 ).toResultSet
-  //    val errMsiSearchPL = new Peaklist(
-  //         id= Peaklist.generateNewId,
-  //         fileType= resultSet2.msiSearch.peakList.fileType,
-  //         path= resultSet2.msiSearch.peakList.path,
-  //         rawFileName= resultSet2.msiSearch.peakList.rawFileName,
-  //         msLevel=  resultSet2.msiSearch.peakList.msLevel
-  //     )
-  //
-  //    val errMsiSearch = new MSISearch (
-  //        id=resultSet.msiSearch.id,
-  //        resultFileName=resultSet.msiSearch.resultFileName,
-  //        submittedQueriesCount=resultSet.msiSearch.submittedQueriesCount,
-  //        searchSettings=resultSet.msiSearch.searchSettings ,
-  //        peakList = errMsiSearchPL,
-  //        date = resultSet.msiSearch.date
-  //     )
-  //
-  //    resultSet2.msiSearch = errMsiSearch
-  //    stop = System.nanoTime
-  //    logger.info( "ResultSet 2 creation time: " + ( ( stop - start ) / milliToNanos ) )
-  //
-  //    start = System.nanoTime
-  //    storer.storeResultSet( resultSet2, stContext )
-  //    stop = System.nanoTime
-  //
-  //    val rsList : List[fr.proline.core.orm.msi.ResultSet] = stContext.msiEm.createQuery("FROM fr.proline.core.orm.msi.ResultSet",classOf[fr.proline.core.orm.msi.ResultSet]).getResultList.toList
-  //    assertEquals(1, rsList.size)
-  //    assertEquals(resultSet.id, rsList(0).getId)
-  //  }
 
   /**
    * Creates some ResultSets with {{{ResultSetFakeBuilder}}} from Proline-OM ''test'' project
@@ -158,19 +97,13 @@ class JPARsStorerTest extends AbstractMultipleDBTestCase with StrictLogging {
 
       /* JPA Db Contexts */
 
-      val pdiDb = new DatabaseConnectionContext(dsConnectorFactoryForTest.getPdiDbConnector)
+      val msiDb = new MsiDbConnectionContext(dsConnectorFactoryForTest.getMsiDbConnector(projectIdForTest))
 
-      val psDb = new DatabaseConnectionContext(dsConnectorFactoryForTest.getPsDbConnector)
-
-      val msiDb = new DatabaseConnectionContext(dsConnectorFactoryForTest.getMsiDbConnector(projectIdForTest))
-
-      val provider = new ORMResultSetProvider(msiDb, psDb, pdiDb)
+      val provider = new ORMResultSetProvider(msiDb)
 
       val loadedResultSet = provider.getResultSet(resultSetId)
 
       msiDb.close()
-
-      psDb.close()
 
       msiDb.close()
 
@@ -334,11 +267,8 @@ class JPARsStorerTest extends AbstractMultipleDBTestCase with StrictLogging {
     /* Check some fields */
     assertEquals("ProteinMatch.accession", src.accession, loaded.accession)
     assertEquals("ProteinMatch.taxonId", normalizeId(src.taxonId), normalizeId(loaded.taxonId))
-
     assertEquals("ProteinMatch.proteinId", normalizeId(src.getProteinId), normalizeId(loaded.getProteinId))
-
     assertEquals("ProteinMatch.seqDatabaseIds", normalizeArrayLength(src.seqDatabaseIds), normalizeArrayLength(loaded.seqDatabaseIds))
-
     assertEquals("ProteinMatch.sequenceMatches", normalizeArrayLength(src.sequenceMatches), normalizeArrayLength(loaded.sequenceMatches))
   }
 

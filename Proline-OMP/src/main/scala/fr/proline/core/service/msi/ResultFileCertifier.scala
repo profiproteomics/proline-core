@@ -14,7 +14,7 @@ import fr.proline.core.om.model.msi.PtmDefinition
 import fr.proline.core.om.provider.ProviderDecoratedExecutionContext
 import fr.proline.core.om.provider.msi.IResultFileProvider
 import fr.proline.core.om.provider.msi.ResultFileProviderRegistry
-import fr.proline.core.om.storer.ps.BuildPtmDefinitionStorer
+import fr.proline.core.om.storer.msi.BuildPtmDefinitionStorer
 import fr.proline.core.om.storer.uds.BuildEnzymeStorer
 
 
@@ -30,8 +30,9 @@ class ResultFileCertifier(
   }
 
   def runService(): Boolean = {
+    
     var result = true
-    val psDbCtx = executionContext.getPSDbConnectionContext()
+    val msiDbCtx = executionContext.getMSIDbConnectionContext()
     val udsDbCtx = executionContext.getUDSDbConnectionContext()
     
     for ((fileType, files) <- resultIdentFilesByFormat) {
@@ -42,15 +43,10 @@ class ResultFileCertifier(
       val rfProvider: Option[IResultFileProvider] = ResultFileProviderRegistry.get(fileType)
       require(rfProvider.isDefined, "No ResultFileProvider for specified identification file format "+fileType)
 
-      // X!Tandem needs to connect to the database to search PTMs and enzymes
-      //VDS FIXME specific format code should not be here ... maybe  pass the provider to all IResultFileProvider
-      if(fileType.equals("xtandem.xml")) {
-        val parserContext = ProviderDecoratedExecutionContext(executionContext) // Use Object factory       
-        rfProvider.get.setParserContext(parserContext)
-      }
-      
-      val storer = BuildPtmDefinitionStorer(executionContext.getPSDbConnectionContext)
-      val udsStorer = BuildEnzymeStorer(executionContext.getUDSDbConnectionContext())
+      rfProvider.get.setParserContext(ProviderDecoratedExecutionContext(executionContext) )
+
+      val ptmDefStorer = BuildPtmDefinitionStorer(executionContext.getMSIDbConnectionContext)
+      val enzymeStorer = BuildEnzymeStorer(executionContext.getUDSDbConnectionContext)
 
       val rfVerifier = rfProvider.get.getResultFileVerifier
       val ptms = new ArrayBuffer[PtmDefinition]
@@ -61,7 +57,7 @@ class ResultFileCertifier(
         // Check if result file is valid
         // TODO: return something else than a Boolean (this is not very informative...)
         if( rfVerifier.isValid(file, importProperties) == false ) {
-          throw new Exception("result file ("+file+") is invalid")
+          throw new Exception(s"Invalid result file: '$file'")
         }
         
         // Retrieve PTM definitions from the result file
@@ -78,24 +74,23 @@ class ResultFileCertifier(
       }
       
     	executeOnProgress() //execute registered action during progress
-      	
       // Store PTMs if some were found
-      if( ptms.length > 0 ) {
+      if (ptms.nonEmpty) {
         
-        val isTxOk = psDbCtx.tryInTransaction {
-          this.logger.info("%d PTM(s) found in the result file, they are going to be stored".format(ptms.length) )
-          storer.storePtmDefinitions(ptms, executionContext)
+        val isTxOk = msiDbCtx.tryInTransaction {
+          this.logger.info(s"${ptms.length} PTM(s) found in the result file, they are going to be stored" )
+          ptmDefStorer.storePtmDefinitions(ptms, executionContext)
         }
-        if( isTxOk == false ) result = false
+        if( !isTxOk ) result = false
       }
 
     	executeOnProgress() //execute registered action during progress
       // Store enzyme if some were found
-      if(enzymes.length > 0) {
+      if (enzymes.nonEmpty) {
         
         val isTxOk = udsDbCtx.tryInTransaction {
-          this.logger.info("%d enzyme(s) found in the result file, they are going to be stored".format(enzymes.length) )
-          udsStorer.storeEnzymes(enzymes, executionContext)
+          this.logger.info(s"${enzymes.length} enzyme(s) found in the result file, they are going to be stored" )
+          enzymeStorer.storeEnzymes(enzymes, executionContext)
         }
       }
       

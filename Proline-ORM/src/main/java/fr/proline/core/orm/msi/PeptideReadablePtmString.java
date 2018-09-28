@@ -17,26 +17,26 @@ import javax.persistence.Table;
 @Table(name = "peptide_readable_ptm_string")
 public class PeptideReadablePtmString implements Serializable {
 
-    private static final long serialVersionUID = 1L;
+	private static final long serialVersionUID = 1L;
 
 	@EmbeddedId
 	private PeptideReadablePtmStringPK id;
 
-    @Column(name = "readable_ptm_string")
-    private String readablePtmString;
+	@Column(name = "readable_ptm_string")
+	private String readablePtmString;
 
-    @ManyToOne
-    @JoinColumn(name = "peptide_id")
-    @MapsId("peptideId")
-    private Peptide peptide;
+	@ManyToOne
+	@JoinColumn(name = "peptide_id")
+	@MapsId("peptideId")
+	private Peptide peptide;
 
-    @ManyToOne
-    @JoinColumn(name = "result_set_id")
-    @MapsId("resultSetId")
-    private ResultSet resultSet;
+	@ManyToOne
+	@JoinColumn(name = "result_set_id")
+	@MapsId("resultSetId")
+	private ResultSet resultSet;
 
-    public PeptideReadablePtmString() {
-    }
+	public PeptideReadablePtmString() {
+	}
 
 	public PeptideReadablePtmStringPK getId() {
 		return this.id;
@@ -46,28 +46,28 @@ public class PeptideReadablePtmString implements Serializable {
 		this.id = id;
 	}
 
-    public void setReadablePtmString(final String pReadablePtmString) {
-	readablePtmString = pReadablePtmString;
-    }
+	public void setReadablePtmString(final String pReadablePtmString) {
+		readablePtmString = pReadablePtmString;
+	}
 
-    public String getReadablePtmString() {
-	return readablePtmString;
-    }
+	public String getReadablePtmString() {
+		return readablePtmString;
+	}
 
-    public void setPeptide(final Peptide pPeptide) {
-	peptide = pPeptide;
-    }
+	public void setPeptide(final Peptide pPeptide) {
+		peptide = pPeptide;
+	}
 
-    public Peptide getPeptide() {
-	return peptide;
-    }
+	public Peptide getPeptide() {
+		return peptide;
+	}
 
-    public void setResultSet(final ResultSet pResultSet) {
-	resultSet = pResultSet;
-    }
+	public void setResultSet(final ResultSet pResultSet) {
+		resultSet = pResultSet;
+	}
 
-    public ResultSet getResultSet() {
-	return resultSet;
-    }
+	public ResultSet getResultSet() {
+		return resultSet;
+	}
 
 }

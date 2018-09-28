@@ -1,17 +1,18 @@
 package fr.proline.core.om.storer.msi.impl
 
-import java.sql.Connection
+
 import com.typesafe.scalalogging.LazyLogging
 import fr.profi.jdbc.easy._
 import fr.profi.jdbc.PreparedStatementWrapper
 import fr.profi.util.serialization.ProfiJson
 import fr.proline.core.dal.tables.msi._
 import fr.proline.core.dal._
-import fr.profi.util.sql._
 import fr.proline.core.om.model.msi._
 import fr.proline.core.om.storer.msi.IMsiSearchWriter
 import fr.profi.util.primitives._
 import fr.profi.chemistry.model.Enzyme
+import fr.profi.jdbc.Nullable
+import fr.profi.jdbc.LongFormattable
 
 object SQLMsiSearchWriter extends AbstractSQLMsiSearchWriter
 
@@ -25,13 +26,13 @@ abstract class AbstractSQLMsiSearchWriter extends IMsiSearchWriter with LazyLogg
 
       // Insert sequence databases
       // TODO : If seqDb does not exist in PDI do not create it !!
-      val seqDbIdByTmpIdBuilder = collection.immutable.Map.newBuilder[Long, Long]
+      val seqDbIdByTmpId = new collection.mutable.LongMap[Long]()
       ss.seqDatabases.foreach { seqDb =>
         val tmpSeqDbId = seqDb.id
         _insertSeqDatabase(seqDb, msiEzDBC)
-        seqDbIdByTmpIdBuilder += (tmpSeqDbId -> seqDb.id)
+        seqDbIdByTmpId += (tmpSeqDbId -> seqDb.id)
       }
-      context.seqDbIdByTmpId = seqDbIdByTmpIdBuilder.result()
+      context.seqDbIdByTmpId = seqDbIdByTmpId
 
       // Insert search settings
       _insertSearchSettings(ss, msiEzDBC)
@@ -164,7 +165,7 @@ abstract class AbstractSQLMsiSearchWriter extends IMsiSearchWriter with LazyLogg
     require(instrumentConfigId > 0, "instrument configuration must first be persisted")
 
     val searchSettingsInsertQuery = MsiDbSearchSettingsTable.mkInsertQuery { (c,colsList) => colsList.filter( _ != c.ID) }
-    
+    val frsIdOpt : Option[Long] = if(searchSettings.fragmentationRuleSet.isEmpty)  Option.empty[Long] else Some(searchSettings.fragmentationRuleSet.get.id)
     msiEzDBC.executePrepared( searchSettingsInsertQuery, true ) { stmt =>
       stmt.executeWith(
         searchSettings.softwareName,
@@ -176,7 +177,8 @@ abstract class AbstractSQLMsiSearchWriter extends IMsiSearchWriter with LazyLogg
         searchSettings.ms1ErrorTolUnit,
         searchSettings.isDecoy,
         searchSettings.properties.map(ProfiJson.serialize(_)),
-        searchSettings.instrumentConfig.id
+        searchSettings.instrumentConfig.id,
+        frsIdOpt
       )
 
       searchSettings.id = stmt.generatedLong
@@ -222,12 +224,22 @@ abstract class AbstractSQLMsiSearchWriter extends IMsiSearchWriter with LazyLogg
       usedEnzymes.foreach( e => stmt.executeWith( ssId, e.id ) )
     }
     
-    // Insert used PTMs    
-    for (ptmDef <- searchSettings.fixedPtmDefs) _insertUsedPTM(ssId, ptmDef, true, msiEzDBC)
-    // do not store Ptms already declared as fixed in case a user use a same Ptm as fixed AND variable
-    var variablePtms = searchSettings.variablePtmDefs.toBuffer
-    variablePtms --= searchSettings.fixedPtmDefs
-    for (ptmDef <- variablePtms) _insertUsedPTM(ssId, ptmDef, false, msiEzDBC)
+    val fixedPtmSet = searchSettings.fixedPtmDefs.toSet
+    val varPtmSet = searchSettings.variablePtmDefs.toSet
+    
+    // Insert used PTMs
+    for (ptmDef <- searchSettings.fixedPtmDefs; if varPtmSet.contains(ptmDef) == false) {
+      _insertUsedPTM(ssId, ptmDef, true, 1, msiEzDBC)
+    }
+    for (ptmDef <- searchSettings.variablePtmDefs) {
+      _insertUsedPTM(ssId, ptmDef, false, 1, msiEzDBC)
+    }
+    
+    // Store Ptms used as fixed AND variable modes in search round #2
+    // TODO: update the Object Model to associate the search round to PTM definitions
+    for (ptmDef <- searchSettings.fixedPtmDefs; if varPtmSet.contains(ptmDef)) {
+      _insertUsedPTM(ssId, ptmDef, true, 2, msiEzDBC)
+    }
     
     // Link search settings to sequence databases
     msiEzDBC.executePrepared("INSERT INTO search_settings_seq_database_map VALUES (?,?,?,?)") { stmt =>
@@ -266,30 +278,17 @@ abstract class AbstractSQLMsiSearchWriter extends IMsiSearchWriter with LazyLogg
     
   }
 
-  protected def _insertUsedPTM(ssId: Long, ptmDef: PtmDefinition, isFixed: Boolean, msiEzDBC: EasyDBC): Unit = {
+  protected def _insertUsedPTM(ssId: Long, ptmDef: PtmDefinition, isFixed: Boolean, searchRound: Int, msiEzDBC: EasyDBC): Unit = {
 
     // Check if the PTM specificity exists in the MSIdb
-    val count = msiEzDBC.selectInt("SELECT count(*) FROM ptm_specificity WHERE id =" + ptmDef.id)
-
-    // Insert PTM specificity if it doesn't exist in the MSIdb
-    if (count == 0) {
-      val residueAsOption = if(ptmDef.residue == '\0') Option.empty[String] else Some(ptmDef.residue.toString)
-      
-      msiEzDBC.executePrepared( MsiDbPtmSpecificityTable.mkInsertQuery ) { stmt =>
-        stmt.executeWith(
-          ptmDef.id,
-          ptmDef.location,
-          residueAsOption,
-          Option.empty[String] // TODO: retrieve properties
-        )
-      }
-    }
-
+    require(ptmDef.id > 0, s"The PTM definition should be first persisted (ID=${ptmDef.id}, name=${ptmDef.names.shortName})")
+    
     // Link search settings to used PTMs
     msiEzDBC.executePrepared( MsiDbUsedPtmTable.mkInsertQuery ) { stmt =>
       stmt.executeWith(
         ssId,
         ptmDef.id,
+        searchRound,
         ptmDef.names.shortName,
         isFixed
       )

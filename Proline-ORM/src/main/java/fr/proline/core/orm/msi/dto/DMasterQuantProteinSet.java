@@ -23,56 +23,61 @@ import fr.proline.core.orm.util.JsonSerializer;
  */
 public class DMasterQuantProteinSet {
 	private static final Logger LOG = LoggerFactory.getLogger(DMasterQuantProteinSet.class);
-  
+
 	public static final String MASTER_QUANT_PROTEINSET_WITH_PEPTIDE_MODIFIED = "PEPTIDE_MODIFIED";
-	  
-	/* MasterQuantComponent fields */ 
-	private long m_id ; //id of associated MasterQuantComponent
-	
+
+	/* MasterQuantComponent fields */
+	private long m_id; //id of associated MasterQuantComponent
+
 	private long m_proteinSetId;
-  
-    private int m_selectionLevel; 
-    	
+
+	private int m_selectionLevel;
+
 	private long m_objectTreeId;
-	
+
 	private String m_serializedProperties;
-    
+
 	private Long m_quantResultSummaryId;
-	
+
 	//DProteinSet to provide access to DProteinMatch
 	private DProteinSet m_dProteinSet;
-		
+
 	// serializedProperties as a map
 	private MasterQuantProteinSetProperties mqProteinSetProperties;
-	
+
 	//List of QuantProteinSet ... to be loaded before use 
 	Map<Long, DQuantProteinSet> quantProteinSetByQchIds = new HashMap<Long, DQuantProteinSet>();
-	
+
 	// List of Status by Qch
 	private Map<Long, String> quantStatusByQchIds = new HashMap<Long, String>();
-	
+
 	// List of peptideNumber by Qch
 	private Map<Long, Integer> quantPeptideNumberByQchIds = new HashMap<Long, Integer>();
-	
+
 	/**
 	 * nb Peptides identified for this proteinSet
 	 */
 	private int nbPeptides;
-	
+
 	/**
 	 * nb Peptides quantified for this proteinSet
 	 */
 	private int nbQuantifiedPeptides;
-	
+
 	// serializedProperties as a map
 	private java.util.Map<String, Object> serializedPropertiesMap = null;
-	
+
 	public DMasterQuantProteinSet() {
-		
+
 	}
 
-	public DMasterQuantProteinSet(long id, int selectionLevel,
-			Long objectTreeId, String serializedProperties, Long quantResultSummaryId, long proteinSetId) {
+	public DMasterQuantProteinSet(
+		long id,
+		int selectionLevel,
+		Long objectTreeId,
+		String serializedProperties,
+		Long quantResultSummaryId,
+		long proteinSetId) {
 		super();
 		this.m_id = id;
 		this.m_quantResultSummaryId = quantResultSummaryId;
@@ -80,7 +85,7 @@ public class DMasterQuantProteinSet {
 		this.m_serializedProperties = serializedProperties;
 		this.m_objectTreeId = objectTreeId;
 		this.m_proteinSetId = proteinSetId;
-		
+
 	}
 
 	public long getId() {
@@ -103,36 +108,34 @@ public class DMasterQuantProteinSet {
 		return m_selectionLevel;
 	}
 
-
 	public void setSelectionLevel(int selectionLevel) {
 		this.m_selectionLevel = selectionLevel;
 	}
-	
-	public Map<Long, DQuantProteinSet> parseQuantProteinSetFromProperties(String quantProtSetdata){
+
+	public Map<Long, DQuantProteinSet> parseQuantProteinSetFromProperties(String quantProtSetdata) {
 
 		try {
 			ObjectMapper objectMapper = JsonSerializer.getMapper();
 			objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
-			List<DQuantProteinSet> quantProtSets = objectMapper.readValue(quantProtSetdata, new TypeReference<List<DQuantProteinSet>>() {});
-			
-			quantProteinSetByQchIds = new HashMap<Long, DQuantProteinSet>();		
-			for(int i=0;i<quantProtSets.size();i++){
+			List<DQuantProteinSet> quantProtSets = objectMapper.readValue(quantProtSetdata, new TypeReference<List<DQuantProteinSet>>() {
+			});
+
+			quantProteinSetByQchIds = new HashMap<Long, DQuantProteinSet>();
+			for (int i = 0; i < quantProtSets.size(); i++) {
 				DQuantProteinSet nextQuantProtSet = quantProtSets.get(i);
 				if (nextQuantProtSet != null) {
-					quantProteinSetByQchIds.put(nextQuantProtSet.quantChannelId,nextQuantProtSet);
+					quantProteinSetByQchIds.put(nextQuantProtSet.quantChannelId, nextQuantProtSet);
 				}
 			}
-		 
-					
-		}catch(Exception e) {
-			LOG.warn("Error Parsing DQuantProteinSet ",e);
+
+		} catch (Exception e) {
+			LOG.warn("Error Parsing DQuantProteinSet ", e);
 			quantProteinSetByQchIds = null;
 		}
-		
+
 		return quantProteinSetByQchIds;
 	}
-	
-	
+
 	public Map<Long, DQuantProteinSet> getQuantProteinSetByQchIds() {
 		return quantProteinSetByQchIds;
 	}
@@ -145,23 +148,17 @@ public class DMasterQuantProteinSet {
 		return m_objectTreeId;
 	}
 
-
 	public void setObjectTreeId(long objectTreeId) {
 		this.m_objectTreeId = objectTreeId;
 	}
-
 
 	public long getProteinSetId() {
 		return m_proteinSetId;
 	}
 
-
-
 	public void setProteinSetId(long m_proteinSetId) {
 		this.m_proteinSetId = m_proteinSetId;
 	}
-
-	
 
 	public String getSerializedProperties() {
 		return m_serializedProperties;
@@ -172,43 +169,41 @@ public class DMasterQuantProteinSet {
 		this.mqProteinSetProperties = null; //reinit map
 	}
 
-
 	@SuppressWarnings("unchecked")
 	public java.util.Map<String, Object> getSerializedPropertiesAsMap()
-			throws Exception {
+		throws Exception {
 		if ((serializedPropertiesMap == null) && (m_serializedProperties != null)) {
 			serializedPropertiesMap = JsonSerializer.getMapper().readValue(
-					getSerializedProperties(), java.util.Map.class);
+				getSerializedProperties(), java.util.Map.class);
 		}
 		return serializedPropertiesMap;
 	}
-	
+
 	public void setMasterQuantProtSetProperties(MasterQuantProteinSetProperties properties) {
 		this.mqProteinSetProperties = properties;
 	}
-	
-    public MasterQuantProteinSetProperties getMasterQuantProtSetProperties() throws Exception {
-    	if ((mqProteinSetProperties == null) && (m_serializedProperties != null)) {
-    		try {
-    			//	Parse properties to get Values
-    			mqProteinSetProperties = parseJsonProperties(m_serializedProperties);
-    		} catch(Exception e){
-    			LOG.warn(" Error parsiong MasterQuantProteinSetProperties ",e);
-    			
-    		}
-    		
-    	}
-    	return mqProteinSetProperties;
-    }
 
+	public MasterQuantProteinSetProperties getMasterQuantProtSetProperties() throws Exception {
+		if ((mqProteinSetProperties == null) && (m_serializedProperties != null)) {
+			try {
+				//	Parse properties to get Values
+				mqProteinSetProperties = parseJsonProperties(m_serializedProperties);
+			} catch (Exception e) {
+				LOG.warn(" Error parsiong MasterQuantProteinSetProperties ", e);
+
+			}
+
+		}
+		return mqProteinSetProperties;
+	}
 
 	private MasterQuantProteinSetProperties parseJsonProperties(String jsonProperties) throws Exception {
-		
-		MasterQuantProteinSetProperties mqProtSetProperties = JsonSerializer.getMapper().readValue(jsonProperties,  MasterQuantProteinSetProperties.class);
-//		LOG.debug("selected_master_quant_peptide_ions_ids readed  _"+mqProperties.selectedMasterQuantPeptideIonIds+"_ ");		
-//		LOG.debug("selectedMasterQuantPeptideIds readed  _"+mqProperties.selectedMasterQuantPeptideIds+"_ ");
-//		LOG.debug("MasterQuantProteinSetProfile readed  _"+mqProperties.getMqProtSetProfilesByGroupSetupNumber()+"_ ");
-			
+
+		MasterQuantProteinSetProperties mqProtSetProperties = JsonSerializer.getMapper().readValue(jsonProperties, MasterQuantProteinSetProperties.class);
+		//		LOG.debug("selected_master_quant_peptide_ions_ids readed  _"+mqProperties.selectedMasterQuantPeptideIonIds+"_ ");		
+		//		LOG.debug("selectedMasterQuantPeptideIds readed  _"+mqProperties.selectedMasterQuantPeptideIds+"_ ");
+		//		LOG.debug("MasterQuantProteinSetProfile readed  _"+mqProperties.getMqProtSetProfilesByGroupSetupNumber()+"_ ");
+
 		return mqProtSetProperties;
 	}
 
@@ -249,9 +244,8 @@ public class DMasterQuantProteinSet {
 	}
 
 	public void setQuantPeptideNumberByQchIds(
-			Map<Long, Integer> quantPeptideNumberByQchIds) {
+		Map<Long, Integer> quantPeptideNumberByQchIds) {
 		this.quantPeptideNumberByQchIds = quantPeptideNumberByQchIds;
 	}
-
 
 }

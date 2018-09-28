@@ -10,34 +10,31 @@ import fr.profi.util.dbunit._
 import fr.profi.util.primitives._
 import fr.profi.util.serialization.ProfiJson
 import fr.proline.core.dal.tables.msi._
-import fr.proline.core.dal.tables.ps._
 import fr.proline.core.dal.tables.uds._
 import fr.proline.core.om.builder._
 import fr.proline.core.om.model.msi._
 import fr.proline.core.om.provider.msi.IPTMProvider
 import fr.proline.core.om.provider.msi.IPeptideProvider
-import fr.proline.core.dal.tables.pdi.PdiDb
 import fr.proline.core.dal.tables.lcms.LcmsDb
 import fr.proline.repository.ProlineDatabaseType
 
 /**
- * @author David Bouyssie
- *
- */
+  *
+  * Parse dbunit XML files and convert them to IResultFile and ResultSet objects.
+  *
+  * @author David Bouyssie
+  *
+  */
 class DbUnitResultFile(
   msiDatasetInputStream: InputStream,
-  udsDatasetInputStream: InputStream,
-  psDatasetInputStream: InputStream
+  udsDatasetInputStream: InputStream
 ) extends IResultFile {
   
   private val RSCols = MsiDbResultSetColumns
   
-  private val psDbDsParser = new PsDbDatasetParser( psDatasetInputStream )
-  
   private val msiDbDsParser = new MsiDbDatasetParser(
     msiDatasetInputStream,
-    udsDatasetInputStream,
-    psDbDsParser
+    udsDatasetInputStream
   )
   
   val fileLocation: File = new File("/dev/null")
@@ -50,6 +47,7 @@ class DbUnitResultFile(
   val hasMs2Peaklist: Boolean = ( msLevel == 2 )
   
   this.instrumentConfig = Option(msiSearch.searchSettings.instrumentConfig)
+  this.fragmentationRuleSet = msiSearch.searchSettings.fragmentationRuleSet
   this.peaklistSoftware = Option(msiSearch.peakList.peaklistSoftware)
   override def parseResultSet(wantDecoy: Boolean)  {  }
   
@@ -67,7 +65,7 @@ class DbUnitResultFile(
   }
   
   def eachSpectrum( onEachSpectrum: Spectrum => Unit ) {
-    for( spectrum <- msiDbDsParser.getSpectra(this.instrumentConfig.get.id) ) {
+    for( spectrum <- msiDbDsParser.getSpectra(this.fragmentationRuleSet.get.id) ) {
       onEachSpectrum(spectrum)
     }
   }
@@ -144,14 +142,6 @@ object DbUnitDatasetParser {
         for( table <- MsiDb.tables )
           yield table.name -> table.columnsAsStrList
       }
-      case ProlineDatabaseType.PDI => {
-        for( table <- PdiDb.tables )
-          yield table.name -> table.columnsAsStrList
-      }
-      case ProlineDatabaseType.PS => {
-        for( table <- PsDb.tables )
-          yield table.name -> table.columnsAsStrList
-      }
       case ProlineDatabaseType.UDS => {
         for( table <- UdsDb.tables )
           yield table.name -> table.columnsAsStrList
@@ -180,37 +170,31 @@ object DbUnitDatasetParser {
   
 }
 
-class PsDbDatasetParser( datasetInputStream: InputStream ) extends IPTMProvider with IPeptideProvider {
+class MsiDbPsDatasetParser( psRecordByTableName: Map[String, Seq[StringMap]] ) extends IPTMProvider with IPeptideProvider {
 
-  // Load the dataset as records
-  private val psRecordByTableName = DbUnitDatasetParser.parseAndFixDataset( datasetInputStream )
-  /*private val psDbColNamesByTableName = DbUnitDatasetParser.getColNamesByTableName( ProlineDatabaseType.PS )
-  private val ptmColNames = psDbColNamesByTableName( PsDbPtmTable.name )
-  private val ptmSpecifColNames = psDbColNamesByTableName( PsDbPtmSpecificityTable.name )
-  private val pepPtmColNames = psDbColNamesByTableName( PsDbPeptidePtmTable.name )*/
-  
   // Inspired by the code of the SQLPTMProvider
   // TODO: try to reduce code redundancy ???
   // Create an abstract PtmProvider and an InMemory one
-  val ptmDefinitionById = {
+  val ptmDefinitionById = if(psRecordByTableName.contains(MsiDbPtmTable.name) == false) LongMap.empty[PtmDefinition]
+  else {
     
     // Parse PTMs
-    val ptmRawRecords = psRecordByTableName( PsDbPtmTable.name ).toArray
+    val ptmRawRecords = psRecordByTableName( MsiDbPtmTable.name ).toArray
     val ptmRecords = ptmRawRecords//DbUnitDatasetParser.castRecords( ptmRawRecords, ptmColNames )
     val ptmRecordById = ptmRecords.map( r => r.getLong("id") -> r ).toMap
 
     // Parse PTM evidences
-    val ptmEvidenceRecords = psRecordByTableName( PsDbPtmEvidenceTable.name ).toArray
+    val ptmEvidenceRecords = psRecordByTableName( MsiDbPtmEvidenceTable.name ).toArray
 
     // Group PTM evidences by PTM id
-    val ptmEvidRecordsByPtmId = ptmEvidenceRecords.groupBy( r => toLong(r(PsDbPtmEvidenceColumns.PTM_ID)) )
+    val ptmEvidRecordsByPtmId = ptmEvidenceRecords.groupBy( r => toLong(r(MsiDbPtmEvidenceColumns.PTM_ID)) )
     
     // Parse PTM specificities 
     /*val ptmSpecifRecords = DbUnitDatasetParser.castRecords( 
-      psRecordByTableName( PsDbPtmSpecificityTable.name ).toArray,
+      psRecordByTableName( MsiDbPtmSpecificityTable.name ).toArray,
       ptmSpecifColNames
     )*/
-    val ptmSpecifRecords = psRecordByTableName( PsDbPtmSpecificityTable.name ).toArray
+    val ptmSpecifRecords = psRecordByTableName( MsiDbPtmSpecificityTable.name ).toArray
     
     // Build PTM definitions
     val ptmDefLongMap = new LongMap[PtmDefinition]()
@@ -218,7 +202,7 @@ class PsDbDatasetParser( datasetInputStream: InputStream ) extends IPTMProvider 
     for( ptmSpecifRecord <- ptmSpecifRecords ) {
 
       // Retrieve corresponding PTM
-      val ptmId = toLong(ptmSpecifRecord(PsDbPtmSpecificityColumns.PTM_ID))
+      val ptmId = toLong(ptmSpecifRecord(MsiDbPtmSpecificityColumns.PTM_ID))
       val ptmRecord = ptmRecordById(ptmId)
 
       // Retrieve corresponding PTM evidences
@@ -242,10 +226,10 @@ class PsDbDatasetParser( datasetInputStream: InputStream ) extends IPTMProvider 
   private def getLocatedPtmsByPepId(): LongMap[Array[LocatedPtm]] = {
     
     /*val castedPepPtmRecords = DbUnitDatasetParser.castRecords(
-      psRecordByTableName.getOrElse(PsDbPeptidePtmTable.name,new ArrayBuffer()).toArray,
+      psRecordByTableName.getOrElse(MsiDbPeptidePtmTable.name,new ArrayBuffer()).toArray,
       pepPtmColNames
     )*/
-    val pepPtmRecords = psRecordByTableName.getOrElse(PsDbPeptidePtmTable.name,new ArrayBuffer()).toArray
+    val pepPtmRecords = psRecordByTableName.getOrElse(MsiDbPeptidePtmTable.name,new ArrayBuffer()).toArray
     val pepPtmRecordsByPepId = pepPtmRecords.toSeq.groupByLong(_.getLong("peptide_id") )
     
     PtmDefinitionBuilder.buildLocatedPtmsGroupedByPepId(pepPtmRecordsByPepId,ptmDefinitionById)
@@ -294,13 +278,13 @@ class PsDbDatasetParser( datasetInputStream: InputStream ) extends IPTMProvider 
   val peptides = {
     
     val locatedPtmsByPepId = this.getLocatedPtmsByPepId()
-    val pepRecords = psRecordByTableName(PsDbPeptideTable.name).toArray
+    val pepRecords = psRecordByTableName(MsiDbPeptideTable.name).toArray
     
     // Iterate over peptide records to convert them into peptide objects
     val peptides = new ArrayBuffer[Peptide](pepRecords.length)
 
     for (pepRecord <- pepRecords) {
-      val pepId = pepRecord.getLong(PsDbPeptideColumns.ID)
+      val pepId = pepRecord.getLong(MsiDbPeptideColumns.ID)
 
       val locatedPtmsOpt = locatedPtmsByPepId.get(pepId)
       peptides += PeptideBuilder.buildPeptide(pepRecord, locatedPtmsOpt)
@@ -321,14 +305,11 @@ class PsDbDatasetParser( datasetInputStream: InputStream ) extends IPTMProvider 
   
   def getPeptide(peptideSeq:String, pepPtms:Array[LocatedPtm] ): Option[Peptide] = null
   
-  def getPeptidesAsOptionsBySeqAndPtms(peptideSeqsAndPtms: Seq[Pair[String, Array[LocatedPtm]]] ): Array[Option[Peptide]] = null
-  
 }
 
 class MsiDbDatasetParser(
   msiDatasetInputStream: InputStream,
-  udsDatasetInputStream: InputStream,
-  psDbDatasetParser: PsDbDatasetParser
+  udsDatasetInputStream: InputStream
 ) {
   
   import DbUnitDatasetParser._
@@ -336,8 +317,10 @@ class MsiDbDatasetParser(
   // --- BEGIN OF CONSTRUCTOR ---
   
   // Load the dataset as records
-  val msiRecordByTableName = DbUnitDatasetParser.parseAndFixDataset( msiDatasetInputStream )
+  private val msiRecordByTableName = DbUnitDatasetParser.parseAndFixDataset( msiDatasetInputStream )
   private val udsRecordByTableName = DbUnitDatasetParser.parseAndFixDataset( udsDatasetInputStream )
+  private val psDatasetParser = new MsiDbPsDatasetParser(msiRecordByTableName)
+  
   val scoreTypeById: LongMap[String] = {
     val ScoringCols = MsiDbScoringColumns
     val scoringRecords = msiRecordByTableName( MsiDbScoringTable.name )
@@ -354,7 +337,7 @@ class MsiDbDatasetParser(
   val proteinMatches = parseProteinMatches()
   val resultSets = parseResultSets()
   
-  def getSpectra( instrumentConfigId: Long ) = parseSpectra( instrumentConfigId: Long )
+  def getSpectra( fragmentationRuleSetId: Long ) = parseSpectra( fragmentationRuleSetId: Long )
   
   // --- END OF CONSTRUCTOR ---
   
@@ -373,16 +356,16 @@ class MsiDbDatasetParser(
       fragRule.getLong("id") -> fragRule.getLong("fragment_series_id")
     }
     
-    val fragSeriesByInstConfigId = new LongMap[ArrayBuffer[StringMap]]()
-    udsRecordByTableName( UdsDbInstrumentConfigFragmentationRuleMapTable.name ).foreach { mapping =>
-      val instConfigId = mapping.getLong("instrument_config_id")
+    val fragSeriesByFragRuleSetId = new LongMap[ArrayBuffer[StringMap]]()
+    udsRecordByTableName( UdsDbFragmentationRuleSetMapTable.name ).foreach { mapping =>
+      val fragRuleSetId = mapping.getLong("fragmentation_rule_set_id")
       val fragRuleId = mapping.getLong("fragmentation_rule_id")
       val fragSeriesIdOpt = fragSeriesIdByFragRuleId.get(fragRuleId)
       
       if (fragSeriesIdOpt.isDefined) {
         val fragSeriesId = fragSeriesIdOpt.get
         val fragSeries = fragSeriesById(fragSeriesId)
-        fragSeriesByInstConfigId.getOrElseUpdate(instConfigId, new ArrayBuffer[StringMap]) += fragSeries
+        fragSeriesByFragRuleSetId.getOrElseUpdate(fragRuleSetId, new ArrayBuffer[StringMap]) += fragSeries
       }
       
     }
@@ -394,6 +377,7 @@ class MsiDbDatasetParser(
       msiRecordByTableName( MsiDbPeaklistSoftwareTable.name ).map( p => p.getLong("id") -> p ).toMap,
       msiRecordByTableName( MsiDbSearchSettingsTable.name ).map( p => p.getLong("id") -> p ).toMap,
       msiRecordByTableName.getOrElse( MsiDbIonSearchTable.name,new ArrayBuffer() ).map( p => p.getLong("id") -> p ).toMap,
+      // FIXME: MSMS_SEARCH SETTINGS SEEMS TO BE NOT STORED FOR SOME RESULT FILES
       msiRecordByTableName.getOrElse( MsiDbMsmsSearchTable.name,new ArrayBuffer() ).map( p => p.getLong("id") -> p ).toMap,
       // FIXME: use the mapping between tables to fetch MsiDbSeqDatabaseTable records
       msiRecordByTableName( MsiDbSeqDatabaseTable.name ).toSeq.groupBy( _.getLong("id") ),
@@ -403,8 +387,9 @@ class MsiDbDatasetParser(
       udsRecordByTableName( UdsDbEnzymeCleavageTable.name ).map( p => p.getLong("id") -> p ).toMap,
       udsRecordByTableName( UdsDbInstrumentConfigTable.name ).map( p => p.getLong("id") -> p ).toMap,
       udsRecordByTableName( UdsDbInstrumentTable.name ).map( p => p.getLong("id") -> p ).toMap,
-      fragSeriesByInstConfigId.toMap,
-      psDbDatasetParser
+      udsRecordByTableName( UdsDbFragmentationRuleSetTable.name ).map( p => p.getLong("id") -> p ).toMap,
+      fragSeriesByFragRuleSetId.toMap,
+      psDatasetParser
     ).head
     
     tmpMsiSearch
@@ -449,7 +434,7 @@ class MsiDbDatasetParser(
       pepMatchRecords,
       msQueries,
       scoreTypeById,
-      psDbDatasetParser
+      psDatasetParser
     )
   }
   
@@ -472,7 +457,7 @@ class MsiDbDatasetParser(
     
   }
   
-  private def parseSpectra( instrumentConfigId: Long ): Array[Spectrum] = {
+  private def parseSpectra( fragmentationRuleSetId: Long ): Array[Spectrum] = {
     
     import org.apache.commons.codec.binary.Base64
     
@@ -485,7 +470,7 @@ class MsiDbDatasetParser(
       newSpectrumRecord ++= spectrumRecord
       newSpectrumRecord(SpecCols.MOZ_LIST) = Base64.decodeBase64( spectrumRecord(SpecCols.MOZ_LIST) )
       newSpectrumRecord(SpecCols.INTENSITY_LIST) = Base64.decodeBase64( spectrumRecord(SpecCols.INTENSITY_LIST) )
-      newSpectrumRecord(SpecCols.INSTRUMENT_CONFIG_ID) = instrumentConfigId
+      newSpectrumRecord(SpecCols.FRAGMENTATION_RULE_SET_ID) = fragmentationRuleSetId
       
       SpectrumBuilder.buildSpectrum( newSpectrumRecord )
     }

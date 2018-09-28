@@ -1,11 +1,8 @@
 package fr.proline.core.om.model.lcms
 
 import java.util.Date
-import scala.collection.mutable.HashMap
-import scala.collection.mutable.ArrayBuffer
-import scala.beans.BeanProperty
+
 import fr.profi.util.misc.InMemoryIdGen
-import fr.proline.core.om.model.msi.Instrument
 
 case class RawFile( 
   
@@ -19,13 +16,11 @@ case class RawFile(
   val mzdbFileDirectory: Option[String] = None,
   val sampleName: Option[String] = None,
   val creationTimestamp: Option[Date] = None,
-  val instrument: Option[Instrument] = None,
-  
+
   // Mutable optional fields
   var properties: Option[RawFileProperties] = None
 ) {
-  require( instrument != null )
-  
+
   def getPath(): Option[String] = directory.map( _ + "/" + name)
   
   def getMzdbFilePath(): Option[String] = {
@@ -83,8 +78,7 @@ case class LcMsScanSequence(
   val ms1ScansCount: Int,
   val ms2ScansCount: Int,
   val scans: Array[LcMsScan],
-  var instrument: Option[Instrument] = None,
-  
+
   // Mutable optional fields
   var properties: Option[LcMsScanSequenceProperties] = None
   

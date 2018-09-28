@@ -19,65 +19,76 @@ import javax.persistence.Table;
 @Table(name = "quant_label")
 public class QuantitationLabel implements Serializable {
 
-    private static final long serialVersionUID = 1L;
+	private static final long serialVersionUID = 1L;
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
-    private long id;
+	@Id
+	@GeneratedValue(strategy = GenerationType.AUTO)
+	private long id;
 
-    private String name;
+	@Column(name = "number")
+	private int number;
 
-    @Column(name = "serialized_properties")
-    private String serializedProperties;
+	private String type;
 
-    private String type;
+	private String name;
 
-    // bi-directional many-to-one association to QuantMethod
-    @ManyToOne
-    @JoinColumn(name = "quant_method_id")
-    private QuantitationMethod method;
+	@Column(name = "serialized_properties")
+	private String serializedProperties;
 
-    public QuantitationLabel() {
-    }
+	// bi-directional many-to-one association to QuantMethod
+	@ManyToOne
+	@JoinColumn(name = "quant_method_id")
+	private QuantitationMethod method;
 
-    public long getId() {
-	return id;
-    }
+	public QuantitationLabel() {
+	}
 
-    public void setId(final long pId) {
-	id = pId;
-    }
+	public long getId() {
+		return id;
+	}
 
-    public String getName() {
-	return this.name;
-    }
+	public void setId(final long pId) {
+		id = pId;
+	}
 
-    public void setName(String name) {
-	this.name = name;
-    }
+	public int getNumber() {
+		return number;
+	}
 
-    public String getSerializedProperties() {
-	return this.serializedProperties;
-    }
+	public void setNumber(int number) {
+		this.number = number;
+	}
 
-    public void setSerializedProperties(String serializedProperties) {
-	this.serializedProperties = serializedProperties;
-    }
+	public String getType() {
+		return this.type;
+	}
 
-    public String getType() {
-	return this.type;
-    }
+	public void setType(String type) {
+		this.type = type;
+	}
 
-    public void setType(String type) {
-	this.type = type;
-    }
+	public String getName() {
+		return this.name;
+	}
 
-    public QuantitationMethod getMethod() {
-	return this.method;
-    }
+	public void setName(String name) {
+		this.name = name;
+	}
 
-    public void setMethod(QuantitationMethod method) {
-	this.method = method;
-    }
+	public String getSerializedProperties() {
+		return this.serializedProperties;
+	}
+
+	public void setSerializedProperties(String serializedProperties) {
+		this.serializedProperties = serializedProperties;
+	}
+
+	public QuantitationMethod getMethod() {
+		return this.method;
+	}
+
+	public void setMethod(QuantitationMethod method) {
+		this.method = method;
+	}
 
 }

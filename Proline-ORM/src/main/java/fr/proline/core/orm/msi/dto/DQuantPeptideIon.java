@@ -10,190 +10,187 @@ public class DQuantPeptideIon {
 	Float duration;
 	Float correctedElutionTime;
 	Float predictedElutionTime;
-	Integer scanNumber;	  
-	
-	Integer peptideMatchesCount;  	  
-	Float ms2MatchingFrequency;	  
-	Float bestPeptideMatchScore;	  
-	Long quantChannelId;	 
-	Long peptideId;	  
+	Integer scanNumber;
+
+	Integer peptideMatchesCount;
+	Float ms2MatchingFrequency;
+	Float bestPeptideMatchScore;
+	Long quantChannelId;
+	Long peptideId;
 	Long peptideInstanceId;
-	  
+
 	List<Long> msQueryIds;
-  	Long lcmsFeatureId;
-	 
-  	Long lcmsMasterFeatureId;
-	 
-  	Long unmodifiedPeptideIonId;	  
-  	Integer selectionLevel;
-  	Boolean isReliable;
-  	
-  	 // Necessary Construtor for JSON parsing !
-  		protected DQuantPeptideIon() {
-  			super();
-  		}
+	Long lcmsFeatureId;
 
-		public Float getRawAbundance() {
-			return rawAbundance;
-		}
+	Long lcmsMasterFeatureId;
 
-		public void setRawAbundance(Float rawAbundance) {
-			this.rawAbundance = rawAbundance;
-		}
+	Long unmodifiedPeptideIonId;
+	Integer selectionLevel;
+	Boolean isReliable;
 
-		public Float getAbundance() {
-			return abundance;
-		}
+	// Necessary Construtor for JSON parsing !
+	protected DQuantPeptideIon() {
+		super();
+	}
 
-		public void setAbundance(Float abundance) {
-			this.abundance = abundance;
-		}
+	public Float getRawAbundance() {
+		return rawAbundance;
+	}
 
-		public Double getMoz() {
-			return moz;
-		}
+	public void setRawAbundance(Float rawAbundance) {
+		this.rawAbundance = rawAbundance;
+	}
 
-		public void setMoz(Double moz) {
-			this.moz = moz;
-		}
+	public Float getAbundance() {
+		return abundance;
+	}
 
-		public Float getElutionTime() {
-			return elutionTime;
-		}
+	public void setAbundance(Float abundance) {
+		this.abundance = abundance;
+	}
 
-		public void setElutionTime(Float elutionTime) {
-			this.elutionTime = elutionTime;
-		}
+	public Double getMoz() {
+		return moz;
+	}
 
-		public Float getDuration() {
-			return duration;
-		}
+	public void setMoz(Double moz) {
+		this.moz = moz;
+	}
 
-		public void setDuration(Float duration) {
-			this.duration = duration;
-		}
+	public Float getElutionTime() {
+		return elutionTime;
+	}
 
-		public Float getCorrectedElutionTime() {
-			return correctedElutionTime;
-		}
+	public void setElutionTime(Float elutionTime) {
+		this.elutionTime = elutionTime;
+	}
 
-		public void setCorrectedElutionTime(Float correctedElutionTime) {
-			this.correctedElutionTime = correctedElutionTime;
-		}
+	public Float getDuration() {
+		return duration;
+	}
 
-		public Integer getScanNumber() {
-			return scanNumber;
-		}
+	public void setDuration(Float duration) {
+		this.duration = duration;
+	}
 
-		public void setScanNumber(Integer scanNumber) {
-			this.scanNumber = scanNumber;
-		}
+	public Float getCorrectedElutionTime() {
+		return correctedElutionTime;
+	}
 
-		public Integer getPeptideMatchesCount() {
-			return peptideMatchesCount;
-		}
+	public void setCorrectedElutionTime(Float correctedElutionTime) {
+		this.correctedElutionTime = correctedElutionTime;
+	}
 
-		public void setPeptideMatchesCount(Integer peptideMatchesCount) {
-			this.peptideMatchesCount = peptideMatchesCount;
-		}
+	public Integer getScanNumber() {
+		return scanNumber;
+	}
 
-		public Float getMs2MatchingFrequency() {
-			return ms2MatchingFrequency;
-		}
+	public void setScanNumber(Integer scanNumber) {
+		this.scanNumber = scanNumber;
+	}
 
-		public void setMs2MatchingFrequency(Float ms2MatchingFrequency) {
-			this.ms2MatchingFrequency = ms2MatchingFrequency;
-		}
+	public Integer getPeptideMatchesCount() {
+		return peptideMatchesCount;
+	}
 
-		public Float getBestPeptideMatchScore() {
-			return bestPeptideMatchScore;
-		}
+	public void setPeptideMatchesCount(Integer peptideMatchesCount) {
+		this.peptideMatchesCount = peptideMatchesCount;
+	}
 
-		public void setBestPeptideMatchScore(Float bestPeptideMatchScore) {
-			this.bestPeptideMatchScore = bestPeptideMatchScore;
-		}
+	public Float getMs2MatchingFrequency() {
+		return ms2MatchingFrequency;
+	}
 
-		public Long getQuantChannelId() {
-			return quantChannelId;
-		}
+	public void setMs2MatchingFrequency(Float ms2MatchingFrequency) {
+		this.ms2MatchingFrequency = ms2MatchingFrequency;
+	}
 
-		public void setQuantChannelId(Long quantChannelId) {
-			this.quantChannelId = quantChannelId;
-		}
+	public Float getBestPeptideMatchScore() {
+		return bestPeptideMatchScore;
+	}
 
-		public Long getPeptideId() {
-			return peptideId;
-		}
+	public void setBestPeptideMatchScore(Float bestPeptideMatchScore) {
+		this.bestPeptideMatchScore = bestPeptideMatchScore;
+	}
 
-		public void setPeptideId(Long peptideId) {
-			this.peptideId = peptideId;
-		}
+	public Long getQuantChannelId() {
+		return quantChannelId;
+	}
 
-		public Long getPeptideInstanceId() {
-			return peptideInstanceId;
-		}
+	public void setQuantChannelId(Long quantChannelId) {
+		this.quantChannelId = quantChannelId;
+	}
 
-		public void setPeptideInstanceId(Long peptideInstanceId) {
-			this.peptideInstanceId = peptideInstanceId;
-		}
+	public Long getPeptideId() {
+		return peptideId;
+	}
 
-		public List<Long> getMsQueryIds() {
-			return msQueryIds;
-		}
+	public void setPeptideId(Long peptideId) {
+		this.peptideId = peptideId;
+	}
 
-		public void setMsQueryIds(List<Long> msQueryIds) {
-			this.msQueryIds = msQueryIds;
-		}
+	public Long getPeptideInstanceId() {
+		return peptideInstanceId;
+	}
 
-		public Long getLcmsFeatureId() {
-			return lcmsFeatureId;
-		}
+	public void setPeptideInstanceId(Long peptideInstanceId) {
+		this.peptideInstanceId = peptideInstanceId;
+	}
 
-		public void setLcmsFeatureId(Long lcmsFeatureId) {
-			this.lcmsFeatureId = lcmsFeatureId;
-		}
+	public List<Long> getMsQueryIds() {
+		return msQueryIds;
+	}
 
-		public Long getLcmsMasterFeatureId() {
-			return lcmsMasterFeatureId;
-		}
+	public void setMsQueryIds(List<Long> msQueryIds) {
+		this.msQueryIds = msQueryIds;
+	}
 
-		public void setLcmsMasterFeatureId(Long lcmsMasterFeatureId) {
-			this.lcmsMasterFeatureId = lcmsMasterFeatureId;
-		}
+	public Long getLcmsFeatureId() {
+		return lcmsFeatureId;
+	}
 
-		public Long getUnmodifiedPeptideIonId() {
-			return unmodifiedPeptideIonId;
-		}
+	public void setLcmsFeatureId(Long lcmsFeatureId) {
+		this.lcmsFeatureId = lcmsFeatureId;
+	}
 
-		public void setUnmodifiedPeptideIonId(Long unmodifiedPeptideIonId) {
-			this.unmodifiedPeptideIonId = unmodifiedPeptideIonId;
-		}
+	public Long getLcmsMasterFeatureId() {
+		return lcmsMasterFeatureId;
+	}
 
-		public Integer getSelectionLevel() {
-			return selectionLevel;
-		}
+	public void setLcmsMasterFeatureId(Long lcmsMasterFeatureId) {
+		this.lcmsMasterFeatureId = lcmsMasterFeatureId;
+	}
 
-		public void setSelectionLevel(Integer selectionLevel) {
-			this.selectionLevel = selectionLevel;
-		}
+	public Long getUnmodifiedPeptideIonId() {
+		return unmodifiedPeptideIonId;
+	}
 
-		public Float getPredictedElutionTime() {
-			return predictedElutionTime;
-		}
+	public void setUnmodifiedPeptideIonId(Long unmodifiedPeptideIonId) {
+		this.unmodifiedPeptideIonId = unmodifiedPeptideIonId;
+	}
 
-		public void setPredictedElutionTime(Float predictedElutionTime) {
-			this.predictedElutionTime = predictedElutionTime;
-		}
+	public Integer getSelectionLevel() {
+		return selectionLevel;
+	}
 
-		public Boolean getIsReliable() {
-			return isReliable;
-		}
+	public void setSelectionLevel(Integer selectionLevel) {
+		this.selectionLevel = selectionLevel;
+	}
 
-		public void setIsReliable(Boolean isReliable) {
-			this.isReliable = isReliable;
-		}
-  		
-  		
+	public Float getPredictedElutionTime() {
+		return predictedElutionTime;
+	}
 
-  
+	public void setPredictedElutionTime(Float predictedElutionTime) {
+		this.predictedElutionTime = predictedElutionTime;
+	}
+
+	public Boolean getIsReliable() {
+		return isReliable;
+	}
+
+	public void setIsReliable(Boolean isReliable) {
+		this.isReliable = isReliable;
+	}
+
 }

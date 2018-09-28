@@ -1,25 +1,21 @@
 package fr.proline.core.om.provider.msi.impl
 
-import scala.collection.mutable.ArrayBuffer
-import scala.collection.mutable.HashSet
-import fr.profi.jdbc.easy.EasyDBC
 import fr.profi.jdbc.ResultSetRow
+import fr.profi.jdbc.easy.EasyDBC
 import fr.profi.util.primitives._
-import fr.profi.util.serialization.ProfiJson
-import fr.proline.core.om.builder.ProteinMatchBuilder
+import fr.proline.context.MsiDbConnectionContext
 import fr.proline.core.dal.DoJDBCReturningWork
-import fr.proline.core.dal.tables.msi._
-import fr.proline.core.dal.tables.SelectQueryBuilder._
-import fr.proline.core.dal.tables.{SelectQueryBuilder1,SelectQueryBuilder2}
 import fr.proline.core.dal.helper.MsiDbHelper
-import fr.proline.core.om.model.msi.{ ProteinMatch, SequenceMatch,ProteinMatchProperties, SequenceMatchProperties }
-import fr.proline.core.om.provider.msi.IProteinMatchProvider
-import fr.proline.context.DatabaseConnectionContext
-import fr.proline.repository.ProlineDatabaseType
+import fr.proline.core.dal.tables.SelectQueryBuilder._
+import fr.proline.core.dal.tables.msi._
+import fr.proline.core.dal.tables.SelectQueryBuilder1
+import fr.proline.core.dal.tables.SelectQueryBuilder2
+import fr.proline.core.om.builder.ProteinMatchBuilder
+import fr.proline.core.om.model.msi.ProteinMatch
 
-class SQLProteinMatchProvider(val msiDbCtx: DatabaseConnectionContext) { //extends IProteinMatchProvider
-  
-  require( msiDbCtx.getProlineDatabaseType == ProlineDatabaseType.MSI, "MsiDb connection required")
+import scala.collection.mutable.ArrayBuffer
+
+class SQLProteinMatchProvider(val msiDbCtx: MsiDbConnectionContext) { //extends IProteinMatchProvider
   
   // Retrieve score type map
   val scoreTypeById = new MsiDbHelper(msiDbCtx).getScoringTypeById

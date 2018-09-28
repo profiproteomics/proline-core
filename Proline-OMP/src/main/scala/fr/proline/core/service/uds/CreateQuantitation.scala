@@ -45,7 +45,7 @@ class CreateQuantitation(
 
   private var _hasInitiatedExecContext: Boolean = false
   private var _udsQuantitation: UdsDataset = null
-  def getUdsQuantitation() = _udsQuantitation
+  def getUdsQuantitation(): UdsDataset = _udsQuantitation
   
   // Secondary constructor
   def this(

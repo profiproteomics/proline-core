@@ -1,10 +1,10 @@
 package fr.proline.core.orm.uds.dto;
 
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+import fr.proline.core.orm.MergeMode;
 import fr.proline.core.orm.lcms.MapAlignment;
 import fr.proline.core.orm.lcms.MapAlignmentPK;
 import fr.proline.core.orm.lcms.MapTime;
@@ -24,172 +24,205 @@ import fr.proline.core.orm.util.JsonSerializer;
  * @author JM235353
  */
 public class DDataset {
-    private long m_id;
-    private Project m_project; 
-    private String m_name;
-    private String m_description;
-    private DatasetType m_type;
-   
-    private int m_childrenCount;
-    private Long m_resultSetId;
-    private Long m_resultSummaryId;
-    private int m_number;
-    private Aggregation m_aggregation;
-    private QuantitationMethod m_quantitationMethod;
-    
-    private ResultSummary m_resultSummary = null;
-    private ResultSet m_resultSet = null;
+	private long m_id;
+	private Project m_project;
+	private String m_name;
+	private String m_description;
+	private DatasetType m_type;
 
-    private MergeInformation m_mergeInformation = MergeInformation.MERGE_UNKNOW;
-    
-    private List<DMasterQuantitationChannel> m_masterQuantitationChannels;
-    private List<MapAlignment> m_mapAlignments;
-    private List<MapAlignment> m_mapReversedAlignments;
-    private List<ProcessedMap> m_maps;
-    private Long m_alnReferenceMapId;
-    
-    private ObjectTree m_postQuantProcessingConfig;
-    private ObjectTree m_quantProcessingConfig;
-    
-    // postQuantProcessingConfig as a map
- 	private Map<String, Object> postQuantProcessingConfigMap;
- 	// quantProcessingConfig as a map
-  	private Map<String, Object> quantProcessingConfigMap;
-  	
-  	// Experimental design for quanti
-  	private GroupSetup groupSetup;
-    
-    public enum MergeInformation {
-    	MERGE_UNKNOW,
-    	NO_MERGE,
-    	MERGE_SEARCH_RESULT,
-    	MERGE_IDENTIFICATION_SUMMARY
-    }
-    
-    public DDataset(long id, Project project, String name, DatasetType type, int childrenCount, Long resultSetId, Long resultSummaryId, int number) {
-        m_id = id;
-        m_project = project;
-        m_name = name;
-        m_type = type;
-        m_childrenCount = childrenCount;
-        m_resultSetId = resultSetId;
-        m_resultSummaryId = resultSummaryId;
-        m_number = number;
-        m_aggregation = null;
-        m_quantitationMethod = null;
-    }
-    
-    public long getId() {
-        return m_id;
-    }
-    
-    public Project getProject() {
-        return m_project;
-    }
-    
-    public DatasetType getType() {
-        return m_type;
-    }
-    
-    public String getName() {
-        return m_name;
-    }
-    
-    public void setName(String name) {
-        m_name = name;
-    }
-    
-    public String getDescription() {
-    	return m_description;
-    }
-    
-    public void setDescription(String description) {
-    	this.m_description = description;
-    }
-    
-    public int getChildrenCount() {
-        return m_childrenCount;
-    }
-    
-    public void setChildrenCount(int childrenCount) {
-        m_childrenCount = childrenCount;
-    }
+	private int m_childrenCount;
+	private Long m_resultSetId;
+	private Long m_resultSummaryId;
+	private int m_number;
+	private Aggregation m_aggregation;
+	private QuantitationMethod m_quantitationMethod;
 
-    public Long getResultSetId() {
-        return m_resultSetId;
-    }
-    
-    public void setResultSetId(Long resultSetId) {
-        m_resultSetId = resultSetId;
-    }
+	private ResultSummary m_resultSummary = null;
+	private ResultSet m_resultSet = null;
 
-    public Long getResultSummaryId() {
-        return m_resultSummaryId;
-    }
-    
-    public void setResultSummaryId(Long resultSummaryId) {
-        m_resultSummaryId = resultSummaryId;
-    }
-    
-    
-    public int getNumber() {
-        return m_number;
-    }
-    
-    public Aggregation getAggregation() {
-        return m_aggregation;
-    }
-    
-    public void setAggregation(Aggregation aggregation) {
-        m_aggregation = aggregation;
-    }
-    
-    public QuantitationMethod getQuantitationMethod() {
-        return m_quantitationMethod;
-    }
-    
-    public void setQuantitationMethod(QuantitationMethod quantitationMethod) {
-        m_quantitationMethod = quantitationMethod;
-    }
-    
-    
-    public ResultSummary getResultSummary() {
-        return m_resultSummary;
-    }
+	private MergeInformation m_mergeInformation = MergeInformation.MERGE_UNKNOW;
 
-    public void setResultSummary(ResultSummary resultSummary) {
-        this.m_resultSummary = resultSummary;
-    }
+	private List<DMasterQuantitationChannel> m_masterQuantitationChannels;
+	private List<MapAlignment> m_mapAlignments;
+	private List<MapAlignment> m_mapReversedAlignments;
+	private List<ProcessedMap> m_maps;
+	private Long m_alnReferenceMapId;
 
-    public ResultSet getResultSet() {
-        return m_resultSet;
-    }
+	private ObjectTree m_postQuantProcessingConfig;
+	private ObjectTree m_quantProcessingConfig;
 
-    public void setResultSet(ResultSet resultSet) {
-        this.m_resultSet = resultSet;
-    }
-    
-    public MergeInformation getMergeInformation() {
-    	return m_mergeInformation;
-    }
-    public void setMergeInformation(MergeInformation mergeInformation) {
-    	m_mergeInformation = mergeInformation;
-    }
-    
-    public List<DMasterQuantitationChannel> getMasterQuantitationChannels() {
-    	return m_masterQuantitationChannels;
-    }
+	// postQuantProcessingConfig as a map
+	private Map<String, Object> postQuantProcessingConfigMap;
+	// quantProcessingConfig as a map
+	private Map<String, Object> quantProcessingConfigMap;
 
-    public void setMasterQuantitationChannels(List<DMasterQuantitationChannel> masterQuantitationChannels) {
-    	this.m_masterQuantitationChannels = masterQuantitationChannels;
-    }
+	// Experimental design for quanti
+	private GroupSetup groupSetup;
+
+	public enum MergeInformation {
+		MERGE_UNKNOW,
+		NO_MERGE,
+		MERGE_SEARCH_RESULT_UNION,
+		MERGE_IDENTIFICATION_SUMMARY_UNION,
+		MERGE_SEARCH_RESULT_AGG,
+		MERGE_IDENTIFICATION_SUMMARY_AGG
+	}
+
+	public DDataset(long id, Project project, String name, DatasetType type, int childrenCount, Long resultSetId, Long resultSummaryId, int number) {
+		m_id = id;
+		m_project = project;
+		m_name = name;
+		m_type = type;
+		m_childrenCount = childrenCount;
+		m_resultSetId = resultSetId;
+		m_resultSummaryId = resultSummaryId;
+		m_number = number;
+		m_aggregation = null;
+		m_quantitationMethod = null;
+	}
+
+	public long getId() {
+		return m_id;
+	}
+
+	public Project getProject() {
+		return m_project;
+	}
+
+	public DatasetType getType() {
+		return m_type;
+	}
+
+	public String getName() {
+		return m_name;
+	}
+
+	public void setName(String name) {
+		m_name = name;
+	}
+
+	public String getDescription() {
+		return m_description;
+	}
+
+	public void setDescription(String description) {
+		this.m_description = description;
+	}
+
+	public int getChildrenCount() {
+		return m_childrenCount;
+	}
+
+	public void setChildrenCount(int childrenCount) {
+		m_childrenCount = childrenCount;
+	}
+
+	public Long getResultSetId() {
+		return m_resultSetId;
+	}
+
+	public void setResultSetId(Long resultSetId) {
+		m_resultSetId = resultSetId;
+	}
+
+	public Long getResultSummaryId() {
+		return m_resultSummaryId;
+	}
+
+	public void setResultSummaryId(Long resultSummaryId) {
+		m_resultSummaryId = resultSummaryId;
+	}
+
+	public int getNumber() {
+		return m_number;
+	}
+
+	public Aggregation getAggregation() {
+		return m_aggregation;
+	}
+
+	public void setAggregation(Aggregation aggregation) {
+		m_aggregation = aggregation;
+	}
+
+	public QuantitationMethod getQuantitationMethod() {
+		return m_quantitationMethod;
+	}
+
+	public void setQuantitationMethod(QuantitationMethod quantitationMethod) {
+		m_quantitationMethod = quantitationMethod;
+	}
+
+	public ResultSummary getResultSummary() {
+		return m_resultSummary;
+	}
+
+	public void setResultSummary(ResultSummary resultSummary) {
+		this.m_resultSummary = resultSummary;
+	}
+
+	public ResultSet getResultSet() {
+		return m_resultSet;
+	}
+
+	public void setResultSet(ResultSet resultSet) {
+		this.m_resultSet = resultSet;
+	}
+
+	public MergeInformation getMergeInformation() {
+		if(m_mergeInformation == null || m_mergeInformation.equals(MergeInformation.MERGE_UNKNOW)) {
+			m_mergeInformation = MergeInformation.MERGE_UNKNOW;
+
+			//Not defined or unknown, try to getInfo
+			try {
+
+				if(m_resultSet !=null && (m_resultSet.getMergeMode().equals(MergeMode.UNION) ||m_resultSet.getMergeMode().equals(MergeMode.AGGREGATION))) {
+					switch (m_resultSet.getMergeMode()) {
+						case UNION:
+							m_mergeInformation = MergeInformation.MERGE_SEARCH_RESULT_UNION;
+							break;
+						case AGGREGATION:
+							m_mergeInformation = MergeInformation.MERGE_SEARCH_RESULT_AGG;
+							break;
+					}
+				} else if(m_resultSummary != null  && (m_resultSummary.getMergeMode().equals(MergeMode.UNION) || m_resultSummary.getMergeMode().equals(MergeMode.AGGREGATION))) {
+					switch (m_resultSummary.getMergeMode()) {
+						case UNION:
+							m_mergeInformation = MergeInformation.MERGE_IDENTIFICATION_SUMMARY_UNION;
+							break;
+						case AGGREGATION:
+							m_mergeInformation = MergeInformation.MERGE_IDENTIFICATION_SUMMARY_AGG;
+							break;
+					}
+				} else if(m_resultSet !=null && m_resultSummary != null && m_resultSet.getMergeMode().equals(MergeMode.NO_MERGE) && m_resultSummary.getMergeMode().equals(MergeMode.NO_MERGE)){
+					m_mergeInformation =  MergeInformation.NO_MERGE;
+				}
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+		}
+
+		return m_mergeInformation;
+	}
+
+	public void setMergeInformation(MergeInformation mergeInformation) {
+		m_mergeInformation = mergeInformation;
+	}
+
+	public List<DMasterQuantitationChannel> getMasterQuantitationChannels() {
+		return m_masterQuantitationChannels;
+	}
+
+	public void setMasterQuantitationChannels(List<DMasterQuantitationChannel> masterQuantitationChannels) {
+		this.m_masterQuantitationChannels = masterQuantitationChannels;
+	}
 
 	public ObjectTree getPostQuantProcessingConfig() {
 		return m_postQuantProcessingConfig;
 	}
 
 	public void setPostQuantProcessingConfig(
-			ObjectTree postQuantProcessingConfig) {
+		ObjectTree postQuantProcessingConfig) {
 		this.m_postQuantProcessingConfig = postQuantProcessingConfig;
 	}
 
@@ -200,24 +233,23 @@ public class DDataset {
 	public void setQuantProcessingConfig(ObjectTree quantProcessingConfig) {
 		this.m_quantProcessingConfig = quantProcessingConfig;
 	}
-	
-	
+
 	// deserialize because the post quant processing config could have changed
 	@SuppressWarnings("unchecked")
-    public Map<String, Object> getPostQuantProcessingConfigAsMap() throws Exception {
-		if ( (m_postQuantProcessingConfig != null)) {
+	public Map<String, Object> getPostQuantProcessingConfigAsMap() throws Exception {
+		if ((m_postQuantProcessingConfig != null)) {
 			postQuantProcessingConfigMap = JsonSerializer.getMapper().readValue(getPostQuantProcessingConfig().getClobData(), Map.class);
-    	}
-    	return postQuantProcessingConfigMap;
-    }
-	
+		}
+		return postQuantProcessingConfigMap;
+	}
+
 	@SuppressWarnings("unchecked")
-    public Map<String, Object> getQuantProcessingConfigAsMap() throws Exception {
+	public Map<String, Object> getQuantProcessingConfigAsMap() throws Exception {
 		if ((quantProcessingConfigMap == null) && (m_quantProcessingConfig != null)) {
 			quantProcessingConfigMap = JsonSerializer.getMapper().readValue(getQuantProcessingConfig().getClobData(), Map.class);
-    	}
-    	return quantProcessingConfigMap;
-    }
+		}
+		return quantProcessingConfigMap;
+	}
 
 	public GroupSetup getGroupSetup() {
 		return groupSetup;
@@ -226,9 +258,8 @@ public class DDataset {
 	public void setGroupSetup(GroupSetup groupSetup) {
 		this.groupSetup = groupSetup;
 	}
-	
 
-    public Long getAlnReferenceMapId() {
+	public Long getAlnReferenceMapId() {
 		return m_alnReferenceMapId;
 	}
 
@@ -237,32 +268,32 @@ public class DDataset {
 	}
 
 	public List<MapAlignment> getMapAlignments() {
-        return m_mapAlignments;
-    }
+		return m_mapAlignments;
+	}
 
-    public void setMapAlignments(List<MapAlignment> allMapAlignments) {
-        this.m_mapAlignments = allMapAlignments;
-        updateReversedAlignments();
-    }
+	public void setMapAlignments(List<MapAlignment> allMapAlignments) {
+		this.m_mapAlignments = allMapAlignments;
+		updateReversedAlignments();
+	}
 
-    public void clearMapAlignments() {
-    	this.m_mapAlignments = null;
-    	this.m_mapReversedAlignments = null;
-    	this.m_alnReferenceMapId = -1L;
-    }
-    
-    public List<ProcessedMap> getMaps() {
-        return m_maps;
-    }
+	public void clearMapAlignments() {
+		this.m_mapAlignments = null;
+		this.m_mapReversedAlignments = null;
+		this.m_alnReferenceMapId = -1L;
+	}
 
-    public void setMaps(List<ProcessedMap> allMaps) {
-        this.m_maps = allMaps;
-    }
-    
+	public List<ProcessedMap> getMaps() {
+		return m_maps;
+	}
+
+	public void setMaps(List<ProcessedMap> allMaps) {
+		this.m_maps = allMaps;
+	}
+
 	private void updateReversedAlignments() {
 		// add the reversed alignments
 		m_mapReversedAlignments = new ArrayList<>();
-//		m_mapReversedAlignments.addAll(m_mapAlignments);
+		//		m_mapReversedAlignments.addAll(m_mapAlignments);
 		for (MapAlignment ma : m_mapAlignments) {
 
 			MapAlignment reversedMap = new MapAlignment();
@@ -300,38 +331,37 @@ public class DDataset {
 		}
 	}
 
-    public List<MapAlignment> getMapReversedAlignments() {
-        return m_mapReversedAlignments;
-    }
-    
-    public List<MapAlignment> getMapAlignmentsFromMap(Long mapId) {
-    	List<MapAlignment> list = new ArrayList<>();
-    	for (MapAlignment ma : m_mapAlignments) {
-    		if (ma.getSourceMap().getId().equals(mapId)) {
-    			list.add(ma);
-    		}
-    	}
+	public List<MapAlignment> getMapReversedAlignments() {
+		return m_mapReversedAlignments;
+	}
 
-    	for (MapAlignment ma : m_mapReversedAlignments) {
-    		if (ma.getSourceMap().getId().equals(mapId)) {
-    			list.add(ma);
-    		}    		
-    	}
-    	  	
-        return list;
-    }
-    
-    
+	public List<MapAlignment> getMapAlignmentsFromMap(Long mapId) {
+		List<MapAlignment> list = new ArrayList<>();
+		for (MapAlignment ma : m_mapAlignments) {
+			if (ma.getSourceMap().getId().equals(mapId)) {
+				list.add(ma);
+			}
+		}
+
+		for (MapAlignment ma : m_mapReversedAlignments) {
+			if (ma.getSourceMap().getId().equals(mapId)) {
+				list.add(ma);
+			}
+		}
+
+		return list;
+	}
+
 	/**
 	 * return true if the dataset is a XIC quantitation (type feature_intensity)
 	 * @return
 	 */
-	public boolean isQuantiXIC(){
-        return ( this.m_quantitationMethod != null && m_quantitationMethod.getAbundanceUnit().compareTo("feature_intensity") == 0 ) ;
+	public boolean isQuantiXIC() {
+		return (this.m_quantitationMethod != null && m_quantitationMethod.getAbundanceUnit().compareTo("feature_intensity") == 0);
 	}
-	
-	public boolean isQuantiSC(){
-        return ( m_quantitationMethod != null && m_quantitationMethod.getAbundanceUnit().compareTo("spectral_counts") == 0 ) ;
+
+	public boolean isQuantiSC() {
+		return (m_quantitationMethod != null && m_quantitationMethod.getAbundanceUnit().compareTo("spectral_counts") == 0);
 	}
-	
+
 }

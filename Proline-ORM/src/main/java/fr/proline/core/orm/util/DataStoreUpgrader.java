@@ -21,7 +21,7 @@ public final class DataStoreUpgrader {
 	}
 
 	/**
-	 * Upgrades all Proline Databases (UDS, PDI, PS and all projects MSI and LCMS Dbs).
+	 * Upgrades all Proline Databases (UDS and all projects MSI and LCMS Dbs).
 	 * 
 	 * @param connectorFactory
 	 *            Must be a valid initialized DataStoreConnectorFactory instance.
@@ -52,39 +52,6 @@ public final class DataStoreUpgrader {
 
 		}
 
-		/* Upgrade PDI Db */
-		final IDatabaseConnector pdiDbConnector = connectorFactory.getPdiDbConnector();
-		if (pdiDbConnector != null) {
-			final int pdiDbMigrationCount = DatabaseUpgrader.upgradeDatabase(pdiDbConnector, repairChecksum);
-
-			if (pdiDbMigrationCount < 0) {
-				result = false;
-				LOG.warn("Unable to upgrade PDI Db");
-			} else {
-				LOG.info("PDI Db :" + pdiDbMigrationCount + " migration done.");
-			}
-			
-			pdiDbConnector.close();
-		}
-
-		/* Upgrade PS Db */
-		final IDatabaseConnector psDbConnector = connectorFactory.getPsDbConnector();
-
-		if (psDbConnector == null) {
-			LOG.warn("DataStoreConnectorFactory has no valid PS Db connector");
-		} else {
-			final int psDbMigrationCount = DatabaseUpgrader.upgradeDatabase(psDbConnector, repairChecksum);
-
-			if (psDbMigrationCount < 0) {
-				result = false;
-				LOG.warn("Unable to upgrade PS Db");
-			} else {
-				LOG.info("PS Db :" + psDbMigrationCount + " migration done.");
-			}
-			
-			psDbConnector.close();
-		}
-
 		/* Upgrade all Projects (MSI and LCMS) Dbs */
 		if (udsDbConnector != null) {
 			final List<Long> projectIds = retrieveProjectIds(udsDbConnector);
@@ -107,7 +74,7 @@ public final class DataStoreUpgrader {
 						} else {
 							LOG.info("MSI Db for project " + projectId + " : " + msiDbMigrationCount + " migration done.");
 						}
-						
+
 						msiDbConnector.close();
 					}
 
@@ -124,12 +91,12 @@ public final class DataStoreUpgrader {
 						} else {
 							LOG.info("LCMS Db for project " + projectId + " : " + lcMsDbMigrationCount + " migration done.");
 						}
-						
+
 						lcMsDbConnector.close();
 					}
 				}
 			}
-			
+
 			// Close UDSdb connecto at the end
 			udsDbConnector.close();
 		}

@@ -64,17 +64,14 @@ public class DecoratedExecutionContext implements IExecutionContext {
 
 		return result;
 	}
+	
+	@Override
+	public long getProjectId() {
+		return m_wrappedExecutionContext.getProjectId();
+	}
 
 	public UdsDbConnectionContext getUDSDbConnectionContext() {
 		return m_wrappedExecutionContext.getUDSDbConnectionContext();
-	}
-
-	public DatabaseConnectionContext getPDIDbConnectionContext() {
-		return m_wrappedExecutionContext.getPDIDbConnectionContext();
-	}
-
-	public DatabaseConnectionContext getPSDbConnectionContext() {
-		return m_wrappedExecutionContext.getPSDbConnectionContext();
 	}
 
 	public MsiDbConnectionContext getMSIDbConnectionContext() {

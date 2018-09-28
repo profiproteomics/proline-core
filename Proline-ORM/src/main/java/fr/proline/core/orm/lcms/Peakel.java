@@ -9,51 +9,50 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
-
 /**
  * The persistent class for the peakel database table.
  * 
  */
 @Entity
-@NamedQuery(name="Peakel.findAll", query="SELECT p FROM Peakel p")
+@NamedQuery(name = "Peakel.findAll", query = "SELECT p FROM Peakel p")
 public class Peakel implements Serializable {
 	private static final Logger LOG = LoggerFactory.getLogger(Peakel.class);
-	
+
 	private static final long serialVersionUID = 1L;
 
 	@Id
 	private Long id;
 
-	@Column(name="apex_intensity")
+	@Column(name = "apex_intensity")
 	private float apexIntensity;
 
 	private float area;
 
 	private float duration;
 
-	@Column(name="elution_time")
+	@Column(name = "elution_time")
 	private float elutionTime;
 
-	@Column(name="feature_count")
+	@Column(name = "feature_count")
 	private Integer featureCount;
 
 	private float fwhm;
 
-	@Column(name="is_overlapping")
+	@Column(name = "is_overlapping")
 	private Boolean isOverlapping;
 
 	private double moz;
 
-	@Column(name="peak_count")
+	@Column(name = "peak_count")
 	private Integer peakCount;
 
 	private byte[] peaks;
 
-	@Column(name="serialized_properties")
+	@Column(name = "serialized_properties")
 	private String serializedProperties;
 
 	//bi-directional many-to-one association to FeaturePeakelItem
-	@OneToMany(mappedBy="peakel")
+	@OneToMany(mappedBy = "peakel")
 	private List<FeaturePeakelItem> featurePeakelItems;
 
 	//bi-directional many-to-one association to Map
@@ -63,22 +62,22 @@ public class Peakel implements Serializable {
 
 	//uni-directional many-to-one association to Scan
 	@ManyToOne
-	@JoinColumn(name="apex_scan_id")
+	@JoinColumn(name = "apex_scan_id")
 	private Scan apexScan;
 
 	//uni-directional many-to-one association to Scan
 	@ManyToOne
-	@JoinColumn(name="first_scan_id")
+	@JoinColumn(name = "first_scan_id")
 	private Scan firstScan;
 
 	//uni-directional many-to-one association to Scan
 	@ManyToOne
-	@JoinColumn(name="last_scan_id")
+	@JoinColumn(name = "last_scan_id")
 	private Scan lastScan;
-	
+
 	@Transient
 	private List<Peak> peakList;
-	
+
 	@Transient
 	private Integer isotopeIndex;
 
@@ -234,7 +233,7 @@ public class Peakel implements Serializable {
 	public void setLastScan(Scan lastScan) {
 		this.lastScan = lastScan;
 	}
-	
+
 	public void setPeakList(List<Peak> peakList) {
 		this.peakList = peakList;
 	}
@@ -245,18 +244,17 @@ public class Peakel implements Serializable {
 				PeakelDataMatrix peakelDataMatrix = PeakelDataMatrix.getPeaks(getPeaks());
 				this.peakList = new ArrayList<Peak>();
 				int nbP = peakelDataMatrix.getNbPeaks();
-				for (int p=0; p<nbP; p++){
+				for (int p = 0; p < nbP; p++) {
 					Peak peak = peakelDataMatrix.getPeak(p);
 					this.peakList.add(peak);
 				}
 			} catch (Exception e) {
-				LOG.warn("Error Parsing PeakList ",e);
+				LOG.warn("Error Parsing PeakList ", e);
 				this.peakList = null;
-			} 
+			}
 		}
 		return this.peakList;
 	}
-	
 
 	public Integer getIsotopeIndex() {
 		return isotopeIndex;
@@ -265,6 +263,5 @@ public class Peakel implements Serializable {
 	public void setIsotopeIndex(Integer isotopeIndex) {
 		this.isotopeIndex = isotopeIndex;
 	}
-
 
 }

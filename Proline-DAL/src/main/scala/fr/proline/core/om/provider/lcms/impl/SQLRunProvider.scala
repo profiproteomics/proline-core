@@ -1,15 +1,16 @@
 package fr.proline.core.om.provider.lcms.impl
 
-import fr.profi.util.collection._
 import fr.profi.util.primitives._
+import fr.profi.util.collection._
 import fr.profi.util.serialization.ProfiJson
 import fr.proline.context.UdsDbConnectionContext
 import fr.proline.core.dal.DoJDBCReturningWork
-import fr.proline.core.dal.tables.{SelectQueryBuilder1, SelectQueryBuilder2}
 import fr.proline.core.dal.tables.SelectQueryBuilder._
-import fr.proline.core.dal.tables.uds.{UdsDbInstrumentTable, UdsDbRawFileTable, UdsDbRunTable}
+import fr.proline.core.dal.tables.uds.UdsDbInstrumentTable
+import fr.proline.core.dal.tables.uds.UdsDbRawFileTable
+import fr.proline.core.dal.tables.uds.UdsDbRunTable
+import fr.proline.core.dal.tables.SelectQueryBuilder1
 import fr.proline.core.om.model.lcms._
-import fr.proline.core.om.model.msi.Instrument
 import fr.proline.core.om.provider.IProlinePathConverter
 import fr.proline.core.om.provider.ProlineManagedDirectoryType
 import fr.proline.core.om.provider.lcms.IRunProvider
@@ -29,15 +30,14 @@ class SQLRawFileProvider(val udsDbCtx: UdsDbConnectionContext, val pathConverter
     
     DoJDBCReturningWork.withEzDBC(udsDbCtx) { ezDBC =>
       
-      val rawFileQuery = new SelectQueryBuilder2(UdsDbRawFileTable, UdsDbInstrumentTable).mkSelectQuery( (t1,c1, t2, c2) =>
-        List(t1.*, t2.*) -> 
-          " WHERE "~ t1.IDENTIFIER ~" IN "~ rawFileIdentifiers.mkString("('","','","')") ~
-          " AND "~ t1.INSTRUMENT_ID ~ "="~ t2.ID
+      val rawFileQuery = new SelectQueryBuilder1(UdsDbRawFileTable).mkSelectQuery( (t1,c1) =>
+        List(t1.*) -> 
+          " WHERE "~ t1.IDENTIFIER ~" IN "~ rawFileIdentifiers.mkString("('","','","')")
       )
       
       ezDBC.select( rawFileQuery ) { rawFileRecord =>
         
-        val rawFilePropsStrOpt = rawFileRecord.getStringOption(RawFileCols.SERIALIZED_PROPERTIES.toAliasedString)
+        val rawFilePropsStrOpt = rawFileRecord.getStringOption(RawFileCols.SERIALIZED_PROPERTIES)
         val rawFileProperties = rawFilePropsStrOpt.map( ProfiJson.deserialize[RawFileProperties](_) )
         
         val directory = rawFileRecord.getStringOption(RawFileCols.RAW_FILE_DIRECTORY).map { str =>
@@ -49,7 +49,6 @@ class SQLRawFileProvider(val udsDbCtx: UdsDbConnectionContext, val pathConverter
           else pathConverter.get.prolinePathToAbsolutePath(str, ProlineManagedDirectoryType.MZDB_FILES)
         }
         
-        // TODO: cache already loaded instruments
         new RawFile(
           identifier = rawFileRecord.getString(RawFileCols.IDENTIFIER),
           name = rawFileRecord.getString(RawFileCols.RAW_FILE_NAME),
@@ -58,13 +57,6 @@ class SQLRawFileProvider(val udsDbCtx: UdsDbConnectionContext, val pathConverter
           mzdbFileDirectory = mzdbFileDirectory,
           sampleName = rawFileRecord.getStringOption(RawFileCols.SAMPLE_NAME),
           creationTimestamp = rawFileRecord.getDateOption(RawFileCols.CREATION_TIMESTAMP),
-          instrument = Some(
-            new Instrument(
-              rawFileRecord.getInt(InstCols.ID),
-              rawFileRecord.getString(InstCols.NAME),
-              rawFileRecord.getString(InstCols.SOURCE)
-            )
-          ),
           properties = rawFileProperties
         )
         
@@ -93,15 +85,15 @@ class SQLRunProvider(
     // Remove duplicated run ids
     val distinctRunIds = runIds.distinct
     
-    val scanSeqByIdAsOpt = if( loadScanSequence == false ) None
+    val scanSeqByIdAsOpt = if( !loadScanSequence ) None
     else {
       require( scanSeqProvider.isDefined, "a scan sequence provider must be defined")
       val scanSeqs = scanSeqProvider.get.getScanSequences(runIds)
       Some( Map() ++ scanSeqs.map( scanSeq => scanSeq.runId -> scanSeq ) )
     }
-    
+
+    var runIdx = 0
     val runs = new Array[LcMsRun](distinctRunIds.length)
-    val runIdxById = distinctRunIds.zipWithIndex.toLongMap
 
     // Load runs
     DoJDBCReturningWork.withEzDBC(udsDbCtx) { ezDBC =>
@@ -121,12 +113,10 @@ class SQLRunProvider(
         val runScanSeq = scanSeqByIdAsOpt.map( _(runRecord.getLong(RunCols.ID)) )
         
         // Build the run
-        val run = this.buildRun(runRecord, rawFile, runScanSeq)
-        runs(runIdxById(run.id)) = run
+        runs(runIdx) = this.buildRun(runRecord, rawFile, runScanSeq)
+        runIdx += 1
       }
-      
       runs
-      
     }
     
   }

@@ -2,13 +2,12 @@ package fr.proline.core.orm.lcms.dto;
 
 import fr.proline.core.orm.lcms.Feature;
 
-public class DFeature extends Feature{
+public class DFeature extends Feature {
 
 	private static final long serialVersionUID = 1L;
 	private double predictedElutionTime;
 	private boolean isBestChild;
-	
-	
+
 	public DFeature(Feature f) {
 		super();
 		setId(f.getId());
@@ -35,8 +34,7 @@ public class DFeature extends Feature{
 		setFeatureClusterItems(f.getFeatureClusterItems());
 		setFeatureMs2Events(f.getFeatureMs2Events());
 		setFeaturePeakelItems(f.getFeaturePeakelItems());
-		
-		
+
 	}
 
 	public double getPredictedElutionTime() {

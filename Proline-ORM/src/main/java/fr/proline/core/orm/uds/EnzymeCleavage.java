@@ -19,65 +19,65 @@ import javax.persistence.Table;
 @Table(name = "enzyme_cleavage")
 public class EnzymeCleavage implements Serializable {
 
-    private static final long serialVersionUID = 1L;
+	private static final long serialVersionUID = 1L;
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
-    private long id;
+	@Id
+	@GeneratedValue(strategy = GenerationType.AUTO)
+	private long id;
 
-    private String site;
+	private String site;
 
-    private String residues;
+	private String residues;
 
-    @Column(name = "restrictive_residues")
-    private String restrictiveResidues;
+	@Column(name = "restrictive_residues")
+	private String restrictiveResidues;
 
-    // bi-directional many-to-one association to Enzyme
-    @ManyToOne
-    @JoinColumn(name = "enzyme_id")
-    private Enzyme enzyme;
+	// bi-directional many-to-one association to Enzyme
+	@ManyToOne
+	@JoinColumn(name = "enzyme_id")
+	private Enzyme enzyme;
 
-    public EnzymeCleavage() {
-    }
+	public EnzymeCleavage() {
+	}
 
-    public long getId() {
-	return id;
-    }
+	public long getId() {
+		return id;
+	}
 
-    public void setId(final long pId) {
-	id = pId;
-    }
+	public void setId(final long pId) {
+		id = pId;
+	}
 
-    public String getSite() {
-	return this.site;
-    }
+	public String getSite() {
+		return this.site;
+	}
 
-    public void setSite(String site) {
-	this.site = site;
-    }
+	public void setSite(String site) {
+		this.site = site;
+	}
 
-    public String getResidues() {
-	return this.residues;
-    }
+	public String getResidues() {
+		return this.residues;
+	}
 
-    public void setResidues(String residues) {
-	this.residues = residues;
-    }
+	public void setResidues(String residues) {
+		this.residues = residues;
+	}
 
-    public String getRestrictiveResidues() {
-	return this.restrictiveResidues;
-    }
+	public String getRestrictiveResidues() {
+		return this.restrictiveResidues;
+	}
 
-    public void setRestrictiveResidues(String restrictiveResidues) {
-	this.restrictiveResidues = restrictiveResidues;
-    }
+	public void setRestrictiveResidues(String restrictiveResidues) {
+		this.restrictiveResidues = restrictiveResidues;
+	}
 
-    public Enzyme getEnzyme() {
-	return this.enzyme;
-    }
+	public Enzyme getEnzyme() {
+		return this.enzyme;
+	}
 
-    public void setEnzyme(Enzyme enzyme) {
-	this.enzyme = enzyme;
-    }
+	public void setEnzyme(Enzyme enzyme) {
+		this.enzyme = enzyme;
+	}
 
 }

@@ -8,7 +8,6 @@ import org.junit.Test
 import fr.proline.core.algo.msq.ProfilizerStatConfig
 
 @Test
-//@Ignore
 class AbundanceRatiolizerTest {
   
   @Test

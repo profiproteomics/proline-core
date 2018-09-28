@@ -91,6 +91,10 @@ public class DatabaseTestConnector implements IDatabaseConnector {
 			public IDatabaseConnection getConnection() throws Exception {
 				IDatabaseConnection dbC = super.getConnection();
 				
+				// ***** WORKAROUND FOR DBUNIT empty fields ERROR ("value is empty but must contain a value") ***** //
+				DatabaseConfig databaseConfig = dbC.getConfig();
+				databaseConfig.setProperty(DatabaseConfig.FEATURE_ALLOW_EMPTY_FIELDS, Boolean.TRUE);
+				
 				// Retrieve the IDataTypeFactory corresponding to the DriverType
 				IDataTypeFactory dataTypeFactory = null;
 				switch (driverType) {
@@ -101,7 +105,7 @@ public class DatabaseTestConnector implements IDatabaseConnector {
 					Statement smt = dbC.getConnection().createStatement();
 					smt.execute("SET REFERENTIAL_INTEGRITY FALSE");
 					smt.close();
-          // ***** WORKAROUND FOR DBUNIT Referential integrity constraint violation ERROR ***** //
+					// ***** WORKAROUND FOR DBUNIT Referential integrity constraint violation ERROR ***** //
 					
 					break;
 				case POSTGRESQL:

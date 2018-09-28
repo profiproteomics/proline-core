@@ -605,7 +605,6 @@ class ResultSetFakeGenerator(
       protein = Option(currProt),
       scoreType = "mascot:standard score",
       peptideMatchesCount = peptides.size, //1 PeptideMatch per Peptide
-      coverage = 100,
       sequenceMatches = protMatchSeqMatches.toArray,
       resultSetId = RESULT_SET_ID
     )

@@ -7,60 +7,61 @@ import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.Table;
 
-
 /**
  * The persistent class for the object_tree_schema database table.
  * 
  */
-@Entity(name="fr.proline.core.orm.uds.ObjectTreeSchema")
-@Table(name="object_tree_schema")
+@Entity(name = "fr.proline.core.orm.uds.ObjectTreeSchema")
+@Table(name = "object_tree_schema")
 public class ObjectTreeSchema implements Serializable {
-	  
+
 	private static final long serialVersionUID = 1L;
-	
-    public enum SchemaName {
-    	ATOM_LABELING_QUANT_CONFIG("quantitation.atom_labeling_config"),
-    	ISOBARIC_TAGGING_QUANT_CONFIG("quantitation.isobaric_tagging_config"),
-    	LABEL_FREE_QUANT_CONFIG("quantitation.label_free_config"),
-    	POST_QUANT_PROCESSING_CONFIG("quantitation.post_quant_processing_config"),
-    	RESIDUE_LABELING_QUANT_CONFIG("quantitation.residue_labeling_config"),
-    	SPECTRAL_COUNTING_QUANT_CONFIG("quantitation.spectral_counting_config");
-    	
-    	private final String name;
-    	
-	    private SchemaName(final String name) {
-	        this.name = name;
-	    }
-	    
-	    @Override
-	    public String toString() {
-	        return name;
-	    }
-    };
-	
-	public ObjectTreeSchema() {}
+
+	public enum SchemaName {
+		ATOM_LABELING_QUANT_CONFIG("quantitation.atom_labeling_config"),
+		ISOBARIC_TAGGING_QUANT_CONFIG("quantitation.isobaric_tagging_config"),
+		LABEL_FREE_QUANT_CONFIG("quantitation.label_free_config"),
+		POST_QUANT_PROCESSING_CONFIG("quantitation.post_quant_processing_config"),
+		RESIDUE_LABELING_QUANT_CONFIG("quantitation.residue_labeling_config"),
+		SPECTRAL_COUNTING_QUANT_CONFIG("quantitation.spectral_counting_config");
+
+		private final String name;
+
+		private SchemaName(final String name) {
+			this.name = name;
+		}
+
+		@Override
+		public String toString() {
+			return name;
+		}
+	};
+
+	public ObjectTreeSchema() {
+	}
+
 	@Id
-	@Column(name="name")
+	@Column(name = "name")
 	private String name;
 
-	@Column(name="type")
+	@Column(name = "type")
 	private String type;
-	
-    @Column(name="is_binary_mode")
-    private boolean isBinaryMode;
 
-	@Column(name="version")
+	@Column(name = "is_binary_mode")
+	private boolean isBinaryMode;
+
+	@Column(name = "version")
 	private String version;
 
-	@Column(name="schema")
+	@Column(name = "schema")
 	private String schema;
-	
-	@Column(name="description")
+
+	@Column(name = "description")
 	private String description;
 
-	@Column(name="serialized_properties")
+	@Column(name = "serialized_properties")
 	private String serializedProperties;
-	
+
 	public String getName() {
 		return name;
 	}
@@ -84,7 +85,7 @@ public class ObjectTreeSchema implements Serializable {
 	public void setVersion(String version) {
 		this.version = version;
 	}
-	
+
 	public boolean getIsBinaryMode() {
 		return this.isBinaryMode;
 	}
@@ -117,5 +118,4 @@ public class ObjectTreeSchema implements Serializable {
 		this.serializedProperties = serializedProperties;
 	}
 
-	
 }

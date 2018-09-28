@@ -43,10 +43,10 @@ class AlnSmootherTest extends JUnitSuite with MustMatchers with StrictLogging {
   def compareSmoothings() {
     
     val lmRangeSmoothingParams = new AlnSmoothingParams( windowSize = 3, windowOverlap = 0 )
-    val timeWindowSmoothingParams = new AlnSmoothingParams( windowSize = 1, windowOverlap = 0, minWindowLandmarks = 3 )
+    val timeWindowSmoothingParams = new AlnSmoothingParams( windowSize = 1, windowOverlap = 0, minWindowLandmarks = Some(3) )
     
-    val lmRangeMapLandmarks = landmarkRangeSmoother.smoothLandmarks(landmarks, lmRangeSmoothingParams)
-    val timeWindowMaplandmarks = timeWindowSmoother.smoothLandmarks(landmarks, timeWindowSmoothingParams)
+    val lmRangeMapLandmarks = landmarkRangeSmoother.smoothLandmarks(landmarks, Some(lmRangeSmoothingParams))
+    val timeWindowMaplandmarks = timeWindowSmoother.smoothLandmarks(landmarks, Some(timeWindowSmoothingParams))
     
     lmRangeMapLandmarks must equal (timeWindowMaplandmarks)
   }
@@ -56,7 +56,7 @@ class AlnSmootherTest extends JUnitSuite with MustMatchers with StrictLogging {
     
     val smoothingParams = new AlnSmoothingParams( windowSize = 3, windowOverlap = 0 )
     
-    val newLandmarks = landmarkRangeSmoother.smoothLandmarks(landmarks, smoothingParams)
+    val newLandmarks = landmarkRangeSmoother.smoothLandmarks(landmarks, Some(smoothingParams))
     
     // Test requirements
     newLandmarks.length must equal (20)
@@ -72,7 +72,7 @@ class AlnSmootherTest extends JUnitSuite with MustMatchers with StrictLogging {
     
     val smoothingParams = new AlnSmoothingParams( windowSize = 3, windowOverlap = 50 )
     
-    val newLandmarks = landmarkRangeSmoother.smoothLandmarks(landmarks, smoothingParams)
+    val newLandmarks = landmarkRangeSmoother.smoothLandmarks(landmarks, Some(smoothingParams))
     
     // Test requirements
     newLandmarks.length must equal (39)
@@ -85,9 +85,9 @@ class AlnSmootherTest extends JUnitSuite with MustMatchers with StrictLogging {
   @Test
   def smoothWithTimeWindowAndNoOverlap() {
     
-    val smoothingParams = new AlnSmoothingParams( windowSize = 1, windowOverlap = 0, minWindowLandmarks = 3 )
+    val smoothingParams = new AlnSmoothingParams( windowSize = 1, windowOverlap = 0, minWindowLandmarks = Some(3) )
     
-    val newLandmarks = timeWindowSmoother.smoothLandmarks(landmarks, smoothingParams)
+    val newLandmarks = timeWindowSmoother.smoothLandmarks(landmarks, Some(smoothingParams))
     
     // Test requirements
     newLandmarks.length must equal (20)
@@ -99,9 +99,9 @@ class AlnSmootherTest extends JUnitSuite with MustMatchers with StrictLogging {
   @Test
   def smoothWithTimeWindowAndOverlap() {
     
-    val smoothingParams = new AlnSmoothingParams( windowSize = 1, windowOverlap = 50, minWindowLandmarks = 3 )
+    val smoothingParams = new AlnSmoothingParams( windowSize = 1, windowOverlap = 50, minWindowLandmarks = Some(3) )
     
-    val newLandmarks = timeWindowSmoother.smoothLandmarks(landmarks, smoothingParams)
+    val newLandmarks = timeWindowSmoother.smoothLandmarks(landmarks, Some(smoothingParams))
     
     // Test requirements
     newLandmarks.length must equal (40)

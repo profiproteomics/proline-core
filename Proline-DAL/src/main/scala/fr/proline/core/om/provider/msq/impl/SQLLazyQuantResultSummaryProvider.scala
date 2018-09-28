@@ -7,18 +7,18 @@ import fr.proline.core.dal.tables.SelectQueryBuilder._
 import fr.proline.core.dal.tables.msi.MsiDbMasterQuantComponentTable
 import fr.proline.core.dal.tables.msi.MsiDbObjectTreeTable
 import fr.proline.core.om.model.msq._
+import fr.proline.core.om.provider.PeptideCacheExecutionContext
 import fr.proline.core.om.provider.msi.impl.SQLLazyResultSummaryProvider
+import fr.proline.core.om.provider.msi.cache.PeptideCache
 import fr.proline.core.om.provider.msq.IQuantResultSummaryProvider
 
 class SQLLazyQuantResultSummaryProvider(
-  override val msiDbCtx: MsiDbConnectionContext,
-  override val psDbCtx: DatabaseConnectionContext,
-  override val udsDbCtx: UdsDbConnectionContext,
+  override val peptideCacheExecutionContext: PeptideCacheExecutionContext,
   loadReporterIons: Boolean = false
-) extends SQLLazyResultSummaryProvider(msiDbCtx,psDbCtx,udsDbCtx) {
+) extends SQLLazyResultSummaryProvider(peptideCacheExecutionContext) {
   
-  protected val mqProtSetProvider = new SQLMasterQuantProteinSetProvider(msiDbCtx, psDbCtx)
-  protected val mqPepProvider = new SQLMasterQuantPeptideProvider(msiDbCtx, psDbCtx)
+  protected val mqProtSetProvider = new SQLMasterQuantProteinSetProvider(peptideCacheExecutionContext)
+  protected val mqPepProvider = new SQLMasterQuantPeptideProvider(peptideCacheExecutionContext)
   protected val mqPepIonProvider = new SQLMasterQuantPeptideIonProvider(msiDbCtx,loadReporterIons)
   
   val MQComponentTable = MsiDbMasterQuantComponentTable

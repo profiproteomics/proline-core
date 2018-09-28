@@ -1,58 +1,37 @@
 package fr.proline.core.service.msi
 
-import scala.Array.canBuildFrom
-
-import org.junit.Assert
-import org.junit.Test
-
 import com.typesafe.scalalogging.StrictLogging
-
 import fr.profi.util.primitives.toInt
-import fr.proline.core.algo.msi.filtering.FilterPropertyKeys
-import fr.proline.core.algo.msi.filtering.ProtSetFilterParams
 import fr.proline.core.algo.msi.filtering.pepmatch.ScorePSMFilter
-import fr.proline.core.algo.msi.filtering.proteinset.ScoreProtSetFilter
 import fr.proline.core.algo.msi.filtering.proteinset.SpecificPeptidesPSFilter
-import fr.proline.core.algo.msi.validation.BasicTDAnalyzer
-import fr.proline.core.algo.msi.validation.TargetDecoyModes
-import fr.proline.core.algo.msi.validation.proteinset.ProtSetRulesValidatorWithFDROptimization
-import fr.proline.core.dal.AbstractEmptyDatastoreTestCase
-import fr.proline.core.dal.DbUnitResultFileLoading
+import fr.proline.core.algo.msi.filtering.{FilterPropertyKeys, ProtSetFilterParams}
+import fr.proline.core.algo.msi.validation.{BasicTDAnalyzer, TargetDecoyModes}
+import fr.proline.core.dal.AbstractDatastoreTestCase
 import fr.proline.core.dbunit.STR_F136482_CTD
 import fr.proline.core.om.model.msi.FilterDescriptor
-import fr.proline.core.om.model.msi.ResultSet
 import fr.proline.repository.DriverType
+import org.junit.{Assert, Test}
 
-object RsmProtSetFiltererF136482Test extends AbstractEmptyDatastoreTestCase with DbUnitResultFileLoading with StrictLogging {
+object RsmProtSetFiltererTest extends AbstractDatastoreTestCase with StrictLogging {
 
-  val driverType = DriverType.H2
-  val dbUnitResultFile = STR_F136482_CTD
+  override val driverType = DriverType.H2
+  override val dbUnitResultFile = STR_F136482_CTD
+  override val useJPA: Boolean = true
+
   val targetRSId = 2L
-  val decoyRSId = Some(1L)
-  val useJPA = true
-  
-  override def getRS(): ResultSet = {
-    this.resetRSValidation(readRS)
-    if (readRS.decoyResultSet.isDefined) this.resetRSValidation(readRS.decoyResultSet.get)
-    this.readRS
-  }
-  
-  protected def resetRSValidation(rs: ResultSet) = {
-    rs.peptideMatches.foreach(_.isValidated = true)
-  }
-  
+
 }
 
-class RsmProtSetFiltererF136482Test extends StrictLogging {
+class RsmProtSetFiltererTest extends StrictLogging {
   
   protected val DEBUG_TESTS = false
-  val targetRS = RsmProtSetFiltererF136482Test.getRS
+  val targetRS = RsmProtSetFiltererTest.getRS(RsmProtSetFiltererTest.targetRSId)
+
+  // reset validation then artificially remove de associated decoyRS
+  RsmProtSetFiltererTest.resetRSValidation(targetRS)
   targetRS.decoyResultSet = None
-  val executionContext = RsmProtSetFiltererF136482Test.executionContext
-  
-  require( targetRS != null, "targetRS is null")
-  require( executionContext != null, "executionContext is null")
-  
+
+  val executionContext = RsmProtSetFiltererTest.executionContext
 
   @Test
   def testProtSpecificValidation() {
@@ -103,10 +82,10 @@ class RsmProtSetFiltererF136482Test extends StrictLogging {
 
     logger.info(" RSMProtSetFilterer : step2. filter protein set ")
     val rsmProtSetFilerer = new RsmProteinSetFilterer(
-		execCtx = executionContext,
-		targetRsm = tRSM, 
-		protSetFilters = protProteoTypiqueFilters
-	)	
+  		execCtx = executionContext,
+  		targetRsm = tRSM, 
+  		protSetFilters = protProteoTypiqueFilters
+  	)	
     val result2 = rsmProtSetFilerer.runService
     Assert.assertTrue(result2)
     logger.debug(" End Run RSMProtSetFilterer step2 ")

@@ -1,16 +1,16 @@
 package fr.proline.core.om.provider.lcms.impl
 
-import scala.collection.mutable.ArrayBuffer
-import scala.collection.mutable.HashMap
 import fr.profi.jdbc.ResultSetRow
+import fr.profi.util.primitives._
 import fr.proline.context.LcMsDbConnectionContext
-import fr.proline.core.dal.{ DoJDBCWork, DoJDBCReturningWork }
+import fr.proline.core.dal.DoJDBCReturningWork
 import fr.proline.core.dal.tables.SelectQueryBuilder._
 import fr.proline.core.dal.tables.SelectQueryBuilder1
 import fr.proline.core.dal.tables.lcms.LcmsDbMapAlignmentTable
 import fr.proline.core.om.model.lcms._
 import fr.proline.core.om.provider.lcms.IMapAlignmentSetProvider
-import fr.profi.util.primitives._
+
+import scala.collection.mutable.ArrayBuffer
 
 class SQLMapAlignmentSetProvider( val lcmsDbCtx: LcMsDbConnectionContext ) extends IMapAlignmentSetProvider {
   

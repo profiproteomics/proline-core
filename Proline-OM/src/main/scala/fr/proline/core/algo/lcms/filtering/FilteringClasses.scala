@@ -21,7 +21,7 @@ case class FilterNode( val filter: Filter = null,
                        val subFilters: List[FilterNode] = null,
                        val logicalOperator: String = null
                       ) {
-  def isNode(): Boolean = if( subFilters != null ) true else false
+  def isNode(): Boolean = ( subFilters != null )
 }
 
 trait IFeatureSelector {

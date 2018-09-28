@@ -15,12 +15,12 @@ object InstrumentConfigBuilder {
   
   protected val instCols = UdsDbInstrumentColumns
   protected val instConfigCols = UdsDbInstrumentConfigColumns
+  protected val fragRuleSetCols = UdsDbFragmentationRuleSetColumns
   protected val fragSerieCols = UdsDbFragmentationSeriesColumns
   
   def buildInstrumentConfigs(
     eachInstConfigRecord: (IValueContainer => InstrumentConfig) => Seq[InstrumentConfig],
-    eachInstrumentRecordSelector: Array[Long] => ( (IValueContainer => Instrument) => Seq[Instrument] ),
-    eachFragmentationSeriesSelector: Array[Long] => ( (IValueContainer => FragmentIonType) => Seq[FragmentIonType] )
+    eachInstrumentRecordSelector: Array[Long] => ( (IValueContainer => Instrument) => Seq[Instrument] )
   ): Array[InstrumentConfig] = {
     
     val instIdByInstConfigId = new HashMap[Long, Long]
@@ -39,19 +39,44 @@ object InstrumentConfigBuilder {
     for (instConfig <- instConfigs)
       instConfig.instrument = instById(instIdByInstConfigId(instConfig.id))
 
-    for (instConfig <- instConfigs) {
+//    for (instConfig <- instConfigs) {
+//      val fragRules = new ArrayBuffer[FragmentationRule]()
+//      eachFragmentationSeriesSelector(Array(instConfig.id)) { r => {
+//        val serie = new FragmentIonType(r.getString(fragSerieCols.NAME))
+//        fragRules += new FragmentIonRequirement(serie.ionSeries.toString(), serie)
+//        serie
+//      }}
+//      instConfig.fragmentationRules = Some(fragRules.toArray)
+//    }
+    instConfigs.toArray
+  }
+
+  def buildFragmentationRuleSets(
+    eachFragmentationRuleSetRecord: (IValueContainer => FragmentationRuleSet) => Seq[FragmentationRuleSet],
+    eachFragmentationSeriesSelector: Array[Long] => ( (IValueContainer => FragmentIonType) => Seq[FragmentIonType] )
+
+   ) : Array[FragmentationRuleSet] = {
+
+    val fragRuleSets = eachFragmentationRuleSetRecord { r =>
+      new FragmentationRuleSet(
+        id= r.getLong(fragRuleSetCols.ID),
+        name = r.getString(fragRuleSetCols.NAME)
+      )
+    }
+
+    for (fragRuleSet <- fragRuleSets) {
       val fragRules = new ArrayBuffer[FragmentationRule]()
-      eachFragmentationSeriesSelector(Array(instConfig.id)) { r => {
+      eachFragmentationSeriesSelector(Array(fragRuleSet.id)) { r => {
         val serie = new FragmentIonType(r.getString(fragSerieCols.NAME))
         fragRules += new FragmentIonRequirement(serie.ionSeries.toString(), serie)
         serie
       }}
-      instConfig.fragmentationRules = Some(fragRules.toArray)
+      fragRuleSet.fragmentationRules = fragRules.toArray
     }
-    instConfigs.toArray
+    fragRuleSets.toArray
   }
-  
-  def buildInstrumentConfig( record: IValueContainer ): InstrumentConfig = {
+
+    def buildInstrumentConfig( record: IValueContainer ): InstrumentConfig = {
     
     val r = record
 

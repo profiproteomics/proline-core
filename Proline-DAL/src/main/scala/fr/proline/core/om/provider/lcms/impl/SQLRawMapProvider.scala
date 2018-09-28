@@ -1,17 +1,18 @@
 package fr.proline.core.om.provider.lcms.impl
 
-import scala.collection.mutable.ArrayBuffer
-import fr.profi.jdbc.ResultSetRow
+import fr.profi.util.primitives._
 import fr.proline.context.LcMsDbConnectionContext
-import fr.proline.core.dal.{ DoJDBCWork, DoJDBCReturningWork }
 import fr.proline.core.dal.tables.SelectQueryBuilder._
-import fr.proline.core.dal.tables.{ SelectQueryBuilder1, SelectQueryBuilder2 }
-import fr.proline.core.dal.tables.lcms.{ LcmsDbMapTable, LcmsDbRawMapTable }
-import fr.proline.core.dal.helper.LcmsDbHelper
+import fr.proline.core.dal.tables.lcms.LcmsDbMapTable
+import fr.proline.core.dal.tables.lcms.LcmsDbRawMapTable
+import fr.proline.core.dal.tables.SelectQueryBuilder1
+import fr.proline.core.dal.tables.SelectQueryBuilder2
+import fr.proline.core.dal.DoJDBCReturningWork
+import fr.proline.core.dal.DoJDBCWork
 import fr.proline.core.om.model.lcms._
 import fr.proline.core.om.provider.lcms.IRawMapProvider
-import fr.profi.util.sql._
-import fr.profi.util.primitives._
+
+import scala.collection.mutable.ArrayBuffer
 
 class SQLRawMapProvider(
   val lcmsDbCtx: LcMsDbConnectionContext,
@@ -35,7 +36,7 @@ class SQLRawMapProvider(
     val featuresByMapId = this.getFeatures(rawMapIds).groupBy(_.relations.rawMapId)
     
     // If requested load peakels and group them by map id
-    val peakelsByRawMapId = if( loadPeakels == false ) Map.empty[Long,Array[Peakel]]
+    val peakelsByRawMapId = if( !loadPeakels ) Map.empty[Long,Array[Peakel]]
     else peakelProvider.getPeakels(rawMapIds).groupBy(_.rawMapId)
     
     val rawMaps = new Array[RawMap](rawMapIds.length)
@@ -116,7 +117,7 @@ class SQLRawMapProvider(
       else getOverlappingFeatureById(mapIds, scanInitialIdById, ms2EventIdsByFtId)
       
       // Load peakel items
-      val peakelItems = peakelProvider.getRawMapPeakelItems(mapIds, loadPeakels = loadPeakels)
+      val peakelItems: Array[FeaturePeakelItem] = peakelProvider.getRawMapPeakelItems(mapIds, loadPeakels = loadPeakels)
       val peakelItemsByFtId = peakelItems.groupBy(_.featureReference.id)
       
       val ftBuffer = new ArrayBuffer[Feature]
@@ -125,11 +126,11 @@ class SQLRawMapProvider(
         val ftId = toLong(ftRecord.getAny(FtCols.ID))
 
         // Try to retrieve overlapping features
-        val olpFeatures = if (olpFtIdsByFtId.contains(ftId) == false ) null
+        val olpFeatures = if (!olpFtIdsByFtId.contains(ftId) ) null
         else olpFtIdsByFtId(ftId) map { olpFtId => olpFeatureById(olpFtId) }
         
         // Retrieve peakel items
-        val peakelItems = peakelItemsByFtId(ftId).toArray
+        val peakelItems = peakelItemsByFtId(ftId)
         
         val feature = buildFeature(ftRecord, scanInitialIdById, ms2EventIdsByFtId, peakelItems, olpFeatures)
 

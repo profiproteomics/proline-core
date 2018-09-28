@@ -1,89 +1,44 @@
 package fr.proline.core.service.msq.quantify
 
-import scala.collection.mutable.ArrayBuffer
-import scala.collection.mutable.HashMap
-import scala.collection.mutable.HashSet
-import scala.collection.mutable.LongMap
-import scala.collection.JavaConversions.collectionAsScalaIterable
-import scala.collection.JavaConversions.setAsJavaSet
-import scala.collection.JavaConverters.asJavaCollectionConverter
-
 import com.typesafe.scalalogging.LazyLogging
-
 import fr.profi.util.collection._
 import fr.profi.util.serialization.ProfiJson
-import fr.proline.context._
+import fr.proline.context.{DatabaseConnectionContext, IExecutionContext, MsiDbConnectionContext}
 import fr.proline.core.algo.msi.ResultSummaryAdder
-import fr.proline.core.algo.msi.scoring.PepSetScoring
-import fr.proline.core.algo.msi.scoring.PeptideSetScoreUpdater
-import fr.proline.core.dal.DoJDBCReturningWork
+import fr.proline.core.algo.msi.scoring.{PepSetScoring, PeptideSetScoreUpdater}
 import fr.proline.core.dal.helper.MsiDbHelper
-import fr.proline.core.dal.tables.SelectQueryBuilder._
-import fr.proline.core.dal.tables.SelectQueryBuilder1
-import fr.proline.core.dal.tables.msi.MsiDbResultSummaryTable
 import fr.proline.core.om.model.msi.ResultSummary
 import fr.proline.core.om.model.msq._
-import fr.proline.core.orm.msi.{MasterQuantComponent => MsiMasterQuantComponent}
-import fr.proline.core.orm.msi.{MasterQuantPeptideIon => MsiMasterQuantPepIon}
-import fr.proline.core.orm.msi.{MasterQuantReporterIon => MsiMasterQuantRepIon}
-import fr.proline.core.orm.msi.{ObjectTree => MsiObjectTree, ObjectTreeSchema => MsiObjectTreeSchema }
+import fr.proline.core.om.provider.PeptideCacheExecutionContext
+import fr.proline.core.om.provider.msi.impl.SQLResultSummaryProvider
 import fr.proline.core.orm.msi.ObjectTreeSchema.SchemaName
-import fr.proline.core.orm.msi.Peptide
-import fr.proline.core.orm.msi.{PeptideInstance => MsiPeptideInstance}
-import fr.proline.core.orm.msi.{PeptideInstancePeptideMatchMap => MsiPepInstPepMatchMap}
-import fr.proline.core.orm.msi.{PeptideInstancePeptideMatchMapPK => MsiPepInstPepMatchMapPK}
-import fr.proline.core.orm.msi.{PeptideMatch => MsiPeptideMatch}
-import fr.proline.core.orm.msi.{PeptideMatchRelation => MsiPeptideMatchRelation}
-import fr.proline.core.orm.msi.{PeptideMatchRelationPK => MsiPeptideMatchRelationPK}
-import fr.proline.core.orm.msi.{PeptideReadablePtmString => MsiPeptideReadablePtmString}
-import fr.proline.core.orm.msi.{PeptideReadablePtmStringPK => MsiPeptideReadablePtmStringPK}
-import fr.proline.core.orm.msi.{PeptideSet => MsiPeptideSet}
-import fr.proline.core.orm.msi.{PeptideSetPeptideInstanceItem => MsiPeptideSetItem}
-import fr.proline.core.orm.msi.{PeptideSetPeptideInstanceItemPK => MsiPeptideSetItemPK}
-import fr.proline.core.orm.msi.{PeptideSetProteinMatchMap => MsiPepSetProtMatchMap}
-import fr.proline.core.orm.msi.{PeptideSetProteinMatchMapPK => MsiPepSetProtMatchMapPK}
-import fr.proline.core.orm.msi.{ProteinMatch => MsiProteinMatch}
-import fr.proline.core.orm.msi.{ProteinSet => MsiProteinSet}
-import fr.proline.core.orm.msi.{ProteinSetProteinMatchItem => MsiProtSetProtMatchItem}
-import fr.proline.core.orm.msi.{ProteinSetProteinMatchItemPK => MsiProtSetProtMatchItemPK}
-import fr.proline.core.orm.msi.ResultSet
-import fr.proline.core.orm.msi.{ResultSet => MsiResultSet}
-import fr.proline.core.orm.msi.{ResultSummary => MsiResultSummary}
-import fr.proline.core.orm.msi.{Scoring => MsiScoring}
-import fr.proline.core.orm.msi.{SequenceMatch => MsiSequenceMatch}
 import fr.proline.core.orm.msi.repository.ObjectTreeSchemaRepository
-import fr.proline.core.orm.uds.Dataset
+import fr.proline.core.orm.msi.{MasterQuantComponent => MsiMasterQuantComponent, MasterQuantPeptideIon => MsiMasterQuantPepIon, MasterQuantReporterIon => MsiMasterQuantRepIon, ObjectTree => MsiObjectTree, ObjectTreeSchema => MsiObjectTreeSchema, PeptideInstance => MsiPeptideInstance, PeptideInstancePeptideMatchMap => MsiPepInstPepMatchMap, PeptideInstancePeptideMatchMapPK => MsiPepInstPepMatchMapPK, PeptideMatch => MsiPeptideMatch, PeptideMatchRelation => MsiPeptideMatchRelation, PeptideMatchRelationPK => MsiPeptideMatchRelationPK, PeptideReadablePtmString => MsiPeptideReadablePtmString, PeptideReadablePtmStringPK => MsiPeptideReadablePtmStringPK, PeptideSet => MsiPeptideSet, PeptideSetPeptideInstanceItem => MsiPeptideSetItem, PeptideSetPeptideInstanceItemPK => MsiPeptideSetItemPK, PeptideSetProteinMatchMap => MsiPepSetProtMatchMap, PeptideSetProteinMatchMapPK => MsiPepSetProtMatchMapPK, ProteinMatch => MsiProteinMatch, ProteinSet => MsiProteinSet, ProteinSetProteinMatchItem => MsiProtSetProtMatchItem, ProteinSetProteinMatchItemPK => MsiProtSetProtMatchItemPK, ResultSet => MsiResultSet, ResultSummary => MsiResultSummary, Scoring => MsiScoring, SequenceMatch => MsiSequenceMatch}
 import fr.proline.core.orm.uds.MasterQuantitationChannel
-import fr.proline.core.util.ResidueUtils.scalaCharToCharacter
+import scala.collection.JavaConversions.asScalaSet
+import scala.collection.JavaConversions.setAsJavaSet
+import scala.collection.mutable.{ArrayBuffer, HashMap, LongMap}
 
 abstract class AbstractMasterQuantChannelQuantifier extends LazyLogging {
 
   // Required fields
   val executionContext: IExecutionContext
   val udsMasterQuantChannel: MasterQuantitationChannel
+  val experimentalDesign: ExperimentalDesign
 
   // Instantiated fields
   protected val udsDbCtx = executionContext.getUDSDbConnectionContext
   protected val udsEm = udsDbCtx.getEntityManager
   protected val msiDbCtx = executionContext.getMSIDbConnectionContext
   protected val msiEm = msiDbCtx.getEntityManager
-  protected val psDbCtx = executionContext.getPSDbConnectionContext
-  
-  protected lazy val mergedResultSummary = getMergedResultSummary(msiDbCtx)
-  
-  //protected val defaultEntityCache = new MasterQuantChannelEntityCache(executionContext, udsMasterQuantChannel)
-  //protected def providedEntityCache: Option[MasterQuantChannelEntityCache] = None
-  //protected val entityCache = providedEntityCache.getOrElse(defaultEntityCache)
-  protected lazy val entityCache = new MasterQuantChannelEntityCache(executionContext, udsMasterQuantChannel)
-  
-  // Specify if merged RSM was created for quanti or was provided
-  // TODO: change the way it's done
-  // Note: [lazy val mergedResultSummary + def getMergedResultSummary() + Boolean isMergedRsmProvided] is too complicated
-  protected var isMergedRsmProvided: Boolean = false
-   
-  protected lazy val curSQLTime = new java.sql.Timestamp(new java.util.Date().getTime)
 
-  private var _quantified = false
+  protected val masterQc = experimentalDesign.masterQuantChannels.find(_.id == udsMasterQuantChannel.getId).get
+
+  protected lazy val mergedResultSummary = getMergedResultSummary(msiDbCtx)
+
+  protected lazy val entityCache = new MasterQuantChannelEntityCache(executionContext, udsMasterQuantChannel)
+
+  protected lazy val curSQLTime = new java.sql.Timestamp(new java.util.Date().getTime)
 
   /**
    * Main method of the quantifier.
@@ -91,53 +46,104 @@ abstract class AbstractMasterQuantChannelQuantifier extends LazyLogging {
    * in each specific quantifier.
    */
   def quantify() = {
-    
-    // Check if the quantification has been already performed
-    require(_quantified==false,"This master quant channel has been already quantified")
-    
+
     this.logger.info(s"Quantification of master quant channel with id=${udsMasterQuantChannel.getId} has started !")
-
-    // Run the quantification process
     this.quantifyMasterChannel()
-
-    this._quantified = true
     this.logger.info(s"Master quant channel with id=${udsMasterQuantChannel.getId} has been quantified !")
+
   }
 
   // Define the interface required to implement the trait
   protected def quantifyMasterChannel(): Unit
   protected def quantPeptidesObjectTreeSchema: MsiObjectTreeSchema
   protected def quantPeptideIonsObjectTreeSchema: MsiObjectTreeSchema
+
   protected lazy val quantReporterIonsObjectTreeSchema: MsiObjectTreeSchema = {
     ObjectTreeSchemaRepository.loadOrCreateObjectTreeSchema(msiEm, SchemaName.QUANT_REPORTER_IONS.toString())
   }
+
   protected lazy val quantProteinSetsSchema: MsiObjectTreeSchema = {
     ObjectTreeSchemaRepository.loadOrCreateObjectTreeSchema(msiEm, SchemaName.QUANT_PROTEIN_SETS.toString())
   }
-  protected def getMergedResultSummary(msiDbCtx: MsiDbConnectionContext): ResultSummary
-  
-  protected def storeMsiQuantResultSet(msiIdentResultSets: List[MsiResultSet]): MsiResultSet = {
 
+  protected def getMergedResultSummary(msiDbCtx: MsiDbConnectionContext): ResultSummary = {
+    if (masterQc.identResultSummaryId.isEmpty) {
+      createMergedResultSummary(msiDbCtx)
+    } else {
+      val identRsmId = masterQc.identResultSummaryId.get
+
+      this.logger.debug("Read Merged RSM with ID " + identRsmId)
+
+      // Instantiate an RSM provider
+      val rsmProvider = new SQLResultSummaryProvider(PeptideCacheExecutionContext(executionContext))
+      val identRsmOpt = rsmProvider.getResultSummary(identRsmId, loadResultSet = true)
+      assert( identRsmOpt.isDefined, "can't load the result summary with id=" + identRsmId)
+
+      // Link identification RSM to MQC
+      udsMasterQuantChannel.setIdentResultSummaryId(identRsmId)
+
+      if (masterQc.identDatasetId.isDefined) {
+        val identDsId = masterQc.identDatasetId.get
+        val udsIdentDs = udsEm.find(classOf[fr.proline.core.orm.uds.Dataset], identDsId)
+        udsMasterQuantChannel.setIdentDataset(udsIdentDs)
+      }
+
+      identRsmOpt.get
+    }
+  }
+  
+  protected def storeMsiQuantResultSet(): MsiResultSet = {
+
+    val msiIdentResultSets = if (!masterQc.identResultSummaryId.isDefined) {
+      entityCache.quantChannelMsiResultSets
+    }  else {
+      val identRSM = msiEm.find(classOf[MsiResultSummary], masterQc.identResultSummaryId.get)
+      identRSM.getResultSet.getChildren().toList
+    }
+    _storeMsiQuantResultSet(msiIdentResultSets)
+  }
+
+  protected def storeMsiQuantResultSet(childrenRSIds: List[Long]): MsiResultSet = {
+    val rs: List[MsiResultSet] = for(rsId <- childrenRSIds) yield msiEm.find(classOf[MsiResultSet],rsId)
+    _storeMsiQuantResultSet(rs)
+  }
+
+  private def _storeMsiQuantResultSet(childrenRS: List[MsiResultSet]): MsiResultSet = {
     // TODO: provide the RS name in the parameters
     val msiQuantResultSet = new MsiResultSet()
     msiQuantResultSet.setName("")
     msiQuantResultSet.setType(MsiResultSet.Type.QUANTITATION)
-    msiQuantResultSet.setModificationTimestamp(curSQLTime)
-
-    // Link this quantitative result set to the identification result sets
-    msiQuantResultSet.setChildren(msiIdentResultSets.toSet[MsiResultSet])
+    msiQuantResultSet.setCreationTimestamp(curSQLTime)
+    msiQuantResultSet.setChildren(childrenRS.toSet[MsiResultSet])
     msiEm.persist(msiQuantResultSet)
 
     msiQuantResultSet
   }
 
-  protected def storeMsiQuantResultSummary(msiQuantResultSet: MsiResultSet): MsiResultSummary = {
+
+  protected def storeMsiQuantResultSummary(msiQuantResultSet: MsiResultSet, childrenRSMIds: Array[Long]) : MsiResultSummary = {
+
     val msiQuantRSM = new MsiResultSummary()
     msiQuantRSM.setModificationTimestamp(curSQLTime)
     msiQuantRSM.setResultSet(msiQuantResultSet)
+    // Retrieve children ResultSummary and link them to the msiQuantRSM
+    val rsms: Array[MsiResultSummary] = for(rsmId <- childrenRSMIds) yield msiEm.find(classOf[MsiResultSummary],rsmId)
+    msiQuantRSM.setChildren(new java.util.HashSet(rsms.toSet))
     msiEm.persist(msiQuantRSM)
 
     msiQuantRSM
+  }
+
+  protected def storeMsiQuantResultSummary(msiQuantResultSet: MsiResultSet) : MsiResultSummary = {
+    val childrenRsmIds = {
+      if (masterQc.identResultSummaryId.isEmpty) {
+        entityCache.quantChannelResultSummaries.map(_.id)
+      } else {
+        val identRSM = msiEm.find(classOf[MsiResultSummary], masterQc.identResultSummaryId.get)
+        identRSM.getChildren().map(_.getId).toArray
+      }
+    }
+    storeMsiQuantResultSummary(msiQuantResultSet, childrenRsmIds)
   }
 
   // TODO: rename into storeMasterQuantEntities
@@ -435,9 +441,11 @@ abstract class AbstractMasterQuantChannelQuantifier extends LazyLogging {
   }
 
   protected def createMergedResultSummary(msiDbCtx: DatabaseConnectionContext): ResultSummary = {
+    createMergedResultSummary(msiDbCtx, entityCache.quantChannelResultSummaries)
+  }
+
+  protected def createMergedResultSummary(msiDbCtx: DatabaseConnectionContext, identRsms: Array[ResultSummary]): ResultSummary = {
     val msiDbHelper = new MsiDbHelper(msiDbCtx)
-    
-    val identRsms = entityCache.identResultSummaries
     val firstIdentRsm = identRsms(0)
     val approxProtMatchesCount = if( firstIdentRsm.resultSet.isDefined) firstIdentRsm.resultSet.get.proteinMatches.length * identRsms.length else  (20000 * identRsms.length)
     val tmpIdentProteinIds = new ArrayBuffer[Long](approxProtMatchesCount)

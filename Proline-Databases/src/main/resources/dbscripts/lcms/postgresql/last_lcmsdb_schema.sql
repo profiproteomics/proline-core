@@ -44,15 +44,6 @@ CREATE TABLE public.cache (
 COMMENT ON COLUMN public.cache.scope IS 'e.g. scope=map.features id=1 (map id)';
 
 
-CREATE TABLE public.instrument (
-                id BIGINT NOT NULL,
-                name VARCHAR(100) NOT NULL,
-                source VARCHAR(100) NOT NULL,
-                serialized_properties TEXT,
-                CONSTRAINT instrument_pk PRIMARY KEY (id)
-);
-
-
 CREATE TABLE public.object_tree_schema (
                 name VARCHAR(1000) NOT NULL,
                 type VARCHAR(50) NOT NULL,
@@ -251,7 +242,6 @@ CREATE TABLE public.scan_sequence (
                 ms1_scan_count INTEGER NOT NULL,
                 ms2_scan_count INTEGER NOT NULL,
                 serialized_properties TEXT,
-                instrument_id BIGINT NOT NULL,
                 CONSTRAINT scan_sequence_pk PRIMARY KEY (id)
 );
 COMMENT ON COLUMN public.scan_sequence.id IS 'This id is not auto-incremneted => it is the run_id from the UDSdb.';
@@ -636,13 +626,6 @@ ALTER TABLE public.feature_peakel_item ADD CONSTRAINT map_feature_peakel_item_fk
 FOREIGN KEY (map_id)
 REFERENCES public.map (id)
 ON DELETE NO ACTION
-ON UPDATE NO ACTION
-NOT DEFERRABLE;
-
-ALTER TABLE public.scan_sequence ADD CONSTRAINT instrument_scan_sequence_fk
-FOREIGN KEY (instrument_id)
-REFERENCES public.instrument (id)
-ON DELETE RESTRICT
 ON UPDATE NO ACTION
 NOT DEFERRABLE;
 

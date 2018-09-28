@@ -55,6 +55,7 @@ case class SearchSettings(
   var instrumentConfig: InstrumentConfig,
   
   // Mutable optional fields
+  var fragmentationRuleSet: Option[FragmentationRuleSet] = None,
   var msmsSearchSettings: Option[MSMSSearchSettings] = None,
   var pmfSearchSettings: Option[PMFSearchSettings] = None,
   var properties: Option[SearchSettingsProperties] = None

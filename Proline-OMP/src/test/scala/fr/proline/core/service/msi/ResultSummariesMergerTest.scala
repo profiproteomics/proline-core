@@ -1,7 +1,5 @@
 package fr.proline.core.service.msi
 
-import org.junit.Assert._
-import org.junit.Test
 import com.typesafe.scalalogging.StrictLogging
 import fr.proline.context.IExecutionContext
 import fr.proline.core.algo.msi.filtering.IPeptideMatchFilter
@@ -12,36 +10,21 @@ import fr.proline.core.dal._
 import fr.proline.core.dbunit._
 import fr.proline.core.om.model.msi.ResultSet
 import fr.proline.core.om.model.msi.ResultSummary
-import fr.proline.core.om.provider.msi.impl.ORMResultSetProvider
 import fr.proline.repository.DriverType
-import fr.proline.core.om.model.msi.ProteinMatch
- 
+import org.junit.Assert._
+import org.junit.Test
 
-object ResultSummariesMergerTest extends AbstractEmptyDatastoreTestCase with StrictLogging {
+object ResultSummariesMergerTest extends AbstractDatastoreTestCase with StrictLogging {
 
-  val driverType = DriverType.H2
-  // For manual postgres test !! If use, should comment all loadDataSet from setUp and AbstractRFImporterTest_.setUp
-  //   val driverType = DriverType.POSTGRESQL
-  val useJPA = false
+  override val driverType = DriverType.H2
+  override val useJPA = true
 
-  /*@Before
-  override def setUp() = {
-    super.setUp()
-
-    //udsDBTestCase.loadDataSet(DbUnitSampleDataset.PROJECT.getResourcePath())
-    //logger.info("UDS db succesfully initialized")
-  }
-
-  @After
-  override def tearDown() {
-    super.tearDown()
-  }*/
-  
 }
 
+@Test
 class ResultSummariesMergerTest extends StrictLogging {
   
-  val sqlExecutionContext = ResultSummariesMergerTest.executionContext
+  val executionContext = ResultSummariesMergerTest.executionContext
   val dsConnectorFactoryForTest = ResultSummariesMergerTest.dsConnectorFactoryForTest
 
   @Test
@@ -52,18 +35,18 @@ class ResultSummariesMergerTest extends StrictLogging {
     try {
       logger.debug("Importing Result Files ...")
 
-      val rs1 = DbUnitResultFileUtils.importDbUnitResultFile(STR_F136482_CTD, sqlExecutionContext)
-      val rs2 = DbUnitResultFileUtils.importDbUnitResultFile(TLS_F027737_MTD_no_varmod, sqlExecutionContext)
+      val rs1 = DbUnitResultFileUtils.importDbUnitResultFile(STR_F136482_CTD, executionContext)
+      val rs2 = DbUnitResultFileUtils.importDbUnitResultFile(TLS_F027737_MTD_no_varmod, executionContext)
 
       logger.debug("Validating ResultSet by Ids ...")
-      val rsm1 = validate(sqlExecutionContext, rs1)
-      val rsm2 = validate(sqlExecutionContext, rs2)
+      val rsm1 = validate(executionContext, rs1)
+      val rsm2 = validate(executionContext, rs2)
 
       val rsms = Seq(rsm1, rsm2)
 
       logger.debug("Merging two ResultSummaries by objects ...")
 
-      val rsmMergerObj = new ResultSummaryMerger(sqlExecutionContext, None, Some(rsms), None, false)//ResultSummariesMergerTest.useJPA)
+      val rsmMergerObj = new ResultSummaryMerger(executionContext, None, Some(rsms), None, false)//ResultSummariesMergerTest.useJPA)
 
       val resultObj = rsmMergerObj.runService
       assertTrue("ResultSummary merger resultObj", resultObj)
@@ -75,23 +58,54 @@ class ResultSummariesMergerTest extends StrictLogging {
       val mergedDecoyRSMObjId = tMergedRSMObj.getDecoyResultSummaryId
       assertTrue("Merged DECOY ResultSummary by Object is present", mergedDecoyRSMObjId > 0L)
 
-      val rsm1Id = rsm1.id
-      val rsm2Id = rsm2.id
-
-      val rsmIds = Seq(rsm1Id, rsm2Id)
       val protMatchesById =   tMergedRSMObj.resultSet.get.getProteinMatchById()
       tMergedRSMObj.proteinSets.foreach( prSet => {
          val typAcc = protMatchesById(prSet.getRepresentativeProteinMatchId).accession
     	 prSet.samesetProteinMatchIds.foreach( ssId => {
     	   if(!ssId.equals(prSet.getRepresentativeProteinMatchId)){
     		   assertFalse(typAcc.compareTo(protMatchesById(ssId).accession) > 0)
-	    	}    	   
+	    	}
     	 })
       })
 
+    } finally {
+
+      if (localJPAExecutionContext != null) {
+        try {
+          localJPAExecutionContext.closeAll()
+        } catch {
+          case exClose: Exception => logger.error("Error closing local JPA ExecutionContext", exClose)
+        }
+      }
+
+    }
+
+  }
+
+  @Test
+  def testMergeTwoRSMByID() {
+
+    var localJPAExecutionContext: IExecutionContext = null
+
+    try {
+      logger.debug("Importing Result Files ...")
+
+      val rs1 = DbUnitResultFileUtils.importDbUnitResultFile(STR_F136482_CTD, executionContext)
+      val rs2 = DbUnitResultFileUtils.importDbUnitResultFile(TLS_F027737_MTD_no_varmod, executionContext)
+
+      logger.debug("Validating ResultSet by Ids ...")
+      val rsm1 = validate(executionContext, rs1)
+      val rsm2 = validate(executionContext, rs2)
+
+
+      val rsm1Id = rsm1.id
+      val rsm2Id = rsm2.id
+
+      val rsmIds = Seq(rsm1Id, rsm2Id)
+
       logger.debug("Merging two ResultSummaries by Ids...")
 
-      val rsmMerger = new ResultSummaryMerger(sqlExecutionContext, Some(rsmIds), None, None, ResultSummariesMergerTest.useJPA)
+      val rsmMerger = new ResultSummaryMerger(executionContext, Some(rsmIds), None, None, ResultSummariesMergerTest.useJPA)
 
       val mergerResult = rsmMerger.runService
       assertTrue("ResultSummary merger result", mergerResult)

@@ -26,6 +26,7 @@ trait IResultFile extends IRsContainer {
   def hasMs2Peaklist: Boolean
   
   var instrumentConfig: Option[InstrumentConfig] = None
+  var fragmentationRuleSet: Option[FragmentationRuleSet] = None
   var peaklistSoftware: Option[PeaklistSoftware] = None
     
   def close(): Unit // release resources

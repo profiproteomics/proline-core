@@ -6,13 +6,13 @@ import fr.proline.repository.DatabaseUpgrader
 import fr.proline.repository.IDataStoreConnectorFactory
 import fr.proline.repository.IDatabaseConnector
 
-class DataStoreConnectorFactoryForTest(private val udsDb: IDatabaseConnector = null,
-  private val pdiDb: IDatabaseConnector = null,
-  private val psDb: IDatabaseConnector = null,
+class DataStoreConnectorFactoryForTest(
+  private val udsDb: IDatabaseConnector = null,
   private val msiDb: IDatabaseConnector = null,
   private val lcMsDb: IDatabaseConnector = null,
-  private val initialize: Boolean = false) extends IDataStoreConnectorFactory with StrictLogging {
-
+  private val initialize: Boolean = false
+) extends IDataStoreConnectorFactory with StrictLogging {
+  
   private val m_closeLock = new AnyRef()
 
   if (udsDb == null) {
@@ -21,26 +21,6 @@ class DataStoreConnectorFactoryForTest(private val udsDb: IDatabaseConnector = n
 
     if (initialize) {
       DatabaseUpgrader.upgradeDatabase(udsDb, false)
-    }
-
-  }
-
-  if (pdiDb == null) {
-    logger.warn("No PDI Db Connector")
-  } else {
-
-    if (initialize) {
-      DatabaseUpgrader.upgradeDatabase(pdiDb, false)
-    }
-
-  }
-
-  if (psDb == null) {
-    logger.warn("No PS Db Connector")
-  } else {
-
-    if (initialize) {
-      DatabaseUpgrader.upgradeDatabase(psDb, false)
     }
 
   }
@@ -73,14 +53,6 @@ class DataStoreConnectorFactoryForTest(private val udsDb: IDatabaseConnector = n
     udsDb
   }
 
-  override def getPdiDbConnector() = {
-    pdiDb
-  }
-
-  override def getPsDbConnector() = {
-    psDb
-  }
-
   /**
    * Return the same MSI Db for all projectId.
    */
@@ -106,14 +78,6 @@ class DataStoreConnectorFactoryForTest(private val udsDb: IDatabaseConnector = n
 
       if (msiDb != null) {
         msiDb.close()
-      }
-
-      if (psDb != null) {
-        psDb.close()
-      }
-
-      if (pdiDb != null) {
-        pdiDb.close()
       }
 
       if (udsDb != null) {

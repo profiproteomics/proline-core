@@ -2,25 +2,25 @@ package fr.proline.core.om.provider.msi.impl
 
 import fr.profi.jdbc.easy.EasyDBC
 import fr.profi.util.primitives._
-import fr.proline.context._
+import fr.proline.context.MsiDbConnectionContext
 import fr.proline.core.dal.DoJDBCReturningWork
 import fr.proline.core.dal.tables.SelectQueryBuilder._
 import fr.proline.core.dal.tables.SelectQueryBuilder1
-import fr.proline.core.dal.tables.msi.{ MsiDbProteinSetTable, MsiDbProteinSetProteinMatchItemTable, MsiDbPeptideSetTable }
+import fr.proline.core.dal.tables.msi.MsiDbPeptideSetTable
+import fr.proline.core.dal.tables.msi.MsiDbProteinSetProteinMatchItemTable
+import fr.proline.core.dal.tables.msi.MsiDbProteinSetTable
 import fr.proline.core.om.builder.ProteinSetBuilder
 import fr.proline.core.om.model.msi._
+import fr.proline.core.om.provider.PeptideCacheExecutionContext
 import fr.proline.core.om.provider.msi.IPeptideSetProvider
-import fr.proline.repository.ProlineDatabaseType
 
 class SQLProteinSetProvider(
   val msiDbCtx: MsiDbConnectionContext,
   val peptideSetProvider: IPeptideSetProvider
 ) {
   
-  require( msiDbCtx.getProlineDatabaseType == ProlineDatabaseType.MSI, "MsiDb connection required")
-  
-  def this(msiDbCtx: MsiDbConnectionContext, psDbCtx: DatabaseConnectionContext) = {
-    this(msiDbCtx, new SQLPeptideSetProvider(msiDbCtx,psDbCtx) )
+  def this(peptideCacheExecContext: PeptideCacheExecutionContext) = {
+    this(peptideCacheExecContext.getMSIDbConnectionContext, new SQLPeptideSetProvider(peptideCacheExecContext) )
   }
 
   def getProteinSetsAsOptions(protSetIds: Seq[Long]): Array[Option[ProteinSet]] = {

@@ -7,10 +7,12 @@ class LandmarkRangeSmoother extends IAlnSmoother {
   import fr.proline.core.om.model.lcms._
   import scala.collection.mutable.ArrayBuffer
   
-  def smoothLandmarks( landmarks: Seq[Landmark], smoothingParams: AlnSmoothingParams ): Seq[Landmark] = {
-   
-    val smoothingWindowSize = smoothingParams.windowSize
-    val smoothingWindowOverlap = smoothingParams.windowOverlap
+  def smoothLandmarks( landmarks: Seq[Landmark], smoothingParams: Option[AlnSmoothingParams] ): Seq[Landmark] = {
+
+    require(smoothingParams.isDefined, "Landmarks range smoother requires window size and window overlaps parameters")
+
+    val smoothingWindowSize = smoothingParams.get.windowSize
+    val smoothingWindowOverlap = smoothingParams.get.windowOverlap
     
     // Create an array of landmarks
     val nbLandmarks = landmarks.length

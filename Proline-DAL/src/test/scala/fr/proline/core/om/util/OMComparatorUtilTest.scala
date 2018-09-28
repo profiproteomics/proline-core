@@ -1,43 +1,36 @@
 package fr.proline.core.om.util
 
 import org.junit.Before
-import fr.proline.repository.util.DatabaseTestCase
-import fr.proline.repository.util.JPAUtils
+
 import org.junit.After
 import org.junit.Assert._
-import fr.proline.repository.util.DatabaseUtils
-import fr.proline.core.orm.ps.PeptidePtm
-import fr.proline.core.om.model.msi.PtmDefinition
-import fr.proline.core.om.model.msi.LocatedPtm
 import org.junit.Test
-import fr.proline.core.om.model.msi.PtmEvidence
-import fr.proline.core.om.model.msi.IonTypes
-import fr.proline.core.om.model.msi.PtmNames
+import fr.proline.repository.util.DatabaseUtils
+import fr.proline.core.om.model.msi._
+import fr.proline.core.orm.msi.PeptidePtm
 import fr.proline.repository.ProlineDatabaseType
+import fr.proline.repository.util.DatabaseTestCase
+import fr.proline.repository.util.JPAUtils
 
 class OMComparatorUtilTest extends DatabaseTestCase {
 
-  override def getProlineDatabaseType() = ProlineDatabaseType.PS
+  override def getProlineDatabaseType() = ProlineDatabaseType.MSI
 
   @Before
   @throws(classOf[Exception])
   def initialize() = {
     initDatabase()
-
-    //loadDataSet("/fr/proline/core/om/ps/Unimod_Dataset.xml");
-    loadCompositeDataSet(Array("/dbunit/datasets/ps-db_init_dataset.xml","/dbunit/datasets/ps/Peptides_Dataset.xml"))
+    loadCompositeDataSet(Array("/dbunit/Init/msi-db.xml","/dbunit/datasets/msi/Peptides_Dataset.xml"))
   }
 
-    override def getPropertiesFileName(): String = {
-	return "db_settings/h2/db_ps.properties";
-  }
+  def getPropertiesFileName(): String = "db_settings/h2/db_msi.properties"
   
   @Test
   def comparePepPtm() = {
-    val psEm = getConnector.createEntityManager
+    val msiEm = getConnector.createEntityManager
 
     try {
-      val pepPtm: PeptidePtm = psEm.find(classOf[PeptidePtm], java.lang.Long.valueOf(1L))
+      val pepPtm: PeptidePtm = msiEm.find(classOf[PeptidePtm], java.lang.Long.valueOf(1L))
 
       val ptmEvi = new PtmEvidence(
         ionType = IonTypes.Precursor,
@@ -70,8 +63,8 @@ class OMComparatorUtilTest extends DatabaseTestCase {
       assertTrue(OMComparatorUtil.comparePeptidePtm(lPtm, pepPtm))
     } finally {
 
-      if (psEm != null) {
-        psEm.close()
+      if (msiEm != null) {
+        msiEm.close()
       }
 
     }
@@ -80,7 +73,7 @@ class OMComparatorUtilTest extends DatabaseTestCase {
 
   @After
   override def tearDown() = {
-    super.tearDown();
+    super.tearDown()
   }
 
 }

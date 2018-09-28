@@ -4,13 +4,12 @@ import java.io.Serializable;
 
 import javax.persistence.*;
 
-
 /**
  * The persistent class for the scan database table.
  * 
  */
 @Entity
-@NamedQuery(name="Scan.findAll", query="SELECT s FROM Scan s")
+@NamedQuery(name = "Scan.findAll", query = "SELECT s FROM Scan s")
 public class Scan implements Serializable {
 	private static final long serialVersionUID = 1L;
 
@@ -18,27 +17,27 @@ public class Scan implements Serializable {
 	@GeneratedValue(strategy = GenerationType.AUTO)
 	private Long id;
 
-	@Column(name="base_peak_intensity")
+	@Column(name = "base_peak_intensity")
 	private double basePeakIntensity;
 
-	@Column(name="base_peak_moz")
+	@Column(name = "base_peak_moz")
 	private double basePeakMoz;
 
 	private Integer cycle;
 
-	@Column(name="initial_id")
+	@Column(name = "initial_id")
 	private Integer initialId;
 
-	@Column(name="ms_level")
+	@Column(name = "ms_level")
 	private Integer msLevel;
 
-	@Column(name="precursor_charge")
+	@Column(name = "precursor_charge")
 	private Integer precursorCharge;
 
-	@Column(name="precursor_moz")
+	@Column(name = "precursor_moz")
 	private Double precursorMoz;
 
-	@Column(name="serialized_properties")
+	@Column(name = "serialized_properties")
 	private String serializedProperties;
 
 	private double tic;
@@ -47,7 +46,7 @@ public class Scan implements Serializable {
 
 	//bi-directional many-to-one association to ScanSequence
 	@ManyToOne
-	@JoinColumn(name="scan_sequence_id")
+	@JoinColumn(name = "scan_sequence_id")
 	private ScanSequence scanSequence;
 
 	public Scan() {

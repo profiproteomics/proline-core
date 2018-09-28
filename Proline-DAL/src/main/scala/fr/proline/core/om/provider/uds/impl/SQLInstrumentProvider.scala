@@ -41,7 +41,7 @@ class SQLInstrumentProvider(val dbCtx: DatabaseConnectionContext) extends IInstr
         )
         
         for (instPropStr <- r.nextStringOption) {
-          if (StringUtils.isEmpty(instPropStr) == false)
+          if (!StringUtils.isEmpty(instPropStr))
             instrument.properties = Some(ProfiJson.deserialize[InstrumentProperties](instPropStr))
         }
 

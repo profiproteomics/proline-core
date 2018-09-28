@@ -97,10 +97,10 @@ object TargetDecoyResultSetSplitter extends IResultSetSplitter {
     val peptideByIds = newPepMatches.groupBy(_.peptide.id)
 
     val newProtMatches = protMatches.map { protMatch =>
-      val seqMatches = protMatch.sequenceMatches.filter { seqMatch => peptideByIds.contains(seqMatch.peptide.get.id) }
+      val seqMatches = protMatch.sequenceMatches.filter { seqMatch => peptideByIds.contains(seqMatch.getPeptideId) }
 
       val newSeqMatch = seqMatches.map { seqMatch =>
-        val pepMatches = peptideByIds.get(seqMatch.peptide.get.id).getOrElse(List())
+        val pepMatches = peptideByIds.get(seqMatch.getPeptideId).getOrElse(List())
         var bestPepMatch = pepMatches(0)
         for (i <- 1 until pepMatches.length) {
           val nextPepMatch = pepMatches(i)

@@ -1,6 +1,8 @@
 package fr.proline.core.algo.msq.config
 
-trait IQuantConfig
+trait IQuantConfig {
+  val configVersion : String = "1.0"
+}
 
 trait IMsQuantConfig extends IQuantConfig {
   val extractionParams: ExtractionParams
@@ -15,5 +17,10 @@ trait IMzTolerant {
   }
 }
 
+trait IMzTimeTolerant extends IMzTolerant {
+  val timeTol: Float
+}
+
 case class ExtractionParams( mozTol: Double, mozTolUnit: String ) extends IMzTolerant
 
+case class MzToleranceParams( mozTol: Double, mozTolUnit: String ) extends IMzTolerant

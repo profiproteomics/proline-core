@@ -9,26 +9,26 @@ import javax.persistence.*;
  * 
  */
 @Entity
-@Table(name="feature_peakel_item")
-@NamedQuery(name="FeaturePeakelItem.findAll", query="SELECT f FROM FeaturePeakelItem f")
+@Table(name = "feature_peakel_item")
+@NamedQuery(name = "FeaturePeakelItem.findAll", query = "SELECT f FROM FeaturePeakelItem f")
 public class FeaturePeakelItem implements Serializable {
 	private static final long serialVersionUID = 1L;
 
 	@EmbeddedId
 	private FeaturePeakelItemPK id;
 
-	@Column(name="isotope_index")
+	@Column(name = "isotope_index")
 	private Integer isotopeIndex;
-	
-	@Column(name="is_base_peakel")
+
+	@Column(name = "is_base_peakel")
 	private boolean isBasePeakel;
 
-	@Column(name="serialized_properties")
+	@Column(name = "serialized_properties")
 	private String serializedProperties;
-	 
+
 	//bi-directional many-to-one association to Feature
 	@ManyToOne
-	@JoinColumn(name="feature_id")
+	@JoinColumn(name = "feature_id")
 	@MapsId("featureId")
 	private Feature feature;
 
@@ -39,7 +39,7 @@ public class FeaturePeakelItem implements Serializable {
 
 	//bi-directional many-to-one association to Peakel
 	@ManyToOne
-	@JoinColumn(name="peakel_id")
+	@JoinColumn(name = "peakel_id")
 	@MapsId("peakelId")
 	private Peakel peakel;
 
@@ -61,7 +61,7 @@ public class FeaturePeakelItem implements Serializable {
 	public void setIsotopeIndex(Integer isotopeIndex) {
 		this.isotopeIndex = isotopeIndex;
 	}
-	
+
 	public boolean getIsBasePeakel() {
 		return isBasePeakel;
 	}

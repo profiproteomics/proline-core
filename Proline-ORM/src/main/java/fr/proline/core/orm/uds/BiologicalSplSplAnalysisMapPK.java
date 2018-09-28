@@ -26,8 +26,8 @@ public class BiologicalSplSplAnalysisMapPK implements Serializable {
 		} else if (obj instanceof BiologicalSplSplAnalysisMapPK) {
 			final BiologicalSplSplAnalysisMapPK otherPK = (BiologicalSplSplAnalysisMapPK) obj;
 
-			result = ((getBiologicalSampleId() == otherPK.getBiologicalSampleId()) && (getSampleAnalysisId() == otherPK
-					.getSampleAnalysisId()));
+			result = ((getBiologicalSampleId() == otherPK.getBiologicalSampleId()) &&
+				(getSampleAnalysisId() == otherPK.getSampleAnalysisId()));
 		}
 
 		return result;
@@ -35,8 +35,8 @@ public class BiologicalSplSplAnalysisMapPK implements Serializable {
 	}
 
 	public int hashCode() {
-		return (Long.valueOf(getBiologicalSampleId()).hashCode() ^ Long.valueOf(
-				getSampleAnalysisId()).hashCode());
+		return (Long.valueOf(getBiologicalSampleId()).hashCode() ^
+			Long.valueOf(getSampleAnalysisId()).hashCode());
 	}
 
 	public long getBiologicalSampleId() {

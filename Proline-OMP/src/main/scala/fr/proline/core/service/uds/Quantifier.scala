@@ -2,7 +2,6 @@ package fr.proline.core.service.uds
 
 import javax.persistence.EntityManager
 import scala.collection.JavaConversions.asScalaBuffer
-import scala.collection.JavaConversions.collectionAsScalaIterable
 import com.typesafe.scalalogging.LazyLogging
 import fr.profi.util.serialization.ProfiJson.deserialize
 import fr.profi.util.serialization.ProfiJson.serialize
@@ -22,6 +21,18 @@ import fr.proline.core.orm.uds.repository.ObjectTreeSchemaRepository
 import fr.proline.core.service.msq.quantify.BuildMasterQuantChannelQuantifier
 import fr.proline.repository.IDataStoreConnectorFactory
 
+object Quantifier {
+
+   def storeQuantConfig(quantConfigAsStr: String, schemaName: UdsSchemaName, udsEM: EntityManager): ObjectTree = {
+    // Store the object tree
+    val quantDSObjectTree = new ObjectTree()
+    quantDSObjectTree.setSchema(ObjectTreeSchemaRepository.loadOrCreateObjectTreeSchema(udsEM, schemaName.toString()))
+    quantDSObjectTree.setClobData(quantConfigAsStr)
+    udsEM.persist(quantDSObjectTree)
+    quantDSObjectTree
+  }
+
+}
 class Quantifier(
   executionContext: IExecutionContext,
   name: String,
@@ -87,19 +98,14 @@ class Quantifier(
       val methodType = QuantMethodType.withName(udsQuantMethod.getType)
       val abundanceUnit = AbundanceUnit.withName(udsQuantMethod.getAbundanceUnit)
 
-      // TODO: remove me (these values have been removed from the quant config)
-      /*if(abundanceUnit == AbundanceUnit.FEATURE_INTENSITY) {
-        // Fake missing fields
-        quantConfigAsMap.put("map_set_name", null)
-        quantConfigAsMap.put("lc_ms_runs", null)
-      }*/
-
       // Parse the quant configuration
       val quantConfigAsStr = serialize(quantConfigAsMap)
       val quantConfigSchemaName = this.getQuantConfigSchemaName(methodType, abundanceUnit)
       
        // Store QUANT CONFIG in ObjectTree
-      val qtConfigObjectTree = storeQuantConfig(quantConfigAsStr, quantConfigSchemaName, udsEM)
+      //TODO deserialize before saving and set degault value if necessary
+      logger.info("Storing quantitation configuration with schema named: " + quantConfigSchemaName.toString())
+      val qtConfigObjectTree = Quantifier.storeQuantConfig(quantConfigAsStr, quantConfigSchemaName, udsEM)
 
       // Link QUANT CONFIG to quantitation DS
       udsQuantitation.putObject(quantConfigSchemaName.toString(), qtConfigObjectTree.getId())
@@ -223,20 +229,6 @@ class Quantifier(
       }
       case RESIDUE_LABELING => UdsSchemaName.RESIDUE_LABELING_QUANT_CONFIG
     }
-  }
-
-  protected def storeQuantConfig(quantConfigAsStr: String, schemaName: UdsSchemaName, udsEM: EntityManager): ObjectTree = {
-
-    logger.info("Storing quantitation configuration with schema named: " + schemaName.toString())
-    
-    // Store the object tree
-    val quantDSObjectTree = new ObjectTree()
-    quantDSObjectTree.setSchema(ObjectTreeSchemaRepository.loadOrCreateObjectTreeSchema(udsEM, schemaName.toString()))
-    quantDSObjectTree.setClobData(quantConfigAsStr)
-
-    udsEM.persist(quantDSObjectTree)
-
-    quantDSObjectTree
   }
 
 

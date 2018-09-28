@@ -67,7 +67,8 @@ object MsiSearchBuilder {
     enzymeCleavageRecordsByEnzymeId: Map[Long,IValueContainer],
     instConfigRecordById: Map[Long,IValueContainer],
     instrumentRecordById: Map[Long,IValueContainer],
-    fragmentationSeriesListByInstConfigId: Map[Long,Seq[IValueContainer]],
+    fragmentationRuleSetById: Map[Long, IValueContainer],
+    fragmentationSeriesListByFragmentationRuleSetId: Map[Long,Seq[IValueContainer]],
     ptmProvider: IPTMProvider
   ): Array[MSISearch] = {
     
@@ -85,7 +86,8 @@ object MsiSearchBuilder {
       { enzymeId: Long => selectAndMapRecords( Array(enzymeId), enzymeCleavageRecordsByEnzymeId ) },
       { instConfigIds: Array[Long] => selectAndMapRecords( instConfigIds, instConfigRecordById ) },
       { instIds: Array[Long] => selectAndMapRecords( instIds, instrumentRecordById ) },
-      { instConfigIds: Array[Long] => selectAndMapGroupedRecords( instConfigIds, fragmentationSeriesListByInstConfigId ) },
+      { fragRuleSetIds: Array[Long] => selectAndMapRecords( fragRuleSetIds, fragmentationRuleSetById ) },
+      { fragRuleSetIds: Array[Long] => selectAndMapGroupedRecords( fragRuleSetIds, fragmentationSeriesListByFragmentationRuleSetId ) },
       ptmProvider
     )
     
@@ -105,6 +107,7 @@ object MsiSearchBuilder {
     eachEnzymeCleavageRecordSelector: Long => ( (IValueContainer => EnzymeCleavage) => Seq[EnzymeCleavage] ),
     eachInstConfigRecordSelector: Array[Long] => ( (IValueContainer => InstrumentConfig) => Seq[InstrumentConfig] ),
     eachInstrumentRecordSelector: Array[Long] => ( (IValueContainer => Instrument) => Seq[Instrument] ),
+    eachFragRuleSetRecordSelector: Array[Long] => ( (IValueContainer => FragmentationRuleSet) => Seq[FragmentationRuleSet] ),
     eachFragSeriesRecordSelector: Array[Long] => ( (IValueContainer => FragmentIonType) => Seq[FragmentIonType] ),
     ptmProvider: IPTMProvider
   ): Array[MSISearch] = {
@@ -141,6 +144,7 @@ object MsiSearchBuilder {
       eachEnzymeCleavageRecordSelector,
       eachInstConfigRecordSelector,
       eachInstrumentRecordSelector,
+      eachFragRuleSetRecordSelector,
       eachFragSeriesRecordSelector,
       eachSearchedSeqDbRecordSelector,
       ptmProvider
@@ -192,6 +196,7 @@ object MsiSearchBuilder {
     eachEnzymeCleavageRecordSelector: Long => ( (IValueContainer => EnzymeCleavage) => Seq[EnzymeCleavage] ),
     eachInstConfigRecordSelector: Array[Long] => ( (IValueContainer => InstrumentConfig) => Seq[InstrumentConfig] ),
     eachInstrumentRecordSelector: Array[Long] => ( (IValueContainer => Instrument) => Seq[Instrument] ),
+    eachFragRuleSetRecordSelector: Array[Long] => ( (IValueContainer => FragmentationRuleSet) => Seq[FragmentationRuleSet] ),
     eachFragmentationSeriesSelector: Array[Long] => ( (IValueContainer => FragmentIonType) => Seq[FragmentIonType] ),
     eachSearchedSeqDbRecordSelector: Long => ( (IValueContainer => SeqDatabase) => Seq[SeqDatabase] ),
     ptmProvider: IPTMProvider
@@ -218,11 +223,12 @@ object MsiSearchBuilder {
     }
     
     val instConfigIdBySSId = new HashMap[Long, Long]
+    val fragRuleSetIdBySSId = new HashMap[Long, Long]
     val searchSettingsList = eachSearchSettingsRecord { r =>
 
       val ssId = r.getLong(ssCols.ID)
       instConfigIdBySSId += ssId -> r.getLong(ssCols.INSTRUMENT_CONFIG_ID)
-
+      fragRuleSetIdBySSId += ssId -> r.getLong(ssCols.FRAGMENTATION_RULE_SET_ID)
       buildSearchSettings( r, pmfSettingsById.get(ssId), msmsSettingsById.get(ssId) )
     }
     
@@ -262,10 +268,10 @@ object MsiSearchBuilder {
     val ptmSpecById = Map() ++ ptmProvider.getPtmDefinitions(ptmSpecIds.distinct).map(s => s.id -> s)
     val instConfById = Map() ++ InstrumentConfigBuilder.buildInstrumentConfigs(
       eachInstConfigRecordSelector(instConfigIdBySSId.values.toArray.distinct),
-      eachInstrumentRecordSelector,
-      eachFragmentationSeriesSelector
+      eachInstrumentRecordSelector
     ).map(i => i.id -> i)
-    
+
+    val fragRulSetById = Map() ++ InstrumentConfigBuilder.buildFragmentationRuleSets(eachFragRuleSetRecordSelector(fragRuleSetIdBySSId.values.toArray.distinct), eachFragmentationSeriesSelector).map(i => i.id -> i)
     for (ss <- searchSettingsList) {
       val ssId = ss.id
       //ss.seqDatabases = seqDbIdsBySSId(ssId).map(seqDbById(_)).toArray      
@@ -280,6 +286,11 @@ object MsiSearchBuilder {
       ss.variablePtmDefs = varPtms
 
       ss.instrumentConfig = instConfById(instConfigIdBySSId(ss.id))
+
+      if( !fragRuleSetIdBySSId.contains(ss.id) || !fragRulSetById.contains(fragRuleSetIdBySSId(ss.id)) )
+        ss.fragmentationRuleSet = None
+      else
+        ss.fragmentationRuleSet = Some(fragRulSetById(fragRuleSetIdBySSId(ss.id)))
     }
 
     searchSettingsList.toArray
@@ -308,6 +319,7 @@ object MsiSearchBuilder {
       fixedPtmDefs = null,
       seqDatabases = null,
       instrumentConfig = null,
+      fragmentationRuleSet = None,
       msmsSearchSettings = msmsSearchSettings,
       pmfSearchSettings = pmfSearchSettings,
       properties = r.getStringOption(ssCols.SERIALIZED_PROPERTIES).map( ProfiJson.deserialize[SearchSettingsProperties](_) )

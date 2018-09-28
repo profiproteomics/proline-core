@@ -1,6 +1,5 @@
 package fr.proline.repository.dialect;
 
-import fr.proline.repository.id.TableNameSequenceGenerator;
 import fr.proline.repository.id.TableNameSequenceStyleGenerator;
 import org.hibernate.dialect.PostgreSQL94Dialect;
 

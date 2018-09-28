@@ -5,54 +5,53 @@ import javax.persistence.*;
 import java.io.Serializable;
 import java.util.List;
 
-
 /**
  * The persistent class for the processed_map database table.
  * 
  */
 @Entity
-@Table(name="processed_map")
-@NamedQuery(name="ProcessedMap.findAll", query="SELECT p FROM ProcessedMap p")
+@Table(name = "processed_map")
+@NamedQuery(name = "ProcessedMap.findAll", query = "SELECT p FROM ProcessedMap p")
 public class ProcessedMap implements Serializable {
 	private static final long serialVersionUID = 1L;
 
 	@Id
 	private Long id;
 
-	@Column(name="is_aln_reference")
+	@Column(name = "is_aln_reference")
 	private Boolean isAlnReference;
 
-	@Column(name="is_locked")
+	@Column(name = "is_locked")
 	private Boolean isLocked;
 
-	@Column(name="is_master")
+	@Column(name = "is_master")
 	private Boolean isMaster;
 
-	@Column(name="normalization_factor")
+	@Column(name = "normalization_factor")
 	private float normalizationFactor;
 
 	private Integer number;
 
 	//bi-directional many-to-one association to FeatureClusterItem
-	@OneToMany(mappedBy="processedMap")
+	@OneToMany(mappedBy = "processedMap")
 	private List<FeatureClusterItem> featureClusterItems;
 
 	//bi-directional many-to-one association to MasterFeatureItem
-	@OneToMany(mappedBy="masterMap")
+	@OneToMany(mappedBy = "masterMap")
 	private List<MasterFeatureItem> masterFeatureItems;
 
 	//bi-directional one-to-one association to Map
 	@OneToOne
-	@JoinColumn(name="id")
+	@JoinColumn(name = "id")
 	private Map map;
 
 	//bi-directional many-to-one association to MapSet
 	@ManyToOne
-	@JoinColumn(name="map_set_id")
+	@JoinColumn(name = "map_set_id")
 	private MapSet mapSet;
 
 	//bi-directional many-to-one association to ProcessedMapFeatureItem
-	@OneToMany(mappedBy="processedMap")
+	@OneToMany(mappedBy = "processedMap")
 	private List<ProcessedMapFeatureItem> processedMapFeatureItems;
 
 	public ProcessedMap() {

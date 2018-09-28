@@ -18,71 +18,71 @@ import javax.persistence.Table;
 @Table(name = "used_ptm")
 public class UsedPtm implements Serializable {
 
-    private static final long serialVersionUID = 1L;
+	private static final long serialVersionUID = 1L;
 
-    @EmbeddedId
-    private UsedPtmPK id;
+	@EmbeddedId
+	private UsedPtmPK id;
 
-    @Column(name = "is_fixed")
-    private boolean isFixed;
+	@Column(name = "is_fixed")
+	private boolean isFixed;
 
-    @Column(name = "short_name")
-    private String shortName;
+	@Column(name = "short_name")
+	private String shortName;
 
-    // bi-directional many-to-one association to PtmSpecificity
-    @ManyToOne
-    @JoinColumn(name = "ptm_specificity_id")
-    @MapsId("ptmSpecificityId")
-    private PtmSpecificity ptmSpecificity;
+	// bi-directional many-to-one association to PtmSpecificity
+	@ManyToOne
+	@JoinColumn(name = "ptm_specificity_id")
+	@MapsId("ptmSpecificityId")
+	private PtmSpecificity ptmSpecificity;
 
-    // bi-directional many-to-one association to SearchSetting
-    @ManyToOne
-    @JoinColumn(name = "search_settings_id")
-    @MapsId("searchSettingsId")
-    private SearchSetting searchSetting;
+	// bi-directional many-to-one association to SearchSetting
+	@ManyToOne
+	@JoinColumn(name = "search_settings_id")
+	@MapsId("searchSettingsId")
+	private SearchSetting searchSetting;
 
-    public UsedPtm() {
-	this.id = new UsedPtmPK();
-    }
+	public UsedPtm() {
+		this.id = new UsedPtmPK();
+	}
 
-    public UsedPtmPK getId() {
-	return this.id;
-    }
+	public UsedPtmPK getId() {
+		return this.id;
+	}
 
-    public void setId(UsedPtmPK id) {
-	this.id = id;
-    }
+	public void setId(UsedPtmPK id) {
+		this.id = id;
+	}
 
-    public boolean getIsFixed() {
-	return isFixed;
-    }
+	public boolean getIsFixed() {
+		return isFixed;
+	}
 
-    public void setIsFixed(final boolean pIsFixed) {
-	isFixed = pIsFixed;
-    }
+	public void setIsFixed(final boolean pIsFixed) {
+		isFixed = pIsFixed;
+	}
 
-    public String getShortName() {
-	return this.shortName;
-    }
+	public String getShortName() {
+		return this.shortName;
+	}
 
-    public void setShortName(String shortName) {
-	this.shortName = shortName;
-    }
+	public void setShortName(String shortName) {
+		this.shortName = shortName;
+	}
 
-    public PtmSpecificity getPtmSpecificity() {
-	return this.ptmSpecificity;
-    }
+	public PtmSpecificity getPtmSpecificity() {
+		return this.ptmSpecificity;
+	}
 
-    public void setPtmSpecificity(PtmSpecificity ptmSpecificity) {
-	this.ptmSpecificity = ptmSpecificity;
-    }
+	public void setPtmSpecificity(PtmSpecificity ptmSpecificity) {
+		this.ptmSpecificity = ptmSpecificity;
+	}
 
-    public SearchSetting getSearchSetting() {
-	return this.searchSetting;
-    }
+	public SearchSetting getSearchSetting() {
+		return this.searchSetting;
+	}
 
-    public void setSearchSetting(SearchSetting searchSetting) {
-	this.searchSetting = searchSetting;
-    }
+	public void setSearchSetting(SearchSetting searchSetting) {
+		this.searchSetting = searchSetting;
+	}
 
 }

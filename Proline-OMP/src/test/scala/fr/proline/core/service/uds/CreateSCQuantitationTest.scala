@@ -1,25 +1,16 @@
 package fr.proline.core.service.uds
 
-import org.junit.After
-import org.junit.Assert._
-import org.junit.Before
-import org.junit.Test
 import com.typesafe.scalalogging.StrictLogging
-import fr.proline.context.IExecutionContext
 import fr.proline.core.dal._
 import fr.proline.core.dal.context._
+import fr.proline.core.om.model.msq._
+import fr.proline.core.orm.uds.{Project, UserAccount}
 import fr.proline.repository.DriverType
-import fr.proline.core.om.model.msq.BiologicalGroup
-import fr.proline.core.om.model.msq.BiologicalSample
-import fr.proline.core.om.model.msq.QuantChannel
-import fr.proline.core.om.model.msq.MasterQuantChannel
-import fr.proline.core.om.model.msq.SimplifiedExperimentalDesign
-import fr.proline.core.orm.uds.Project
-import fr.proline.core.orm.uds.UserAccount
+import org.junit.Assert._
+import org.junit.Test
 
-object CreateSCQuantitationTest extends AbstractEmptyDatastoreTestCase with StrictLogging {
+object CreateSCQuantitationTest extends AbstractDatastoreTestCase with StrictLogging {
   
-  // Define the required parameters
   val driverType = DriverType.H2
   val useJPA = true
   
@@ -66,12 +57,10 @@ class CreateSCQuantitationTest extends StrictLogging {
     super.initDBsDBManagement(driverType)
 
     //Load Data
-    pdiDBTestCase.loadDataSet("/dbunit/datasets/pdi/Proteins_Dataset.xml")
-    psDBTestCase.loadDataSet("/dbunit_samples/" + fileName + "/ps-db.xml")
     msiDBTestCase.loadDataSet("/dbunit_samples/" + fileName + "/msi-db.xml")
     udsDBTestCase.loadDataSet("/dbunit_samples/" + fileName + "/uds-db.xml")
 
-    logger.info("PDI, PS, MSI and UDS dbs succesfully initialized !")
+    logger.info("MSI and UDS dbs succesfully initialized !")
 
     val execContext = buildJPAContext()
     executionContext = execContext

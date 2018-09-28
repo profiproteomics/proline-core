@@ -1,7 +1,5 @@
 package fr.proline.core.service.msq.quantify
 
-import scala.collection.JavaConversions.collectionAsScalaIterable
-
 import fr.profi.util.serialization.ProfiJson
 import fr.proline.context.IExecutionContext
 import fr.proline.context.MsiDbConnectionContext
@@ -10,15 +8,14 @@ import fr.proline.core.om.model.lcms.MapSet
 import fr.proline.core.om.model.msi.ResultSummary
 import fr.proline.core.om.model.msq.ExperimentalDesign
 import fr.proline.core.om.model.msq.MasterQuantChannelProperties
+import fr.proline.core.om.provider.PeptideCacheExecutionContext
 import fr.proline.core.om.provider.msi.impl.SQLResultSummaryProvider
-import fr.proline.core.om.storer.msi.impl.ReadBackRsmDuplicator
-import fr.proline.core.om.storer.msi.impl.ResetIdsRsmDuplicator
-import fr.proline.core.om.storer.msi.impl.RsmDuplicator
-import fr.proline.core.orm.msi.{ ResultSet => MsiResultSet }
-import fr.proline.core.orm.msi.{ ResultSummary => MsiResultSummary }
+import fr.proline.core.orm.msi.{ResultSet => MsiResultSet}
+import fr.proline.core.orm.msi.{ResultSummary => MsiResultSummary}
 import fr.proline.core.orm.uds.MasterQuantitationChannel
 import fr.proline.core.service.lcms.io.ExtractMapSet
 
+import scala.collection.JavaConversions.collectionAsScalaIterable
 
 
 class Ms2DrivenLabelFreeFeatureQuantifier(
@@ -38,7 +35,7 @@ class Ms2DrivenLabelFreeFeatureQuantifier(
     val mapSetExtractor = new ExtractMapSet(
       this.lcmsDbCtx,
       this.udsMasterQuantChannel.getName,
-      this.entityCache.getLcMsRuns(),
+      this.entityCache.getSortedLcMsRuns(),
       masterQcExpDesign,
       quantConfig,
       Some(pepByRunAndScanNbr),
@@ -71,35 +68,6 @@ class Ms2DrivenLabelFreeFeatureQuantifier(
     udsEm.merge(udsMasterQuantChannel)
     
     super.quantifyMasterChannel()
-  }
-  
-  override protected def getMergedResultSummary(msiDbCtx: MsiDbConnectionContext): ResultSummary = {
-    if (masterQc.identResultSummaryId.isEmpty) {
-      isMergedRsmProvided = false
-      createMergedResultSummary(msiDbCtx)
-    } else {
-      isMergedRsmProvided = true
-      
-      val pRsmId = masterQc.identResultSummaryId.get
-          
-      this.logger.debug("Read Merged RSM with ID " + pRsmId)
-
-      // Instantiate a Lazy RSM provider
-      val rsmProvider = new SQLResultSummaryProvider(msiDbCtx = msiDbCtx, psDbCtx = psDbCtx, udsDbCtx = udsDbCtx)
-      val identRsmOpt = rsmProvider.getResultSummary(pRsmId, true)
-        
-      require( identRsmOpt.isDefined, "can't load the result summary with id=" + pRsmId)
-      
-      // Update Master Quant Channel properties
-      val mqchProperties = new MasterQuantChannelProperties(
-        identResultSummaryId = masterQc.identResultSummaryId,
-        identDatasetId = masterQc.identDatasetId,
-        spectralCountProperties = None
-      )
-      udsMasterQuantChannel.setSerializedProperties(ProfiJson.serialize(mqchProperties))
-      
-      identRsmOpt.get
-    }
   }
 
 }

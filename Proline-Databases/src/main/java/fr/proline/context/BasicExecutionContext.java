@@ -10,36 +10,24 @@ public class BasicExecutionContext implements IExecutionContext {
 
 	private static final Logger LOG = LoggerFactory.getLogger(BasicExecutionContext.class);
 
+	private final long m_projectId;
 	private final UdsDbConnectionContext m_udsDb;
-	private final DatabaseConnectionContext m_pdiDb;
-	private final DatabaseConnectionContext m_psDb;
 	private final MsiDbConnectionContext m_msiDb;
 	private final LcMsDbConnectionContext m_lcMsDb;
 
 	public BasicExecutionContext(
+		final long projectId,
 		final UdsDbConnectionContext udsDb,
-		final DatabaseConnectionContext pdiDb,
-		final DatabaseConnectionContext psDb,
 		final MsiDbConnectionContext msiDb,
-		final LcMsDbConnectionContext lcMsDb) {
+		final LcMsDbConnectionContext lcMsDb
+	) {
+		m_projectId = projectId;
 
 		if (udsDb == null) {
 			LOG.info("UDS DatabaseConnectionContext is null");
 		}
 
 		m_udsDb = udsDb;
-
-		if (pdiDb == null) {
-			LOG.info("PDI DatabaseConnectionContext is null");
-		}
-
-		m_pdiDb = pdiDb;
-
-		if (psDb == null) {
-			LOG.info("PS DatabaseConnectionContext is null");
-		}
-
-		m_psDb = psDb;
 
 		if (msiDb == null) {
 			LOG.info("MSI DatabaseConnectionContext is null");
@@ -53,20 +41,15 @@ public class BasicExecutionContext implements IExecutionContext {
 
 		m_lcMsDb = lcMsDb;
 	}
+	
+	@Override
+	public long getProjectId() {
+		return m_projectId;
+	}
 
 	@Override
 	public UdsDbConnectionContext getUDSDbConnectionContext() {
 		return m_udsDb;
-	}
-
-	@Override
-	public DatabaseConnectionContext getPDIDbConnectionContext() {
-		return m_pdiDb;
-	}
-
-	@Override
-	public DatabaseConnectionContext getPSDbConnectionContext() {
-		return m_psDb;
 	}
 
 	@Override
@@ -81,9 +64,11 @@ public class BasicExecutionContext implements IExecutionContext {
 
 	@Override
 	public boolean isJPA() {
-		final List<DatabaseConnectionContext> contexts = Arrays.asList(getUDSDbConnectionContext(),
-			getPDIDbConnectionContext(), getPSDbConnectionContext(), getMSIDbConnectionContext(),
-			getLCMSDbConnectionContext());
+		final List<DatabaseConnectionContext> contexts = Arrays.asList(
+			getUDSDbConnectionContext(),
+			getMSIDbConnectionContext(),
+			getLCMSDbConnectionContext()
+		);
 
 		return isAllJPA(contexts);
 	}
@@ -97,14 +82,6 @@ public class BasicExecutionContext implements IExecutionContext {
 
 		if (m_msiDb != null) {
 			m_msiDb.close();
-		}
-
-		if (m_psDb != null) {
-			m_psDb.close();
-		}
-
-		if (m_pdiDb != null) {
-			m_pdiDb.close();
 		}
 
 		if (m_udsDb != null) {

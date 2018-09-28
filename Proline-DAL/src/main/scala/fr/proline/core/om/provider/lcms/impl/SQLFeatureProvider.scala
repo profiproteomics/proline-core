@@ -1,17 +1,19 @@
 package fr.proline.core.om.provider.lcms.impl
 
-import scala.collection.mutable.ArrayBuffer
 import fr.profi.jdbc.ResultSetRow
-import fr.proline.context.LcMsDbConnectionContext
-import fr.proline.core.dal.{ DoJDBCWork, DoJDBCReturningWork }
-import fr.proline.core.dal.helper.LcmsDbHelper
-import fr.proline.core.dal.tables.SelectQueryBuilder._
-import fr.proline.core.dal.tables.{ SelectQueryBuilder1, SelectQueryBuilder2 }
-import fr.proline.core.dal.tables.lcms._
-import fr.proline.core.om.model.lcms._
 import fr.profi.util.primitives._
 import fr.profi.util.serialization.ProfiJson
-import fr.proline.core.om.provider.lcms.impl._
+import fr.proline.context.LcMsDbConnectionContext
+import fr.proline.core.dal.helper.LcmsDbHelper
+import fr.proline.core.dal.tables.SelectQueryBuilder._
+import fr.proline.core.dal.tables.lcms._
+import fr.proline.core.dal.tables.SelectQueryBuilder1
+import fr.proline.core.dal.tables.SelectQueryBuilder2
+import fr.proline.core.dal.DoJDBCReturningWork
+import fr.proline.core.dal.DoJDBCWork
+import fr.proline.core.om.model.lcms._
+
+import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.HashMap
   
 class SQLFeatureProvider(

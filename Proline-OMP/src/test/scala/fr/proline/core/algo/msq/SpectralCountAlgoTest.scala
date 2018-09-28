@@ -3,22 +3,21 @@ package fr.proline.core.algo.msq
 import org.junit.Assert.assertTrue
 import org.junit.BeforeClass
 import org.junit.Test
-
 import com.typesafe.scalalogging.StrictLogging
-
 import fr.proline.core.algo.msq.spectralcount.PepInstanceFilteringLeafSCUpdater
-import fr.proline.core.dal.AbstractResultSummaryTestCase
+import fr.proline.core.dal.AbstractDatastoreTestCase
 import fr.proline.core.dbunit.STR_F063442_F122817_MergedRSMs
 import fr.proline.core.om.model.msi.ResultSummary
 import fr.proline.repository.DriverType
 
-object SpectralCountAlgoTest extends AbstractResultSummaryTestCase with StrictLogging {
+object SpectralCountAlgoTest extends AbstractDatastoreTestCase with StrictLogging {
 
   // Define some needed values
-  val driverType = DriverType.H2
-  val dbUnitResultFile = STR_F063442_F122817_MergedRSMs
+  override val driverType = DriverType.H2
+  override val dbUnitResultFile = STR_F063442_F122817_MergedRSMs
+  override val useJPA = true
+
   val targetRSMId: Long = 33L
-  val useJPA = true
 
   protected var readRSM: ResultSummary = null
 
@@ -26,14 +25,11 @@ object SpectralCountAlgoTest extends AbstractResultSummaryTestCase with StrictLo
   @throws(classOf[Exception])
   override def setUp() = {
     super.setUp()
-
     readRSM = this._loadRSM()
   }
 
   private def _loadRSM(): ResultSummary = {
-    val rsm = rsmProvider.getResultSummary(targetRSMId, true).get
-    // SMALL HACK because of DBUNIT BUG (see bioproj defect #7548)
-    //    if (decoyRSId.isDefined) rs.decoyResultSet = rsProvider.getResultSet(decoyRSId.get)
+    val rsm = getResultSummaryProvider().getResultSummary(targetRSMId, true).get
     rsm
   }
 

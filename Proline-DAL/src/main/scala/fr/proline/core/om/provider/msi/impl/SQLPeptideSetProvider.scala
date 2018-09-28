@@ -2,7 +2,7 @@ package fr.proline.core.om.provider.msi.impl
 
 import fr.profi.jdbc.easy.EasyDBC
 import fr.profi.util.primitives._
-import fr.proline.context._
+import fr.proline.context.MsiDbConnectionContext
 import fr.proline.core.dal.DoJDBCReturningWork
 import fr.proline.core.dal.helper.MsiDbHelper
 import fr.proline.core.dal.tables.SelectQueryBuilder._
@@ -10,18 +10,17 @@ import fr.proline.core.dal.tables.SelectQueryBuilder1
 import fr.proline.core.dal.tables.msi._
 import fr.proline.core.om.builder.PeptideSetBuilder
 import fr.proline.core.om.model.msi._
-import fr.proline.core.om.provider.msi.{ IPeptideSetProvider, IPeptideInstanceProvider }
-import fr.proline.repository.ProlineDatabaseType
+import fr.proline.core.om.provider.PeptideCacheExecutionContext
+import fr.proline.core.om.provider.msi.IPeptideInstanceProvider
+import fr.proline.core.om.provider.msi.IPeptideSetProvider
 
 class SQLPeptideSetProvider(
   val msiDbCtx: MsiDbConnectionContext,
   val peptideInstanceProvider: IPeptideInstanceProvider
 ) extends IPeptideSetProvider {
   
-  require( msiDbCtx.getProlineDatabaseType == ProlineDatabaseType.MSI, "MsiDb connection required")
-  
-  def this(msiDbCtx: MsiDbConnectionContext, psDbCtx: DatabaseConnectionContext) {
-    this(msiDbCtx, new SQLPeptideInstanceProvider(msiDbCtx,psDbCtx) )
+  def this(peptideCacheExecContext: PeptideCacheExecutionContext) {
+    this(peptideCacheExecContext.getMSIDbConnectionContext, new SQLPeptideInstanceProvider(peptideCacheExecContext) )
   }
   
   val PepSetItemCols = MsiDbPeptideSetPeptideInstanceItemTable.columns

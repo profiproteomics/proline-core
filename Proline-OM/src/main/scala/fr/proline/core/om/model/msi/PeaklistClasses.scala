@@ -59,7 +59,7 @@ case class Spectrum (
   var mozList: Option[Array[Double]],
   var intensityList: Option[Array[Float]],
   val peaksCount: Int,
-  val instrumentConfigId: Long,
+  val fragmentationRuleSetId: Option[Long],
   val peaklistId: Long,
   
   var properties: Option[SpectrumProperties] = None

@@ -14,8 +14,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import fr.proline.core.orm.msi.MasterQuantPeptideIon;
 import fr.proline.core.orm.util.JsonSerializer;
 
-
-
 /**
  * Infer DMasterQuantPeptide representation from MasterQuantComponent table
  * for those linked to peptideInstance. 
@@ -25,39 +23,41 @@ import fr.proline.core.orm.util.JsonSerializer;
 public class DMasterQuantPeptide {
 
 	private static final Logger LOG = LoggerFactory.getLogger(DMasterQuantPeptide.class);
-	
-	/* MasterQuantComponent fields */ 
-	private long m_id ; //id of associated MasterQuantComponent
-	
+
+	/* MasterQuantComponent fields */
+	private long m_id; //id of associated MasterQuantComponent
+
 	private long m_peptideInstanceId;
-  
-    private int m_selectionLevel; 
-    	
+
+	private int m_selectionLevel;
+
 	private long m_objectTreeId;
-	
+
 	private String m_serializedProperties;
-    
+
 	private Long m_quantResultSummaryId;
 
 	// deserialized Properties 
 	private MasterQuantPeptideProperties m_mqPeptideProperties;
-	
+
 	//List of QuantPPeptide ... to be loaded before use 
 	Map<Long, DQuantPeptide> m_quantPeptideByQchIds = new HashMap<Long, DQuantPeptide>();
 
 	//Associated MasterQuantPeptideIons
 	List<MasterQuantPeptideIon> m_masterQPepIons;
-	
+
 	//DPeptideInstance to provide access to DPeptideMatch
 	DPeptideInstance m_dPeptideInstance;
-	
+
 	// Cluster
 	DCluster m_cluster;
-	
-	
-	public DMasterQuantPeptide(long id, 
-			int selectionLevel, long objectTreeId,
-			String serializedProperties, Long quantResultSummaryId) {
+
+	public DMasterQuantPeptide(
+		long id,
+		int selectionLevel,
+		long objectTreeId,
+		String serializedProperties,
+		Long quantResultSummaryId) {
 		super();
 		m_id = id;
 		m_selectionLevel = selectionLevel;
@@ -66,27 +66,27 @@ public class DMasterQuantPeptide {
 		m_quantResultSummaryId = quantResultSummaryId;
 	}
 
-	public Map<Long, DQuantPeptide> parseQuantPeptideFromProperties(String quantPeptideData){
+	public Map<Long, DQuantPeptide> parseQuantPeptideFromProperties(String quantPeptideData) {
 
 		try {
 			ObjectMapper objectMapper = JsonSerializer.getMapper();
 			objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
-			List<DQuantPeptide> quantPeptides = objectMapper.readValue(quantPeptideData, new TypeReference<List<DQuantPeptide>>() {});
-			
-			m_quantPeptideByQchIds = new HashMap<Long, DQuantPeptide>();		
-			for(int i=0;i<quantPeptides.size();i++){
+			List<DQuantPeptide> quantPeptides = objectMapper.readValue(quantPeptideData, new TypeReference<List<DQuantPeptide>>() {
+			});
+
+			m_quantPeptideByQchIds = new HashMap<Long, DQuantPeptide>();
+			for (int i = 0; i < quantPeptides.size(); i++) {
 				DQuantPeptide nextQuantPeptide = quantPeptides.get(i);
 				if (nextQuantPeptide != null) {
-					m_quantPeptideByQchIds.put(nextQuantPeptide.quantChannelId,nextQuantPeptide);
+					m_quantPeptideByQchIds.put(nextQuantPeptide.quantChannelId, nextQuantPeptide);
 				}
 			}
-		 
-					
-		}catch(Exception e) {
-			LOG.warn("Error Parsing DQuantPeptide ",e);
+
+		} catch (Exception e) {
+			LOG.warn("Error Parsing DQuantPeptide ", e);
 			m_quantPeptideByQchIds = null;
 		}
-		
+
 		return m_quantPeptideByQchIds;
 	}
 
@@ -142,16 +142,16 @@ public class DMasterQuantPeptide {
 	public MasterQuantPeptideProperties getMasterQuantPeptideProperties() {
 		if ((m_mqPeptideProperties == null) && (m_serializedProperties != null)) {
 			try {
-    			//	Parse properties to get Values
+				//	Parse properties to get Values
 				ObjectMapper objectMapper = JsonSerializer.getMapper();
-				m_mqPeptideProperties = objectMapper.readValue(m_serializedProperties,  MasterQuantPeptideProperties.class);
-    		} catch(Exception e){
-    			LOG.warn(" Error parsiong MasterQuantPeptideProperties ",e);
-    			
-    		}
-    		
-    	}
-    	return m_mqPeptideProperties;
+				m_mqPeptideProperties = objectMapper.readValue(m_serializedProperties, MasterQuantPeptideProperties.class);
+			} catch (Exception e) {
+				LOG.warn(" Error parsiong MasterQuantPeptideProperties ", e);
+
+			}
+
+		}
+		return m_mqPeptideProperties;
 	}
 
 	public void setMasterQuantPeptideProperties(MasterQuantPeptideProperties mqPeptideProperties) {
@@ -181,13 +181,12 @@ public class DMasterQuantPeptide {
 	public void setPeptideInstance(DPeptideInstance peptideInstance) {
 		this.m_dPeptideInstance = peptideInstance;
 	}
-	
-	public DCluster getCluster(){
+
+	public DCluster getCluster() {
 		return this.m_cluster;
 	}
-	
-	public void setCluster(DCluster cluster){
+
+	public void setCluster(DCluster cluster) {
 		this.m_cluster = cluster;
 	}
 }
-

@@ -17,42 +17,42 @@ import javax.persistence.Table;
 @Table(name = "protein_match_decoy_rule")
 public class ProteinMatchDecoyRule implements Serializable {
 
-    private static final long serialVersionUID = 1L;
+	private static final long serialVersionUID = 1L;
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
-    private long id;
+	@Id
+	@GeneratedValue(strategy = GenerationType.AUTO)
+	private long id;
 
-    @Column(name = "ac_decoy_tag")
-    private String acDecoyTag;
+	@Column(name = "ac_decoy_tag")
+	private String acDecoyTag;
 
-    private String name;
+	private String name;
 
-    public ProteinMatchDecoyRule() {
-    }
+	public ProteinMatchDecoyRule() {
+	}
 
-    public long getId() {
-	return id;
-    }
+	public long getId() {
+		return id;
+	}
 
-    public void setId(final long pId) {
-	id = pId;
-    }
+	public void setId(final long pId) {
+		id = pId;
+	}
 
-    public String getAcDecoyTag() {
-	return this.acDecoyTag;
-    }
+	public String getAcDecoyTag() {
+		return this.acDecoyTag;
+	}
 
-    public void setAcDecoyTag(String acDecoyTag) {
-	this.acDecoyTag = acDecoyTag;
-    }
+	public void setAcDecoyTag(String acDecoyTag) {
+		this.acDecoyTag = acDecoyTag;
+	}
 
-    public String getName() {
-	return this.name;
-    }
+	public String getName() {
+		return this.name;
+	}
 
-    public void setName(String name) {
-	this.name = name;
-    }
+	public void setName(String name) {
+		this.name = name;
+	}
 
 }

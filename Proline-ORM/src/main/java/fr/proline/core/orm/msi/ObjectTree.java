@@ -20,67 +20,67 @@ import javax.persistence.Table;
 @Table(name = "object_tree")
 public class ObjectTree implements Serializable {
 
-    private static final long serialVersionUID = 1L;
+	private static final long serialVersionUID = 1L;
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
-    private long id;
+	@Id
+	@GeneratedValue(strategy = GenerationType.AUTO)
+	private long id;
 
-    @Column(name = "blob_data")
-    private byte[] blobData;
+	@Column(name = "blob_data")
+	private byte[] blobData;
 
-    @Column(name = "clob_data")
-    private String clobData;
+	@Column(name = "clob_data")
+	private String clobData;
 
-    @Column(name = "serialized_properties")
-    private String serializedProperties;
+	@Column(name = "serialized_properties")
+	private String serializedProperties;
 
-    @ManyToOne(cascade=CascadeType.PERSIST)
-    @JoinColumn(name = "schema_name")
-    // @MapsId("schemaName")
-    private ObjectTreeSchema schema;
+	@ManyToOne(cascade = CascadeType.PERSIST)
+	@JoinColumn(name = "schema_name")
+	// @MapsId("schemaName")
+	private ObjectTreeSchema schema;
 
-    public ObjectTree() {
-    }
+	public ObjectTree() {
+	}
 
-    public long getId() {
-	return id;
-    }
+	public long getId() {
+		return id;
+	}
 
-    public void setId(final long pId) {
-	id = pId;
-    }
+	public void setId(final long pId) {
+		id = pId;
+	}
 
-    public byte[] getBlobData() {
-	return this.blobData;
-    }
+	public byte[] getBlobData() {
+		return this.blobData;
+	}
 
-    public void setBlobData(byte[] blobData) {
-	this.blobData = blobData;
-    }
+	public void setBlobData(byte[] blobData) {
+		this.blobData = blobData;
+	}
 
-    public String getClobData() {
-	return clobData;
-    }
+	public String getClobData() {
+		return clobData;
+	}
 
-    public void setClobData(String clobData) {
-	this.clobData = clobData;
-    }
+	public void setClobData(String clobData) {
+		this.clobData = clobData;
+	}
 
-    public String getSerializedProperties() {
-	return serializedProperties;
-    }
+	public String getSerializedProperties() {
+		return serializedProperties;
+	}
 
-    public void setSerializedProperties(String serializedProperties) {
-	this.serializedProperties = serializedProperties;
-    }
+	public void setSerializedProperties(String serializedProperties) {
+		this.serializedProperties = serializedProperties;
+	}
 
-    public ObjectTreeSchema getSchema() {
-	return schema;
-    }
+	public ObjectTreeSchema getSchema() {
+		return schema;
+	}
 
-    public void setSchema(ObjectTreeSchema schema) {
-	this.schema = schema;
-    }
+	public void setSchema(ObjectTreeSchema schema) {
+		this.schema = schema;
+	}
 
 }

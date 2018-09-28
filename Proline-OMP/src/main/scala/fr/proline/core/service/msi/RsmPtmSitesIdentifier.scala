@@ -1,38 +1,35 @@
 package fr.proline.core.service.msi
 
 import com.typesafe.scalalogging.LazyLogging
-
+import fr.profi.util.primitives._
+import fr.profi.util.serialization.ProfiJson
 import fr.proline.api.service.IService
 import fr.proline.context.IExecutionContext
 import fr.proline.core.algo.msi.PtmSitesIdentifier
 import fr.proline.core.dal._
 import fr.proline.core.dal.tables.SelectQueryBuilder._
 import fr.proline.core.dal.tables.SelectQueryBuilder1
+import fr.proline.core.dal.tables.msi.MsiDbObjectTreeTable
+import fr.proline.core.dal.tables.msi.MsiDbPeptideMatchTable
 import fr.proline.core.dal.tables.msi.MsiDbResultSummaryObjectTreeMapTable
+import fr.proline.core.dal.tables.msi.MsiDbResultSummaryRelationTable
 import fr.proline.core.om.model.msi.PtmSite
 import fr.proline.core.om.model.msi.ResultSummary
+import fr.proline.core.om.provider.PeptideCacheExecutionContext
 import fr.proline.core.om.provider.msi.impl.SQLProteinMatchProvider
 import fr.proline.core.om.provider.msi.impl.SQLResultSummaryProvider
 import fr.proline.core.om.storer.msi.RsmStorer
 import fr.proline.core.orm.msi.ObjectTreeSchema.SchemaName
-import fr.profi.util.primitives._
-import fr.proline.core.dal.tables.msi.MsiDbObjectTreeTable
+
 import scala.collection.mutable.ArrayBuffer
-import fr.profi.util.serialization.ProfiJson
-import fr.proline.core.dal.tables.msi.MsiDbResultSummaryRelationTable
-import fr.proline.core.dal.tables.msi.MsiDbPeptideMatchTable
 
 object RsmPtmSitesIdentifier extends LazyLogging {
 
   def loadResultSummary(rsmId: Long, execContext: IExecutionContext): ResultSummary = {
 
-    val rsmProvider = new SQLResultSummaryProvider(
-      execContext.getMSIDbConnectionContext,
-      execContext.getPSDbConnectionContext,
-      execContext.getUDSDbConnectionContext
-    )
+    val rsmProvider = new SQLResultSummaryProvider(PeptideCacheExecutionContext(execContext) )
 
-    val rsm = rsmProvider.getResultSummary(rsmId, true)
+    val rsm = rsmProvider.getResultSummary(rsmId, loadResultSet = true)
     require(rsm.isDefined, "Unknown ResultSummary Id: " + rsmId)
 
     rsm.get
@@ -64,7 +61,7 @@ class RsmPtmSitesIdentifier(
     val existingObjectTreeId = _getPtmSitesObjectTreeID(resultSummaryId)
 
     // Check if a transaction is already initiated
-    val wasInTransaction = msiDbContext.isInTransaction()
+    val wasInTransaction = msiDbContext.isInTransaction
     if (!wasInTransaction) msiDbContext.beginTransaction()
 
     // Avoid loadResultSummary if PTMSites already defined and option force is not set
@@ -81,7 +78,7 @@ class RsmPtmSitesIdentifier(
 
       val rsm = RsmPtmSitesIdentifier.loadResultSummary(resultSummaryId, execContext)
       _getOrIdentifyPtmSites(rsm)
-      
+
       // Commit transaction if it was initiated locally
       if (!wasInTransaction) msiDbContext.commitTransaction()
 

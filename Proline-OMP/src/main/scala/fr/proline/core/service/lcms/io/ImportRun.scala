@@ -78,7 +78,6 @@ object ImportScanSequence { // extends String2FileConverter
       maxIntensity = 0.0,
       ms1ScansCount = ms1Count,
       ms2ScansCount = ms2Count,
-      instrument = rawFile.instrument,
       scans = scans.toArray
     )
   }

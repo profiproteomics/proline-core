@@ -9,34 +9,34 @@ import fr.proline.core.orm.uds.QuantitationChannel;
  *
  */
 
-public class DQuantitationChannel extends QuantitationChannel{
+public class DQuantitationChannel extends QuantitationChannel {
 
 	private static final long serialVersionUID = 1L;
-	
+
 	/**
 	 * MsiSearch.resultFileName corresponding to the resultSummary.resultSet
 	 */
-	private String resultFileName ;
-	
+	private String resultFileName;
+
 	/**
 	 * raw file Name : peaklist.path
 	 */
 	private String rawFilePath;
-	
+
 	// link with the raw map id
 	private Long lcmsRawMapId;
-	
+
 	// mzdb file name
 	private String mzdbFileName;
-	
+
 	// resultSet from the identification
 	private ResultSet identRs;
 	// identDataset id, if exists
 	private Long identDatasetId;
-    
+
 	private Long biologicalGroupId = null;
 	private String biologicalGroupName = null;
-	
+
 	public DQuantitationChannel(QuantitationChannel o) {
 		super();
 		setId(o.getId());
@@ -69,21 +69,20 @@ public class DQuantitationChannel extends QuantitationChannel{
 	public void setRawFilePath(String rawFilePath) {
 		this.rawFilePath = rawFilePath;
 	}
-	
 
 	/**
 	 * returns the rawFileName form the rawFilePath, separated with \
 	 * @return
 	 */
-	public  String getRawFileName() {
+	public String getRawFileName() {
 		if (this.rawFilePath == null) {
 			return "";
-		}else {
+		} else {
 			int index = this.rawFilePath.lastIndexOf("\\");
-			if (index == -1 || index == this.rawFilePath.length()-1) {
+			if (index == -1 || index == this.rawFilePath.length() - 1) {
 				return this.rawFilePath;
-			}else {
-				return this.rawFilePath.substring(index+1);
+			} else {
+				return this.rawFilePath.substring(index + 1);
 			}
 		}
 	}
@@ -103,8 +102,6 @@ public class DQuantitationChannel extends QuantitationChannel{
 	public void setMzdbFileName(String mzdbFileName) {
 		this.mzdbFileName = mzdbFileName;
 	}
-
-	
 
 	public ResultSet getIdentRs() {
 		return identRs;
@@ -129,7 +126,7 @@ public class DQuantitationChannel extends QuantitationChannel{
 	public void setBiologicalGroupId(Long biologicalGroupId) {
 		this.biologicalGroupId = biologicalGroupId;
 	}
-	
+
 	public String getBiologicalGroupName() {
 		return biologicalGroupName;
 	}
@@ -137,6 +134,5 @@ public class DQuantitationChannel extends QuantitationChannel{
 	public void setBiologicalGroupName(String biologicalGroupName) {
 		this.biologicalGroupName = biologicalGroupName;
 	}
-	
-	
+
 }

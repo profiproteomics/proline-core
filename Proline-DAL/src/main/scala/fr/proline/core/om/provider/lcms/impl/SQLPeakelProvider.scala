@@ -1,19 +1,16 @@
 package fr.proline.core.om.provider.lcms.impl
 
-import scala.collection.mutable.ArrayBuffer
 import fr.profi.jdbc.ResultSetRow
 import fr.profi.mzdb.model.PeakelDataMatrix
+import fr.profi.util.primitives._
+import fr.profi.util.serialization.ProfiJson
 import fr.proline.context.LcMsDbConnectionContext
-import fr.proline.core.dal.{ DoJDBCWork, DoJDBCReturningWork }
+import fr.proline.core.dal.DoJDBCReturningWork
 import fr.proline.core.dal.tables.SelectQueryBuilder._
 import fr.proline.core.dal.tables.SelectQueryBuilder1
 import fr.proline.core.dal.tables.lcms._
 import fr.proline.core.om.model.lcms._
-import fr.profi.util.sql._
-import fr.profi.util.primitives._
-import fr.profi.util.serialization.ProfiJson
-//import fr.profi.util.serialization.ProfiMsgPack
-import scala.collection.mutable.HashMap
+
 
 class SQLPeakelProvider(val lcmsDbCtx: LcMsDbConnectionContext) {
   

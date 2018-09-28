@@ -232,7 +232,7 @@ case class MapAlignmentSet(
    * Converts an elution time using the time list of the reference map (refMap)
    * and the corresponding delta time list allowing to compute targetMap elution times.
    * 
-   * @param fromMapTime The elution time to convert (must be in the fromMap scale).
+   * @param refMapTime The elution time to convert (must be in the fromMap scale).
    * @param mass A mass value which may be used to select the appropriate map alignment.
    * @return The elution time converted in the targetMap scale.
    */

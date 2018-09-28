@@ -1,40 +1,40 @@
 package fr.proline.core.om.provider.msi.impl
 
-import scala.collection.mutable.ArrayBuffer
-
 import fr.profi.util.primitives._
-import fr.proline.context._
+import fr.proline.context.MsiDbConnectionContext
 import fr.proline.core.dal.DoJDBCReturningWork
 import fr.proline.core.dal.helper.MsiDbHelper
-import fr.proline.core.dal.tables.{SelectQueryBuilder1,SelectQueryBuilder2}
 import fr.proline.core.dal.tables.SelectQueryBuilder._
 import fr.proline.core.dal.tables.msi.MsiDbPeptideInstancePeptideMatchMapTable
 import fr.proline.core.dal.tables.msi.MsiDbPeptideMatchColumns
 import fr.proline.core.dal.tables.msi.MsiDbPeptideMatchTable
+import fr.proline.core.dal.tables.SelectQueryBuilder1
+import fr.proline.core.dal.tables.SelectQueryBuilder2
 import fr.proline.core.om.builder.PeptideMatchBuilder
 import fr.proline.core.om.model.msi._
+import fr.proline.core.om.provider.PeptideCacheExecutionContext
 import fr.proline.core.om.provider.msi._
 import fr.proline.repository.ProlineDatabaseType
 
 class SQLPeptideMatchProvider(
   val msiDbCtx: MsiDbConnectionContext,
-  var peptideProvider: IPeptideProvider
+  val peptideProvider: IPeptideProvider
 ) extends IPeptideMatchProvider {
-  
-  val PepMatchCols = MsiDbPeptideMatchColumns
+
+  val PepMatchCols: MsiDbPeptideMatchColumns.type = MsiDbPeptideMatchColumns
   val msQProvider = new SQLMsQueryProvider(msiDbCtx)
   
   require( msiDbCtx.getProlineDatabaseType == ProlineDatabaseType.MSI, "MsiDb connection required")
   
-  def this(msiDbCtx: MsiDbConnectionContext, psSqlCtx: DatabaseConnectionContext) = {
-    this(msiDbCtx, new SQLPeptideProvider(psSqlCtx) )
+  def this(peptideCacheExecutionContext: PeptideCacheExecutionContext) = {
+    this(peptideCacheExecutionContext.getMSIDbConnectionContext, new SQLPeptideProvider(peptideCacheExecutionContext) )
   }
 
   // Instantiate a MSIdb helper
   val msiDbHelper = new MsiDbHelper(msiDbCtx)
 
   // Retrieve score type map
-  val scoreTypeById = msiDbHelper.getScoringTypeById
+  val scoreTypeById = msiDbHelper.getScoringTypeById()
 
   def getPeptideMatches(pepMatchIds: Seq[Long]): Array[PeptideMatch] = {
     if( pepMatchIds.isEmpty ) return Array()

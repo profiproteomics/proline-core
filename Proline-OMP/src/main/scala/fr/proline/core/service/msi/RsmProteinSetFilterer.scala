@@ -1,27 +1,25 @@
 package fr.proline.core.service.msi
 
+import javax.persistence.EntityManager
+
 import com.typesafe.scalalogging.LazyLogging
-import fr.proline.api.service.IService
-import fr.proline.core.algo.msi.filtering.IProteinSetFilter
-import fr.proline.context.IExecutionContext
-import fr.proline.core.om.model.msi.ResultSummary
-import fr.proline.core.om.provider.msi.impl.SQLResultSummaryProvider
-import fr.proline.core.om.provider.msi.IResultSummaryProvider
-import fr.proline.core.om.model.msi.RsmValidationProperties
-import fr.proline.core.om.model.msi.RsmValidationParamsProperties
-import fr.proline.core.om.model.msi.RsmValidationResultsProperties
-import fr.proline.core.algo.msi.validation.ValidationResult
-import scala.collection.mutable.ArrayBuffer
-import fr.proline.core.om.model.msi.FilterDescriptor
-import fr.proline.core.om.model.msi.RsmValidationResultProperties
-import fr.proline.core.algo.msi.validation.TargetDecoyModes
-import fr.proline.core.algo.msi.validation.proteinset.BasicProtSetValidator
-import fr.proline.core.om.model.msi.ResultSummaryProperties
-import fr.proline.core.om.model.msi.ResultSummaryProperties
-import fr.proline.core.om.model.msi.ResultSummaryProperties
 import fr.profi.util.serialization.ProfiJson
-import fr.proline.repository.util.JDBCWork
-import java.sql.Connection
+import fr.proline.api.service.IService
+import fr.proline.context.IExecutionContext
+import fr.proline.core.algo.msi.filtering.IProteinSetFilter
+import fr.proline.core.algo.msi.validation.ValidationResult
+import fr.proline.core.algo.msi.validation.proteinset.BasicProtSetValidator
+import fr.proline.core.om.model.msi.FilterDescriptor
+import fr.proline.core.om.model.msi.ResultSummary
+import fr.proline.core.om.model.msi.ResultSummaryProperties
+import fr.proline.core.om.model.msi.RsmValidationParamsProperties
+import fr.proline.core.om.model.msi.RsmValidationProperties
+import fr.proline.core.om.model.msi.RsmValidationResultProperties
+import fr.proline.core.om.model.msi.RsmValidationResultsProperties
+import fr.proline.core.om.provider.PeptideCacheExecutionContext
+import fr.proline.core.om.provider.msi.impl.SQLResultSummaryProvider
+
+import scala.collection.mutable.ArrayBuffer
 
 object RsmProteinSetFilterer {
   
@@ -36,24 +34,18 @@ object RsmProteinSetFilterer {
 	}
   
   def _loadResultSummary(rsmId: Long, execContext: IExecutionContext): ResultSummary = {
-	    val rsmProvider = getResultSummaryProvider(execContext)
+	    val rsmProvider = new SQLResultSummaryProvider(PeptideCacheExecutionContext(execContext))
 	
-	    val rsm = rsmProvider.getResultSummary(rsmId, true)
+	    val rsm = rsmProvider.getResultSummary(rsmId, loadResultSet = true)
 	    require(rsm.isDefined, "Unknown ResultSummary Id: " + rsmId)
 	    val targetRSM = rsm.get
 	    if( (targetRSM.getDecoyResultSummaryId > 0) && (targetRSM.decoyResultSummary == null || targetRSM.decoyResultSummary.isEmpty)){
-	    	targetRSM.decoyResultSummary = rsmProvider.getResultSummary(targetRSM.getDecoyResultSummaryId, true)	        
+	    	targetRSM.decoyResultSummary = rsmProvider.getResultSummary(targetRSM.getDecoyResultSummaryId, loadResultSet = true)
 	    }
 	    targetRSM
 	      
   }
-  
-    private def getResultSummaryProvider(execContext: IExecutionContext): IResultSummaryProvider = {
 
-    new SQLResultSummaryProvider(execContext.getMSIDbConnectionContext,
-      execContext.getPSDbConnectionContext,
-      execContext.getUDSDbConnectionContext)
-  }
 }
 
 
@@ -68,7 +60,7 @@ class RsmProteinSetFilterer (
 	protSetFilters: Seq[IProteinSetFilter] 
 ) extends IService with LazyLogging {
   
-   val msiEM = execCtx.getMSIDbConnectionContext().getEntityManager()
+   val msiEM: EntityManager = execCtx.getMSIDbConnectionContext.getEntityManager
 	
 	def runService(): Boolean = {
 	  
@@ -105,7 +97,7 @@ class RsmProteinSetFilterer (
         logger.debug(
           "After Filter " + protSetFilter.filterDescription +
             " Nbr protein set target validated = " + finalValidationResult.targetMatchesCount +
-            " <> " + targetRsm.proteinSets.filter(_.isValidated).length
+            " <> " + targetRsm.proteinSets.count(_.isValidated)
         )
 
         // Store Validation Params obtained after filtering
@@ -114,7 +106,7 @@ class RsmProteinSetFilterer (
     }
     //End go through all Prot Filters
 
-    executeOnProgress() //execute registered action during progress
+    executeOnProgress()
 
 
     // Save Protein Set Filters properties

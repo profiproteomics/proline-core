@@ -11,14 +11,14 @@ import javax.persistence.Embeddable;
  */
 @Embeddable
 public class ProjectUserAccountMapPK implements Serializable {
-    // default serial version id, required for serializable classes.
-    private static final long serialVersionUID = 1L;
+	// default serial version id, required for serializable classes.
+	private static final long serialVersionUID = 1L;
 
-    @Column(name = "project_id")
-    private long projectId;
+	@Column(name = "project_id")
+	private long projectId;
 
-    @Column(name = "user_account_id")
-    private long userAccountId;
+	@Column(name = "user_account_id")
+	private long userAccountId;
 
 	public long getProjectId() {
 		return projectId;
@@ -35,24 +35,24 @@ public class ProjectUserAccountMapPK implements Serializable {
 	public void setUserAccountId(long userAccountId) {
 		this.userAccountId = userAccountId;
 	}
-    
-	  @Override
-	    public boolean equals(final Object obj) {
+
+	@Override
+	public boolean equals(final Object obj) {
 		boolean result = false;
 
 		if (obj == this) {
-		    result = true;
+			result = true;
 		} else if (obj instanceof ProjectUserAccountMapPK) {
-		    final ProjectUserAccountMapPK otherPK = (ProjectUserAccountMapPK) obj;
+			final ProjectUserAccountMapPK otherPK = (ProjectUserAccountMapPK) obj;
 
-		    result = ((getProjectId() == otherPK.getProjectId()) && (getUserAccountId() == otherPK.getUserAccountId()));
+			result = ((getProjectId() == otherPK.getProjectId()) && (getUserAccountId() == otherPK.getUserAccountId()));
 		}
 
 		return result;
 
-	    }
+	}
 
-	    public int hashCode() {
+	public int hashCode() {
 		return (Long.valueOf(getProjectId()).hashCode() ^ Long.valueOf(getUserAccountId()).hashCode());
-	    }
+	}
 }

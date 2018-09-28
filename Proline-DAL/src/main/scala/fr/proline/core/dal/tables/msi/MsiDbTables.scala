@@ -2,18 +2,21 @@ package fr.proline.core.dal.tables.msi
 
 import fr.proline.core.dal.tables._
 
-object MsiDbAdminInfosColumns extends ColumnEnumeration {
-  val $tableName = MsiDbAdminInfosTable.name
-  val MODEL_VERSION = Column("model_version")
-  val DB_CREATION_DATE = Column("db_creation_date")
-  val MODEL_UPDATE_DATE = Column("model_update_date")
+object MsiDbAtomLabelColumns extends ColumnEnumeration {
+  val $tableName = MsiDbAtomLabelTable.name
+  val ID = Column("id")
+  val NAME = Column("name")
+  val SYMBOL = Column("symbol")
+  val MONO_MASS = Column("mono_mass")
+  val AVERAGE_MASS = Column("average_mass")
+  val SERIALIZED_PROPERTIES = Column("serialized_properties")
 }
 
-abstract class MsiDbAdminInfosTable extends TableDefinition[MsiDbAdminInfosColumns.type]
+abstract class MsiDbAtomLabelTable extends TableDefinition[MsiDbAtomLabelColumns.type]
 
-object MsiDbAdminInfosTable extends MsiDbAdminInfosTable {
-  val name = "admin_infos"
-  val columns = MsiDbAdminInfosColumns
+object MsiDbAtomLabelTable extends MsiDbAtomLabelTable {
+  val name = "atom_label"
+  val columns = MsiDbAtomLabelColumns
 }
 
 object MsiDbBioSequenceColumns extends ColumnEnumeration {
@@ -33,25 +36,6 @@ abstract class MsiDbBioSequenceTable extends TableDefinition[MsiDbBioSequenceCol
 object MsiDbBioSequenceTable extends MsiDbBioSequenceTable {
   val name = "bio_sequence"
   val columns = MsiDbBioSequenceColumns
-}
-
-object MsiDbCacheColumns extends ColumnEnumeration {
-  val $tableName = MsiDbCacheTable.name
-  val SCOPE = Column("scope")
-  val ID = Column("id")
-  val FORMAT = Column("format")
-  val BYTE_ORDER = Column("byte_order")
-  val DATA = Column("data")
-  val COMPRESSION = Column("compression")
-  val TIMESTAMP = Column("timestamp")
-  val SERIALIZED_PROPERTIES = Column("serialized_properties")
-}
-
-abstract class MsiDbCacheTable extends TableDefinition[MsiDbCacheColumns.type]
-
-object MsiDbCacheTable extends MsiDbCacheTable {
-  val name = "cache"
-  val columns = MsiDbCacheColumns
 }
 
 object MsiDbConsensusSpectrumColumns extends ColumnEnumeration {
@@ -341,6 +325,7 @@ object MsiDbPeptideColumns extends ColumnEnumeration {
   val PTM_STRING = Column("ptm_string")
   val CALCULATED_MASS = Column("calculated_mass")
   val SERIALIZED_PROPERTIES = Column("serialized_properties")
+  val ATOM_LABEL_ID = Column("atom_label_id")
 }
 
 abstract class MsiDbPeptideTable extends TableDefinition[MsiDbPeptideColumns.type]
@@ -446,6 +431,25 @@ object MsiDbPeptideMatchRelationTable extends MsiDbPeptideMatchRelationTable {
   val columns = MsiDbPeptideMatchRelationColumns
 }
 
+object MsiDbPeptidePtmColumns extends ColumnEnumeration {
+  val $tableName = MsiDbPeptidePtmTable.name
+  val ID = Column("id")
+  val SEQ_POSITION = Column("seq_position")
+  val MONO_MASS = Column("mono_mass")
+  val AVERAGE_MASS = Column("average_mass")
+  val SERIALIZED_PROPERTIES = Column("serialized_properties")
+  val PEPTIDE_ID = Column("peptide_id")
+  val PTM_SPECIFICITY_ID = Column("ptm_specificity_id")
+  val ATOM_LABEL_ID = Column("atom_label_id")
+}
+
+abstract class MsiDbPeptidePtmTable extends TableDefinition[MsiDbPeptidePtmColumns.type]
+
+object MsiDbPeptidePtmTable extends MsiDbPeptidePtmTable {
+  val name = "peptide_ptm"
+  val columns = MsiDbPeptidePtmColumns
+}
+
 object MsiDbPeptideReadablePtmStringColumns extends ColumnEnumeration {
   val $tableName = MsiDbPeptideReadablePtmStringTable.name
   val PEPTIDE_ID = Column("peptide_id")
@@ -534,7 +538,6 @@ object MsiDbProteinMatchColumns extends ColumnEnumeration {
   val DESCRIPTION = Column("description")
   val GENE_NAME = Column("gene_name")
   val SCORE = Column("score")
-  val COVERAGE = Column("coverage")
   val PEPTIDE_COUNT = Column("peptide_count")
   val PEPTIDE_MATCH_COUNT = Column("peptide_match_count")
   val IS_DECOY = Column("is_decoy")
@@ -617,12 +620,63 @@ object MsiDbProteinSetProteinMatchItemTable extends MsiDbProteinSetProteinMatchI
   val columns = MsiDbProteinSetProteinMatchItemColumns
 }
 
+object MsiDbPtmColumns extends ColumnEnumeration {
+  val $tableName = MsiDbPtmTable.name
+  val ID = Column("id")
+  val UNIMOD_ID = Column("unimod_id")
+  val FULL_NAME = Column("full_name")
+  val SHORT_NAME = Column("short_name")
+  val SERIALIZED_PROPERTIES = Column("serialized_properties")
+}
+
+abstract class MsiDbPtmTable extends TableDefinition[MsiDbPtmColumns.type]
+
+object MsiDbPtmTable extends MsiDbPtmTable {
+  val name = "ptm"
+  val columns = MsiDbPtmColumns
+}
+
+object MsiDbPtmClassificationColumns extends ColumnEnumeration {
+  val $tableName = MsiDbPtmClassificationTable.name
+  val ID = Column("id")
+  val NAME = Column("name")
+}
+
+abstract class MsiDbPtmClassificationTable extends TableDefinition[MsiDbPtmClassificationColumns.type]
+
+object MsiDbPtmClassificationTable extends MsiDbPtmClassificationTable {
+  val name = "ptm_classification"
+  val columns = MsiDbPtmClassificationColumns
+}
+
+object MsiDbPtmEvidenceColumns extends ColumnEnumeration {
+  val $tableName = MsiDbPtmEvidenceTable.name
+  val ID = Column("id")
+  val TYPE = Column("type")
+  val IS_REQUIRED = Column("is_required")
+  val COMPOSITION = Column("composition")
+  val MONO_MASS = Column("mono_mass")
+  val AVERAGE_MASS = Column("average_mass")
+  val SERIALIZED_PROPERTIES = Column("serialized_properties")
+  val SPECIFICITY_ID = Column("specificity_id")
+  val PTM_ID = Column("ptm_id")
+}
+
+abstract class MsiDbPtmEvidenceTable extends TableDefinition[MsiDbPtmEvidenceColumns.type]
+
+object MsiDbPtmEvidenceTable extends MsiDbPtmEvidenceTable {
+  val name = "ptm_evidence"
+  val columns = MsiDbPtmEvidenceColumns
+}
+
 object MsiDbPtmSpecificityColumns extends ColumnEnumeration {
   val $tableName = MsiDbPtmSpecificityTable.name
   val ID = Column("id")
   val LOCATION = Column("location")
   val RESIDUE = Column("residue")
   val SERIALIZED_PROPERTIES = Column("serialized_properties")
+  val PTM_ID = Column("ptm_id")
+  val CLASSIFICATION_ID = Column("classification_id")
 }
 
 abstract class MsiDbPtmSpecificityTable extends TableDefinition[MsiDbPtmSpecificityColumns.type]
@@ -639,7 +693,7 @@ object MsiDbResultSetColumns extends ColumnEnumeration {
   val DESCRIPTION = Column("description")
   val TYPE = Column("type")
   val CREATION_LOG = Column("creation_log")
-  val MODIFICATION_TIMESTAMP = Column("modification_timestamp")
+  val CREATION_TIMESTAMP = Column("creation_timestamp")
   val SERIALIZED_PROPERTIES = Column("serialized_properties")
   val DECOY_RESULT_SET_ID = Column("decoy_result_set_id")
   val MERGED_RSM_ID = Column("merged_rsm_id")
@@ -755,6 +809,7 @@ object MsiDbSearchSettingsColumns extends ColumnEnumeration {
   val IS_DECOY = Column("is_decoy")
   val SERIALIZED_PROPERTIES = Column("serialized_properties")
   val INSTRUMENT_CONFIG_ID = Column("instrument_config_id")
+  val FRAGMENTATION_RULE_SET_ID = Column("fragmentation_rule_set_id")
 }
 
 abstract class MsiDbSearchSettingsTable extends TableDefinition[MsiDbSearchSettingsColumns.type]
@@ -838,7 +893,7 @@ object MsiDbSpectrumColumns extends ColumnEnumeration {
   val PEAK_COUNT = Column("peak_count")
   val SERIALIZED_PROPERTIES = Column("serialized_properties")
   val PEAKLIST_ID = Column("peaklist_id")
-  val INSTRUMENT_CONFIG_ID = Column("instrument_config_id")
+  val FRAGMENTATION_RULE_SET_ID = Column("fragmentation_rule_set_id")
 }
 
 abstract class MsiDbSpectrumTable extends TableDefinition[MsiDbSpectrumColumns.type]
@@ -865,6 +920,7 @@ object MsiDbUsedPtmColumns extends ColumnEnumeration {
   val $tableName = MsiDbUsedPtmTable.name
   val SEARCH_SETTINGS_ID = Column("search_settings_id")
   val PTM_SPECIFICITY_ID = Column("ptm_specificity_id")
+  val SEARCH_ROUND = Column("search_round")
   val SHORT_NAME = Column("short_name")
   val IS_FIXED = Column("is_fixed")
 }
@@ -878,9 +934,8 @@ object MsiDbUsedPtmTable extends MsiDbUsedPtmTable {
 
 object MsiDb {
   val tables = Array(
-    MsiDbAdminInfosTable,
+    MsiDbAtomLabelTable,
     MsiDbBioSequenceTable,
-    MsiDbCacheTable,
     MsiDbConsensusSpectrumTable,
     MsiDbEnzymeTable,
     MsiDbInstrumentConfigTable,
@@ -903,6 +958,7 @@ object MsiDb {
     MsiDbPeptideMatchTable,
     MsiDbPeptideMatchObjectTreeMapTable,
     MsiDbPeptideMatchRelationTable,
+    MsiDbPeptidePtmTable,
     MsiDbPeptideReadablePtmStringTable,
     MsiDbPeptideSetTable,
     MsiDbPeptideSetPeptideInstanceItemTable,
@@ -913,6 +969,9 @@ object MsiDb {
     MsiDbProteinSetTable,
     MsiDbProteinSetObjectTreeMapTable,
     MsiDbProteinSetProteinMatchItemTable,
+    MsiDbPtmTable,
+    MsiDbPtmClassificationTable,
+    MsiDbPtmEvidenceTable,
     MsiDbPtmSpecificityTable,
     MsiDbResultSetTable,
     MsiDbResultSetObjectTreeMapTable,
@@ -930,5 +989,4 @@ object MsiDb {
     MsiDbUsedPtmTable
   )
 }
-
 

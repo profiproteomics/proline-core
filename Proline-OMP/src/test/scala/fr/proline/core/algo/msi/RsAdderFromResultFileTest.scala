@@ -1,45 +1,41 @@
 package fr.proline.core.algo.msi
 
-import org.junit.Assert._
-import org.junit.BeforeClass
-import org.junit.Test
 import com.typesafe.scalalogging.StrictLogging
+import fr.proline.context.IExecutionContext
 import fr.proline.core.algo.msi.filtering.pepmatch.ScorePSMFilter
-import fr.proline.core.algo.msi.validation.BasicTDAnalyzer
-import fr.proline.core.algo.msi.validation.TargetDecoyModes
-import fr.proline.core.dal.STR_F122817_Mascot_v2_3_TEST_CASE
+import fr.proline.core.algo.msi.validation.{BasicTDAnalyzer, TargetDecoyModes}
+import fr.proline.core.dal.AbstractDatastoreTestCase
+import fr.proline.core.dbunit.{DbUnitResultFileLocation, STR_F122817_Mascot_v2_3}
 import fr.proline.core.om.model.msi.ResultSet
+import fr.proline.core.om.provider.PeptideCacheExecutionContext
 import fr.proline.core.om.provider.msi.impl.SQLResultSummaryProvider
 import fr.proline.core.service.msi.ResultSetValidator
+import fr.proline.repository.DriverType
+import org.junit.Assert._
+import org.junit.Test
 
-/*//object RsAdderFromResultFileTest extends AbstractResultSetTestCase with StrictLogging {
-object RsAdderFromResultFileTest extends AbstractDbUnitResultFileTestCase with StrictLogging {
 
-  // Define the interface to be implemented
-  val driverType = DriverType.H2
-  val dbUnitResultFile = STR_F122817_Mascot_v2_3
+object RsAdderFromResultFileTest extends AbstractDatastoreTestCase {
+
+  override val driverType: DriverType = DriverType.H2
+  override val useJPA: Boolean = true
+  override val dbUnitResultFile: DbUnitResultFileLocation = STR_F122817_Mascot_v2_3
+
   val targetRSId = 1L
-  val decoyRSId = Option.empty[Long]
-  
-}*/
-
-object RsAdderFromResultFileTest extends StrictLogging {
-  
-  var readRS: ResultSet = null
-  
-  @BeforeClass
-  def init() {
-    readRS = STR_F122817_Mascot_v2_3_TEST_CASE.getRS
-  }
 
 }
 
+/**
+  * VDS FIXME ===> Suite au Merge, le probleme a disparu... si ca se confirme, Commentaire A SUPPRIMER.
+  * While init STR_F122817_Mascot_v2_3_TEST_CASE => Error getting PtmDef for used_PTM :
+  *  java.util.NoSuchElementException: key not found: when searching PTM_Classification for used_PTM : classification = ""
+  *  JPAPtmDefinitionWriter.convertPtmDefinitionToMsiPtmSpecificity(JPAPtmDefinitionStorer.scala:196)
+  */
+@Test
 class RsAdderFromResultFileTest extends StrictLogging with RsAdderFromResultFileTesting {
-  
-  val executionContext = STR_F122817_Mascot_v2_3_TEST_CASE.executionContext
-  require( executionContext != null, "executionContext is null" )
-  
-  val readRS = RsAdderFromResultFileTest.readRS
+
+  override val executionContext: IExecutionContext = RsAdderFromResultFileTest.executionContext
+  override val readRS: ResultSet = RsAdderFromResultFileTest.getRS(RsAdderFromResultFileTest.targetRSId)
   
   @Test
   def addOneRS() {
@@ -94,20 +90,16 @@ class RsAdderFromResultFileTest extends StrictLogging with RsAdderFromResultFile
       storeResultSummary = true
     )
 
-    val result = rsValidation.runService
+    val result = rsValidation.runService()
     assertTrue("ResultSet validation result", result)
     logger.info(" End Run ResultSetValidator Service with Score Filter, in Test ")
 
     val tRSM = rsValidation.validatedTargetRsm
     logger.info(" rsValidation.validatedTargetRsm " + tRSM.id)
     assertNotNull(tRSM)
-
-    val provider = new SQLResultSummaryProvider(
-      executionContext.getMSIDbConnectionContext(),
-      executionContext.getPSDbConnectionContext(),
-      executionContext.getUDSDbConnectionContext()
-    )
-    val readRSM = provider.getResultSummary(tRSM.id, false)
+    
+    val provider = new SQLResultSummaryProvider(PeptideCacheExecutionContext(executionContext))
+    val readRSM = provider.getResultSummary(tRSM.id, loadResultSet = false)
     assertNotNull(readRSM)
 
   }

@@ -34,11 +34,11 @@ import fr.profi.util.StringUtils;
  */
 @Entity
 @NamedQueries({
-		@NamedQuery(name = "findExternalDbByType", query = "select ed from fr.proline.core.orm.uds.ExternalDb ed"
-			+ " where ed.type = :type"),
+	@NamedQuery(name = "findExternalDbByType", query = "select ed from fr.proline.core.orm.uds.ExternalDb ed"
+		+ " where ed.type = :type"),
 
-		@NamedQuery(name = "findExternalDbByTypeAndProject", query = "select ed from fr.proline.core.orm.uds.ExternalDb ed"
-			+ " join ed.projects as dBProject where (ed.type = :type) and (dBProject = :project)") })
+	@NamedQuery(name = "findExternalDbByTypeAndProject", query = "select ed from fr.proline.core.orm.uds.ExternalDb ed"
+		+ " join ed.projects as dBProject where (ed.type = :type) and (dBProject = :project)") })
 @Table(name = "external_db")
 public class ExternalDb implements Serializable {
 
@@ -59,12 +59,6 @@ public class ExternalDb implements Serializable {
 
 	@Column(name = "name")
 	private String dbName;
-
-	@Column(name = "password")
-	private String dbPassword;
-
-	@Column(name = "username")
-	private String dbUser;
 
 	@Column(name = "version")
 	private String dbVersion;
@@ -115,22 +109,6 @@ public class ExternalDb implements Serializable {
 
 	public void setDbName(String dbName) {
 		this.dbName = dbName;
-	}
-
-	public String getDbPassword() {
-		return this.dbPassword;
-	}
-
-	public void setDbPassword(String dbPassword) {
-		this.dbPassword = dbPassword;
-	}
-
-	public String getDbUser() {
-		return this.dbUser;
-	}
-
-	public void setDbUser(String dbUser) {
-		this.dbUser = dbUser;
 	}
 
 	public String getDbVersion() {
@@ -230,7 +208,7 @@ public class ExternalDb implements Serializable {
 	 * 
 	 * @return Properties Map usable to build a database connector.
 	 */
-	public Map<Object, Object> toPropertiesMap() {
+	public Map<Object, Object> toPropertiesMap(String userName, String password) {
 		final DriverType dt = getDriverType();
 
 		if (dt == null) {
@@ -299,7 +277,6 @@ public class ExternalDb implements Serializable {
 				if ((0 < portValue) && (portValue <= MAX_PORT)) {
 					urlBuilder.append(':').append(portValue);
 				}
-
 			}
 
 			urlBuilder.append('/');
@@ -315,17 +292,15 @@ public class ExternalDb implements Serializable {
 
 		properties.put(AbstractDatabaseConnector.PERSISTENCE_JDBC_URL_KEY, urlBuilder.toString());
 
-		/* javax.persistence.jdbc.user */
+		// javax.persistence.jdbc.user //
 		boolean authent = false;
 
-		final String user = getDbUser();
-		if (!StringUtils.isEmpty(user)) {
+		if (!StringUtils.isEmpty(userName)) {
 			authent = true;
-			properties.put(AbstractDatabaseConnector.PERSISTENCE_JDBC_USER_KEY, user);
+			properties.put(AbstractDatabaseConnector.PERSISTENCE_JDBC_USER_KEY, userName);
 		}
 
-		/* javax.persistence.jdbc.password */
-		final String password = getDbPassword();
+		// javax.persistence.jdbc.password //
 		if (StringUtils.isEmpty(password)) {
 
 			if (authent) {
@@ -346,13 +321,13 @@ public class ExternalDb implements Serializable {
 	 *            <code>DriverType</code> (H2, POSTGRESQL, SQLITE).
 	 * @return Properties Map usable to build a database connector.
 	 */
-	public Map<Object, Object> toPropertiesMap(final DriverType dt) {
+	public Map<Object, Object> toPropertiesMap(final DriverType dt, String userName, String password) {
 
 		if (dt != null) {
 			setDriverType(dt);
 		}
 
-		return toPropertiesMap();
+		return toPropertiesMap(userName, password);
 	}
 
 }

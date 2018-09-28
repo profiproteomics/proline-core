@@ -1,7 +1,6 @@
 package fr.proline.core.om.provider.msi
 
 import fr.proline.core.om.model.msi.PeptideMatch
-import fr.proline.context.DatabaseConnectionContext
 
 case class PeptideMatchFilter(
   val maxPrettyRank: Option[Int] = None,

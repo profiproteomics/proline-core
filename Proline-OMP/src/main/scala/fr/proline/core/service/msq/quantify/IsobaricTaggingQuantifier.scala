@@ -1,7 +1,5 @@
 package fr.proline.core.service.msq.quantify
 
-import scala.collection.mutable.ArrayBuffer
-import scala.collection.mutable.LongMap
 import com.typesafe.scalalogging.LazyLogging
 import fr.profi.util.collection._
 import fr.profi.util.ms._
@@ -9,20 +7,23 @@ import fr.profi.util.serialization.ProfiJson
 import fr.proline.context._
 import fr.proline.core.algo.msq.config._
 import fr.proline.core.algo.msq.summarizing._
-import fr.proline.core.om.model.msi.LazyResultSummary
 import fr.proline.core.om.model.msi.Ms2Query
 import fr.proline.core.om.model.msi.ResultSummary
 import fr.proline.core.om.model.msi.Spectrum
 import fr.proline.core.om.model.msq._
+import fr.proline.core.om.provider.PeptideCacheExecutionContext
 import fr.proline.core.om.provider.msi.impl.SQLResultSummaryProvider
 import fr.proline.core.om.provider.msi.impl.SQLSpectrumProvider
-import fr.proline.core.orm.msi.{ ObjectTree => MsiObjectTree }
-import fr.proline.core.orm.msi.{ ResultSummary => MsiResultSummary }
+import fr.proline.core.om.storer.msi.impl.RsmDuplicator
 import fr.proline.core.orm.msi.ObjectTreeSchema.SchemaName
 import fr.proline.core.orm.msi.repository.ObjectTreeSchemaRepository
+import fr.proline.core.orm.msi.{ResultSummary => MsiResultSummary}
 import fr.proline.core.orm.uds.MasterQuantitationChannel
 import fr.proline.core.service.lcms.io.ExtractMapSet
-import fr.proline.core.om.storer.msi.impl.RsmDuplicator
+
+import scala.collection.mutable.ArrayBuffer
+import scala.collection.mutable.LongMap
+import scala.collection.JavaConversions.asScalaSet
 
 class IsobaricTaggingQuantifier(
   val executionContext: IExecutionContext,
@@ -35,7 +36,6 @@ class IsobaricTaggingQuantifier(
   private val groupSetupNumber = 1
   private val masterQcExpDesign = experimentalDesign.getMasterQuantChannelExpDesign(udsMasterQuantChannel.getNumber, groupSetupNumber)
   
-  private val masterQc = experimentalDesign.masterQuantChannels.find(_.number == udsMasterQuantChannel.getNumber).get
   private val quantChannelsByIdentRsmId = masterQc.quantChannels.groupBy( _.identResultSummaryId )
   private val tagById = quantMethod.tagById
   private val tagByQcId = masterQc.quantChannels.toLongMapWith { qc =>
@@ -56,8 +56,8 @@ class IsobaricTaggingQuantifier(
     require( msiDbCtx.isInTransaction, "MsiDb connection context must be inside a transaction")
 
     // Store the master quant result set
-    val msiQuantResultSet = this.storeMsiQuantResultSet(entityCache.msiIdentResultSets)
-    val quantRsId = msiQuantResultSet.getId()
+    val msiQuantResultSet = this.storeMsiQuantResultSet()
+    val quantRsId = msiQuantResultSet.getId
 
     // Create corresponding master quant result summary
     val msiQuantRsm = this.storeMsiQuantResultSummary(msiQuantResultSet)
@@ -68,18 +68,15 @@ class IsobaricTaggingQuantifier(
     udsEm.persist(udsMasterQuantChannel)
 
     // Store master quant result summary
-    // get cloned and stored master quant result summary
-    val rsmProvider = new SQLResultSummaryProvider(msiDbCtx, psDbCtx, udsDbCtx)
-    val rsmDuplicator =  new RsmDuplicator(rsmProvider)  
-    val quantRSM = if(!isMergedRsmProvided) {        
-    	rsmDuplicator.cloneAndStoreRSM(this.mergedResultSummary, msiQuantRsm, msiQuantResultSet, true, msiEm) 
-    } else {       
-      rsmDuplicator.cloneAndStoreRSM(this.mergedResultSummary, msiQuantRsm, msiQuantResultSet, false, msiEm) 
-    }
-    
+
+    // Build or clone master quant result summary, then store it
+    // TODO: remove code redundancy with the AbstractLabelFreeFeatureQuantifier (maybe add a dedicated method in AbstractMasterQuantChannelQuantifier)
+    val rsmProvider = new SQLResultSummaryProvider(PeptideCacheExecutionContext(executionContext))
+    val rsmDuplicator =  new RsmDuplicator(rsmProvider)
+    val quantRsm = rsmDuplicator.cloneAndStoreRSM(mergedResultSummary, msiQuantRsm, msiQuantResultSet, !masterQc.identResultSummaryId.isDefined, msiEm)
     
     // Compute and store quant entities (MQ Peptides, MQ ProteinSets)
-    this.computeAndStoreQuantEntities(msiQuantRsm, quantRSM)
+    this.computeAndStoreQuantEntities(msiQuantRsm, quantRsm)
     
     // Flush the entity manager to perform the update on the master quant peptides
     msiEm.flush()
@@ -100,12 +97,12 @@ class IsobaricTaggingQuantifier(
     
     val entitiesSummarizer = if( lfqConfigOpt.isEmpty ) {
       require(
-        entityCache.identResultSummaries.length == 1,
+        entityCache.quantChannelResultSummaries.length == 1,
         "can't mix isobaric tagging results from multiple result summaries without a label free config"
       )
       
       // Quantify reporter ions
-      val mqReporterIons = _quantifyIdentRsm(entityCache.identResultSummaries.head).toArray
+      val mqReporterIons = _quantifyIdentRsm(entityCache.quantChannelResultSummaries.head).toArray
       
       new IsobaricTaggingEntitiesSummarizer(mqReporterIons)
     }
@@ -116,7 +113,7 @@ class IsobaricTaggingQuantifier(
       
       // Quantify reporter ions
       val mqReporterIonsByIdentRsmId = new LongMap[Array[MasterQuantReporterIon]]
-      for(identRsm <- entityCache.identResultSummaries) {
+      for(identRsm <- entityCache.quantChannelResultSummaries) {
         mqReporterIonsByIdentRsmId += identRsm.id -> _quantifyIdentRsm(identRsm).toArray
       }
       
@@ -127,7 +124,7 @@ class IsobaricTaggingQuantifier(
       val mapSetExtractor = new ExtractMapSet(
         executionContext.getLCMSDbConnectionContext,
         udsMasterQuantChannel.getName,
-        entityCache.getLcMsRuns(),
+        entityCache.getSortedLcMsRuns(),
         masterQcExpDesign,
         lfqConfig,
         Some(pepByRunAndScanNbr),
@@ -156,44 +153,23 @@ class IsobaricTaggingQuantifier(
     val(mqPeptides,mqProtSets) = entitiesSummarizer.computeMasterQuantPeptidesAndProteinSets(
       this.masterQc,
       quantRsm,
-      this.entityCache.identResultSummaries
+      this.entityCache.quantChannelResultSummaries
     )
     
     this.storeMasterQuantPeptidesAndProteinSets(msiQuantRsm,mqPeptides,mqProtSets)
   }
   
   protected lazy val quantPeptidesObjectTreeSchema = {
-    ObjectTreeSchemaRepository.loadOrCreateObjectTreeSchema(msiEm, SchemaName.ISOBARIC_TAGGING_QUANT_PEPTIDES.toString())
+    ObjectTreeSchemaRepository.loadOrCreateObjectTreeSchema(msiEm, SchemaName.ISOBARIC_TAGGING_QUANT_PEPTIDES.toString)
   }
 
   protected lazy val quantPeptideIonsObjectTreeSchema = {
-    ObjectTreeSchemaRepository.loadOrCreateObjectTreeSchema(msiEm, SchemaName.ISOBARIC_TAGGING_QUANT_PEPTIDE_IONS.toString())
+    ObjectTreeSchemaRepository.loadOrCreateObjectTreeSchema(msiEm, SchemaName.ISOBARIC_TAGGING_QUANT_PEPTIDE_IONS.toString)
   }
   
-  protected def getMergedResultSummary(msiDbCtx: MsiDbConnectionContext): ResultSummary = {
-    val mergedIdentRsmIdOpt = masterQc.identResultSummaryId
-    require(mergedIdentRsmIdOpt.isDefined, "mergedIdentRsmIdOpt is not defined")
-    
-    if (mergedIdentRsmIdOpt.isEmpty) {
-      isMergedRsmProvided = false
-      createMergedResultSummary(msiDbCtx)
-    } else {
-      isMergedRsmProvided = true
-      val identRsmId = mergedIdentRsmIdOpt.get
-      this.logger.debug("Read Merged RSM with ID " + identRsmId)
-
-      // Instantiate a RSM provider
-      val rsmProvider = new SQLResultSummaryProvider(msiDbCtx = msiDbCtx, psDbCtx = psDbCtx, udsDbCtx = udsDbCtx)
-      val identRsm = rsmProvider.getResultSummary(identRsmId,true).get
-
-      // FIXME: it should not be stored here but directly into the MasterQuantChannel table
-      val mqcProperties = new MasterQuantChannelProperties(
-        identResultSummaryId = Some(identRsmId)
-      )
-      udsMasterQuantChannel.setSerializedProperties(ProfiJson.serialize(mqcProperties))
-      
-      identRsm
-    }
+  override protected def getMergedResultSummary(msiDbCtx: MsiDbConnectionContext): ResultSummary = {
+    require(masterQc.identResultSummaryId.isDefined, "mergedIdentRsmIdOpt is not defined")
+    super.getMergedResultSummary(msiDbCtx)
   }
   
   
@@ -222,10 +198,10 @@ class IsobaricTaggingQuantifier(
     _foreachIdentifiedSpectrum(peaklistId, identMs2QueryBySpecId) { case (specId, spectrum, identMs2Query) =>
       
       // Keep only peaks having a low m/z value
-      val mozListToUse = spectrum.getMozList.takeWhile( _ <= maxMassToUse )
+      val mozListToUse = spectrum.getMozList().takeWhile( _ <= maxMassToUse )
       
       // Compute [moz,intensity] pairs
-      val mzIntPairs = mozListToUse.zip(spectrum.getIntensityList.take(mozListToUse.length) )
+      val mzIntPairs = mozListToUse.zip(spectrum.getIntensityList().take(mozListToUse.length) )
       
       val quantReporterIonMap = new LongMap[QuantReporterIon](identRsmQuantChannelsCount)
       
@@ -253,10 +229,10 @@ class IsobaricTaggingQuantifier(
       masterQuantReporterIons += MasterQuantReporterIon(
         id = MasterQuantReporterIon.generateNewId(),
         charge = identMs2Query.charge,
-        elutionTime = spectrum.getElutionTime,
+        elutionTime = spectrum.getElutionTime(),
         msQueryId = identMs2Query.id,
         spectrumId = specId,
-        scanNumber = spectrum.getScanNumber,
+        scanNumber = spectrum.getScanNumber(),
         quantReporterIonMap = quantReporterIonMap,
         selectionLevel = 2
       )
@@ -320,10 +296,10 @@ class IsobaricTaggingQuantifier(
           //println( ms3SpecInitialId )
           //println( ms3SpecHeader.getMsLevel )
           
-          val thermoMetaData = ms3SpecHeader.getScanList().getScans().get(0).getThermoMetaData()
+          val thermoMetaData = ms3SpecHeader.getScanList.getScans.get(0).getThermoMetaData
           assert(thermoMetaData != null, "Isobaric quantification of MS3 data is only supported for Thermo data")
           
-          val ms1Target = thermoMetaData.getTargets().apply(0)
+          val ms1Target = thermoMetaData.getTargets.apply(0)
           val ms1TargetMz = ms1Target.getMz
           //println( "ms1TargetMz", ms1TargetMz )
           
@@ -343,7 +319,7 @@ class IsobaricTaggingQuantifier(
           
           val ms2SpecInitialId = nearestMs2Sh.getInitialId
           assert(
-            ms3ShMap.contains(ms2SpecInitialId) == false,
+            !ms3ShMap.contains(ms2SpecInitialId),
             s"The MS2 spectrum #$ms2SpecInitialId is already mapped to another MS3 spectrum (#${ms3ShMap(ms2SpecInitialId).getId}), "+
             s"can't create a new mapping with MS3 spectrum #$ms3SpecInitialId"
           )

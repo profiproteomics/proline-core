@@ -7,7 +7,6 @@ import java.sql.Connection;
 import javax.persistence.EntityManager;
 import javax.sql.DataSource;
 
-import org.junit.Ignore;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -18,68 +17,59 @@ import fr.proline.repository.IDatabaseConnector;
 
 public class DatabaseConnectorTest {
 
-    private static final Logger LOG = LoggerFactory.getLogger(DatabaseConnectorTest.class);
+	private static final Logger LOG = LoggerFactory.getLogger(DatabaseConnectorTest.class);
 
-    @Test
-    public void testH2() {
-	final IDatabaseConnector h2Connector = DatabaseConnectorFactory.createDatabaseConnectorInstance(
-		ProlineDatabaseType.MSI, "db_msi.properties");
+	@Test
+	public void testH2() {
+		final IDatabaseConnector h2Connector = DatabaseConnectorFactory.createDatabaseConnectorInstance(
+			ProlineDatabaseType.MSI, "db_msi.properties");
 
-	checkDatabaseConnector("H2 MSI mem", h2Connector);
-    }
-
-    @Ignore
-    /* PostgreSQL manual test ; default configuration for Grenoble CEA Network */
-    public void testPG() {
-	final IDatabaseConnector pgConnector = DatabaseConnectorFactory.createDatabaseConnectorInstance(
-		ProlineDatabaseType.PDI, "pg_pdi.properties");
-
-	checkDatabaseConnector("PostgreSQL PDI gre037784", pgConnector);
-    }
-
-    @Test
-    public void testSQLite() {
-	final IDatabaseConnector sqliteConnector = DatabaseConnectorFactory.createDatabaseConnectorInstance(
-		ProlineDatabaseType.MSI, "sqlite_msi.properties");
-
-	checkDatabaseConnector("SQLite MSI mem", sqliteConnector);
-    }
-
-    private static void checkDatabaseConnector(final String description, final IDatabaseConnector connector) {
-	assertNotNull(description + " DatabaseConnector instance", connector);
-
-	final DataSource ds = connector.getDataSource();
-
-	final String dsMessage = description + " DataSource";
-	assertNotNull(dsMessage, ds);
-
-	LOG.info(dsMessage + " : " + ds);
-
-	try {
-	    final Connection con = ds.getConnection();
-	    assertNotNull(description + " JDBC Connection", con);
-
-	    con.close();
-	} catch (Exception ex) {
-	    final String message = description + " JDBC DataSource handling";
-	    LOG.error(message, ex);
-
-	    fail(message);
+		checkDatabaseConnector("H2 MSI mem", h2Connector);
 	}
 
-	/*final EntityManagerFactory emf = connector.getEntityManagerFactory();
+	@Test
+	public void testSQLite() {
+		final IDatabaseConnector sqliteConnector = DatabaseConnectorFactory.createDatabaseConnectorInstance(
+			ProlineDatabaseType.MSI, "sqlite_msi.properties");
 
-	final String emfMessage = description + " EntityManagerFactory";
-	assertNotNull(emfMessage, emf);
+		checkDatabaseConnector("SQLite MSI mem", sqliteConnector);
+	}
 
-	LOG.info(emfMessage + " : " + emf);*/
+	private static void checkDatabaseConnector(final String description, final IDatabaseConnector connector) {
+		assertNotNull(description + " DatabaseConnector instance", connector);
 
-	final EntityManager em = connector.createEntityManager();
-	assertNotNull(description + " EntityManager", em);
+		final DataSource ds = connector.getDataSource();
 
-	em.close();
+		final String dsMessage = description + " DataSource";
+		assertNotNull(dsMessage, ds);
 
-	connector.close();
-    }
+		LOG.info(dsMessage + " : " + ds);
+
+		try {
+			final Connection con = ds.getConnection();
+			assertNotNull(description + " JDBC Connection", con);
+
+			con.close();
+		} catch (Exception ex) {
+			final String message = description + " JDBC DataSource handling";
+			LOG.error(message, ex);
+
+			fail(message);
+		}
+
+		/*final EntityManagerFactory emf = connector.getEntityManagerFactory();
+		
+		final String emfMessage = description + " EntityManagerFactory";
+		assertNotNull(emfMessage, emf);
+		
+		LOG.info(emfMessage + " : " + emf);*/
+
+		final EntityManager em = connector.createEntityManager();
+		assertNotNull(description + " EntityManager", em);
+
+		em.close();
+
+		connector.close();
+	}
 
 }

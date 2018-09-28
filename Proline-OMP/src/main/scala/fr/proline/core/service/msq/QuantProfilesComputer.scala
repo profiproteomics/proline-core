@@ -1,35 +1,33 @@
 package fr.proline.core.service.msq
 
-import javax.persistence.EntityManager
-import scala.collection.mutable.ArrayBuffer
 import com.typesafe.scalalogging.LazyLogging
 import fr.profi.jdbc.easy._
 import fr.profi.util.collection._
 import fr.profi.util.serialization.ProfiJson
 import fr.proline.api.service.IService
 import fr.proline.context.IExecutionContext
+import fr.proline.core.algo.lcms.FeatureSummarizer
+import fr.proline.core.algo.lcms.FeatureSummarizingMethod
+import fr.proline.core.algo.lcms.summarizing._
 import fr.proline.core.algo.msq.Profilizer
 import fr.proline.core.algo.msq.ProfilizerConfig
+import fr.proline.core.algo.msq.summarizing.BuildMasterQuantPeptide
 import fr.proline.core.dal.BuildLazyExecutionContext
-import fr.proline.core.dal.context.execCtxToTxExecCtx
 import fr.proline.core.dal.DoJDBCWork
 import fr.proline.core.dal.helper.UdsDbHelper
 import fr.proline.core.om.model.msq.ExperimentalDesign
+import fr.proline.core.om.provider.PeptideCacheExecutionContext
+import fr.proline.core.om.provider.lcms.impl.SQLMapSetProvider
 import fr.proline.core.om.provider.msq.impl.SQLExperimentalDesignProvider
 import fr.proline.core.om.provider.msq.impl.SQLQuantResultSummaryProvider
 import fr.proline.core.orm.uds.MasterQuantitationChannel
 import fr.proline.core.orm.uds.ObjectTree
 import fr.proline.core.orm.uds.ObjectTreeSchema
-import fr.proline.core.orm.uds.ObjectTreeSchema.SchemaName
 import fr.proline.core.orm.uds.repository.ObjectTreeSchemaRepository
 import fr.proline.repository.IDataStoreConnectorFactory
-import fr.proline.core.om.provider.lcms.impl.SQLMapSetProvider
-import fr.proline.core.algo.lcms.FeatureSummarizer
-import fr.proline.core.algo.lcms.FeatureSummarizingMethod
-import fr.proline.core.algo.lcms.summarizing._
-import fr.proline.core.algo.msq.summarizing.BuildMasterQuantPeptide
+
+import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.LongMap
-import fr.proline.core.algo.msq.config.profilizer.QuantComponentItem
 
 // Factory for Proline-Cortex
 object QuantProfilesComputer {
@@ -78,7 +76,7 @@ class QuantProfilesComputer(
     config: ProfilizerConfig
   ) {
     this(
-      BuildLazyExecutionContext(dsFactory, projectId, true), // Force JPA context
+      BuildLazyExecutionContext(dsFactory, projectId, useJPA = true), // Force JPA context
       experimentalDesign,
       masterQuantChannelId,
       config
@@ -86,13 +84,13 @@ class QuantProfilesComputer(
     _hasInitiatedExecContext = true
   }
   
-  def runService() = {
+  def runService(): Boolean = {
 
     this.logger.info("Running service QuantProfilesComputer.")
     
     // Get entity manager
-    val udsDbCtx = executionContext.getUDSDbConnectionContext()
-    val udsEM = udsDbCtx.getEntityManager()
+    val udsDbCtx = executionContext.getUDSDbConnectionContext
+    val udsEM = udsDbCtx.getEntityManager
     val udsDbHelper = new UdsDbHelper(udsDbCtx)
     
     // Retrieve the quantitation fraction
@@ -101,16 +99,13 @@ class QuantProfilesComputer(
     
     // FIXME: check the quantitation method first
     
-    val quantRsmId = udsMasterQuantChannel.getQuantResultSummaryId()
+    val quantRsmId = udsMasterQuantChannel.getQuantResultSummaryId
     val qcIds = udsDbHelper.getQuantChannelIds(masterQuantChannelId)
     
     // --- 1.1 Load the Quant RSM --- //
     logger.info("Loading the quantitative result summary #"+quantRsmId)
-    val quantRsmProvider = new SQLQuantResultSummaryProvider(
-      executionContext.getMSIDbConnectionContext,
-      executionContext.getPSDbConnectionContext,
-      executionContext.getUDSDbConnectionContext
-    )
+    val quantRsmProvider = new SQLQuantResultSummaryProvider(PeptideCacheExecutionContext(executionContext))
+
     // Note that it is important to load the Result Set to have all required information
     val quantRSM = quantRsmProvider.getQuantResultSummary(quantRsmId, qcIds, loadResultSet = true).get
     logger.info("Before Feature summarizer mqPep with selection level == 1 : "+quantRSM.masterQuantPeptides.count(_.selectionLevel == 1))
@@ -158,7 +153,7 @@ class QuantProfilesComputer(
             val qPepIonFtId = qPepIon.lcmsFeatureId.getOrElse(0)
             
             // Retrieve the feature to use as a reference for this cluster
-            val mainClusterFt = if(ft.isCluster == false) ft
+            val mainClusterFt = if(!ft.isCluster) ft
             else {
               val ftOpt = ft.subFeatures.find(_.id == qPepIonFtId)
               if( ftOpt.isDefined) ftOpt.get
@@ -225,11 +220,11 @@ class QuantProfilesComputer(
       val mapSetProvider = new SQLMapSetProvider(lcmsDbCtx = lcmsDbCtx)
       val mapSet = mapSetProvider.getMapSet(udsMasterQuantChannel.getLcmsMapSetId, loadPeakels = true)
       val masterFtById = mapSet.masterMap.features.view.map(ft => ft.id -> ft).toMap
-      
-      var mqPepIonIdsByFeatureId = LongMap[scala.collection.mutable.Set[Long]]()
+
+      val mqPepIonIdsByFeatureId = LongMap[scala.collection.mutable.Set[Long]]()
       quantRSM.masterQuantPeptides.flatMap(_.masterQuantPeptideIons).foreach { mqPepIon => 
         val masterFt = masterFtById(mqPepIon.lcmsMasterFeatureId.get)
-        val childFts = masterFt.children.flatMap{ ft => if(ft.isCluster == false) Array(ft) else ft.subFeatures }
+        val childFts = masterFt.children.flatMap{ ft => if(!ft.isCluster) Array(ft) else ft.subFeatures }
         childFts.foreach { f => 
           mqPepIonIdsByFeatureId.getOrElseUpdate(f.id, scala.collection.mutable.Set[Long]()) += mqPepIon.id
         }
@@ -242,14 +237,13 @@ class QuantProfilesComputer(
         val mqPepIons = mqPep.masterQuantPeptideIons
         
         for (mqPepIon <- mqPepIons) {
-          val qPepIonMap = mqPepIon.quantPeptideIonMap
           val masterFt = masterFtById(mqPepIon.lcmsMasterFeatureId.get)
           val sharedFtsCount = masterFt.children.count { ft =>
-            val mainFt = if (ft.isCluster == false) ft else ft.subFeatures.maxBy(_.intensity)
+            val mainFt = if (!ft.isCluster) ft else ft.subFeatures.maxBy(_.intensity)
             mainFt.getBasePeakel().getOrElse(mainFt.relations.peakelItems(0).getPeakel().get).featuresCount > 1
           }
 
-          if ((sharedFtsCount > 0) || (mqPepIonWithSharedFeatures.contains(mqPepIon.id))) {
+          if ((sharedFtsCount > 0) || mqPepIonWithSharedFeatures.contains(mqPepIon.id)) {
 //            logger.info("master feature deselected due to " + sharedFtsCount + " shared peakels over " + masterFt.children.length)
             masterFt.selectionLevel = 1
           }
@@ -303,7 +297,7 @@ class QuantProfilesComputer(
     }*/
     
     // --- 5. Update MasterQuantPeptides and MasterQuantProtSets properties --- //
-    val msiDbCtx = executionContext.getMSIDbConnectionContext()
+    val msiDbCtx = executionContext.getMSIDbConnectionContext
     
     DoJDBCWork.tryTransactionWithEzDBC(msiDbCtx) { ezDBC =>
       
@@ -384,7 +378,7 @@ class QuantProfilesComputer(
     udsDbCtx.beginTransaction()
     
     // Save profilizerConfigSchema as an ObjectTree
-    val profilizerConfigSchemaName = ObjectTreeSchema.SchemaName.POST_QUANT_PROCESSING_CONFIG.toString()
+    val profilizerConfigSchemaName = ObjectTreeSchema.SchemaName.POST_QUANT_PROCESSING_CONFIG.toString
     val profilizerConfigSchema = ObjectTreeSchemaRepository.loadOrCreateObjectTreeSchema(udsEM,profilizerConfigSchemaName)
     val profilizerConfigObjectTree = new ObjectTree()
     profilizerConfigObjectTree.setSchema(profilizerConfigSchema)
@@ -392,7 +386,7 @@ class QuantProfilesComputer(
     udsEM.persist(profilizerConfigObjectTree)
 
     // Link the ObjectTree to the quantitation dataset
-    val udsQuantitation = udsMasterQuantChannel.getDataset()
+    val udsQuantitation = udsMasterQuantChannel.getDataset
     udsQuantitation.putObject(profilizerConfigSchemaName, profilizerConfigObjectTree.getId())
     udsEM.merge(udsQuantitation)
     

@@ -131,7 +131,7 @@ class ResultSetAdder(
     } toArray
     
     val mergedPeptideMatches = mergedPeptideMatchesBuffer.toArray
-    
+
     // Group peptide matches by peptide id
     val pepMatchesByPepId = mergedPeptideMatches.groupBy(_.peptide.id)
     
@@ -177,7 +177,7 @@ private[this] trait IPeptideMatchAdder {
 private[this] class PeptideMatchAggregator(
   val newResultSetId: Long,
   val cloneObjects: Boolean = true // clone objects by default
-) extends IPeptideMatchAdder {
+) extends IPeptideMatchAdder with LazyLogging {
   
   private val peptideMatchChildren = new ArrayBuffer[PeptideMatch]()
   
@@ -188,7 +188,14 @@ private[this] class PeptideMatchAggregator(
   def toPeptideMatch(): PeptideMatch = {
     
     // Determine the best child using the score value
-    val bestChild = peptideMatchChildren.maxBy(_.score)
+    // VDS: in order to ensure always same  best Peptide math use score AND deltaMoz
+    //val bestChild2 = peptideMatchChildren.maxBy(_.score)
+
+    val bestChild = PeptideMatch.getBestOnScoreDeltaMoZ(peptideMatchChildren.toArray)
+
+//    if(bestChild.id != bestChild2.id)
+//      logger.info(" NOT SAME BEST (used)" +bestChild.id+" VS (maxBy)"+bestChild2.id)
+
     var psmSC = 0
     peptideMatchChildren.foreach(psmChild => {
       if(psmChild.properties.isDefined && psmChild.properties.get.spectralCount.isDefined)
@@ -212,6 +219,7 @@ private[this] class PeptideMatchAggregator(
     } else {
       val newPSM = bestChild.copy(
         id = PeptideMatch.generateNewId(),
+        //children = Some(peptideMatchChildren.toArray),
         childrenIds = peptideMatchChildren.map(_.id).distinct.toArray,
         bestChildId = bestChild.id,
         resultSetId = newResultSetId
@@ -281,7 +289,7 @@ private[this] case class SeqMatchUniqueKey(
   end: Int
 )
 
-private[this] class ProteinMatchAdder( newResultSetId: Long ) {
+private[this] class ProteinMatchAdder( newResultSetId: Long ) extends LazyLogging{
   
   private var firstAddedProteinMatch: ProteinMatch = null
   private var proteinMatchDescription: String = null
@@ -335,14 +343,24 @@ private[this] class ProteinMatchAdder( newResultSetId: Long ) {
     val parentSeqMatches = childSeqMatchByUniqueKey.values.toArray.sortBy(_.start)
 
     // Retrieve protein id for coverage computation
-    val proteinId = firstAddedProteinMatch.getProteinId
-    
+//    val proteinId = firstAddedProteinMatch.getProteinId
     // Update total peptideMatchesCount and bestPeptideMatch for each sequenceMatch
     var peptideMatchesCount = 0
     for (seqMatch <- parentSeqMatches) {
       val peptideMatches = pepMatchesByPepId(seqMatch.getPeptideId)
       peptideMatchesCount += peptideMatches.length
-      seqMatch.bestPeptideMatchId = pepMatchesByPepId(seqMatch.getPeptideId).maxBy(_.score).id
+      // VDS: in order to ensure always same  best Peptide math use score AND deltaMoz
+      //seqMatch.bestPeptideMatchId = pepMatchesByPepId(seqMatch.getPeptideId).maxBy(_.score).id
+      seqMatch.bestPeptideMatch = if( peptideMatchesCount == 1 ) Some(peptideMatches(0))
+      else {
+        var searchBest = peptideMatches(0)
+        peptideMatches.foreach( pepM => {
+          if ((searchBest.score < pepM.score) || ((searchBest.score == pepM.score) && (searchBest.deltaMoz < pepM.deltaMoz)))
+            searchBest = pepM
+        })
+        Some(searchBest)
+      }
+      seqMatch.bestPeptideMatchId = seqMatch.bestPeptideMatch.get.id
     }
     
     // Clone firstAddedProteinMatch while setting some values computed using the merged protein matches
@@ -350,7 +368,6 @@ private[this] class ProteinMatchAdder( newResultSetId: Long ) {
       description = proteinMatchDescription,
       id = ProteinMatch.generateNewId,
       score = proteinMatchScore,
-      coverage = 0.0f, // protein match sequence coverage cannot be computed and depends on validated psm
       peptideMatchesCount = peptideMatchesCount,
       sequenceMatches = parentSeqMatches,
       seqDatabaseIds = seqDatabaseIdSet.toArray,

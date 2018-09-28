@@ -49,460 +49,458 @@ import fr.proline.core.orm.msi.ResultSummary;
 	@NamedQuery(name = "findDatasetNamesByProject", query = "Select ds.name from Dataset ds where ds.project.id =:id"),
 	@NamedQuery(name = "findRootDatasetNamesByProject", query = "Select ds.name from Dataset ds where ds.project.id =:id and ds.parentDataset is null"),
 	@NamedQuery(name = "findDatasetByNameAndProject", query = "Select ds from Dataset ds where ds.project.id =:id and ds.name=:name"),
-	@NamedQuery(name = "findRootDatasetByNameAndProject", query = "Select ds from Dataset ds where ds.project.id =:id and ds.name=:name and ds.parentDataset is null") })
+	@NamedQuery(name = "findRootDatasetByNameAndProject", query = "Select ds from Dataset ds where ds.project.id =:id and ds.name=:name and ds.parentDataset is null")
+})
 public class Dataset implements Serializable {
 
-    private static final long serialVersionUID = 1L;
+	private static final long serialVersionUID = 1L;
 
-    public enum DatasetType {
-	IDENTIFICATION, QUANTITATION, AGGREGATE, TRASH, QUANTITATION_FOLDER, IDENTIFICATION_FOLDER
-    };
+	public enum DatasetType {
+		IDENTIFICATION, QUANTITATION, AGGREGATE, TRASH, QUANTITATION_FOLDER, IDENTIFICATION_FOLDER
+	};
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
-    private long id;
+	@Id
+	@GeneratedValue(strategy = GenerationType.AUTO)
+	private long id;
 
-    @Column(name = "creation_timestamp")
-    private Timestamp creationTimestamp = new Timestamp(new Date().getTime());
+	@Column(name = "creation_timestamp")
+	private Timestamp creationTimestamp = new Timestamp(new Date().getTime());
 
-    private String description;
+	private String description;
 
-    @Column(name = "children_count")
-    private int childrenCount;
+	@Column(name = "child_count")
+	private int childCount;
 
-    private String keywords;
+	private String keywords;
 
-    @Column(name = "modification_log")
-    private String modificationLog;
+	@Column(name = "modification_log")
+	private String modificationLog;
 
-    private String name;
+	private String name;
 
-    @Enumerated(value = EnumType.STRING)
-    private DatasetType type;
+	@Enumerated(value = EnumType.STRING)
+	private DatasetType type;
 
-    private int number;
+	private int number;
 
-    @ManyToOne
-    @JoinColumn(name = "fractionation_id")
-    private Fractionation fractionation;
+	@ManyToOne
+	@JoinColumn(name = "fractionation_id")
+	private Fractionation fractionation;
 
-    @ManyToOne
-    @JoinColumn(name = "aggregation_id")
-    private Aggregation aggregation;
+	@ManyToOne
+	@JoinColumn(name = "aggregation_id")
+	private Aggregation aggregation;
 
-    @ManyToOne
-    @JoinColumn(name = "project_id")
-    private Project project;
+	@ManyToOne
+	@JoinColumn(name = "project_id")
+	private Project project;
 
-    @Column(name = "serialized_properties")
-    private String serializedProperties;
+	@Column(name = "serialized_properties")
+	private String serializedProperties;
 
-    // bi-directional many-to-one association to DataSet
-    @ManyToOne
-    @JoinColumn(name = "parent_dataset_id")
-    private Dataset parentDataset;
+	// bi-directional many-to-one association to DataSet
+	@ManyToOne
+	@JoinColumn(name = "parent_dataset_id")
+	private Dataset parentDataset;
 
-    // bi-directional many-to-one association to DataSet
-    @OneToMany(mappedBy = "parentDataset")
-    @OrderBy("number")
-    private List<Dataset> children;
+	// bi-directional many-to-one association to DataSet
+	@OneToMany(mappedBy = "parentDataset")
+	@OrderBy("number")
+	private List<Dataset> children;
 
-    @Column(name = "result_set_id")
-    private Long resultSetId;
+	@Column(name = "result_set_id")
+	private Long resultSetId;
 
-    @Column(name = "result_summary_id")
-    private Long resultSummaryId;
+	@Column(name = "result_summary_id")
+	private Long resultSummaryId;
 
-    // bi-directional many-to-one association to BiologicalSample
-    @OneToMany(mappedBy = "dataset")
-    @OrderBy("number")
-    private List<BiologicalSample> biologicalSamples;
+	// bi-directional many-to-one association to BiologicalSample
+	@OneToMany(mappedBy = "dataset")
+	@OrderBy("number")
+	private List<BiologicalSample> biologicalSamples;
 
-    // bi-directional many-to-one association to GroupSetup
-    @OneToMany(mappedBy = "dataset")
-    private Set<GroupSetup> groupSetups;
+	// bi-directional many-to-one association to GroupSetup
+	@OneToMany(mappedBy = "dataset")
+	private Set<GroupSetup> groupSetups;
 
-    // bi-directional many-to-one association to QuantChannel
-    @OneToMany(mappedBy = "dataset")
-    @OrderBy("number")
-    private List<QuantitationChannel> quantitationChannels;
+	// bi-directional many-to-one association to QuantChannel
+	@OneToMany(mappedBy = "dataset")
+	@OrderBy("number")
+	private List<QuantitationChannel> quantitationChannels;
 
-    // uni-directional many-to-one association to QuantMethod
-    @ManyToOne
-    @JoinColumn(name = "quant_method_id")
-    private QuantitationMethod method;
+	// uni-directional many-to-one association to QuantMethod
+	@ManyToOne
+	@JoinColumn(name = "quant_method_id")
+	private QuantitationMethod method;
 
-    // bi-directional many-to-one association to MasterQuantitationChannel
-    @OneToMany(mappedBy = "dataset")
-    @OrderBy("number")
-    private List<MasterQuantitationChannel> masterQuantitationChannels;
+	// bi-directional many-to-one association to MasterQuantitationChannel
+	@OneToMany(mappedBy = "quantDataset")
+	@OrderBy("number")
+	private List<MasterQuantitationChannel> masterQuantitationChannels;
 
-    // bi-directional many-to-one association to SampleAnalysis
-    @OneToMany(mappedBy = "dataset")
-    private Set<SampleAnalysis> sampleAnalyses;
+	// bi-directional many-to-one association to SampleAnalysis
+	@OneToMany(mappedBy = "dataset")
+	private Set<SampleAnalysis> sampleAnalyses;
 
-    
-    @ElementCollection
-    @MapKeyColumn(name = "schema_name")
-    @Column(name = "object_tree_id")
-    @CollectionTable(name = "data_set_object_tree_map", joinColumns = @JoinColumn(name = "data_set_id", referencedColumnName = "id"))
-    private Map<String, Long> objectTreeIdByName;
+	@ElementCollection
+	@MapKeyColumn(name = "schema_name")
+	@Column(name = "object_tree_id")
+	@CollectionTable(name = "data_set_object_tree_map", joinColumns = @JoinColumn(name = "data_set_id", referencedColumnName = "id") )
+	private Map<String, Long> objectTreeIdByName;
 
-    
-    // Transient Variables not saved in database
-    @Transient
-    private TransientData transientData = null;
+	// Transient Variables not saved in database
+	@Transient
+	private TransientData transientData = null;
 
-    protected Dataset() {
-    }
-
-    public Dataset(Project project) {
-	this.project = project;
-    }
-
-    public long getId() {
-	return id;
-    }
-
-    public void setId(final long pId) {
-	id = pId;
-    }
-
-    public int getChildrenCount() {
-	return childrenCount;
-    }
-
-    public void setChildrenCount(final int pChildrenCount) {
-	childrenCount = pChildrenCount;
-    }
-
-    public Timestamp getCreationTimestamp() {
-	Timestamp result = null;
-
-	if (creationTimestamp != null) { // Should not be null
-	    result = (Timestamp) creationTimestamp.clone();
+	protected Dataset() {
 	}
 
-	return result;
-    }
-
-    public void setCreationTimestamp(final Timestamp pCreationTimestamp) {
-
-	if (pCreationTimestamp == null) {
-	    throw new IllegalArgumentException("PCreationTimestamp is null");
+	public Dataset(Project project) {
+		this.project = project;
 	}
 
-	creationTimestamp = (Timestamp) pCreationTimestamp.clone();
-    }
+	public long getId() {
+		return id;
+	}
 
-    public String getDescription() {
-	return this.description;
-    }
+	public void setId(final long pId) {
+		id = pId;
+	}
 
-    public void setDescription(String description) {
-	this.description = description;
-    }
+	public int getChildrenCount() {
+		return childCount;
+	}
 
-    public DatasetType getType() {
-	return type;
-    }
+	public void setChildrenCount(final int pChildrenCount) {
+		childCount = pChildrenCount;
+	}
 
-    public void setType(DatasetType type) {
-	this.type = type;
-    }
+	public Timestamp getCreationTimestamp() {
+		Timestamp result = null;
 
-    public Dataset getParentDataset() {
-	return parentDataset;
-    }
+		if (creationTimestamp != null) { // Should not be null
+			result = (Timestamp) creationTimestamp.clone();
+		}
 
-    public void setParentDataset(Dataset parentDataset) {
-	this.parentDataset = parentDataset;
-    }
+		return result;
+	}
 
-    public Long getResultSetId() {
-	return resultSetId;
-    }
+	public void setCreationTimestamp(final Timestamp pCreationTimestamp) {
 
-    public void setResultSetId(final Long pResultSetId) {
-	resultSetId = pResultSetId;
-    }
+		if (pCreationTimestamp == null) {
+			throw new IllegalArgumentException("PCreationTimestamp is null");
+		}
 
-    public Long getResultSummaryId() {
-	return resultSummaryId;
-    }
+		creationTimestamp = (Timestamp) pCreationTimestamp.clone();
+	}
 
-    public void setResultSummaryId(final Long pResultSummaryId) {
-	resultSummaryId = pResultSummaryId;
-    }
+	public String getDescription() {
+		return this.description;
+	}
 
-    public String getKeywords() {
-	return this.keywords;
-    }
+	public void setDescription(String description) {
+		this.description = description;
+	}
 
-    public void setKeywords(String keywords) {
-	this.keywords = keywords;
-    }
+	public DatasetType getType() {
+		return type;
+	}
 
-    public String getModificationLog() {
-	return this.modificationLog;
-    }
+	public void setType(DatasetType type) {
+		this.type = type;
+	}
 
-    public void setModificationLog(String modificationLog) {
-	this.modificationLog = modificationLog;
-    }
+	public Dataset getParentDataset() {
+		return parentDataset;
+	}
 
-    public String getName() {
-	return this.name;
-    }
+	public void setParentDataset(Dataset parentDataset) {
+		this.parentDataset = parentDataset;
+	}
 
-    public void setName(String name) {
-	this.name = name;
-    }
+	public Long getResultSetId() {
+		return resultSetId;
+	}
 
-    public int getNumber() {
-	return number;
-    }
+	public void setResultSetId(final Long pResultSetId) {
+		resultSetId = pResultSetId;
+	}
 
-    public void setNumber(final int pNumber) {
-	number = pNumber;
-    }
+	public Long getResultSummaryId() {
+		return resultSummaryId;
+	}
 
-    public Project getProject() {
-	return this.project;
-    }
+	public void setResultSummaryId(final Long pResultSummaryId) {
+		resultSummaryId = pResultSummaryId;
+	}
 
-    public void setProject(Project project) {
-	this.project = project;
-    }
+	public String getKeywords() {
+		return this.keywords;
+	}
 
-    public String getSerializedProperties() {
-	return this.serializedProperties;
-    }
+	public void setKeywords(String keywords) {
+		this.keywords = keywords;
+	}
 
-    public void setSerializedProperties(String serializedProperties) {
-	this.serializedProperties = serializedProperties;
-    }
+	public String getModificationLog() {
+		return this.modificationLog;
+	}
 
-    public List<BiologicalSample> getBiologicalSamples() {
-	return biologicalSamples;
-    }
+	public void setModificationLog(String modificationLog) {
+		this.modificationLog = modificationLog;
+	}
 
-    public void setBiologicalSamples(final List<BiologicalSample> biologicalSamples) {
-	this.biologicalSamples = biologicalSamples;
-    }
+	public String getName() {
+		return this.name;
+	}
 
-    public Set<GroupSetup> getGroupSetups() {
-	return this.groupSetups;
-    }
+	public void setName(String name) {
+		this.name = name;
+	}
 
-    public void setGroupSetups(Set<GroupSetup> groupSetups) {
-	this.groupSetups = groupSetups;
-    }
+	public int getNumber() {
+		return number;
+	}
 
-    public List<QuantitationChannel> getQuantitationChannels() {
-	return quantitationChannels;
-    }
+	public void setNumber(final int pNumber) {
+		number = pNumber;
+	}
 
-    public void setQuantitationChannels(final List<QuantitationChannel> quantitationChannels) {
-	this.quantitationChannels = quantitationChannels;
-    }
+	public Project getProject() {
+		return this.project;
+	}
 
-    public QuantitationMethod getMethod() {
-	return this.method;
-    }
+	public void setProject(Project project) {
+		this.project = project;
+	}
 
-    public void setMethod(QuantitationMethod method) {
-	this.method = method;
-    }
+	public String getSerializedProperties() {
+		return this.serializedProperties;
+	}
 
-    public List<MasterQuantitationChannel> getMasterQuantitationChannels() {
-	return masterQuantitationChannels;
-    }
+	public void setSerializedProperties(String serializedProperties) {
+		this.serializedProperties = serializedProperties;
+	}
 
-    public void setMasterQuantitationChannels(final List<MasterQuantitationChannel> masterQuantitationChannels) {
-	this.masterQuantitationChannels = masterQuantitationChannels;
-    }
+	public List<BiologicalSample> getBiologicalSamples() {
+		return biologicalSamples;
+	}
 
-    public Set<SampleAnalysis> getSampleReplicates() {
-	return sampleAnalyses;
-    }
+	public void setBiologicalSamples(final List<BiologicalSample> biologicalSamples) {
+		this.biologicalSamples = biologicalSamples;
+	}
 
-    public void setSampleReplicates(final Set<SampleAnalysis> sampleAnalyses) {
-	this.sampleAnalyses = sampleAnalyses;
-    }
+	public Set<GroupSetup> getGroupSetups() {
+		return this.groupSetups;
+	}
 
-    public Fractionation getFractionation() {
-	return fractionation;
-    }
+	public void setGroupSetups(Set<GroupSetup> groupSetups) {
+		this.groupSetups = groupSetups;
+	}
 
-    public void setFractionation(Fractionation fractionation) {
-	this.fractionation = fractionation;
-    }
+	public List<QuantitationChannel> getQuantitationChannels() {
+		return quantitationChannels;
+	}
 
-    public Aggregation getAggregation() {
-	return aggregation;
-    }
+	public void setQuantitationChannels(final List<QuantitationChannel> quantitationChannels) {
+		this.quantitationChannels = quantitationChannels;
+	}
 
-    public void setAggregation(Aggregation aggregation) {
-	this.aggregation = aggregation;
-    }
+	public QuantitationMethod getMethod() {
+		return this.method;
+	}
 
-    void setObjectTreeIdByName(final Map<String, Long> objectTree) {
-	objectTreeIdByName = objectTree;
-    }
+	public void setMethod(QuantitationMethod method) {
+		this.method = method;
+	}
 
-    public Map<String, Long> getObjectTreeIdByName() {
-	return objectTreeIdByName;
-    }
-    
-    public Long putObject(final String schemaName, final Long objectId) {
-    	if (StringUtils.isEmpty(schemaName)) {
-    	    throw new IllegalArgumentException("Invalid schemaName");
-    	}
+	public List<MasterQuantitationChannel> getMasterQuantitationChannels() {
+		return masterQuantitationChannels;
+	}
 
-    	Map<String, Long> localObjectTree = getObjectTreeIdByName();
+	public void setMasterQuantitationChannels(final List<MasterQuantitationChannel> masterQuantitationChannels) {
+		this.masterQuantitationChannels = masterQuantitationChannels;
+	}
 
-    	if (localObjectTree == null) {
-    	    localObjectTree = new HashMap<String, Long>();
+	public Set<SampleAnalysis> getSampleReplicates() {
+		return sampleAnalyses;
+	}
 
-    	    setObjectTreeIdByName(localObjectTree);
-    	}
+	public void setSampleReplicates(final Set<SampleAnalysis> sampleAnalyses) {
+		this.sampleAnalyses = sampleAnalyses;
+	}
 
-    	return localObjectTree.put(schemaName, Long.valueOf(objectId));    
-    }
+	public Fractionation getFractionation() {
+		return fractionation;
+	}
 
-    public Long removeObject(final String schemaName) {
+	public void setFractionation(Fractionation fractionation) {
+		this.fractionation = fractionation;
+	}
+
+	public Aggregation getAggregation() {
+		return aggregation;
+	}
+
+	public void setAggregation(Aggregation aggregation) {
+		this.aggregation = aggregation;
+	}
+
+	void setObjectTreeIdByName(final Map<String, Long> objectTree) {
+		objectTreeIdByName = objectTree;
+	}
+
+	public Map<String, Long> getObjectTreeIdByName() {
+		return objectTreeIdByName;
+	}
+
+	public Long putObject(final String schemaName, final Long objectId) {
+		if (StringUtils.isEmpty(schemaName)) {
+			throw new IllegalArgumentException("Invalid schemaName");
+		}
+
+		Map<String, Long> localObjectTree = getObjectTreeIdByName();
+
+		if (localObjectTree == null) {
+			localObjectTree = new HashMap<String, Long>();
+
+			setObjectTreeIdByName(localObjectTree);
+		}
+
+		return localObjectTree.put(schemaName, Long.valueOf(objectId));
+	}
+
+	public Long removeObject(final String schemaName) {
 		Long result = null;
-	
+
 		final Map<String, Long> localObjectTree = getObjectTreeIdByName();
 		if (localObjectTree != null) {
-		    result = localObjectTree.remove(schemaName);
+			result = localObjectTree.remove(schemaName);
 		}
 		return result;
-    }
-
-    
-    public List<Dataset> getChildren() {
-	return children;
-    }
-
-    public void setChildren(final List<Dataset> children) {
-	this.children = children;
-    }
-
-    public void addChild(Dataset child) {
-	List<Dataset> childrenList = getChildren();
-	if (childrenList == null) {
-	    childrenList = new ArrayList<Dataset>(1);
-	    setChildren(childrenList);
-	}
-	childrenList.add(child);
-	child.setNumber(childrenCount);
-	childrenCount++;
-	child.setParentDataset(this);
-    }
-
-    public void insertChild(Dataset child, int index) {
-	List<Dataset> childrenList = getChildren();
-	if (childrenList == null) {
-	    childrenList = new ArrayList<Dataset>(1);
-	    setChildren(childrenList);
-	}
-	childrenList.add(index, child);
-	child.setNumber(index);
-	childrenCount++;
-
-	for (int i = index + 1; i < childrenList.size(); i++) {
-	    childrenList.get(i).setNumber(i);
-	}
-	child.setParentDataset(this);
-    }
-
-    public void replaceAllChildren(List<Dataset> newChildren) {
-	List<Dataset> childrenList = getChildren();
-	if (childrenList != null) {
-	    Iterator<Dataset> it = childrenList.iterator();
-	    while (it.hasNext()) {
-		Dataset child = it.next();
-		child.setParentDataset(null);
-		child.setNumber(0);
-	    }
-	    childrenList.clear();
-	    childrenCount = 0;
-	}
-	Iterator<Dataset> it = newChildren.iterator();
-	while (it.hasNext()) {
-	    Dataset newChild = it.next();
-	    addChild(newChild);
-	}
-    }
-
-    public Set<IdentificationDataset> getIdentificationDataset() {
-	Set<IdentificationDataset> idfDS = new HashSet<IdentificationDataset>();
-	if ((getChildren() == null || getChildren().isEmpty())
-		&& (getType().equals(DatasetType.IDENTIFICATION))) {
-	    idfDS.add((IdentificationDataset) this);
 	}
 
-	for (Dataset ds : getChildren()) {
-	    idfDS.addAll(ds.getIdentificationDataset());
-	}
-	return idfDS;
-
-    }
-
-    // FIXME: (IdentificationDataset)this in getIdentificationDataset throws a ClassCastException
-    // this method is just a workaround but a better solution has to be implemented
-    public Set<Dataset> getIdentificationDatasets() {
-	Set<Dataset> idfDS = new HashSet<Dataset>();
-	if ((getChildren() == null || getChildren().isEmpty())
-		&& (getType().equals(DatasetType.IDENTIFICATION))) {
-	    idfDS.add((Dataset) this);
+	public List<Dataset> getChildren() {
+		return children;
 	}
 
-	for (Dataset ds : getChildren()) {
-	    idfDS.addAll(ds.getIdentificationDatasets());
-	}
-	return idfDS;
-
-    }
-
-    public TransientData getTransientData() {
-	if (transientData == null) {
-	    transientData = new TransientData();
-	}
-	return transientData;
-    }
-
-    /**
-     * Transient Data which will be not saved in database Used by the Proline Studio IHM
-     * 
-     * @author JM235353
-     */
-    public static class TransientData implements Serializable {
-
-	private static final long serialVersionUID = 1L;
-	private ResultSummary resultSummary = null; // JPM.WART : uds package has no access to msi package
-	private ResultSet resultSet = null;
-
-	protected TransientData() {
+	public void setChildren(final List<Dataset> children) {
+		this.children = children;
 	}
 
-	public ResultSummary getResultSummary() {
-	    return resultSummary;
+	public void addChild(Dataset child) {
+		List<Dataset> childrenList = getChildren();
+		if (childrenList == null) {
+			childrenList = new ArrayList<Dataset>(1);
+			setChildren(childrenList);
+		}
+		childrenList.add(child);
+		child.setNumber(childCount);
+		childCount++;
+		child.setParentDataset(this);
 	}
 
-	public void setResultSummary(ResultSummary resultSummary) {
-	    this.resultSummary = resultSummary;
+	public void insertChild(Dataset child, int index) {
+		List<Dataset> childrenList = getChildren();
+		if (childrenList == null) {
+			childrenList = new ArrayList<Dataset>(1);
+			setChildren(childrenList);
+		}
+		childrenList.add(index, child);
+		child.setNumber(index);
+		childCount++;
+
+		for (int i = index + 1; i < childrenList.size(); i++) {
+			childrenList.get(i).setNumber(i);
+		}
+		child.setParentDataset(this);
 	}
 
-	public ResultSet getResultSet() {
-	    return resultSet;
+	public void replaceAllChildren(List<Dataset> newChildren) {
+		List<Dataset> childrenList = getChildren();
+		if (childrenList != null) {
+			Iterator<Dataset> it = childrenList.iterator();
+			while (it.hasNext()) {
+				Dataset child = it.next();
+				child.setParentDataset(null);
+				child.setNumber(0);
+			}
+			childrenList.clear();
+			childCount = 0;
+		}
+		Iterator<Dataset> it = newChildren.iterator();
+		while (it.hasNext()) {
+			Dataset newChild = it.next();
+			addChild(newChild);
+		}
 	}
 
-	public void setResultSet(ResultSet resultSet) {
-	    this.resultSet = resultSet;
+	public Set<IdentificationDataset> getIdentificationDataset() {
+		Set<IdentificationDataset> idfDS = new HashSet<IdentificationDataset>();
+		if ((getChildren() == null || getChildren().isEmpty())
+			&& (getType().equals(DatasetType.IDENTIFICATION))) {
+			idfDS.add((IdentificationDataset) this);
+		}
+
+		for (Dataset ds : getChildren()) {
+			idfDS.addAll(ds.getIdentificationDataset());
+		}
+		return idfDS;
+
 	}
-    }
+
+	// FIXME: (IdentificationDataset)this in getIdentificationDataset throws a ClassCastException
+	// this method is just a workaround but a better solution has to be implemented
+	public Set<Dataset> getIdentificationDatasets() {
+		Set<Dataset> idfDS = new HashSet<Dataset>();
+		if ((getChildren() == null || getChildren().isEmpty())
+			&& (getType().equals(DatasetType.IDENTIFICATION))) {
+			idfDS.add((Dataset) this);
+		}
+
+		for (Dataset ds : getChildren()) {
+			idfDS.addAll(ds.getIdentificationDatasets());
+		}
+		return idfDS;
+
+	}
+
+	public TransientData getTransientData() {
+		if (transientData == null) {
+			transientData = new TransientData();
+		}
+		return transientData;
+	}
+
+	/**
+	 * Transient Data which will be not saved in database Used by the Proline Studio IHM
+	 * 
+	 * @author JM235353
+	 */
+	public static class TransientData implements Serializable {
+
+		private static final long serialVersionUID = 1L;
+		private ResultSummary resultSummary = null; // JPM.WART : uds package has no access to msi package
+		private ResultSet resultSet = null;
+
+		protected TransientData() {
+		}
+
+		public ResultSummary getResultSummary() {
+			return resultSummary;
+		}
+
+		public void setResultSummary(ResultSummary resultSummary) {
+			this.resultSummary = resultSummary;
+		}
+
+		public ResultSet getResultSet() {
+			return resultSet;
+		}
+
+		public void setResultSet(ResultSet resultSet) {
+			this.resultSet = resultSet;
+		}
+	}
 
 }

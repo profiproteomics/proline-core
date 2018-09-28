@@ -1,58 +1,51 @@
 package fr.proline.core.om.provider.msi.impl
 
-import scala.collection.mutable.ArrayBuffer
-
+import fr.proline.context.BasicExecutionContext
+import fr.proline.context.IExecutionContext
+import fr.proline.core.dal._
+import fr.proline.core.om.model.msi._
+import fr.proline.core.om.provider.PeptideCacheExecutionContext
+import fr.proline.core.om.provider.msi.cache.IPeptideCache
+import fr.proline.repository.ProlineDatabaseType
+import fr.proline.repository.util.DatabaseTestCase
 import org.hamcrest.CoreMatchers
 import org.junit.After
 import org.junit.Assert._
 import org.junit.Before
 import org.junit.Test
 
-import fr.proline.core.dal._
-import fr.proline.core.om.model.msi._
-import fr.proline.repository.ProlineDatabaseType
-import fr.proline.repository.util.DatabaseTestCase
+import scala.collection.mutable.ArrayBuffer
 
 @Test
 class SQLPeptideProviderTest extends DatabaseTestCase {
 
   private val SEQ_TO_FOUND: String = "LTGMAFR"
-
-  override def getProlineDatabaseType() = ProlineDatabaseType.PS
+  private var peptideCache : IPeptideCache = _
+  private var exeContext : IExecutionContext = _
+  override def getProlineDatabaseType() = ProlineDatabaseType.MSI
 
   @Before
   @throws(classOf[Exception])
   def setUp() = {
     initDatabase()
+    val msiDbCtx = BuildMsiDbConnectionContext(getConnector, false)
+    exeContext = PeptideCacheExecutionContext(new BasicExecutionContext(1,null,msiDbCtx,null))
+    peptideCache = PeptideCacheExecutionContext(exeContext).getPeptideCache()
+    peptideCache.clear() // Clear peptide cache between tests
 
-    SQLPeptideProvider.clear() // Clear peptide cache between tests
-
-    //loadDataSet("/fr/proline/core/om/ps/Unimod_Dataset.xml")
-    loadCompositeDataSet(Array("/dbunit/datasets/ps-db_init_dataset.xml", "/dbunit/datasets/ps/Peptides_Dataset.xml"))
+    loadCompositeDataSet(Array("/dbunit/Init/msi-db.xml", "/dbunit/datasets/msi/Peptides_Dataset.xml"))
   }
 
-    override def getPropertiesFileName(): String = {
-	return "db_settings/h2/db_ps.properties";
-  }
-  
+  override def getPropertiesFileName(): String = "db_settings/h2/db_msi.properties"
     
   @Test
   def getSinglePeptide() = {
-    val psDb = BuildDbConnectionContext(getConnector, false)
-
-    try {
-
-      val sqlPepProvider = new SQLPeptideProvider(psDb)
+      val sqlPepProvider = new SQLPeptideProvider(PeptideCacheExecutionContext(exeContext))
 
       val pep: Option[Peptide] = sqlPepProvider.getPeptide(4)
       assertThat(pep, CoreMatchers.notNullValue())
       assertNotSame(pep, None)
       assertThat(pep.get.calculatedMass, CoreMatchers.equalTo(810.405807))
-
-    } finally {
-      psDb.close
-    }
-
   }
 
   @Test
@@ -62,122 +55,88 @@ class SQLPeptideProviderTest extends DatabaseTestCase {
     ids += 1
     ids += 4
 
-    val psDb = BuildDbConnectionContext(getConnector, false)
 
-    try {
+    val sqlPepProvider = new SQLPeptideProvider(PeptideCacheExecutionContext(exeContext))
 
-      val sqlPepProvider = new SQLPeptideProvider(psDb)
-
-      val peps: Array[Option[Peptide]] = sqlPepProvider.getPeptidesAsOptions(ids)
-      assertThat(peps, CoreMatchers.notNullValue())
-      assertThat(peps.length, CoreMatchers.equalTo(3))
-      assertEquals(peps.apply(2).get.id, 4L)
-      assertThat(peps(2).get.calculatedMass, CoreMatchers.equalTo(810.405807))
-
-    } finally {
-      psDb.close
-    }
+    val peps: Array[Option[Peptide]] = sqlPepProvider.getPeptidesAsOptions(ids)
+    assertThat(peps, CoreMatchers.notNullValue())
+    assertThat(peps.length, CoreMatchers.equalTo(3))
+    assertEquals(peps.apply(2).get.id, 4L)
+    assertThat(peps(2).get.calculatedMass, CoreMatchers.equalTo(810.405807))
 
   }
 
   @Test
   def getPeptideWithNTermPTM() = {
-    val psDb = BuildDbConnectionContext(getConnector, false)
+     val sqlPepProvider = new SQLPeptideProvider(PeptideCacheExecutionContext(exeContext))
 
-    try {
-      val sqlPepProvider = new SQLPeptideProvider(psDb)
+    val pep: Option[Peptide] = sqlPepProvider.getPeptide(6)
+    assertThat(pep, CoreMatchers.notNullValue())
+    assertNotSame(pep, None)
 
-      val pep: Option[Peptide] = sqlPepProvider.getPeptide(6)
-      assertThat(pep, CoreMatchers.notNullValue())
-      assertNotSame(pep, None)
-
-      assertEquals(pep.get.id, 6L)
-      assertThat(pep.get.ptms.length, CoreMatchers.equalTo(1))
-      assertThat(pep.get.ptms(0).definition.names.shortName, CoreMatchers.equalTo("Acetyl"))
-      assertTrue(pep.get.ptms(0).isNTerm)
-
-    } finally {
-      psDb.close
-    }
+    assertEquals(pep.get.id, 6L)
+    assertThat(pep.get.ptms.length, CoreMatchers.equalTo(1))
+    assertThat(pep.get.ptms(0).definition.names.shortName, CoreMatchers.equalTo("Acetyl"))
+    assertTrue(pep.get.ptms(0).isNTerm)
 
   }
 
   @Test
   def getPeptideOnSeqAndNoPtms() = {
-    val psDb = BuildDbConnectionContext(getConnector, false)
 
-    try {
-      val sqlPepProvider = new SQLPeptideProvider(psDb)
+    val sqlPepProvider = new SQLPeptideProvider(PeptideCacheExecutionContext(exeContext))
 
-      val ptms = new Array[LocatedPtm](0)
-      val pep: Option[Peptide] = sqlPepProvider.getPeptide(SEQ_TO_FOUND, ptms)
-      assertThat(pep, CoreMatchers.notNullValue())
-      assertNotSame(pep, None)
-      assertTrue(pep.get.ptms == null || pep.get.ptms.length == 0)
-
-    } finally {
-      psDb.close
-    }
+    val ptms = new Array[LocatedPtm](0)
+    val pep: Option[Peptide] = sqlPepProvider.getPeptide(SEQ_TO_FOUND, ptms)
+    assertThat(pep, CoreMatchers.notNullValue())
+    assertNotSame(pep, None)
+    assertTrue(pep.get.ptms == null || pep.get.ptms.length == 0)
 
   }
 
   @Test
   def getPeptideOnSeqAndPtms() = {
-    val psDb = BuildDbConnectionContext(getConnector, false)
+    val sqlPepProvider = new SQLPeptideProvider(PeptideCacheExecutionContext(exeContext))
 
-    try {
-      val sqlPepProvider = new SQLPeptideProvider(psDb)
+    var ptmsBuilder = Array.newBuilder[LocatedPtm]
 
-      var ptmsBuilder = Array.newBuilder[LocatedPtm]
+    val ptmEvi: PtmEvidence = new PtmEvidence(IonTypes.Precursor, "", Double.MaxValue, Double.MaxValue, false)
+    val ptmEvidences = Array[PtmEvidence](ptmEvi)
 
-      val ptmEvi: PtmEvidence = new PtmEvidence(IonTypes.Precursor, "", Double.MaxValue, Double.MaxValue, false)
-      val ptmEvidences = Array[PtmEvidence](ptmEvi)
+    val ptmDef = new PtmDefinition(0, "ANYWHERE", new PtmNames("Oxidation", "Oxidation or Hydroxylation"), ptmEvidences, 'M', null, 0)
+    ptmsBuilder += new LocatedPtm(ptmDef, 3, Double.MaxValue, Double.MaxValue, "O", false, false)
 
-      val ptmDef = new PtmDefinition(0, "ANYWHERE", new PtmNames("Oxidation", "Oxidation or Hydroxylation"), ptmEvidences, 'M', null, 0)
-      ptmsBuilder += new LocatedPtm(ptmDef, 3, Double.MaxValue, Double.MaxValue, "O", false, false)
-
-      /*val provTest = new fr.proline.core.om.provider.msi.impl.ORMPTMProvider( this.em )
+    /*val provTest = new fr.proline.core.om.provider.msi.impl.ORMPTMProvider( this.em )
 	  val ptmDefs = provTest.getPtmDefinitions(List(1,2,30))
 	  ptmDefs.foreach { ptm => println(ptm.get.names.shortName ) }*/
 
-      val pep: Option[Peptide] = sqlPepProvider.getPeptide(SEQ_TO_FOUND, ptmsBuilder.result())
-      assertThat(pep, CoreMatchers.notNullValue())
-      assertNotSame(pep, None)
-      assertThat(pep.get.ptms.length, CoreMatchers.equalTo(1))
-      assertThat(pep.get.ptms(0).seqPosition, CoreMatchers.equalTo(3))
-
-    } finally {
-      psDb.close
-    }
+    val pep: Option[Peptide] = sqlPepProvider.getPeptide(SEQ_TO_FOUND, ptmsBuilder.result())
+    assertThat(pep, CoreMatchers.notNullValue())
+    assertNotSame(pep, None)
+    assertThat(pep.get.ptms.length, CoreMatchers.equalTo(1))
+    assertThat(pep.get.ptms(0).seqPosition, CoreMatchers.equalTo(3))
 
   }
 
   @Test
   def getPeptideWithMultiplePtmSpecificities() = {
-    val psDb = BuildDbConnectionContext(getConnector, false)
 
-    try {
+    val sqlPepProvider = new SQLPeptideProvider(PeptideCacheExecutionContext(exeContext))
 
-      val sqlPepProvider = new SQLPeptideProvider(psDb)
-
-      val pep: Option[Peptide] = sqlPepProvider.getPeptide(7)
-      assertThat(pep, CoreMatchers.notNullValue())
-      assertNotSame(pep, None)
-      assertThat(pep.get.ptms.head.definition.neutralLosses.size, CoreMatchers.equalTo(2))
-      assertThat(pep.get.ptms.head.definition.ptmEvidences.size, CoreMatchers.equalTo(3))
-      assertThat(pep.get.ptms.head.definition.classification, CoreMatchers.equalTo("Post-translational"))
-
-    } finally {
-      psDb.close
-    }
-
+    val pep: Option[Peptide] = sqlPepProvider.getPeptide(7)
+    assertThat(pep, CoreMatchers.notNullValue())
+    assertNotSame(pep, None)
+    assertThat(pep.get.ptms.head.definition.neutralLosses.size, CoreMatchers.equalTo(2))
+    assertThat(pep.get.ptms.head.definition.ptmEvidences.size, CoreMatchers.equalTo(3))
+    assertThat(pep.get.ptms.head.definition.classification, CoreMatchers.equalTo("Post-translational"))
   }
 
   @After
   override def tearDown() = {
 
     try {
-      SQLPeptideProvider.clear() // Clear peptide cache between tests
+      peptideCache.clear() // Clear peptide cache between tests
+      exeContext.closeAll()
     } finally {
       super.tearDown()
     }

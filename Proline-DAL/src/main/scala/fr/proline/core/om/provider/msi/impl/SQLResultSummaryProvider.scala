@@ -1,24 +1,29 @@
 package fr.proline.core.om.provider.msi.impl
 
 import fr.profi.util.collection._
-import fr.profi.util.serialization.ProfiJson
 import fr.profi.util.misc.MapIfNotNull
+import fr.profi.util.serialization.ProfiJson
 import fr.proline.context._
 import fr.proline.core.dal.DoJDBCReturningWork
+import fr.proline.core.dal.helper.MsiDbHelper
+import fr.proline.core.dal.tables.SelectQueryBuilder._
+import fr.proline.core.dal.tables.SelectQueryBuilder2
 import fr.proline.core.dal.tables.msi.MsiDbResultSetTable
 import fr.proline.core.dal.tables.msi.MsiDbResultSummaryTable
-import fr.proline.core.dal.tables.SelectQueryBuilder2
-import fr.proline.core.dal.tables.SelectQueryBuilder._
-import fr.proline.core.dal.helper.MsiDbHelper
-import fr.proline.core.om.model.msi._
+import fr.proline.core.om.model.msi.ProteinMatch
+import fr.proline.core.om.model.msi.ProteinSet
+import fr.proline.core.om.model.msi.ResultSet
+import fr.proline.core.om.model.msi.ResultSummary
+import fr.proline.core.om.model.msi.ResultSummaryProperties
+import fr.proline.core.om.provider.PeptideCacheExecutionContext
 import fr.proline.core.om.provider.msi.IResultSummaryProvider
 
 class SQLResultSummaryProvider(
-  val msiDbCtx: MsiDbConnectionContext,
-  val psDbCtx: DatabaseConnectionContext,
-  val udsDbCtx: UdsDbConnectionContext
+  val peptideCacheExecContext : PeptideCacheExecutionContext
 ) extends SQLResultSetLoader with IResultSummaryProvider {
-  
+
+  val msiDbCtx: MsiDbConnectionContext = peptideCacheExecContext.getMSIDbConnectionContext
+  val udsDbCtx: UdsDbConnectionContext = peptideCacheExecContext.getUDSDbConnectionContext
 
   // Instantiate a MSIdb helper
   val msiDbHelper = new MsiDbHelper(msiDbCtx)
@@ -33,11 +38,11 @@ class SQLResultSummaryProvider(
     
     val loadProtMatches = loadProteinMatches.getOrElse(loadResultSet)
 
-    val pepMatchProvider = new SQLPeptideMatchProvider(msiDbCtx, psDbCtx)
+    val pepMatchProvider = new SQLPeptideMatchProvider(peptideCacheExecContext)
     val protMatchProvider = new SQLProteinMatchProvider(msiDbCtx)
     
     // Load peptide sets
-    val pepSetProvider = new SQLPeptideSetProvider(msiDbCtx, psDbCtx)
+    val pepSetProvider = new SQLPeptideSetProvider(peptideCacheExecContext)
     val pepSets = pepSetProvider.getResultSummariesPeptideSets(rsmIds)
     val inMemPepSetProvider = new InMemoryPeptideSetProvider(pepSets)
 
@@ -59,7 +64,7 @@ class SQLResultSummaryProvider(
         // Retrieve some vars
         val rsmId: Long = toLong(r.getAny(RSMCols.ID))
         val rsmPepSets = inMemPepSetProvider.getResultSummaryPeptideSets(rsmId)
-        val rsmPepInsts = rsmPepSets.flatMap(_.getPeptideInstances).distinct
+        val rsmPepInsts = rsmPepSets.flatMap(_.getPeptideInstances()).distinct
         val rsmProtSets = protSetsByRsmId.getOrElse(rsmId, Array.empty[ProteinSet])
     
         val decoyRsmId = r.getLongOrElse(RSMCols.DECOY_RESULT_SUMMARY_ID, 0L)
@@ -86,7 +91,7 @@ class SQLResultSummaryProvider(
             //protMatchById.get(protSet.getRepresentativeProteinMatchId).map( protSet.setRepresentativeProteinMatch(_) )
             
             val samesetProtMatchById = protSet.samesetProteinMatches.get.map( p => p.id -> p ).toMap
-            val reprProtMatchId = protSet.getRepresentativeProteinMatchId
+            val reprProtMatchId = protSet.getRepresentativeProteinMatchId()
             val reprProtMatchOpt = samesetProtMatchById.get(reprProtMatchId)
             if(reprProtMatchOpt.isDefined) {
               protSet.setRepresentativeProteinMatch(reprProtMatchOpt.get)
@@ -109,7 +114,7 @@ class SQLResultSummaryProvider(
          
           // Link peptide matches to peptide instances
           rsmPepInsts.foreach { pepInst =>
-            pepInst.peptideMatches = pepInst.getPeptideMatchIds.map( pepMatchById(_) )
+            pepInst.peptideMatches = pepInst.getPeptideMatchIds().map( pepMatchById(_) )
           }
           
           // Note: we set isValidatedContent to false here because we may have loaded matches belonging non-validated protein sets

@@ -7,68 +7,68 @@ import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.Table;
 
-
 /**
  * The persistent class for the admin_infos database table.
  * 
  */
-@Entity(name="fr.proline.core.orm.msi.ObjectTreeSchema")
-@Table(name="object_tree_schema")
+@Entity(name = "fr.proline.core.orm.msi.ObjectTreeSchema")
+@Table(name = "object_tree_schema")
 public class ObjectTreeSchema implements Serializable {
-  
+
 	private static final long serialVersionUID = 1L;
-	
-    public enum SchemaName {
-    	SPECTRUM_MATCH("peptide_match.spectrum_match"),
-    	ISOBARIC_TAGGING_QUANT_PEPTIDES("object_tree.isobaric_tagging_quant_peptides"),
-    	ISOBARIC_TAGGING_QUANT_PEPTIDE_IONS("object_tree.isobaric_tagging_quant_peptide_ions"),
-    	LABEL_FREE_QUANT_PEPTIDES("object_tree.label_free_quant_peptides"),
-    	LABEL_FREE_QUANT_PEPTIDE_IONS("object_tree.label_free_quant_peptide_ions"),
-    	QUANT_PROTEIN_SETS("object_tree.quant_protein_sets"),
-    	QUANT_REPORTER_IONS("object_tree.quant_reporter_ions"),
-    	SPECTRAL_COUNTING_QUANT_PEPTIDES("object_tree.spectral_counting_quant_peptides"),
-    	SPECTRAL_COUNTING_QUANT_PEPTIDE_IONS("object_tree.spectral_counting_quant_peptide_ions"),
-    	PEPTIDE_VALIDATION_ROC_CURVE("result_summary.peptide_validation_roc_curve"),
-    	PROTEIN_VALIDATION_ROC_CURVE("result_summary.protein_validation_roc_curve"), 
-    	PTM_SITES("result_summary.ptm_sites");
-    	
-    	private final String name;
-    	
-	    private SchemaName(final String name) {
-	        this.name = name;
-	    }
-	    
-	    @Override
-	    public String toString() {
-	        return name;
-	    }
-    };
+
+	public enum SchemaName {
+		SPECTRUM_MATCH("peptide_match.spectrum_match"),
+		ISOBARIC_TAGGING_QUANT_PEPTIDES("object_tree.isobaric_tagging_quant_peptides"),
+		ISOBARIC_TAGGING_QUANT_PEPTIDE_IONS("object_tree.isobaric_tagging_quant_peptide_ions"),
+		LABEL_FREE_QUANT_PEPTIDES("object_tree.label_free_quant_peptides"),
+		LABEL_FREE_QUANT_PEPTIDE_IONS("object_tree.label_free_quant_peptide_ions"),
+		QUANT_PROTEIN_SETS("object_tree.quant_protein_sets"),
+		QUANT_REPORTER_IONS("object_tree.quant_reporter_ions"),
+		SPECTRAL_COUNTING_QUANT_PEPTIDES("object_tree.spectral_counting_quant_peptides"),
+		SPECTRAL_COUNTING_QUANT_PEPTIDE_IONS("object_tree.spectral_counting_quant_peptide_ions"),
+		PEPTIDE_VALIDATION_ROC_CURVE("result_summary.peptide_validation_roc_curve"),
+		PROTEIN_VALIDATION_ROC_CURVE("result_summary.protein_validation_roc_curve"),
+		PTM_SITES("result_summary.ptm_sites"),
+		ION_SERIES("peptide_match.ion_series");
+
+		private final String name;
+
+		private SchemaName(final String name) {
+			this.name = name;
+		}
+
+		@Override
+		public String toString() {
+			return name;
+		}
+	};
 
 	@Id
-	@Column(name="name")
+	@Column(name = "name")
 	private String name;
 
-	@Column(name="type")
+	@Column(name = "type")
 	private String type;
-	
-    @Column(name="is_binary_mode")
-    private boolean isBinaryMode;
 
-	@Column(name="version")
+	@Column(name = "is_binary_mode")
+	private boolean isBinaryMode;
+
+	@Column(name = "version")
 	private String version;
 
-	@Column(name="schema")
+	@Column(name = "schema")
 	private String schema;
-	
-	@Column(name="description")
+
+	@Column(name = "description")
 	private String description;
 
-	@Column(name="serialized_properties")
+	@Column(name = "serialized_properties")
 	private String serializedProperties;
-	
+
 	public ObjectTreeSchema() {
-    }
-	
+	}
+
 	public String getName() {
 		return name;
 	}
@@ -92,7 +92,7 @@ public class ObjectTreeSchema implements Serializable {
 	public void setVersion(String version) {
 		this.version = version;
 	}
-	
+
 	public boolean getIsBinaryMode() {
 		return this.isBinaryMode;
 	}

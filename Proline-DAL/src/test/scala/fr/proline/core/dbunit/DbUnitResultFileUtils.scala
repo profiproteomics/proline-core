@@ -10,7 +10,7 @@ import fr.proline.core.om.provider.msi.impl.{ SQLPeaklistSoftwareProvider => Msi
 import fr.proline.core.om.storer.msi.ResultFileStorer
 import fr.proline.core.om.storer.msi.RsStorer
 import fr.proline.core.om.storer.msi.impl.StorerContext
-import fr.proline.core.om.storer.ps.BuildPtmDefinitionStorer
+import fr.proline.core.om.storer.msi.BuildPtmDefinitionStorer
 
 object DbUnitResultFileUtils {
   
@@ -29,28 +29,21 @@ object DbUnitResultFileUtils {
     // Open streams
     val msiStream = classLoader.getResourceAsStream( datasetLocation.msiDbDatasetPath )
     val udsStream = classLoader.getResourceAsStream( datasetLocation.udsDbDatasetPath )
-    val psStream = classLoader.getResourceAsStream( datasetLocation.psDbDatasetPath )
     
-    val dbUnitRF = new DbUnitResultFile(msiStream,udsStream,psStream)  
+    val dbUnitRF = new DbUnitResultFile(msiStream,udsStream)
     
     // Close input streams
     msiStream.close()
     udsStream.close()
-    psStream.close()
     
     dbUnitRF
   }
   
-  def storeDbUnitResultFile( dbUnitResultFile: DbUnitResultFile, execCtx: IExecutionContext ): ResultSet =  {
+  private def storeDbUnitResultFile( dbUnitResultFile: DbUnitResultFile, execCtx: IExecutionContext ): ResultSet =  {
     
     // Store PTM definitions
     val searchSettings = dbUnitResultFile.msiSearch.searchSettings
     val ptmDefs = searchSettings.fixedPtmDefs ++ searchSettings.variablePtmDefs
-    
-    val psDbCtx = execCtx.getPSDbConnectionContext
-    psDbCtx.beginTransaction()
-    BuildPtmDefinitionStorer(psDbCtx).storePtmDefinitions(ptmDefs, execCtx)
-    psDbCtx.commitTransaction()
     
     // Retrieve the target result set
     val rs = dbUnitResultFile.getResultSet(wantDecoy = false)
@@ -72,6 +65,8 @@ object DbUnitResultFileUtils {
     
     udsDbCtx.beginTransaction()
     msiDbCtx.beginTransaction()
+    
+    BuildPtmDefinitionStorer(msiDbCtx).storePtmDefinitions(ptmDefs, execCtx)
     
     // TODO: do this in the ResultFileStorer
     DoJDBCWork.withEzDBC(msiDbCtx) { msiEzDBC =>

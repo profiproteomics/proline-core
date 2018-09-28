@@ -1,7 +1,5 @@
 package fr.proline.core.om.storer.msi
 
-import com.typesafe.scalalogging.LazyLogging
-
 import fr.proline.core.om.model.msi.InstrumentConfig
 import fr.proline.core.om.model.msi.MSISearch
 import fr.proline.core.om.model.msi.MsQuery
@@ -23,9 +21,9 @@ trait IMsiSearchWriter {
    *
    * Transaction are not managed by this method, should be done by user.
    *
-   * @param msiSearchID MSISearch to associate MSQuery to
+   * @param msiSearchId MSISearch to associate MSQuery to
    * @param msQueries Queries to store
-   * @param StorerContext where mapping will be saved and/or retrieve as well as repository connexion information
+   * @param context StorerContext where mapping will be saved and/or retrieve as well as repository connexion information
    *
    * @return StorerContext with updated references
    *

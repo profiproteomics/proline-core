@@ -13,7 +13,8 @@ import fr.profi.util.ms.massToMoz
 
 import scala.annotation.meta.field
 import scala.beans.BeanProperty
-import scala.collection.mutable.{ArrayBuffer, ListBuffer}
+import scala.collection.mutable.ArrayBuffer
+import scala.collection.mutable.ListBuffer
 
 object Peptide extends InMemoryIdGen with LazyLogging {
   
@@ -220,7 +221,7 @@ case class Peptide (
   require( sequence != null, "sequence is null" )
   require( calculatedMass >= 0 )
   if (isNotEmpty(ptmString)) {
-    require(isModified, s"PTMs can't be empty if ptmString is not empty ($ptmString)")
+    require(isModified, s"PTMs ($sequence) can't be empty if ptmString is not empty ($ptmString)")
   }
   
   def isModified(): Boolean = ptms != null && ptms.nonEmpty
@@ -294,6 +295,17 @@ object PeptideMatch extends InMemoryIdGen with LazyLogging {
     }
 //    if(missedCleavages > 0) logger.debug("Sequence "+residueBefore.getOrElse("^")+"."+sequence+"."+residueAfter.getOrElse("$")+" has "+missedCleavages+" miscleavages")
     missedCleavages
+  }
+
+  def getBestOnScoreDeltaMoZ(pepMatches: Array[PeptideMatch]): PeptideMatch = {
+
+       var tmpBest = pepMatches(0)
+      pepMatches.foreach( pepM => {
+        if ((tmpBest.score < pepM.score) || ((tmpBest.score == pepM.score) && (tmpBest.deltaMoz < pepM.deltaMoz)))
+          tmpBest = pepM
+      })
+      tmpBest
+
   }
   
 }

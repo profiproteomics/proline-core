@@ -8,6 +8,7 @@ import com.fasterxml.jackson.annotation.JsonProperty
 import com.fasterxml.jackson.core.`type`.TypeReference
 import com.fasterxml.jackson.module.scala.JsonScalaEnumeration
 
+import fr.profi.util.lang.EnhancedEnum
 import fr.profi.util.misc.InMemoryIdGen
 import fr.profi.util.StringUtils.isEmpty
 import fr.profi.util.StringUtils.isNotEmpty
@@ -97,15 +98,32 @@ object PtmLocation extends Enumeration {
   val ANYWHERE = Value("Anywhere")
 }
 
+object PtmClassification extends EnhancedEnum {
+  val UNKNOWN = Value("-")
+  val POST_TRANSLATIONAL = Value("Post-translational")
+  val CO_TRANSLATIONAL = Value("Co-translational")
+  val PRE_TRANSLATIONAL = Value("Pre-translational")
+  val CHEMICAL_DERIVATIVE = Value("Chemical derivative")
+  val ARTEFACT = Value("Artefact")
+  val N_LINKED_GLYCOSYLATION = Value("N-linked glycosylation")
+  val O_LINKED_GLYCOSYLATION = Value("O-linked glycosylation")
+  val OTHER_GLYCOSYLATION = Value("Other glycosylation")
+  val SYNTH_PEP_PROTECT_GP = Value("Synth. pep. protect. gp.")
+  val ISOTOPIC_LABEL = Value("Isotopic label")
+  val NON_STANDARD_RESIDUE = Value("Non-standard residue")
+  val MULTIPLE = Value("Multiple")
+  val OTHER = Value("Other")
+  val AA_SUBSTITUTION = Value("AA substitution")
+}
+
 trait IPtmSpecificity {
   def id: Long
   val location: String
   val residue: Char
-  val classification: String
+  val classification: String // PtmClassification.Value
   val ptmId: Long
 }
 
-//@JsonInclude(Include.NON_NULL)
 case class PtmSpecificity(
 
   // Required fields
@@ -113,7 +131,7 @@ case class PtmSpecificity(
 
   // Immutable optional fields
   val residue: Char = '\0',
-  val classification: String = null,
+  val classification: String = null, //PtmClassification.Value = PtmClassification.UNKNOWN,
   val id: Long = 0,
   val ptmId: Long = 0
 ) extends IPtmSpecificity {
@@ -141,7 +159,7 @@ case class PtmDefinition(
 
   // Immutable optional fields
   val residue: Char = '\0',
-  val classification: String = null,
+  val classification: String = null, //PtmClassification.Value = PtmClassification.UNKNOWN,
   val ptmId: Long = 0,
   val unimodId: Int = 0
 

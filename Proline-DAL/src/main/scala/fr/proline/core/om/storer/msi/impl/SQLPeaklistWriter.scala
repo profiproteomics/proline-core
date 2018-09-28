@@ -1,9 +1,6 @@
 package fr.proline.core.om.storer.msi.impl
 
-import java.sql.Connection
-
 import com.typesafe.scalalogging.LazyLogging
-
 import fr.profi.jdbc.PreparedStatementWrapper
 import fr.profi.jdbc.easy._
 import fr.profi.util.serialization.ProfiJson
@@ -16,8 +13,8 @@ import fr.proline.core.om.model.msi.IPeaklistContainer
 import fr.proline.core.om.model.msi.Peaklist
 import fr.proline.core.om.model.msi.Spectrum
 import fr.proline.core.om.storer.msi.IPeaklistWriter
-import fr.proline.repository.util.JDBCWork
 import fr.profi.util.bytes._
+import fr.proline.context.MsiDbConnectionContext
 
 object SQLPeaklistWriter extends AbstractSQLPeaklistWriter
 
@@ -28,7 +25,16 @@ abstract class AbstractSQLPeaklistWriter extends IPeaklistWriter with LazyLoggin
 
   //protected val doubleFormatter = newDecimalFormat("#.######")
   //protected val floatFormatter = newDecimalFormat("#.##")
-  
+
+  def updateSpectraFragmentationRuleSet(spectrumId: Long, fragRuleSetId : Long, msiDbConCtxt : MsiDbConnectionContext): Boolean = {
+    var nbRecords =0
+    DoJDBCWork.withEzDBC(msiDbConCtxt) { msiEzDBC =>
+      val updateQuery = "UPDATE "+MsiDbSpectrumTable.name+" SET "+MsiDbSpectrumTable.columns.FRAGMENTATION_RULE_SET_ID+" = "+fragRuleSetId+" WHERE id = "+spectrumId
+      nbRecords = msiEzDBC.execute(updateQuery)
+    }
+    nbRecords.equals(1)
+  }
+
   def insertPeaklist(peaklist: Peaklist, context: StorerContext): Long = {
     require(peaklist != null, "peaklist is null")
 
@@ -139,7 +145,7 @@ abstract class AbstractSQLPeaklistWriter extends IPeaklistWriter with LazyLoggin
       spectrum.peaksCount,
       spectrum.properties.map(ProfiJson.serialize(_)),
       peaklistId,
-      spectrum.instrumentConfigId
+      spectrum.fragmentationRuleSetId
     )
 
     spectrum.id = stmt.generatedLong

@@ -14,21 +14,6 @@ object UdsDbActivationTable extends UdsDbActivationTable {
   val columns = UdsDbActivationColumns
 }
 
-object UdsDbAdminInfosColumns extends ColumnEnumeration {
-  val $tableName = UdsDbAdminInfosTable.name
-  val MODEL_VERSION = Column("model_version")
-  val DB_CREATION_DATE = Column("db_creation_date")
-  val MODEL_UPDATE_DATE = Column("model_update_date")
-  val CONFIGURATION = Column("configuration")
-}
-
-abstract class UdsDbAdminInfosTable extends TableDefinition[UdsDbAdminInfosColumns.type]
-
-object UdsDbAdminInfosTable extends UdsDbAdminInfosTable {
-  val name = "admin_infos"
-  val columns = UdsDbAdminInfosColumns
-}
-
 object UdsDbAggregationColumns extends ColumnEnumeration {
   val $tableName = UdsDbAggregationTable.name
   val ID = Column("id")
@@ -111,7 +96,7 @@ object UdsDbDataSetColumns extends ColumnEnumeration {
   val KEYWORDS = Column("keywords")
   val CREATION_TIMESTAMP = Column("creation_timestamp")
   val MODIFICATION_LOG = Column("modification_log")
-  val CHILDREN_COUNT = Column("children_count")
+  val CHILD_COUNT = Column("child_count")
   val SERIALIZED_PROPERTIES = Column("serialized_properties")
   val RESULT_SET_ID = Column("result_set_id")
   val RESULT_SUMMARY_ID = Column("result_summary_id")
@@ -205,8 +190,6 @@ object UdsDbExternalDbColumns extends ColumnEnumeration {
   val ID = Column("id")
   val NAME = Column("name")
   val CONNECTION_MODE = Column("connection_mode")
-  val USERNAME = Column("username")
-  val PASSWORD = Column("password")
   val HOST = Column("host")
   val PORT = Column("port")
   val TYPE = Column("type")
@@ -333,17 +316,32 @@ object UdsDbInstrumentConfigTable extends UdsDbInstrumentConfigTable {
   val columns = UdsDbInstrumentConfigColumns
 }
 
-object UdsDbInstrumentConfigFragmentationRuleMapColumns extends ColumnEnumeration {
-  val $tableName = UdsDbInstrumentConfigFragmentationRuleMapTable.name
-  val INSTRUMENT_CONFIG_ID = Column("instrument_config_id")
+
+object UdsDbFragmentationRuleSetColumns extends ColumnEnumeration {
+  val $tableName = UdsDbFragmentationRuleSetTable.name
+  val ID = Column("id")
+  val NAME = Column("name")
+}
+
+abstract class UdsDbFragmentationRuleSetTable extends TableDefinition[UdsDbFragmentationRuleSetColumns.type]
+
+object UdsDbFragmentationRuleSetTable extends UdsDbFragmentationRuleSetTable {
+  val name = "fragmentation_rule_set"
+  val columns = UdsDbFragmentationRuleSetColumns
+}
+
+
+object UdsDbFragmentationRuleSetMapColumns extends ColumnEnumeration {
+  val $tableName = UdsDbFragmentationRuleSetMapTable.name
+  val FRAGMENTATION_RULE_SET_ID = Column("fragmentation_rule_set_id")
   val FRAGMENTATION_RULE_ID = Column("fragmentation_rule_id")
 }
 
-abstract class UdsDbInstrumentConfigFragmentationRuleMapTable extends TableDefinition[UdsDbInstrumentConfigFragmentationRuleMapColumns.type]
+abstract class UdsDbFragmentationRuleSetMapTable extends TableDefinition[UdsDbFragmentationRuleSetMapColumns.type]
 
-object UdsDbInstrumentConfigFragmentationRuleMapTable extends UdsDbInstrumentConfigFragmentationRuleMapTable {
-  val name = "instrument_config_fragmentation_rule_map"
-  val columns = UdsDbInstrumentConfigFragmentationRuleMapColumns
+object UdsDbFragmentationRuleSetMapTable extends UdsDbFragmentationRuleSetMapTable {
+  val name = "fragmentation_rule_set_map"
+  val columns = UdsDbFragmentationRuleSetMapColumns
 }
 
 object UdsDbMasterQuantChannelColumns extends ColumnEnumeration {
@@ -353,7 +351,9 @@ object UdsDbMasterQuantChannelColumns extends ColumnEnumeration {
   val NAME = Column("name")
   val SERIALIZED_PROPERTIES = Column("serialized_properties")
   val LCMS_MAP_SET_ID = Column("lcms_map_set_id")
+  val IDENT_RESULT_SUMMARY_ID = Column("ident_result_summary_id")
   val QUANT_RESULT_SUMMARY_ID = Column("quant_result_summary_id")
+  val IDENT_DATA_SET_ID = Column("ident_data_set_id")
   val QUANTITATION_ID = Column("quantitation_id")
 }
 
@@ -502,6 +502,7 @@ object UdsDbQuantChannelTable extends UdsDbQuantChannelTable {
 object UdsDbQuantLabelColumns extends ColumnEnumeration {
   val $tableName = UdsDbQuantLabelTable.name
   val ID = Column("id")
+  val NUMBER = Column("number")
   val TYPE = Column("type")
   val NAME = Column("name")
   val SERIALIZED_PROPERTIES = Column("serialized_properties")
@@ -557,7 +558,6 @@ object UdsDbRawFileColumns extends ColumnEnumeration {
   val SAMPLE_NAME = Column("sample_name")
   val CREATION_TIMESTAMP = Column("creation_timestamp")
   val SERIALIZED_PROPERTIES = Column("serialized_properties")
-  val INSTRUMENT_ID = Column("instrument_id")
   val OWNER_ID = Column("owner_id")
 }
 
@@ -687,7 +687,6 @@ object UdsDbVirtualFolderTable extends UdsDbVirtualFolderTable {
 object UdsDb {
   val tables = Array(
     UdsDbActivationTable,
-    UdsDbAdminInfosTable,
     UdsDbAggregationTable,
     UdsDbBiologicalGroupTable,
     UdsDbBiologicalGroupBiologicalSampleItemTable,
@@ -706,7 +705,8 @@ object UdsDb {
     UdsDbGroupSetupBiologicalGroupMapTable,
     UdsDbInstrumentTable,
     UdsDbInstrumentConfigTable,
-    UdsDbInstrumentConfigFragmentationRuleMapTable,
+    UdsDbFragmentationRuleSetTable,
+    UdsDbFragmentationRuleSetMapTable,
     UdsDbMasterQuantChannelTable,
     UdsDbObjectTreeTable,
     UdsDbObjectTreeSchemaTable,

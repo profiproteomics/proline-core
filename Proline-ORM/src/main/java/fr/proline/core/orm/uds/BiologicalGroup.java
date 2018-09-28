@@ -24,93 +24,101 @@ import javax.persistence.Table;
 @Table(name = "biological_group")
 public class BiologicalGroup implements Serializable {
 
-    private static final long serialVersionUID = 1L;
+	private static final long serialVersionUID = 1L;
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
-    private long id;
+	@Id
+	@GeneratedValue(strategy = GenerationType.AUTO)
+	private long id;
 
-    private String name;
+	private String name;
 
-    private int number;
+	private int number;
 
-    // bi-directional many-to-one association to Dataset
-    @ManyToOne
-    @JoinColumn(name = "quantitation_id")
-    private Dataset dataset;
+	// bi-directional many-to-one association to Dataset
+	@ManyToOne
+	@JoinColumn(name = "quantitation_id")
+	private Dataset dataset;
 
-    @Column(name = "serialized_properties")
-    private String serializedProperties;
+	@Column(name = "serialized_properties")
+	private String serializedProperties;
 
-    // bi-directional many-to-many association to GroupSetup
-    @ManyToMany
-    @JoinTable(name = "group_setup_biological_group_map", joinColumns = { @JoinColumn(name = "biological_group_id") }, inverseJoinColumns = { @JoinColumn(name = "group_setup_id") })
-    private Set<GroupSetup> groupSetups;
+	// bi-directional many-to-many association to GroupSetup
+	@ManyToMany
+	@JoinTable(
+		name = "group_setup_biological_group_map",
+		joinColumns = { @JoinColumn(name = "biological_group_id") },
+		inverseJoinColumns = { @JoinColumn(name = "group_setup_id") }
+	)
+	private Set<GroupSetup> groupSetups;
 
-    // uni-directional many-to-many association to BiologicalSample
-    @ManyToMany
-    @JoinTable(name = "biological_group_biological_sample_item", joinColumns = { @JoinColumn(name = "biological_group_id") }, inverseJoinColumns = { @JoinColumn(name = "biological_sample_id") })
-    @OrderBy("number")
-    private List<BiologicalSample> biologicalSamples;
+	// uni-directional many-to-many association to BiologicalSample
+	@ManyToMany
+	@JoinTable(
+		name = "biological_group_biological_sample_item",
+		joinColumns = { @JoinColumn(name = "biological_group_id") },
+		inverseJoinColumns = {@JoinColumn(name = "biological_sample_id")}
+	)
+	@OrderBy("number")
+	private List<BiologicalSample> biologicalSamples;
 
-    public BiologicalGroup() {
-    }
+	public BiologicalGroup() {
+	}
 
-    public long getId() {
-	return id;
-    }
+	public long getId() {
+		return id;
+	}
 
-    public void setId(final long pId) {
-	id = pId;
-    }
+	public void setId(final long pId) {
+		id = pId;
+	}
 
-    public String getName() {
-	return this.name;
-    }
+	public String getName() {
+		return this.name;
+	}
 
-    public void setName(String name) {
-	this.name = name;
-    }
+	public void setName(String name) {
+		this.name = name;
+	}
 
-    public int getNumber() {
-	return number;
-    }
+	public int getNumber() {
+		return number;
+	}
 
-    public void setNumber(final int pNumber) {
-	number = pNumber;
-    }
+	public void setNumber(final int pNumber) {
+		number = pNumber;
+	}
 
-    public String getSerializedProperties() {
-	return this.serializedProperties;
-    }
+	public String getSerializedProperties() {
+		return this.serializedProperties;
+	}
 
-    public void setSerializedProperties(String serializedProperties) {
-	this.serializedProperties = serializedProperties;
-    }
+	public void setSerializedProperties(String serializedProperties) {
+		this.serializedProperties = serializedProperties;
+	}
 
-    public Set<GroupSetup> getGroupSetups() {
-	return this.groupSetups;
-    }
+	public Set<GroupSetup> getGroupSetups() {
+		return this.groupSetups;
+	}
 
-    public void setGroupSetups(Set<GroupSetup> groupSetups) {
-	this.groupSetups = groupSetups;
-    }
+	public void setGroupSetups(Set<GroupSetup> groupSetups) {
+		this.groupSetups = groupSetups;
+	}
 
-    public List<BiologicalSample> getBiologicalSamples() {
-	return biologicalSamples;
-    }
+	public List<BiologicalSample> getBiologicalSamples() {
+		return biologicalSamples;
+	}
 
-    public void setBiologicalSamples(final List<BiologicalSample> biologicalSamples) {
-	this.biologicalSamples = biologicalSamples;
-    }
+	public void setBiologicalSamples(final List<BiologicalSample> biologicalSamples) {
+		this.biologicalSamples = biologicalSamples;
+	}
 
-    // TODO: return a true QuantitationDataset object when it is implemented
-    public Dataset getQuantitationDataset() {
-	return this.dataset;
-    }
+	// TODO: return a true QuantitationDataset object when it is implemented
+	public Dataset getQuantitationDataset() {
+		return this.dataset;
+	}
 
-    public void setQuantitationDataset(Dataset dataset) {
-	this.dataset = dataset;
-    }
+	public void setQuantitationDataset(Dataset dataset) {
+		this.dataset = dataset;
+	}
 
 }

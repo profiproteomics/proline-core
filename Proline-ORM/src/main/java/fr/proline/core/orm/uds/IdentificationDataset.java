@@ -15,50 +15,49 @@ import javax.persistence.Table;
  */
 @Entity
 @Table(name = "run_identification")
-@PrimaryKeyJoinColumn(name="id", referencedColumnName="id")
+@PrimaryKeyJoinColumn(name = "id", referencedColumnName = "id")
 public class IdentificationDataset extends Dataset implements Serializable {
-    private static final long serialVersionUID = 1L;
+	private static final long serialVersionUID = 1L;
 
-    @Column(name = "serialized_properties")
-    private String serializedProperties;
+	@Column(name = "serialized_properties")
+	private String serializedProperties;
 
-    // uni-directional many-to-one association to Run
-    @ManyToOne
-    @JoinColumn(name = "raw_file_identifier")
-    private RawFile rawFile;
+	// uni-directional many-to-one association to Run
+	@ManyToOne
+	@JoinColumn(name = "raw_file_identifier")
+	private RawFile rawFile;
 
-    // uni-directional many-to-one association to Run
-    @ManyToOne
-    @JoinColumn(name = "run_id")
-    private Run run;
+	// uni-directional many-to-one association to Run
+	@ManyToOne
+	@JoinColumn(name = "run_id")
+	private Run run;
 
-    public IdentificationDataset() {
-	super.setType(DatasetType.IDENTIFICATION);
-    }
+	public IdentificationDataset() {
+		super.setType(DatasetType.IDENTIFICATION);
+	}
 
+	public String getSerializedProperties() {
+		return this.serializedProperties;
+	}
 
-    public String getSerializedProperties() {
-	return this.serializedProperties;
-    }
+	public void setSerializedProperties(String serializedProperties) {
+		this.serializedProperties = serializedProperties;
+	}
 
-    public void setSerializedProperties(String serializedProperties) {
-	this.serializedProperties = serializedProperties;
-    }
+	public RawFile getRawFile() {
+		return rawFile;
+	}
 
-    public RawFile getRawFile() {
-	return rawFile;
-    }
+	public void setRawFile(RawFile rawfile) {
+		this.rawFile = rawfile;
+	}
 
-    public void setRawFile(RawFile rawfile) {
-	this.rawFile = rawfile;
-    }
+	public Run getRun() {
+		return run;
+	}
 
-    public Run getRun() {
-	return run;
-    }
-
-    public void setRun(Run run) {
-	this.run = run;
-    }
+	public void setRun(Run run) {
+		this.run = run;
+	}
 
 }

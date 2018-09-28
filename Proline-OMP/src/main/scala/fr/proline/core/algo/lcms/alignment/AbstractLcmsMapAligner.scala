@@ -1,19 +1,14 @@
 package fr.proline.core.algo.lcms.alignment
 
-import scala.annotation.tailrec
-import scala.collection.mutable.ArrayBuffer
-import scala.collection.mutable.HashMap
-import scala.collection.mutable.LongMap
-
 import com.typesafe.scalalogging.LazyLogging
-
 import fr.profi.util.collection._
-import fr.proline.core.algo.lcms.AlignmentParams
-import fr.proline.core.algo.lcms.AlnSmoother
-import fr.proline.core.algo.lcms.FeatureMapper
-import fr.proline.core.algo.lcms.FeatureMappingParams
+import fr.proline.core.algo.lcms.{AlignmentConfig, AlnSmoother, FeatureMapper}
 import fr.proline.core.algo.msq.profilizer.CommonsStatHelper
 import fr.proline.core.om.model.lcms._
+
+import scala.annotation.tailrec
+import scala.collection.mutable.ArrayBuffer
+import scala.collection.mutable.LongMap
 
 case class AlignmentResult( alnRefMapId: Long, mapAlnSets: Array[MapAlignmentSet] )
 
@@ -21,7 +16,7 @@ abstract class AbstractLcmsMapAligner extends LazyLogging {
 
   def computeMapAlignmentsUsingCustomFtMapper(
     lcmsMaps: Seq[ProcessedMap],
-    alnParams: AlignmentParams
+    alnConfig: AlignmentConfig
   )(ftMapper: (Seq[Feature],Seq[Feature]) => LongMap[_ <: Seq[Feature]]): AlignmentResult
   
   def determineAlnReferenceMap(
@@ -32,10 +27,10 @@ abstract class AbstractLcmsMapAligner extends LazyLogging {
   
   def computeMapAlignments(
     lcmsMaps: Seq[ProcessedMap],
-    alnParams: AlignmentParams
+    alnConfig: AlignmentConfig
   ): AlignmentResult = {
-    this.computeMapAlignmentsUsingCustomFtMapper(lcmsMaps,alnParams) { (map1Features, map2Features) =>
-      FeatureMapper.computePairwiseFtMapping( map1Features, map2Features, alnParams.ftMappingParams )
+    this.computeMapAlignmentsUsingCustomFtMapper(lcmsMaps,alnConfig) { (map1Features, map2Features) =>
+      FeatureMapper.computePairwiseFtMapping( map1Features, map2Features, alnConfig.ftMappingMethodParams)
     }
   }
   
@@ -43,10 +38,10 @@ abstract class AbstractLcmsMapAligner extends LazyLogging {
     map1: ProcessedMap,
     map2: ProcessedMap,
     ftMapper: (Seq[Feature],Seq[Feature]) => LongMap[_ <: Seq[Feature]],
-    alnParams: AlignmentParams
+    alnConfig: AlignmentConfig
   ): Option[MapAlignmentSet] = {
-    
-    val massInterval = alnParams.massInterval
+
+    val massInterval = if (alnConfig.methodParams.isDefined) alnConfig.methodParams.get.massInterval.getOrElse(20000) else 20000
     //val timeInterval = alnParams.timeInterval
     
     val( map1Features, map2Features ) = ( map1.features, map2.features )
@@ -77,8 +72,8 @@ abstract class AbstractLcmsMapAligner extends LazyLogging {
     }
     
     // Create an alignment smoother
-    val smoothingMethodName = alnParams.smoothingMethodName
-    val alnSmoother = AlnSmoother( methodName = smoothingMethodName )
+    val smoothingMethod = alnConfig.smoothingMethodName
+    val alnSmoother = AlnSmoother( method = smoothingMethod )
     
     // Compute feature alignments
     val ftAlignments = new ArrayBuffer[MapAlignment](0)
@@ -86,7 +81,7 @@ abstract class AbstractLcmsMapAligner extends LazyLogging {
     for ((massRangeIdx,landmarks) <- landmarksByMassIdx if landmarks.isEmpty == false) {
       
       val landmarksSortedByTime = landmarks.sortBy( _.time )
-      var smoothedLandmarks = alnSmoother.smoothLandmarks( landmarksSortedByTime, alnParams.smoothingParams )
+      var smoothedLandmarks = alnSmoother.smoothLandmarks( landmarksSortedByTime, alnConfig.smoothingMethodParams )
       // FIXME: this should not be empty
       if( smoothedLandmarks.isEmpty ) {
         logger.warn("Empty array of smoothed Landmarks, use the original landmarks instead")
@@ -125,7 +120,7 @@ abstract class AbstractLcmsMapAligner extends LazyLogging {
     
     if( ftAlignments.isEmpty ) {
       val errorMsg = s"Can't compute map alignment set between map #${map1.id} and map #${map2.id}"
-      if (alnParams.ignoreErrors.getOrElse(false)) {
+      if (alnConfig.ignoreErrors.getOrElse(false)) {
         this.logger.warn(errorMsg)
         None
       } else {

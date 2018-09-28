@@ -55,7 +55,7 @@ object PrettyRankPSMFilter {
  */
 class PrettyRankPSMFilter( var maxPrettyRank: Int = 1 ) extends IPeptideMatchFilter with IPeptideMatchSorter with LazyLogging {
   
-  val filterParameter = PepMatchFilterParams.RANK.toString
+  val filterParameter = PepMatchFilterParams.PRETTY_RANK.toString
   val filterDescription = "peptide match rank filter"
     
   def getPeptideMatchValueForFiltering(pepMatch: PeptideMatch): Any = pepMatch.rank

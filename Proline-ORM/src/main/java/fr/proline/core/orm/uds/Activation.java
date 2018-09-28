@@ -9,26 +9,23 @@ import javax.persistence.*;
  */
 @Entity(name = "fr.proline.core.orm.uds.Activation")
 @NamedQueries({
-  @NamedQuery(
-    name = "findActivationByType",
-    query = "SELECT activ FROM fr.proline.core.orm.uds.Activation activ WHERE activ.type = :type"
-  )
+	@NamedQuery(name = "findActivationByType", query = "SELECT activ FROM fr.proline.core.orm.uds.Activation activ WHERE activ.type = :type")
 })
-@Table(name="activation")
+@Table(name = "activation")
 public class Activation implements Serializable {
 	private static final long serialVersionUID = 1L;
-	
-    public enum ActivationType {
-        CID, ECD, ETD, HCD, PSD
-    };
+
+	public enum ActivationType {
+		CID, ECD, ETD, HCD, PSD
+	};
 
 	@Id
-	@Column(name="type")
+	@Column(name = "type")
 	@Enumerated(value = EnumType.STRING)
 	private ActivationType type;
-	
-    public Activation() {
-    }
+
+	public Activation() {
+	}
 
 	public ActivationType getType() {
 		return this.type;

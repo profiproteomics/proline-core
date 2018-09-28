@@ -1,17 +1,9 @@
 package fr.proline.core.orm.uds;
 
 import java.io.Serializable;
-import java.util.Set;
+import java.util.List;
 
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
-import javax.persistence.NamedQueries;
-import javax.persistence.NamedQuery;
-import javax.persistence.OneToMany;
-import javax.persistence.Table;
+import javax.persistence.*;
 
 /**
  * The persistent class for the quant_method database table.
@@ -19,100 +11,103 @@ import javax.persistence.Table;
  */
 @Entity
 @NamedQueries({
-	@NamedQuery(name = "findQuantMethodForTypeAndUnit", query = "select qm from fr.proline.core.orm.uds.QuantitationMethod qm"
-		+ " where (upper(qm.type) = :searchType) and (upper(qm.abundanceUnit) = :searchAbundanceUnit)")
+	@NamedQuery(
+		name = "findQuantMethodForTypeAndUnit",
+		query = "select qm from fr.proline.core.orm.uds.QuantitationMethod qm"
+			+ " where (upper(qm.type) = :searchType) and (upper(qm.abundanceUnit) = :searchAbundanceUnit)"
+	)
 })
 @Table(name = "quant_method")
 public class QuantitationMethod implements Serializable {
 
-    private static final long serialVersionUID = 1L;
-    
-    public enum Type {
-      ATOM_LABELING("atom_labeling"),
-      // TODO: rename isobaric_tagging in the UDSdb
-      ISOBARIC_TAG("isobaric_tag"),
-      LABEL_FREE("label_free"),
-      RESIDUE_LABELING("residue_labeling");
-      
-      private final String type;
-      
-      private Type(final String type) {
-          this.type = type;
-      }
-      
-      @Override
-      public String toString() {
-          return type;
-      }
-    };
+	private static final long serialVersionUID = 1L;
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
-    private long id;
+	public enum Type {
+		ATOM_LABELING("atom_labeling"),
+		ISOBARIC_TAGGING("isobaric_tagging"),
+		LABEL_FREE("label_free"),
+		RESIDUE_LABELING("residue_labeling");
 
-    @Column(name = "abundance_unit")
-    private String abundanceUnit;
+		private final String type;
 
-    private String name;
+		private Type(final String type) {
+			this.type = type;
+		}
 
-    @Column(name = "serialized_properties")
-    private String serializedProperties;
+		@Override
+		public String toString() {
+			return type;
+		}
+	};
 
-    private String type;
+	@Id
+	@GeneratedValue(strategy = GenerationType.AUTO)
+	private long id;
 
-    // bi-directional many-to-one association to QuantLabel
-    @OneToMany(mappedBy = "method")
-    private Set<QuantitationLabel> labels;
+	@Column(name = "abundance_unit")
+	private String abundanceUnit;
 
-    public QuantitationMethod() {
-    }
+	private String name;
 
-    public long getId() {
-	return id;
-    }
+	@Column(name = "serialized_properties")
+	private String serializedProperties;
 
-    public void setId(final long pId) {
-	id = pId;
-    }
+	private String type;
 
-    public String getAbundanceUnit() {
-	return this.abundanceUnit;
-    }
+	// bi-directional many-to-one association to QuantLabel
+	@OneToMany(mappedBy = "method")
+	@OrderBy("number")
+	private List<QuantitationLabel> labels;
 
-    public void setAbundanceUnit(String abundanceUnit) {
-	this.abundanceUnit = abundanceUnit;
-    }
+	public QuantitationMethod() {
+	}
 
-    public String getName() {
-	return this.name;
-    }
+	public long getId() {
+		return id;
+	}
 
-    public void setName(String name) {
-	this.name = name;
-    }
+	public void setId(final long pId) {
+		id = pId;
+	}
 
-    public String getSerializedProperties() {
-	return this.serializedProperties;
-    }
+	public String getAbundanceUnit() {
+		return this.abundanceUnit;
+	}
 
-    public void setSerializedProperties(String serializedProperties) {
-	this.serializedProperties = serializedProperties;
-    }
+	public void setAbundanceUnit(String abundanceUnit) {
+		this.abundanceUnit = abundanceUnit;
+	}
 
-    public String getType() {
-	return this.type;
-    }
+	public String getName() {
+		return this.name;
+	}
 
-    public void setType(String type) {
-	this.type = type;
-    }
+	public void setName(String name) {
+		this.name = name;
+	}
 
-    public Set<QuantitationLabel> getLabels() {
-	return this.labels;
-    }
+	public String getSerializedProperties() {
+		return this.serializedProperties;
+	}
 
-    public void setLabels(Set<QuantitationLabel> labels) {
-	this.labels = labels;
-    }
+	public void setSerializedProperties(String serializedProperties) {
+		this.serializedProperties = serializedProperties;
+	}
+
+	public String getType() {
+		return this.type;
+	}
+
+	public void setType(String type) {
+		this.type = type;
+	}
+
+	public List<QuantitationLabel> getLabels() {
+		return this.labels;
+	}
+
+	public void setLabels(List<QuantitationLabel> labels) {
+		this.labels = labels;
+	}
 
 }

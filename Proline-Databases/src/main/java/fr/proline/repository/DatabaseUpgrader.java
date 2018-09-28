@@ -12,11 +12,12 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
+import java.util.HashMap;
 
 import javax.sql.DataSource;
 
 import org.flywaydb.core.Flyway;
-import org.flywaydb.core.api.FlywayException;
 import org.flywaydb.core.api.MigrationInfo;
 import org.flywaydb.core.api.MigrationState;
 import org.flywaydb.core.api.MigrationType;
@@ -38,7 +39,7 @@ public final class DatabaseUpgrader {
 	/* Constants */
 	public static final String MIGRATION_SCRIPTS_DIR = "dbscripts/";
 	public static final String MIGRATION_CLASSPATH = "/fr/proline/repository/migration/";
-
+	public static String JDBC_PASSWORD = null;
 	private static final Logger LOG = LoggerFactory.getLogger(DatabaseUpgrader.class);
 
 	private static final int BUFFER_SIZE = 256;
@@ -47,8 +48,6 @@ public final class DatabaseUpgrader {
 	 * Script name for each database type TODO: remove these definitions when Flyway supports SQLite.
 	 */
 	private static final String UDS_DB_SCRIPT_NAME = "V0_1__init_udsdb.sql";
-	private static final String PDI_DB_SCRIPT_NAME = "V0_1__init_pdidb.sql";
-	private static final String PS_DB_SCRIPT_NAME = "V0_1__init_psdb.sql";
 	private static final String MSI_DB_SCRIPT_NAME = "V0_1__init_msidb.sql";
 	private static final String LCMS_DB_SCRIPT_NAME = "V0_1__init_lcmsdb.sql";
 
@@ -130,8 +129,7 @@ public final class DatabaseUpgrader {
 
 		final ProlineDatabaseType prolineDbType = connector.getProlineDatabaseType();
 
-		LOG.debug("Upgrading {} Db, migrationScriptsLocation [{}], migrationClassLocation [{}]",
-			prolineDbType, migrationScriptsLocation, migrationClassLocation);
+		LOG.debug("Upgrading {} Db, migrationScriptsLocation [{}], migrationClassLocation [{}]", prolineDbType, migrationScriptsLocation, migrationClassLocation);
 
 		int migrationsCount = -1;
 
@@ -158,7 +156,13 @@ public final class DatabaseUpgrader {
 				flyway.setDataSource(connector.getDataSource());
 
 				/* Trace applied Flyway migrations before migrate() call */
-				final MigrationInfo[] appliedMigrations = flyway.info().applied();
+				MigrationInfo[] appliedMigrations = null;
+				try {
+					appliedMigrations = flyway.info().applied();
+				} catch (Throwable t) {
+					LOG.error("An error occured while retrieving the Flyway migration history", t);
+				}
+					
 				if (appliedMigrations != null) {
 					final int nAppliedMigrations = appliedMigrations.length;
 
@@ -180,18 +184,20 @@ public final class DatabaseUpgrader {
 						LOG.info(allMigrationsBuilder.toString());
 					}
 
+					if (repairChecksum) {
+						flyway.repair();
+					}
 				}
 				
-				if (repairChecksum) {
-					flyway.repair();
-				}
-				
+				// Apply workaround for redmine issue #12788
 				flyway.setOutOfOrder(true);
 
+				//Set DB Connectin Password before migration ... needed is some case to connect to other DBs
+				DatabaseUpgrader.JDBC_PASSWORD = (String) connector.getProperty(AbstractDatabaseConnector.PERSISTENCE_JDBC_PASSWORD_KEY);
 
 				migrationsCount = flyway.migrate();
 				LOG.info("Flyway applies {} migration(s) to {}", migrationsCount, prolineDbType);
-
+				DatabaseUpgrader.JDBC_PASSWORD = null;
 				/* Trace current Flyway migration after migrate() call */
 				final MigrationInfo currentMigrationInfo = flyway.info().current();
 				if (currentMigrationInfo != null) {
@@ -206,6 +212,60 @@ public final class DatabaseUpgrader {
 		}
 
 		return migrationsCount;
+	}
+	
+	/* get undone migrations */
+	public static Map<ProlineDatabaseType, Map<String, MigrationState>> getUndoneMigrations(
+			final IDatabaseConnector connector) {
+		Map<String, MigrationState> scriptsState = new HashMap<>();
+		Map<ProlineDatabaseType, Map<String, MigrationState>> undoneMigrationsInfos = new HashMap<>();
+		if (connector == null) {
+			throw new IllegalArgumentException("Connector is null");
+		}
+		String migrationScriptsLocation = buildMigrationScriptsLocation(connector.getProlineDatabaseType(),
+				connector.getDriverType());
+		if (StringUtils.isEmpty(migrationScriptsLocation)) {
+			throw new IllegalArgumentException("Invalid migrationLocation");
+		}
+		String migrationClassLocation = buildMigrationClassLocation(connector.getProlineDatabaseType(),
+				connector.getDriverType());
+		final ProlineDatabaseType prolineDbType = connector.getProlineDatabaseType();
+
+		try {
+			if (connector.getDriverType() != DriverType.SQLITE) {
+				final Flyway flyway = new Flyway();
+				if (migrationClassLocation != null)
+					flyway.setLocations(migrationScriptsLocation, migrationClassLocation);
+				else
+					flyway.setLocations(migrationScriptsLocation);
+				flyway.setDataSource(connector.getDataSource());
+				MigrationInfo[] allMigrations = null;
+				try {
+					allMigrations = flyway.info().all();
+				} catch (Throwable t) {
+					LOG.error("An error occured while retrieving the Flyway migration history", t);
+				}
+				if (allMigrations != null) {
+					final int nAllMigrations = allMigrations.length;
+					if (nAllMigrations > 0) {
+						for (int i = 0; i < nAllMigrations; ++i) {
+							final String script = allMigrations[i].getScript();
+							final MigrationState state = allMigrations[i].getState();
+							if (script != null && state != null) {
+								if (state != MigrationState.SUCCESS)
+									scriptsState.put(script, state);
+							}
+						}
+						undoneMigrationsInfos.put(prolineDbType, scriptsState);
+					}
+				}
+			} // End if (driverType is not SQLITE)
+
+		} catch (Exception ex) {
+			LOG.error("Error while trying to check undone migrations " + prolineDbType + " Db", ex);
+		}
+
+		return undoneMigrationsInfos;
 	}
 
 	/**
@@ -444,10 +504,6 @@ public final class DatabaseUpgrader {
 		// TODO: find a safer way to do that
 		if (migrationScriptsLocation.contains("/uds/")) {
 			scriptName = UDS_DB_SCRIPT_NAME;
-		} else if (migrationScriptsLocation.contains("/pdi/")) {
-			scriptName = PDI_DB_SCRIPT_NAME;
-		} else if (migrationScriptsLocation.contains("/ps/")) {
-			scriptName = PS_DB_SCRIPT_NAME;
 		} else if (migrationScriptsLocation.contains("/msi/")) {
 			scriptName = MSI_DB_SCRIPT_NAME;
 		} else if (migrationScriptsLocation.contains("/lcms/")) {

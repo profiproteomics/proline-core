@@ -4,9 +4,10 @@ import fr.profi.util.StringUtils;
 
 public enum ProlineDatabaseType {
 
-	UDS("udsdb_production"), PDI("pdidb_production"), PS("psdb_production"), MSI("msidb_production"), LCMS(
-		"lcmsdb_production"),
-	SEQ("seqdb_production");
+    UDS("udsdb_production"),
+    MSI("msidb_production"),
+    LCMS("lcmsdb_production"),
+    SEQ("seqdb_production");
 
 	private final String m_puName;
 

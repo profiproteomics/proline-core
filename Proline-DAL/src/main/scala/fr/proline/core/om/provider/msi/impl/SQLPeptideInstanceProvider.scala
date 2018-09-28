@@ -1,29 +1,27 @@
 package fr.proline.core.om.provider.msi.impl
 
 import com.typesafe.scalalogging.LazyLogging
-
 import fr.profi.jdbc.easy.EasyDBC
 import fr.profi.util.primitives._
-import fr.proline.context._
+import fr.proline.context.MsiDbConnectionContext
 import fr.proline.core.dal.DoJDBCReturningWork
 import fr.proline.core.dal.tables.SelectQueryBuilder._
 import fr.proline.core.dal.tables.SelectQueryBuilder1
-import fr.proline.core.dal.tables.msi.{ MsiDbPeptideInstanceTable, MsiDbPeptideInstancePeptideMatchMapTable }
+import fr.proline.core.dal.tables.msi.MsiDbPeptideInstancePeptideMatchMapTable
+import fr.proline.core.dal.tables.msi.MsiDbPeptideInstanceTable
 import fr.proline.core.om.builder.PeptideInstanceBuilder
 import fr.proline.core.om.model.msi.PeptideInstance
+import fr.proline.core.om.provider.PeptideCacheExecutionContext
 import fr.proline.core.om.provider.msi.IPeptideInstanceProvider
 import fr.proline.core.om.provider.msi.IPeptideProvider
-import fr.proline.repository.ProlineDatabaseType
 
 class SQLPeptideInstanceProvider(
   val msiDbCtx: MsiDbConnectionContext,
-  var peptideProvider: IPeptideProvider
+  val peptideProvider: IPeptideProvider
 ) extends IPeptideInstanceProvider with LazyLogging {
   
-  require( msiDbCtx.getProlineDatabaseType == ProlineDatabaseType.MSI, "MsiDb connection required")
-  
-  def this(msiDbCtx: MsiDbConnectionContext, psSqlCtx: DatabaseConnectionContext) = {
-    this(msiDbCtx, new SQLPeptideProvider(psSqlCtx) )
+  def this(peptideCacheExecContext: PeptideCacheExecutionContext) = {
+    this(peptideCacheExecContext.getMSIDbConnectionContext, new SQLPeptideProvider(peptideCacheExecContext) )
   }
 
   def getPeptideInstancesAsOptions(pepInstIds: Seq[Long]): Array[Option[PeptideInstance]] = {

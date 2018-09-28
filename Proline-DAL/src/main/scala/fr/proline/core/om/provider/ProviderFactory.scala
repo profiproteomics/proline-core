@@ -1,17 +1,21 @@
 package fr.proline.core.om.provider
 
 import com.typesafe.scalalogging.LazyLogging
+import fr.profi.util.PropertiesUtils
+import fr.profi.util.StringUtils
 import fr.proline.context.IExecutionContext
-import fr.proline.core.om.provider.msi.impl.{ ORMSeqDatabaseProvider, ORMProteinProvider, ORMPeptideProvider, ORMPTMProvider }
-import fr.proline.core.om.provider.msi.{ IProteinProvider, IPeptideProvider, IPTMProvider }
-import fr.proline.core.om.provider.msi.{ ISeqDatabaseProvider, IPeptideMatchProvider }
-import fr.profi.util.{ StringUtils, PropertiesUtils }
+import fr.proline.core.om.provider.msi.IMsQueryProvider
 import fr.proline.core.om.provider.msi.IResultSetProvider
 import fr.proline.core.om.provider.msi.impl.ORMResultSetProvider
-import fr.proline.core.om.provider.msi.impl.SQLResultSetProvider
-import fr.proline.core.om.provider.msi.IMsQueryProvider
-import fr.proline.core.om.provider.msi.IMsQueryProvider
 import fr.proline.core.om.provider.msi.impl.SQLMsQueryProvider
+import fr.proline.core.om.provider.msi.impl.SQLResultSetProvider
+import fr.proline.core.om.provider.msi.impl.ORMPTMProvider
+import fr.proline.core.om.provider.msi.impl.ORMPeptideProvider
+import fr.proline.core.om.provider.msi.IPTMProvider
+import fr.proline.core.om.provider.msi.IPeptideProvider
+import fr.proline.core.om.provider.msi.IProteinProvider
+import fr.proline.core.om.provider.msi.IPeptideMatchProvider
+import fr.proline.core.om.provider.msi.ISeqDatabaseProvider
 
 trait IProviderFactory {
 
@@ -49,10 +53,6 @@ object ProviderFactory extends IProviderFactory with LazyLogging {
       getPeptideProviderInstance(executionContext).asInstanceOf[T]
     } else if (providerClassifier == classOf[IPeptideMatchProvider]) {
       getPeptideMatchProviderInstance(executionContext).asInstanceOf[T]
-    } else if (providerClassifier == classOf[IProteinProvider]) {
-      getProteinProviderInstance(executionContext).asInstanceOf[T]
-    } else if (providerClassifier == classOf[ISeqDatabaseProvider]) {
-      getSeqDatabaseProviderInstance(executionContext).asInstanceOf[T]
     } else if (providerClassifier == classOf[IPTMProvider]) {
       getPTMProviderInstance(executionContext).asInstanceOf[T]
     } else if (providerClassifier == classOf[IResultSetProvider]) {
@@ -69,12 +69,12 @@ object ProviderFactory extends IProviderFactory with LazyLogging {
     var result: IPeptideProvider = getDefaultProviderInstance(classOf[IPeptideProvider])
 
     if (result == null) {
-      val psDb = executionContext.getPSDbConnectionContext
+      val msiDb = executionContext.getMSIDbConnectionContext
 
-      if ((psDb != null) && psDb.isJPA) {
+      if ((msiDb != null) && msiDb.isJPA) {
         logger.debug("Creating a default ORMPeptideProvider in current executionContext")
 
-        result = new ORMPeptideProvider(psDb)
+        result = new ORMPeptideProvider(msiDb)
       }
 
     }
@@ -89,7 +89,7 @@ object ProviderFactory extends IProviderFactory with LazyLogging {
   }
 
   def getPeptideMatchProviderInstance(executionContext: IExecutionContext): IPeptideMatchProvider = {
-    var result: IPeptideMatchProvider = getDefaultProviderInstance(classOf[IPeptideMatchProvider])
+    val result: IPeptideMatchProvider = getDefaultProviderInstance(classOf[IPeptideMatchProvider])
 
     if (result == null) {
       logger.warn("No IPeptideMatchProvider implementing instance found !!")
@@ -100,71 +100,24 @@ object ProviderFactory extends IProviderFactory with LazyLogging {
     result
   }
 
-  def getProteinProviderInstance(executionContext: IExecutionContext): IProteinProvider = {
-    var result: IProteinProvider = getDefaultProviderInstance(classOf[IProteinProvider])
-
-    if (result == null) {
-      val pdiDb = executionContext.getPDIDbConnectionContext
-
-      if ((pdiDb != null) && pdiDb.isJPA) {
-        logger.debug("Creating a default ORMProteinProvider in current executionContext")
-
-        result = new ORMProteinProvider(pdiDb)
-      }
-
-    }
-
-    if (result == null) {
-      logger.warn("No IProteinProvider implementing instance found !!")
-    } else {
-      logger.debug("ProteinProvider implementation : " + result.getClass.getName)
-    }
-
-    result
-  }
-
-  def getSeqDatabaseProviderInstance(executionContext: IExecutionContext): ISeqDatabaseProvider = {
-    var result: ISeqDatabaseProvider = getDefaultProviderInstance(classOf[ISeqDatabaseProvider])
-
-    if (result == null) {
-      val pdiDb = executionContext.getPDIDbConnectionContext
-
-      if ((pdiDb != null) && pdiDb.isJPA) {
-        logger.debug("Creating a default ORMSeqDatabaseProvider in current executionContext")
-
-        result = new ORMSeqDatabaseProvider(pdiDb)
-      }
-
-    }
-
-    if (result == null) {
-      logger.warn("No ISeqDatabaseProvider implementing instance found !!")
-    } else {
-      logger.debug("SeqDatabaseProvider implementation : " + result.getClass.getName)
-    }
-
-    result
-  }
-
   def getResultSetProviderInstance(executionContext: IExecutionContext): IResultSetProvider = {
     var result: IResultSetProvider = getDefaultProviderInstance(classOf[IResultSetProvider])
 
     if (result == null) {
       val msiDb = executionContext.getMSIDbConnectionContext
-      val psDb = executionContext.getPSDbConnectionContext
 
       if (msiDb != null) {
 
         if (msiDb.isJPA) {
           logger.debug("Creating a default ORMResultSetProvider in current executionContext")
 
-          /* ORMResultSetProvider(msiDbCtx, psDbCtx, pdiDbCtx) */
-          result = new ORMResultSetProvider(msiDb, psDb, executionContext.getPDIDbConnectionContext)
+          /* ORMResultSetProvider(msiDbCtx) */
+          result = new ORMResultSetProvider(msiDb)
         } else {
           logger.debug("Creating a default SQLResultSetProvider in current executionContext")
 
-          /* SQLResultSetProvider(msiDbCtx, psDbCtx, udsDbCtx) */
-          result = new SQLResultSetProvider(msiDb, psDb, executionContext.getUDSDbConnectionContext)
+          /* SQLResultSetProvider(peptideCacheExecContext) */
+          result = new SQLResultSetProvider(PeptideCacheExecutionContext(executionContext))
         }
 
       } else {
@@ -184,12 +137,12 @@ object ProviderFactory extends IProviderFactory with LazyLogging {
     var result: IPTMProvider = getDefaultProviderInstance(classOf[IPTMProvider])
 
     if (result == null) {
-      val psDb = executionContext.getPSDbConnectionContext
+      val msiDb = executionContext.getMSIDbConnectionContext
 
-      if ((psDb != null) && psDb.isJPA) {
+      if ((msiDb != null) && msiDb.isJPA) {
         logger.debug("Creating a default ORMPTMProvider in current executionContext")
 
-        result = new ORMPTMProvider(psDb)
+        result = new ORMPTMProvider(msiDb)
       }
 
     }

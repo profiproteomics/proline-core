@@ -23,100 +23,126 @@ import javax.persistence.Table;
 @Table(name = "master_quant_channel")
 public class MasterQuantitationChannel implements Serializable {
 
-    private static final long serialVersionUID = 1L;
+	private static final long serialVersionUID = 1L;
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
-    private long id;
+	@Id
+	@GeneratedValue(strategy = GenerationType.AUTO)
+	private long id;
 
-    @Column(name = "lcms_map_set_id")
-    private Long lcmsMapSetId;
+	private String name;
 
-    private String name;
+	private int number;
 
-    private int number;
+	@Column(name = "serialized_properties")
+	private String serializedProperties;
 
-    @Column(name = "quant_result_summary_id")
-    private Long quantResultSummaryId;
+	@Column(name = "lcms_map_set_id")
+	private Long lcmsMapSetId;
 
-    @Column(name = "serialized_properties")
-    private String serializedProperties;
+	@Column(name = "ident_result_summary_id")
+	private Long identResultSummaryId;
 
-    // bi-directional many-to-one association to QuantChannel
-    @OneToMany(mappedBy = "masterQuantitationChannel", cascade=CascadeType.ALL)
-    @OrderBy("number")
-    private List<QuantitationChannel> quantitationChannels;
+	@Column(name = "quant_result_summary_id")
+	private Long quantResultSummaryId;
 
-    // bi-directional many-to-one association to Dataset
-    @ManyToOne
-    @JoinColumn(name = "quantitation_id")
-    private Dataset dataset;
+	// bi-directional many-to-one association to ident Dataset
+	@ManyToOne
+	@JoinColumn(name = "ident_data_set_id")
+	private Dataset identDataset;
 
-    public MasterQuantitationChannel() {
-    }
+	// bi-directional many-to-one association to quant Dataset
+	@ManyToOne
+	@JoinColumn(name = "quantitation_id")
+	private Dataset quantDataset;
 
-    public long getId() {
-	return id;
-    }
+	// bi-directional many-to-one association to QuantChannel
+	@OneToMany(mappedBy = "masterQuantitationChannel", cascade = CascadeType.ALL)
+	@OrderBy("number")
+	private List<QuantitationChannel> quantitationChannels;
 
-    public void setId(final long pId) {
-	id = pId;
-    }
+	public MasterQuantitationChannel() {
+	}
 
-    public Long getLcmsMapSetId() {
-	return lcmsMapSetId;
-    }
+	public long getId() {
+		return id;
+	}
 
-    public void setLcmsMapSetId(final Long pLcmsMapSetId) {
-	lcmsMapSetId = pLcmsMapSetId;
-    }
+	public void setId(final long pId) {
+		id = pId;
+	}
 
-    public String getName() {
-	return this.name;
-    }
+	public String getName() {
+		return this.name;
+	}
 
-    public void setName(String name) {
-	this.name = name;
-    }
+	public void setName(String name) {
+		this.name = name;
+	}
 
-    public int getNumber() {
-	return number;
-    }
+	public int getNumber() {
+		return number;
+	}
 
-    public void setNumber(final int pNumber) {
-	number = pNumber;
-    }
+	public void setNumber(final int pNumber) {
+		number = pNumber;
+	}
 
-    public Long getQuantResultSummaryId() {
-	return quantResultSummaryId;
-    }
+	public String getSerializedProperties() {
+		return this.serializedProperties;
+	}
 
-    public void setQuantResultSummaryId(final Long pQuantResultSummaryId) {
-	quantResultSummaryId = pQuantResultSummaryId;
-    }
+	public void setSerializedProperties(String serializedProperties) {
+		this.serializedProperties = serializedProperties;
+	}
 
-    public String getSerializedProperties() {
-	return this.serializedProperties;
-    }
+	public Long getLcmsMapSetId() {
+		return lcmsMapSetId;
+	}
 
-    public void setSerializedProperties(String serializedProperties) {
-	this.serializedProperties = serializedProperties;
-    }
+	public void setLcmsMapSetId(final Long pLcmsMapSetId) {
+		lcmsMapSetId = pLcmsMapSetId;
+	}
 
-    public List<QuantitationChannel> getQuantitationChannels() {
-	return quantitationChannels;
-    }
+	public Long getIdentResultSummaryId() {
+		return identResultSummaryId;
+	}
 
-    public void setQuantitationChannels(final List<QuantitationChannel> quantitationChannels) {
-	this.quantitationChannels = quantitationChannels;
-    }
+	public void setIdentResultSummaryId(Long identResultSummaryId) {
+		this.identResultSummaryId = identResultSummaryId;
+	}
 
-    public Dataset getDataset() {
-	return this.dataset;
-    }
+	public Long getQuantResultSummaryId() {
+		return quantResultSummaryId;
+	}
 
-    public void setDataset(Dataset dataset) {
-	this.dataset = dataset;
-    }
+	public void setQuantResultSummaryId(final Long pQuantResultSummaryId) {
+		quantResultSummaryId = pQuantResultSummaryId;
+	}
+
+	public Dataset getIdentDataset() {
+		return identDataset;
+	}
+
+	public void setIdentDataset(Dataset identDataset) {
+		this.identDataset = identDataset;
+	}
+
+	// TODO: rename to getQuantDataset
+	public Dataset getDataset() {
+		return this.quantDataset;
+	}
+
+	// TODO: rename to setQuantDataset
+	public void setDataset(Dataset dataset) {
+		this.quantDataset = dataset;
+	}
+
+	public List<QuantitationChannel> getQuantitationChannels() {
+		return quantitationChannels;
+	}
+
+	public void setQuantitationChannels(final List<QuantitationChannel> quantitationChannels) {
+		this.quantitationChannels = quantitationChannels;
+	}
 
 }

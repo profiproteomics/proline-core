@@ -17,64 +17,64 @@ import javax.persistence.OneToMany;
 @Entity
 public class Instrument implements Serializable {
 
-    private static final long serialVersionUID = 1L;
+	private static final long serialVersionUID = 1L;
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
-    private long id;
+	@Id
+	@GeneratedValue(strategy = GenerationType.AUTO)
+	private long id;
 
-    private String name;
+	private String name;
 
-    @Column(name = "serialized_properties")
-    private String serializedProperties;
+	@Column(name = "serialized_properties")
+	private String serializedProperties;
 
-    private String source;
+	private String source;
 
-    // bi-directional many-to-one association to InstrumentConfiguration
-    @OneToMany(mappedBy = "instrument")
-    private Set<InstrumentConfiguration> instrumentConfigurations;
+	// bi-directional many-to-one association to InstrumentConfiguration
+	@OneToMany(mappedBy = "instrument")
+	private Set<InstrumentConfiguration> instrumentConfigurations;
 
-    public Instrument() {
-    }
+	public Instrument() {
+	}
 
-    public long getId() {
-	return id;
-    }
+	public long getId() {
+		return id;
+	}
 
-    public void setId(final long pId) {
-	id = pId;
-    }
+	public void setId(final long pId) {
+		id = pId;
+	}
 
-    public String getName() {
-	return this.name;
-    }
+	public String getName() {
+		return this.name;
+	}
 
-    public void setName(String name) {
-	this.name = name;
-    }
+	public void setName(String name) {
+		this.name = name;
+	}
 
-    public String getSerializedProperties() {
-	return this.serializedProperties;
-    }
+	public String getSerializedProperties() {
+		return this.serializedProperties;
+	}
 
-    public void setSerializedProperties(String serializedProperties) {
-	this.serializedProperties = serializedProperties;
-    }
+	public void setSerializedProperties(String serializedProperties) {
+		this.serializedProperties = serializedProperties;
+	}
 
-    public String getSource() {
-	return this.source;
-    }
+	public String getSource() {
+		return this.source;
+	}
 
-    public void setSource(String source) {
-	this.source = source;
-    }
+	public void setSource(String source) {
+		this.source = source;
+	}
 
-    public Set<InstrumentConfiguration> getInstrumentConfigurations() {
-	return this.instrumentConfigurations;
-    }
+	public Set<InstrumentConfiguration> getInstrumentConfigurations() {
+		return this.instrumentConfigurations;
+	}
 
-    public void setInstrumentConfigurations(Set<InstrumentConfiguration> instrumentConfigurations) {
-	this.instrumentConfigurations = instrumentConfigurations;
-    }
+	public void setInstrumentConfigurations(Set<InstrumentConfiguration> instrumentConfigurations) {
+		this.instrumentConfigurations = instrumentConfigurations;
+	}
 
 }

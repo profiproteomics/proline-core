@@ -3,26 +3,26 @@ package fr.proline.core.orm.lcms;
 /* peak represented in the peaks BLOB of Peakel*/
 public class Peak {
 	private Long scanId;
-	private Double  moz;
+	private Double moz;
 	private Float elutionTime;
 	private Float intensity;
-	
+
 	public Peak() {
 		super();
 	}
 
-	
-
-	public Peak(Long scanId, Double moz, Float elutionTime,
-			Float intensity) {
+	public Peak(
+		Long scanId,
+		Double moz,
+		Float elutionTime,
+		Float intensity
+	) {
 		super();
 		this.scanId = scanId;
 		this.moz = moz;
 		this.elutionTime = elutionTime;
 		this.intensity = intensity;
 	}
-
-
 
 	public Long getScanId() {
 		return scanId;
@@ -55,6 +55,5 @@ public class Peak {
 	public void setIntensity(Float intensity) {
 		this.intensity = intensity;
 	}
-	
 
 }

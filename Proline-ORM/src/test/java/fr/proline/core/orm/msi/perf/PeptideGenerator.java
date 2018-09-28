@@ -14,106 +14,106 @@ import fr.profi.util.StringUtils;
 @Ignore
 public class PeptideGenerator {
 
-    /* Constants */
-    private static final int MIN_SEQUENCE_LENGTH = 5;
+	/* Constants */
+	private static final int MIN_SEQUENCE_LENGTH = 5;
 
-    private static final int SEQUENCE_LENGTH = 28;
+	private static final int SEQUENCE_LENGTH = 28;
 
-    private static final double MASS_FACTOR = 1e6;
+	private static final double MASS_FACTOR = 1e6;
 
-    private static final double PTM_PROBA = 1.0 / 2; // 1.0 = NO PTM ; <= 0.0 ALL PTM
+	private static final double PTM_PROBA = 1.0 / 2; // 1.0 = NO PTM ; <= 0.0 ALL PTM
 
-    private static final int CHAR_RANGE = 'Z' - 'A' + 1;
+	private static final int CHAR_RANGE = 'Z' - 'A' + 1;
 
-    /* WARN Nothing is thread-safe in this class : use PeptideGenerator localy */
-    private final Random m_randomGenerator = new Random();
+	/* WARN Nothing is thread-safe in this class : use PeptideGenerator localy */
+	private final Random m_randomGenerator = new Random();
 
-    private final AtomicLong m_peptideId = new AtomicLong(1L);
+	private final AtomicLong m_peptideId = new AtomicLong(1L);
 
-    private final Set<String> m_knownSequences = new HashSet<String>();
+	private final Set<String> m_knownSequences = new HashSet<String>();
 
-    private String m_lastSequence;
+	private String m_lastSequence;
 
-    public void setInitialPeptideId(final long peptideId) {
-	m_peptideId.set(peptideId);
-    }
-
-    public boolean addSequence(final String sequence) {
-
-	if (StringUtils.isEmpty(sequence)) {
-	    throw new IllegalArgumentException("Invalid sequence");
+	public void setInitialPeptideId(final long peptideId) {
+		m_peptideId.set(peptideId);
 	}
 
-	return m_knownSequences.add(sequence);
-    }
+	public boolean addSequence(final String sequence) {
 
-    public Peptide createPeptide() {
-	final Peptide pept = new Peptide();
+		if (StringUtils.isEmpty(sequence)) {
+			throw new IllegalArgumentException("Invalid sequence");
+		}
 
-	pept.setId(m_peptideId.getAndIncrement());
-
-	if (m_randomGenerator.nextDouble() < PTM_PROBA) {
-	    /* This Peptide has ptmString */
-	    String sequence = m_lastSequence;
-
-	    if (sequence == null) {
-		sequence = getUniqueSequence();
-	    }
-
-	    pept.setSequence(sequence);
-	    pept.setPtmString(getRandomString());
-
-	    m_lastSequence = null;
-	} else {
-	    /* This Peptide has no ptmString */
-	    pept.setSequence(getUniqueSequence());
-	    pept.setPtmString(null);
+		return m_knownSequences.add(sequence);
 	}
 
-	pept.setCalculatedMass(getRandomMass());
+	public Peptide createPeptide() {
+		final Peptide pept = new Peptide();
 
-	return pept;
-    }
+		pept.setId(m_peptideId.getAndIncrement());
 
-    public String getRandomString() {
-	final int length = m_randomGenerator.nextInt(SEQUENCE_LENGTH) + MIN_SEQUENCE_LENGTH;
+		if (m_randomGenerator.nextDouble() < PTM_PROBA) {
+			/* This Peptide has ptmString */
+			String sequence = m_lastSequence;
 
-	final StringBuilder buff = new StringBuilder(length);
+			if (sequence == null) {
+				sequence = getUniqueSequence();
+			}
 
-	for (int i = 0; i < length; ++i) {
-	    buff.append(getRandomChar());
+			pept.setSequence(sequence);
+			pept.setPtmString(getRandomString());
+
+			m_lastSequence = null;
+		} else {
+			/* This Peptide has no ptmString */
+			pept.setSequence(getUniqueSequence());
+			pept.setPtmString(null);
+		}
+
+		pept.setCalculatedMass(getRandomMass());
+
+		return pept;
 	}
 
-	return buff.toString();
-    }
+	public String getRandomString() {
+		final int length = m_randomGenerator.nextInt(SEQUENCE_LENGTH) + MIN_SEQUENCE_LENGTH;
 
-    public Iterator<String> getSequenceIterator() {
-	return m_knownSequences.iterator();
-    }
+		final StringBuilder buff = new StringBuilder(length);
 
-    public boolean isKnown(final String sequence) {
-	return m_knownSequences.contains(sequence);
-    }
+		for (int i = 0; i < length; ++i) {
+			buff.append(getRandomChar());
+		}
 
-    private String getUniqueSequence() {
-	String sequence = getRandomString();
-
-	while (m_knownSequences.contains(sequence)) {
-	    sequence = getRandomString();
+		return buff.toString();
 	}
 
-	m_knownSequences.add(sequence);
-	m_lastSequence = sequence;
+	public Iterator<String> getSequenceIterator() {
+		return m_knownSequences.iterator();
+	}
 
-	return sequence;
-    }
+	public boolean isKnown(final String sequence) {
+		return m_knownSequences.contains(sequence);
+	}
 
-    private double getRandomMass() {
-	return (m_randomGenerator.nextDouble() * MASS_FACTOR);
-    }
+	private String getUniqueSequence() {
+		String sequence = getRandomString();
 
-    private char getRandomChar() {
-	return (char) (m_randomGenerator.nextInt(CHAR_RANGE) + 'A');
-    }
+		while (m_knownSequences.contains(sequence)) {
+			sequence = getRandomString();
+		}
+
+		m_knownSequences.add(sequence);
+		m_lastSequence = sequence;
+
+		return sequence;
+	}
+
+	private double getRandomMass() {
+		return (m_randomGenerator.nextDouble() * MASS_FACTOR);
+	}
+
+	private char getRandomChar() {
+		return (char) (m_randomGenerator.nextInt(CHAR_RANGE) + 'A');
+	}
 
 }

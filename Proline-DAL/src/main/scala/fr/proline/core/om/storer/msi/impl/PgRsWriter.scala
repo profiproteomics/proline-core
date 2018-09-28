@@ -6,7 +6,7 @@ import org.postgresql.copy.CopyManager
 import org.postgresql.core.BaseConnection
 import fr.profi.jdbc.easy._
 import fr.profi.util.serialization.ProfiJson
-import fr.proline.context.DatabaseConnectionContext
+import fr.proline.context.MsiDbConnectionContext
 import fr.proline.core.dal._
 import fr.proline.core.dal.helper.MsiDbHelper
 import fr.proline.core.dal.tables.SelectQueryBuilder1
@@ -47,9 +47,9 @@ private[msi] object PgRsWriter extends AbstractSQLRsWriter() {
   )
   
   //def fetchExistingPeptidesIdByUniqueKey( pepSequences: Seq[String] ):  Map[String,Int] = null
-  // TODO: insert peptides into a TMP table
+
   // TODO: check first peptideByUniqueKey ???
-  override def insertNewPeptides(peptides: Seq[Peptide], peptideByUniqueKey: HashMap[String,Peptide], msiDbCtx: DatabaseConnectionContext): Unit = {
+  /*override def insertNewPeptides(peptides: Seq[Peptide], peptideByUniqueKey: HashMap[String,Peptide], msiDbCtx: DatabaseConnectionContext): Unit = {
 
     DoJDBCWork.withConnection(msiDbCtx) { msiCon =>
       
@@ -97,7 +97,7 @@ private[msi] object PgRsWriter extends AbstractSQLRsWriter() {
       )*/
     }
     
-  }
+  }*/
 
   //def fetchProteinIdentifiers( accessions: Seq[String] ): Array[Any] = null
 
@@ -105,7 +105,7 @@ private[msi] object PgRsWriter extends AbstractSQLRsWriter() {
 
   //def storeNewProteins( proteins: Seq[Protein] ): Array[Protein] = null
   
-  override def insertRsReadablePtmStrings(rs: ResultSet, msiDbCtx: DatabaseConnectionContext): Int = {
+  override def insertRsReadablePtmStrings(rs: ResultSet, msiDbCtx: MsiDbConnectionContext): Int = {
     
     DoJDBCReturningWork.withConnection(msiDbCtx) { msiCon =>
       
@@ -159,7 +159,7 @@ private[msi] object PgRsWriter extends AbstractSQLRsWriter() {
     }
   }
 
-  override def insertRsPeptideMatches(rs: ResultSet, msiDbCtx: DatabaseConnectionContext): Int = {
+  override def insertRsPeptideMatches(rs: ResultSet, msiDbCtx: MsiDbConnectionContext): Int = {
 
     DoJDBCReturningWork.withEzDBC(msiDbCtx) { msiEzDBC =>
       
@@ -192,7 +192,10 @@ private[msi] object PgRsWriter extends AbstractSQLRsWriter() {
       val pgBulkLoader = bulkCopyManager.copyIn(
         s"COPY ${MsiDbPeptideMatchTable.name} ($pepMatchTableColsWithoutPK) FROM STDIN"
       )
-  
+
+      // prepare a map for ionSeries
+      val ionSeriesById = new HashMap[String, Array[String]]
+
       // Iterate over peptide matches to store them
       for (peptideMatch <- peptideMatches if !scoringErr) {
         
@@ -206,9 +209,25 @@ private[msi] object PgRsWriter extends AbstractSQLRsWriter() {
           val bestChildId = peptideMatch.bestChildId
 
           var pmCharge = msQuery.charge
-          if(peptideMatch.properties.isDefined && peptideMatch.properties.get.getOmssaProperties.isDefined) {
-            pmCharge = peptideMatch.properties.get.getOmssaProperties.get.getCorrectedCharge
-          }  
+          if(peptideMatch.properties.isDefined) {
+            val key = _formatPeptideMatchKey(msQuery.id, peptideMatch.rank, peptideMatch.peptide.id)
+            if(peptideMatch.properties.get.getOmssaProperties.isDefined) {
+              pmCharge = peptideMatch.properties.get.getOmssaProperties.get.getCorrectedCharge
+              // extract ion series here
+              ionSeriesById.put(key, peptideMatch.properties.get.getOmssaProperties.get.getIonSeries)
+              // remove it from omssa properties before peptide match insertion to avoid flooding the peptide_match table
+              peptideMatch.properties.get.getOmssaProperties.get.setIonSeries(null)
+            } else if(peptideMatch.properties.get.getXtandemProperties.isDefined) {
+              // also extract ion series for xtandem
+              val ionSeriesMatches: Array[String] = peptideMatch.properties.get.getXtandemProperties.get.getIonSeriesMatches.map(entry => entry._1 + "=" + entry._2).toArray
+              val ionSeriesScores: Array[String] = peptideMatch.properties.get.getXtandemProperties.get.getIonSeriesScores.map(entry => entry._1 + "=" + entry._2).toArray
+              // convert the two maps into a single array (at least for now)
+              val ionSeries: Array[String] = ionSeriesMatches ++ ionSeriesScores
+              ionSeriesById.put(key, ionSeries)
+              peptideMatch.properties.get.getXtandemProperties.get.setIonSeriesMatches(null)
+              peptideMatch.properties.get.getXtandemProperties.get.setIonSeriesScores(null)
+            }
+          }
 
           // Build a row containing peptide match values
           val pepMatchValues = List(
@@ -256,18 +275,29 @@ private[msi] object PgRsWriter extends AbstractSQLRsWriter() {
       //Same peptide could be identified by two PSMs from same query if seq contains X that could be replaced by I/L for instance
       // Get PepMatch MS_QUERY_ID, RANK, PEPTIDE_ID, ID for RS
       val pepMatchIdByKey = msiEzDBC.select( pepMatchUniqueFKsQueryRank, rsId) { r =>
-        (r.nextLong+"_"+r.nextInt+ "%" + r.nextLong -> r.nextLong)
+        (_formatPeptideMatchKey(r.nextLong, r.nextInt, r.nextLong) -> r.nextLong)
       } toMap
         
       // Iterate over peptide matches to update them
-      peptideMatches.foreach { pepMatch => pepMatch.id = pepMatchIdByKey(pepMatch.msQuery.id+"_"+pepMatch.rank + "%" + pepMatch.peptide.id) }
-  
+      peptideMatches.foreach {
+        pepMatch => {
+          val key = _formatPeptideMatchKey(pepMatch.msQuery.id, pepMatch.rank, pepMatch.peptide.id)
+          val newId = pepMatchIdByKey(key)
+          pepMatch.id = newId
+          if(ionSeriesById.size > 0 && ionSeriesById.isDefinedAt(key)) {
+            insertIonSeries(pepMatch, ionSeriesById.get(key).get, msiDbCtx)
+          }
+        }
+      }
+
       this._linkPeptideMatchesToChildren(peptideMatches, bulkCopyManager)
   
       nbInsertedPepMatches.toInt
     }
     
   }
+
+  private def _formatPeptideMatchKey(msQueryId: Long, peptideMatchRank: Int, peptideId: Long): String = msQueryId + "_" + peptideMatchRank + "%" + peptideId
 
   private def _linkPeptideMatchesToChildren(peptideMatches: Seq[PeptideMatch], bulkCopyManager: CopyManager): Unit = {
 
@@ -300,7 +330,7 @@ private[msi] object PgRsWriter extends AbstractSQLRsWriter() {
     logger.info(s"BULK insert of $nbInsertedRecords peptide match relations has been done !")
   }
 
-  override def insertRsProteinMatches(rs: ResultSet, msiDbCtx: DatabaseConnectionContext): Int = {
+  override def insertRsProteinMatches(rs: ResultSet, msiDbCtx: MsiDbConnectionContext): Int = {
 
     DoJDBCReturningWork.withEzDBC(msiDbCtx) { msiEzDBC =>
       
@@ -361,7 +391,6 @@ private[msi] object PgRsWriter extends AbstractSQLRsWriter() {
           proteinMatch.description,
           Option(proteinMatch.geneName),
           proteinMatch.score,
-          proteinMatch.coverage,
           proteinMatch.sequenceMatches.length,
           proteinMatch.peptideMatchesCount,
           proteinMatch.isDecoy,
@@ -386,7 +415,7 @@ private[msi] object PgRsWriter extends AbstractSQLRsWriter() {
     }
 
       // End of BULK copy
-    val nbInsertedProtMatches = pgBulkLoader.endCopy()
+      val nbInsertedProtMatches = pgBulkLoader.endCopy()
   
       // Move TMP table content to MAIN table
       /*logger.info("move TMP table " + tmpProtMatchTableName + " into MAIN protein_match table")
@@ -408,7 +437,7 @@ private[msi] object PgRsWriter extends AbstractSQLRsWriter() {
     
   }
 
-  override def insertRsSequenceMatches(rs: ResultSet, msiDbCtx: DatabaseConnectionContext): Int = {
+  override def insertRsSequenceMatches(rs: ResultSet, msiDbCtx: MsiDbConnectionContext): Int = {
 
     DoJDBCReturningWork.withConnection(msiDbCtx) { msiCon =>
       

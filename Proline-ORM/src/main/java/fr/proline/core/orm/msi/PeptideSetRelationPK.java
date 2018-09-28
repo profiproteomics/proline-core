@@ -12,54 +12,54 @@ import javax.persistence.Embeddable;
 @Embeddable
 public class PeptideSetRelationPK implements Serializable {
 
-    // default serial version id, required for serializable classes.
-    private static final long serialVersionUID = 1L;
+	// default serial version id, required for serializable classes.
+	private static final long serialVersionUID = 1L;
 
-    @Column(name = "peptide_overset_id")
-    private long peptideOversetId;
+	@Column(name = "peptide_overset_id")
+	private long peptideOversetId;
 
-    @Column(name = "peptide_subset_id")
-    private long peptideSubsetId;
+	@Column(name = "peptide_subset_id")
+	private long peptideSubsetId;
 
-    public PeptideSetRelationPK() {
-    }
-
-    public long getPeptideOversetId() {
-	return peptideOversetId;
-    }
-
-    public void setPeptideOversetId(final long pPeptideOversetId) {
-	peptideOversetId = pPeptideOversetId;
-    }
-
-    public long getPeptideSubsetId() {
-	return peptideSubsetId;
-    }
-
-    public void setPeptideSubsetId(final long pPeptideSubsetId) {
-	peptideSubsetId = pPeptideSubsetId;
-    }
-
-    @Override
-    public boolean equals(final Object obj) {
-	boolean result = false;
-
-	if (obj == this) {
-	    result = true;
-	} else if (obj instanceof PeptideSetRelationPK) {
-	    final PeptideSetRelationPK otherPK = (PeptideSetRelationPK) obj;
-
-	    result = ((getPeptideOversetId() == otherPK.getPeptideOversetId()) && (getPeptideSubsetId() == otherPK
-		    .getPeptideSubsetId()));
+	public PeptideSetRelationPK() {
 	}
 
-	return result;
-    }
+	public long getPeptideOversetId() {
+		return peptideOversetId;
+	}
 
-    @Override
-    public int hashCode() {
-	return (Long.valueOf(getPeptideOversetId()).hashCode() ^ Long.valueOf(getPeptideSubsetId())
-		.hashCode());
-    }
+	public void setPeptideOversetId(final long pPeptideOversetId) {
+		peptideOversetId = pPeptideOversetId;
+	}
+
+	public long getPeptideSubsetId() {
+		return peptideSubsetId;
+	}
+
+	public void setPeptideSubsetId(final long pPeptideSubsetId) {
+		peptideSubsetId = pPeptideSubsetId;
+	}
+
+	@Override
+	public boolean equals(final Object obj) {
+		boolean result = false;
+
+		if (obj == this) {
+			result = true;
+		} else if (obj instanceof PeptideSetRelationPK) {
+			final PeptideSetRelationPK otherPK = (PeptideSetRelationPK) obj;
+
+			result = ((getPeptideOversetId() == otherPK.getPeptideOversetId()) && (getPeptideSubsetId() == otherPK
+				.getPeptideSubsetId()));
+		}
+
+		return result;
+	}
+
+	@Override
+	public int hashCode() {
+		return (Long.valueOf(getPeptideOversetId()).hashCode() ^ Long.valueOf(getPeptideSubsetId())
+			.hashCode());
+	}
 
 }

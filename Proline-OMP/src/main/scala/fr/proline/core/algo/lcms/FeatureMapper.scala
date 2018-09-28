@@ -1,24 +1,26 @@
 package fr.proline.core.algo.lcms
 
-import scala.collection.mutable.LongMap
-
 import fr.profi.util.collection._
+import fr.profi.util.ms.calcMozTolInDalton
+import fr.proline.core.om.model.lcms._
+
+import scala.collection.mutable.{ArrayBuffer, LongMap}
 
 object FeatureMapper {
   
-  import scala.collection.mutable.ArrayBuffer
-  import fr.proline.core.om.model.lcms._
-  import fr.profi.util.ms.calcMozTolInDalton
-  
+
   def computePairwiseFtMapping(
     map1Features: Seq[Feature],
     map2Features: Seq[Feature],
     methodParams: FeatureMappingParams,
     isChargeTolerant: Boolean = false
   ): LongMap[ArrayBuffer[Feature]] = {
-    
-    val mozTol = methodParams.mozTol
-    val mozTolUnit = methodParams.mozTolUnit
+
+    require(methodParams.mozTol.isDefined, "FeatureMapper requires FeatureMappingParams.mozTol parameter")
+    require(methodParams.mozTolUnit.isDefined, "FeatureMapper requires FeatureMappingParams.mozTolUnit parameter")
+
+    val mozTol = methodParams.mozTol.get
+    val mozTolUnit = methodParams.mozTolUnit.get
     val timeTol = methodParams.timeTol
     
     // Group features by charge

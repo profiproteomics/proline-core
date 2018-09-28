@@ -8,11 +8,10 @@ import fr.proline.core.om.storer.msi.RsStorer
 import fr.proline.core.om.storer.msi.impl.StorerContext
 import fr.proline.core.om.model.msi.ResultSet
 
-trait RsAdderFromResultFileTesting extends RsAdderFromResultChecking with RsAdderFromResultStoring
+trait RsAdderFromResultFileTesting {
 
-trait RsAdderFromResultChecking {
-  
-  val readRS: ResultSet
+val executionContext: IExecutionContext
+val readRS: ResultSet
   
   def checkBuiltResultSetIsNew( builtRS: ResultSet ) {
     // Check built result set is not null
@@ -49,13 +48,7 @@ trait RsAdderFromResultChecking {
     // Check that result set ids have been correctly assigned
     checkBuiltPeptideMatchesHaveRightId( builtRS: ResultSet )
   }
-  
-}
 
-trait RsAdderFromResultStoring {
-  
-  val executionContext: IExecutionContext
-  
   def storeBuiltResultSet( builtRS: ResultSet ) = {
     
     executionContext.getMSIDbConnectionContext().tryInTransaction {

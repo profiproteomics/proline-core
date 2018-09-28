@@ -1,15 +1,16 @@
 package fr.proline.core.om.provider.msi.impl
 
 import com.typesafe.scalalogging.LazyLogging
-
 import fr.profi.util.collection._
 import fr.proline.context._
 import fr.proline.core.dal.DoJDBCReturningWork
 import fr.proline.core.dal.tables.SelectQueryBuilder._
 import fr.proline.core.dal.tables.SelectQueryBuilder1
+import fr.proline.core.dal.tables.msi.MsiDbResultSetColumns
 import fr.proline.core.dal.tables.msi.MsiDbResultSetTable
 import fr.proline.core.om.builder.ResultSetDescriptorBuilder
 import fr.proline.core.om.model.msi._
+import fr.proline.core.om.provider.PeptideCacheExecutionContext
 import fr.proline.core.om.provider.msi._
 
 // TODO: replace SQLResultSetLoader by the SQLLazyResultSetLoader
@@ -17,11 +18,10 @@ trait SQLLazyResultSetLoader extends LazyLogging {
 
   import fr.proline.core.dal.helper.MsiDbHelper
 
-  val msiDbCtx: MsiDbConnectionContext
-  val psDbCtx: DatabaseConnectionContext
   val udsDbCtx: UdsDbConnectionContext
+  val msiDbCtx: MsiDbConnectionContext
 
-  val RSCols = MsiDbResultSetTable.columns
+  val RSCols: MsiDbResultSetColumns.type = MsiDbResultSetTable.columns
 
   protected def getLazyResultSet(
     rsDescriptor: ResultSetDescriptor,
@@ -41,9 +41,7 @@ trait SQLLazyResultSetLoader extends LazyLogging {
     lazyDecoyRsLoader: () => Map[Long, LazyResultSet]
   ): Array[LazyResultSet] = {
     
-    val rsIds = rsDescriptors.map(_.id)
-    val rsDescriptorById = rsDescriptors.view.map(rsd => rsd.id -> rsd)
-    
+
     // Lazy loading of lazy decoy RS
     lazy val lazyDecoyRsById = lazyDecoyRsLoader()
     
@@ -62,19 +60,19 @@ trait SQLLazyResultSetLoader extends LazyLogging {
     lazy val parentMsiSearchById = if (!parentMsiSearchIds.isEmpty) {    
       logger.info(s"Lazy loading ${parentMsiSearchIds.length} parent MSI search(es)...")
       
-      new SQLMsiSearchProvider(udsDbCtx, msiDbCtx, psDbCtx)
+      new SQLMsiSearchProvider(udsDbCtx, msiDbCtx)
         .getMSISearches(parentMsiSearchIds)      
         .view.map(ms => ms.id -> ms).toMap      
     } else Map.empty[Long, fr.proline.core.om.model.msi.MSISearch]
     
     lazy val childMsiSearchById = if (!childMsiSearchIds.isEmpty) {
       logger.info(s"Lazy loading ${childMsiSearchIds.length} child MSI search(es)...")
-      new SQLMsiSearchProvider(udsDbCtx, msiDbCtx, psDbCtx)
+      new SQLMsiSearchProvider(udsDbCtx, msiDbCtx)
         .getMSISearches(childMsiSearchIds)      
         .view.map(ms => ms.id -> ms).toMap      
     } else Map.empty[Long, fr.proline.core.om.model.msi.MSISearch]
 
-    val resultSets = for(rsDescriptor <- rsDescriptors) yield {
+    val resultSets: Array[LazyResultSet] = for(rsDescriptor <- rsDescriptors) yield {
 
       val loadMsiSearchOpt = if(rsDescriptor.msiSearchId == 0) None
       else {
@@ -114,7 +112,7 @@ trait SQLLazyResultSetLoader extends LazyLogging {
       rs
     }
 
-    resultSets.toArray
+    resultSets
   }
   
   protected def getResultSetDescriptors(
@@ -138,10 +136,11 @@ trait SQLLazyResultSetLoader extends LazyLogging {
 }
 
 class SQLLazyResultSetProvider(
-  val msiDbCtx: MsiDbConnectionContext,
-  val psDbCtx: DatabaseConnectionContext,
-  val udsDbCtx: UdsDbConnectionContext
-) extends SQLLazyResultSetLoader { 
+  val peptideCacheExecContext: PeptideCacheExecutionContext
+) extends SQLLazyResultSetLoader {
+
+  override val msiDbCtx: MsiDbConnectionContext =  peptideCacheExecContext.getMSIDbConnectionContext
+  override val udsDbCtx: UdsDbConnectionContext = peptideCacheExecContext.getUDSDbConnectionContext
 
   def getLazyResultSets(
     rsIds: Seq[Long],
@@ -157,7 +156,7 @@ class SQLLazyResultSetProvider(
     )
 
     // Lazy loading of peptide matches
-    val pepMatchProvider = new SQLPeptideMatchProvider(msiDbCtx, psDbCtx)
+    val pepMatchProvider = new SQLPeptideMatchProvider(peptideCacheExecContext)
     lazy val pepMatchesByRsId = pepMatchProvider.getResultSetsPeptideMatches(rsIds, pepMatchFilterOpt).groupBy(_.resultSetId)
     
     val loadPeptideMatches = { rsd: ResultSetDescriptor =>
@@ -187,7 +186,7 @@ class SQLLazyResultSetProvider(
       }
     }
     
-    val resultSets = this.getLazyResultSets(rsDescriptors, false, loadPeptideMatches, loadProteinMatches, lazyDecoyRsLoader)
+    val resultSets = this.getLazyResultSets(rsDescriptors, isValidatedContent = false, loadPeptideMatches, loadProteinMatches, lazyDecoyRsLoader)
     
     logger.info(s"${rsIds.length} lazy result set(s) loaded in ${ (System.currentTimeMillis() - start) / 1000 } s")
 

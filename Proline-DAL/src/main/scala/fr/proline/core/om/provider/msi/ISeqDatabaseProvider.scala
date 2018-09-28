@@ -75,8 +75,6 @@ object SeqDbFakeProvider extends ISeqDatabaseProvider {
 
 object SeqDbEmptyFakeProvider extends ISeqDatabaseProvider {
   
-  val pdiDbCtx = null
-  
    def getSeqDatabasesAsOptions(seqDBIds: Seq[Long]): Array[Option[SeqDatabase]] = { 
 	  var result = new Array[Option[SeqDatabase]](1)
 	  result(0) = None

@@ -1,6 +1,5 @@
 package fr.proline.core.om.provider.msi
 
-import fr.proline.context.DatabaseConnectionContext
 import fr.proline.core.om.model.msi.MSISearch
 
 trait IMSISearchProvider {

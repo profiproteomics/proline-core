@@ -25,12 +25,9 @@ object MsiDbHelperTest extends DatabaseTestCase with StrictLogging {
   @BeforeClass
   @throws(classOf[Exception])
   def setUp() = {
-
     logger.info("Initializing MSIs")
-
     initDatabase()
-
-    loadCompositeDataSet(Array("/dbunit/datasets/msi-db_init_dataset.xml", "/dbunit/datasets/msi/Resultset_Dataset.xml")) //Load Data
+    loadCompositeDataSet(Array("/dbunit/Init/msi-db.xml", "/dbunit/datasets/msi/Resultset_Dataset.xml"))
   }
 
   @AfterClass

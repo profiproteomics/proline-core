@@ -18,8 +18,6 @@ class StorerContext(wrappedExecutionContext: IExecutionContext)
 
   /* Db Context params check */
   require(getUDSDbConnectionContext != null, "UDS Db Context is null")
-  require(getPDIDbConnectionContext != null, "PDI Db Context Db Context is null")
-  require(getPSDbConnectionContext != null, "PS Db Context Db Context is null")
   require(getMSIDbConnectionContext != null, "MSI Db Context is null")
 
   /**
@@ -28,9 +26,9 @@ class StorerContext(wrappedExecutionContext: IExecutionContext)
    */
   var spectrumIdByTitle: Map[String, Long] = null
 
-  var seqDbIdByTmpId: Map[Long, Long] = null // TODO To be integrated to idCaches
+  var seqDbIdByTmpId: mutable.LongMap[Long] = null // TODO: To be integrated to idCaches
 
-  private val m_entityCaches = mutable.Map.empty[Class[_], mutable.Map[Long, _]]
+  private val _entityCaches = mutable.Map.empty[Class[_], mutable.LongMap[_]]
 
   /**
    * Retrieved and created Msi Peptide entities.
@@ -44,22 +42,22 @@ class StorerContext(wrappedExecutionContext: IExecutionContext)
    * Caches associate OM Id (can be "In memory" < 0) -> ORM loaded or persisted entity from context [[EntityManager]].
    * MsiSeqDatabase cache can contain {{{null}}} values if SeqDatabase not found in Pdi Db.
    *
-   * @param classifier Class of relevant Msi entity obtained with Scala {{{classOf[]}}} operator.
+   * @param entityClass Class of relevant Msi entity obtained with Scala {{{classOf[]}}} operator.
    * @return current cache for given Msi entity.
    */
-  def getEntityCache[T](classifier: Class[T]): mutable.Map[Long, T] = {
-    require(classifier != null, "Classifier is null")
+  def getEntityCache[T](entityClass: Class[T]): mutable.Map[Long, T] = {
+    require(entityClass != null, "entityClass is null")
 
-    val knownCache = m_entityCaches.get(classifier)
+    val knownCache = _entityCaches.get(entityClass)
 
     if (knownCache.isDefined) {
-      knownCache.get.asInstanceOf[mutable.Map[Long, T]]
+      knownCache.get.asInstanceOf[mutable.LongMap[T]]
     } else {
-      logger.debug("Creating context cache for " + classifier)
+      logger.debug(s"Creating context cache for class '$entityClass'" )
 
-      val newCache = mutable.Map.empty[Long, T]
+      val newCache = mutable.LongMap.empty[T]
 
-      m_entityCaches += classifier -> newCache
+      _entityCaches += entityClass -> newCache
 
       newCache
     }
@@ -75,15 +73,15 @@ class StorerContext(wrappedExecutionContext: IExecutionContext)
       /* Specific StorerContext clean-up : clears collection and caches */
       msiPeptides.clear()
 
-      for (map <- m_entityCaches.values) {
+      for (map <- _entityCaches.values) {
         map.clear()
       }
 
-      m_entityCaches.clear()
+      _entityCaches.clear()
 
       seqDbIdByTmpId = null
-
       spectrumIdByTitle = null
+      
     } finally {
       super.clearContext()
     }
@@ -100,19 +98,17 @@ object StorerContext {
   def apply(wrappedEC: IExecutionContext): StorerContext = {
     require(wrappedEC != null, "WrappedEC is null")
 
-    var result: StorerContext = wrappedEC match {
+    val result: StorerContext = wrappedEC match {
       case context: StorerContext             => context
-
       case context: DecoratedExecutionContext => context.find(classOf[StorerContext])
-
       case _                                  => null
     }
 
-    if (result == null) {
-      result = new StorerContext(wrappedEC)
-    } else {
-      result.clearContext() // Clear Context caches
-    }
+    if (result == null)
+      return new StorerContext(wrappedEC)
+
+    // Clear Context caches
+    result.clearContext() 
 
     result
   }

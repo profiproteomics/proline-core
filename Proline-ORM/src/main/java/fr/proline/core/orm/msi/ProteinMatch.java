@@ -21,195 +21,188 @@ import javax.persistence.Table;
  */
 @Entity
 @NamedQueries({
-	@NamedQuery(name = "findProteinMatchesForResultSet", query = "select pm from fr.proline.core.orm.msi.ProteinMatch pm"
-		+ " where pm.resultSet = :resultSet"),
-
-	@NamedQuery(name = "findProteinMatchesForResultSetId", query = "select pm from fr.proline.core.orm.msi.ProteinMatch pm"
-		+ " where pm.resultSet.id = :resultSetId")
-
+	@NamedQuery(
+		name = "findProteinMatchesForResultSet",
+		query = "select pm from fr.proline.core.orm.msi.ProteinMatch pm"
+		+ " where pm.resultSet = :resultSet"
+	),
+	@NamedQuery(
+		name = "findProteinMatchesForResultSetId",
+		query = "select pm from fr.proline.core.orm.msi.ProteinMatch pm"
+		+ " where pm.resultSet.id = :resultSetId"
+	)
 })
 @Table(name = "protein_match")
 public class ProteinMatch implements Serializable {
 
-    private static final long serialVersionUID = 1L;
+	private static final long serialVersionUID = 1L;
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
-    private long id;
+	@Id
+	@GeneratedValue(strategy = GenerationType.AUTO)
+	private long id;
 
-    private String accession;
+	private String accession;
 
-    @Column(name = "bio_sequence_id")
-    private Long bioSequenceId;
+	@Column(name = "bio_sequence_id")
+	private Long bioSequenceId;
 
-    @Column(name = "is_last_bio_sequence")
-    private boolean isLastBioSequence;
+	@Column(name = "is_last_bio_sequence")
+	private boolean isLastBioSequence;
 
-    private float coverage;
+	private String description;
 
-    private String description;
+	@Column(name = "gene_name")
+	private String geneName;
 
-    @Column(name = "gene_name")
-    private String geneName;
+	@Column(name = "is_decoy")
+	private boolean isDecoy;
 
-    @Column(name = "is_decoy")
-    private boolean isDecoy;
+	@Column(name = "peptide_count")
+	private int peptideCount;
 
-    @Column(name = "peptide_count")
-    private int peptideCount;
+	@Column(name = "peptide_match_count")
+	private int peptideMatchCount;
 
-    @Column(name = "peptide_match_count")
-    private int peptideMatchCount;
+	@ManyToOne
+	@JoinColumn(name = "result_set_id")
+	private ResultSet resultSet;
 
-    @ManyToOne
-    @JoinColumn(name = "result_set_id")
-    private ResultSet resultSet;
+	private float score;
 
-    private float score;
+	@Column(name = "scoring_id")
+	private long scoringId;
 
-    @Column(name = "scoring_id")
-    private long scoringId;
+	@Column(name = "serialized_properties")
+	private String serializedProperties;
 
-    @Column(name = "serialized_properties")
-    private String serializedProperties;
+	@Column(name = "taxon_id")
+	private Long taxonId;
 
-    @Column(name = "taxon_id")
-    private Long taxonId;
+	// bi-directional many-to-one association to ProteinSetProteinMatchItem
+	@OneToMany(mappedBy = "proteinMatch")
+	private Set<ProteinSetProteinMatchItem> proteinSetProteinMatchItems;
 
-    // bi-directional many-to-one association to ProteinSetProteinMatchItem
-    @OneToMany(mappedBy = "proteinMatch")
-    private Set<ProteinSetProteinMatchItem> proteinSetProteinMatchItems;
+	public ProteinMatch() {
+	}
 
+	public long getId() {
+		return id;
+	}
 
-    public ProteinMatch() {
-    }
+	public void setId(final long pId) {
+		id = pId;
+	}
 
-    public long getId() {
-	return id;
-    }
+	public String getAccession() {
+		return this.accession;
+	}
 
-    public void setId(final long pId) {
-	id = pId;
-    }
+	public void setAccession(String accession) {
+		this.accession = accession;
+	}
 
-    public String getAccession() {
-	return this.accession;
-    }
+	public Long getBioSequenceId() {
+		return bioSequenceId;
+	}
 
-    public void setAccession(String accession) {
-	this.accession = accession;
-    }
+	public void setBioSequenceId(final Long pBioSequenceId) {
+		bioSequenceId = pBioSequenceId;
+	}
 
-    public Long getBioSequenceId() {
-	return bioSequenceId;
-    }
+	public String getDescription() {
+		return this.description;
+	}
 
-    public void setBioSequenceId(final Long pBioSequenceId) {
-	bioSequenceId = pBioSequenceId;
-    }
+	public void setDescription(String description) {
+		this.description = description;
+	}
 
-    public float getCoverage() {
-	return this.coverage;
-    }
+	public String getGeneName() {
+		return this.geneName;
+	}
 
-    public void setCoverage(float coverage) {
-	this.coverage = coverage;
-    }
+	public void setGeneName(String geneName) {
+		this.geneName = geneName;
+	}
 
-    public String getDescription() {
-	return this.description;
-    }
+	public boolean getIsDecoy() {
+		return isDecoy;
+	}
 
-    public void setDescription(String description) {
-	this.description = description;
-    }
+	public void setIsDecoy(final boolean pIsDecoy) {
+		isDecoy = pIsDecoy;
+	}
 
-    public String getGeneName() {
-	return this.geneName;
-    }
+	public int getPeptideCount() {
+		return peptideCount;
+	}
 
-    public void setGeneName(String geneName) {
-	this.geneName = geneName;
-    }
+	public void setPeptideCount(final int pPeptideCount) {
+		peptideCount = pPeptideCount;
+	}
 
-    public boolean getIsDecoy() {
-	return isDecoy;
-    }
+	public int getPeptideMatchCount() {
+		return this.peptideMatchCount;
+	}
 
-    public void setIsDecoy(final boolean pIsDecoy) {
-	isDecoy = pIsDecoy;
-    }
+	public void setPeptideMatchCount(int peptideMatchCount) {
+		this.peptideMatchCount = peptideMatchCount;
+	}
 
-    public int getPeptideCount() {
-	return peptideCount;
-    }
+	public ResultSet getResultSet() {
+		return this.resultSet;
+	}
 
-    public void setPeptideCount(final int pPeptideCount) {
-	peptideCount = pPeptideCount;
-    }
+	public void setResultSet(ResultSet resultSet) {
+		this.resultSet = resultSet;
+	}
 
-    public int getPeptideMatchCount() {
-	return this.peptideMatchCount;
-    }
+	public float getScore() {
+		return score;
+	}
 
-    public void setPeptideMatchCount(int peptideMatchCount) {
-	this.peptideMatchCount = peptideMatchCount;
-    }
+	public void setScore(final float pScore) {
+		score = pScore;
+	}
 
-    public ResultSet getResultSet() {
-	return this.resultSet;
-    }
+	public long getScoringId() {
+		return scoringId;
+	}
 
-    public void setResultSet(ResultSet resultSet) {
-	this.resultSet = resultSet;
-    }
+	public void setScoringId(final long pScoringId) {
+		scoringId = pScoringId;
+	}
 
-    public float getScore() {
-	return score;
-    }
+	public String getSerializedProperties() {
+		return this.serializedProperties;
+	}
 
-    public void setScore(final float pScore) {
-	score = pScore;
-    }
+	public void setSerializedProperties(String serializedProperties) {
+		this.serializedProperties = serializedProperties;
+	}
 
-    public long getScoringId() {
-	return scoringId;
-    }
+	public Long getTaxonId() {
+		return taxonId;
+	}
 
-    public void setScoringId(final long pScoringId) {
-	scoringId = pScoringId;
-    }
+	public void setTaxonId(final Long pTaxonId) {
+		taxonId = pTaxonId;
+	}
 
-    public String getSerializedProperties() {
-	return this.serializedProperties;
-    }
+	public Set<ProteinSetProteinMatchItem> getProteinSetProteinMatchItems() {
+		return this.proteinSetProteinMatchItems;
+	}
 
-    public void setSerializedProperties(String serializedProperties) {
-	this.serializedProperties = serializedProperties;
-    }
+	public void setProteinSetProteinMatchItems(Set<ProteinSetProteinMatchItem> proteinSetProteinMatchItems) {
+		this.proteinSetProteinMatchItems = proteinSetProteinMatchItems;
+	}
 
-    public Long getTaxonId() {
-	return taxonId;
-    }
+	public boolean getIsLastBioSequence() {
+		return isLastBioSequence;
+	}
 
-    public void setTaxonId(final Long pTaxonId) {
-	taxonId = pTaxonId;
-    }
-
-    public Set<ProteinSetProteinMatchItem> getProteinSetProteinMatchItems() {
-	return this.proteinSetProteinMatchItems;
-    }
-
-    public void setProteinSetProteinMatchItems(Set<ProteinSetProteinMatchItem> proteinSetProteinMatchItems) {
-	this.proteinSetProteinMatchItems = proteinSetProteinMatchItems;
-    }
-
-    public boolean getIsLastBioSequence() {
-	return isLastBioSequence;
-    }
-
-    public void setIsLastBioSequence(final boolean pIsLastBioSequence) {
-	isLastBioSequence = pIsLastBioSequence;
-    }
+	public void setIsLastBioSequence(final boolean pIsLastBioSequence) {
+		isLastBioSequence = pIsLastBioSequence;
+	}
 
 }

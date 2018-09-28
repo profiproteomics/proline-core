@@ -21,12 +21,12 @@ public class ProteinSetProteinMatchItem implements Serializable {
 
 	@EmbeddedId
 	private ProteinSetProteinMatchItemPK id;
-	
+
 	@Column(name = "is_in_subset")
 	private boolean isInSubset;
-	
+
 	private float coverage;
-	
+
 	@ManyToOne
 	@JoinColumn(name = "result_summary_id")
 	private ResultSummary resultSummary;
@@ -56,14 +56,14 @@ public class ProteinSetProteinMatchItem implements Serializable {
 	public void setId(ProteinSetProteinMatchItemPK id) {
 		this.id = id;
 	}
-	
+
 	public boolean getIsInSubset() {
 		return this.isInSubset;
 	}
 
-    public void setIsInSubset(final boolean isInSubset) {
+	public void setIsInSubset(final boolean isInSubset) {
 		this.isInSubset = isInSubset;
-    }
+	}
 
 	public float getCoverage() {
 		return coverage;

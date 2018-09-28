@@ -12,42 +12,42 @@ import javax.persistence.Table;
 @Table(name = "ion_search")
 public class IonSearch extends SearchSetting {
 
-    private static final long serialVersionUID = 1L;
+	private static final long serialVersionUID = 1L;
 
-    @Column(name = "max_protein_mass")
-    private Double maxProteinMass;
+	@Column(name = "max_protein_mass")
+	private Double maxProteinMass;
 
-    @Column(name = "min_protein_mass")
-    private Double minProteinMass;
+	@Column(name = "min_protein_mass")
+	private Double minProteinMass;
 
-    @Column(name = "protein_pi")
-    private Float proteinPi;
+	@Column(name = "protein_pi")
+	private Float proteinPi;
 
-    public IonSearch() {
-    }
+	public IonSearch() {
+	}
 
-    public Double getMaxProteinMass() {
-	return maxProteinMass;
-    }
+	public Double getMaxProteinMass() {
+		return maxProteinMass;
+	}
 
-    public void setMaxProteinMass(final Double pMaxProteinMass) {
-	maxProteinMass = pMaxProteinMass;
-    }
+	public void setMaxProteinMass(final Double pMaxProteinMass) {
+		maxProteinMass = pMaxProteinMass;
+	}
 
-    public Double getMinProteinMass() {
-	return minProteinMass;
-    }
+	public Double getMinProteinMass() {
+		return minProteinMass;
+	}
 
-    public void setMinProteinMass(final Double pMinProteinMass) {
-	minProteinMass = pMinProteinMass;
-    }
+	public void setMinProteinMass(final Double pMinProteinMass) {
+		minProteinMass = pMinProteinMass;
+	}
 
-    public Float getProteinPi() {
-	return proteinPi;
-    }
+	public Float getProteinPi() {
+		return proteinPi;
+	}
 
-    public void setProteinPi(final Float pProteinPi) {
-	proteinPi = pProteinPi;
-    }
+	public void setProteinPi(final Float pProteinPi) {
+		proteinPi = pProteinPi;
+	}
 
 }

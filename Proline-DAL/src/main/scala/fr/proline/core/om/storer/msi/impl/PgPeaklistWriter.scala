@@ -88,7 +88,7 @@ object PgPeaklistWriter extends AbstractSQLPeaklistWriter with LazyLogging {
           spectrum.peaksCount,
           spectrum.properties.map(ProfiJson.serialize(_)),
           peaklistId,
-          spectrum.instrumentConfigId
+          spectrum.fragmentationRuleSetId
         )
         
         // Store spectrum

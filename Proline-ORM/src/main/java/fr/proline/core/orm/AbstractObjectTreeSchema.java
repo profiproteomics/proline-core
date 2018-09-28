@@ -12,9 +12,9 @@ import javax.persistence.Table;
  * 
  */
 @Entity
-@Table(name="object_tree_schema")
+@Table(name = "object_tree_schema")
 public abstract class AbstractObjectTreeSchema implements Serializable {
-	
+
 	protected static final long serialVersionUID = 1L;
 
 	@Id
@@ -38,7 +38,7 @@ public abstract class AbstractObjectTreeSchema implements Serializable {
 
 	@Column(name = "serialized_properties")
 	protected String serializedProperties;
-	
+
 	public String getName() {
 		return name;
 	}

@@ -29,216 +29,215 @@ import fr.profi.util.StringUtils;
 @Table(name = "msi_search")
 public class MsiSearch implements Serializable {
 
-    private static final long serialVersionUID = 1L;
+	private static final long serialVersionUID = 1L;
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
-    private long id;
+	@Id
+	@GeneratedValue(strategy = GenerationType.AUTO)
+	private long id;
 
-    private Timestamp date;
+	private Timestamp date;
 
-    @Column(name = "queries_count")
-    private Integer queriesCount;
+	@Column(name = "queries_count")
+	private Integer queriesCount;
 
-    @Column(name = "result_file_name")
-    private String resultFileName;
+	@Column(name = "result_file_name")
+	private String resultFileName;
 
-    @Column(name = "result_file_directory")
-    private String resultFileDirectory;
+	@Column(name = "result_file_directory")
+	private String resultFileDirectory;
 
-    @Column(name = "searched_sequences_count")
-    private Integer searchedSequencesCount;
+	@Column(name = "searched_sequences_count")
+	private Integer searchedSequencesCount;
 
-    @Column(name = "job_number")
-    private Integer jobNumber;
+	@Column(name = "job_number")
+	private Integer jobNumber;
 
-    @Column(name = "serialized_properties")
-    private String serializedProperties;
+	@Column(name = "serialized_properties")
+	private String serializedProperties;
 
+	private String title;
 
-    private String title;
+	@Column(name = "user_email")
+	private String userEmail;
 
-    @Column(name = "user_email")
-    private String userEmail;
+	@Column(name = "user_name")
+	private String userName;
 
-    @Column(name = "user_name")
-    private String userName;
+	// uni-directional many-to-one association to Peaklist
+	@ManyToOne
+	@JoinColumn(name = "peaklist_id")
+	private Peaklist peaklist;
 
-    // uni-directional many-to-one association to Peaklist
-    @ManyToOne
-    @JoinColumn(name = "peaklist_id")
-    private Peaklist peaklist;
+	// uni-directional many-to-one association to SearchSetting
+	@ManyToOne
+	@JoinColumn(name = "search_settings_id")
+	private SearchSetting searchSetting;
 
-    // uni-directional many-to-one association to SearchSetting
-    @ManyToOne
-    @JoinColumn(name = "search_settings_id")
-    private SearchSetting searchSetting;
+	@ElementCollection
+	@MapKeyColumn(name = "schema_name")
+	@Column(name = "object_tree_id")
+	@CollectionTable(name = "msi_search_object_tree_map", joinColumns = @JoinColumn(name = "msi_search_id", referencedColumnName = "id") )
+	private Map<String, Long> objectTreeIdByName;
 
-    @ElementCollection
-    @MapKeyColumn(name = "schema_name")
-    @Column(name = "object_tree_id")
-    @CollectionTable(name = "msi_search_object_tree_map", joinColumns = @JoinColumn(name = "msi_search_id", referencedColumnName = "id"))
-    private Map<String, Long> objectTreeIdByName;
-
-    public MsiSearch() {
-    }
-
-    public long getId() {
-	return id;
-    }
-
-    public void setId(final long pId) {
-	id = pId;
-    }
-
-    public Timestamp getDate() {
-	Timestamp result = null;
-
-	if (date != null) {
-	    result = (Timestamp) date.clone();
+	public MsiSearch() {
 	}
 
-	return result;
-    }
-
-    public void setDate(final Timestamp pDate) {
-
-	if (pDate == null) {
-	    date = null;
-	} else {
-	    date = (Timestamp) pDate.clone();
+	public long getId() {
+		return id;
 	}
 
-    }
-
-    public Integer getQueriesCount() {
-	return this.queriesCount;
-    }
-
-    public void setQueriesCount(Integer queriesCount) {
-	this.queriesCount = queriesCount;
-    }
-
-    public String getResultFileName() {
-	return resultFileName;
-    }
-
-    public void setResultFileName(String resultFileName) {
-	this.resultFileName = resultFileName;
-    }
-
-    public String getResultFileDirectory() {
-	return resultFileDirectory;
-    }
-
-    public void setResultFileDirectory(String resultFileDirectory) {
-	this.resultFileDirectory = resultFileDirectory;
-    }
-
-    public Integer getJobNumber() {
-	return jobNumber;
-    }
-
-    public void setJobNumber(Integer jobNumber) {
-	this.jobNumber = jobNumber;
-    }
-
-    public Integer getSearchedSequencesCount() {
-	return this.searchedSequencesCount;
-    }
-
-    public void setSearchedSequencesCount(Integer searchedSequencesCount) {
-	this.searchedSequencesCount = searchedSequencesCount;
-    }
-
-    public String getSerializedProperties() {
-	return this.serializedProperties;
-    }
-
-    public void setSerializedProperties(String serializedProperties) {
-	this.serializedProperties = serializedProperties;
-    }
-
-    public String getTitle() {
-	return this.title;
-    }
-
-    public void setTitle(String title) {
-	this.title = title;
-    }
-
-    public String getUserEmail() {
-	return this.userEmail;
-    }
-
-    public void setUserEmail(String userEmail) {
-	this.userEmail = userEmail;
-    }
-
-    public String getUserName() {
-	return this.userName;
-    }
-
-    public void setUserName(String userName) {
-	this.userName = userName;
-    }
-
-    public Peaklist getPeaklist() {
-	return this.peaklist;
-    }
-
-    public void setPeaklist(Peaklist peaklist) {
-	this.peaklist = peaklist;
-    }
-
-    public SearchSetting getSearchSetting() {
-	return this.searchSetting;
-    }
-
-    public void setSearchSetting(SearchSetting searchSetting) {
-	this.searchSetting = searchSetting;
-    }
-
-    void setObjectTreeIdByName(final Map<String, Long> objectTree) {
-	objectTreeIdByName = objectTree;
-    }
-
-    public Map<String, Long> getObjectTreeIdByName() {
-	return objectTreeIdByName;
-    }
-
-    public Long putObject(final String schemaName, final long objectId) {
-
-	if (StringUtils.isEmpty(schemaName)) {
-	    throw new IllegalArgumentException("Invalid schemaName");
+	public void setId(final long pId) {
+		id = pId;
 	}
 
-	Map<String, Long> localObjectTree = getObjectTreeIdByName();
+	public Timestamp getDate() {
+		Timestamp result = null;
 
-	if (localObjectTree == null) {
-	    localObjectTree = new HashMap<String, Long>();
+		if (date != null) {
+			result = (Timestamp) date.clone();
+		}
 
-	    setObjectTreeIdByName(localObjectTree);
+		return result;
 	}
 
-	return localObjectTree.put(schemaName, Long.valueOf(objectId));
-    }
+	public void setDate(final Timestamp pDate) {
 
-    public Long removeObject(final String schemaName) {
-	Long result = null;
+		if (pDate == null) {
+			date = null;
+		} else {
+			date = (Timestamp) pDate.clone();
+		}
 
-	final Map<String, Long> localObjectTree = getObjectTreeIdByName();
-	if (localObjectTree != null) {
-	    result = localObjectTree.remove(schemaName);
 	}
 
-	return result;
-    }
+	public Integer getQueriesCount() {
+		return this.queriesCount;
+	}
 
-    @Override
-    public String toString() {
-	return new ToStringBuilder(this).append("id", getId()).append("title", getTitle())
-		.append("job", getJobNumber()).append("result filename", getResultFileName()).toString();
-    }
+	public void setQueriesCount(Integer queriesCount) {
+		this.queriesCount = queriesCount;
+	}
+
+	public String getResultFileName() {
+		return resultFileName;
+	}
+
+	public void setResultFileName(String resultFileName) {
+		this.resultFileName = resultFileName;
+	}
+
+	public String getResultFileDirectory() {
+		return resultFileDirectory;
+	}
+
+	public void setResultFileDirectory(String resultFileDirectory) {
+		this.resultFileDirectory = resultFileDirectory;
+	}
+
+	public Integer getJobNumber() {
+		return jobNumber;
+	}
+
+	public void setJobNumber(Integer jobNumber) {
+		this.jobNumber = jobNumber;
+	}
+
+	public Integer getSearchedSequencesCount() {
+		return this.searchedSequencesCount;
+	}
+
+	public void setSearchedSequencesCount(Integer searchedSequencesCount) {
+		this.searchedSequencesCount = searchedSequencesCount;
+	}
+
+	public String getSerializedProperties() {
+		return this.serializedProperties;
+	}
+
+	public void setSerializedProperties(String serializedProperties) {
+		this.serializedProperties = serializedProperties;
+	}
+
+	public String getTitle() {
+		return this.title;
+	}
+
+	public void setTitle(String title) {
+		this.title = title;
+	}
+
+	public String getUserEmail() {
+		return this.userEmail;
+	}
+
+	public void setUserEmail(String userEmail) {
+		this.userEmail = userEmail;
+	}
+
+	public String getUserName() {
+		return this.userName;
+	}
+
+	public void setUserName(String userName) {
+		this.userName = userName;
+	}
+
+	public Peaklist getPeaklist() {
+		return this.peaklist;
+	}
+
+	public void setPeaklist(Peaklist peaklist) {
+		this.peaklist = peaklist;
+	}
+
+	public SearchSetting getSearchSetting() {
+		return this.searchSetting;
+	}
+
+	public void setSearchSetting(SearchSetting searchSetting) {
+		this.searchSetting = searchSetting;
+	}
+
+	void setObjectTreeIdByName(final Map<String, Long> objectTree) {
+		objectTreeIdByName = objectTree;
+	}
+
+	public Map<String, Long> getObjectTreeIdByName() {
+		return objectTreeIdByName;
+	}
+
+	public Long putObject(final String schemaName, final long objectId) {
+
+		if (StringUtils.isEmpty(schemaName)) {
+			throw new IllegalArgumentException("Invalid schemaName");
+		}
+
+		Map<String, Long> localObjectTree = getObjectTreeIdByName();
+
+		if (localObjectTree == null) {
+			localObjectTree = new HashMap<String, Long>();
+
+			setObjectTreeIdByName(localObjectTree);
+		}
+
+		return localObjectTree.put(schemaName, Long.valueOf(objectId));
+	}
+
+	public Long removeObject(final String schemaName) {
+		Long result = null;
+
+		final Map<String, Long> localObjectTree = getObjectTreeIdByName();
+		if (localObjectTree != null) {
+			result = localObjectTree.remove(schemaName);
+		}
+
+		return result;
+	}
+
+	@Override
+	public String toString() {
+		return new ToStringBuilder(this).append("id", getId()).append("title", getTitle())
+			.append("job", getJobNumber()).append("result filename", getResultFileName()).toString();
+	}
 
 }

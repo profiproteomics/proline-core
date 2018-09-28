@@ -47,7 +47,6 @@ class SpecificPeptidesPSFilter(
 
       if (nbrPepSpecific < minNbrPep) {
         pSet.isValidated = false
-        logger.info("INVALID PROT SET => "+pSet.toString())
         pSet.peptideSet.getPeptideInstances.foreach(pInst => {
           pInst.validatedProteinSetsCount = pInst.validatedProteinSetsCount-1
         })

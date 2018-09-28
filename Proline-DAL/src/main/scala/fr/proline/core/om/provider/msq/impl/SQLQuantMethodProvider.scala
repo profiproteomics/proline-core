@@ -3,15 +3,14 @@ package fr.proline.core.om.provider.msq.impl
 import fr.profi.jdbc.easy.EasyDBC
 import fr.profi.util.serialization.ProfiJson
 import fr.proline.context.UdsDbConnectionContext
-import fr.proline.core.algo.msq.config.IQuantConfig
 import fr.proline.core.dal.DoJDBCReturningWork
-import fr.proline.core.dal.tables._
 import fr.proline.core.dal.tables.SelectQueryBuilder._
+import fr.proline.core.dal.tables._
 import fr.proline.core.dal.tables.uds.UdsDbDataSetTable
 import fr.proline.core.dal.tables.uds.UdsDbQuantLabelTable
 import fr.proline.core.dal.tables.uds.UdsDbQuantMethodTable
-import fr.proline.core.om.provider.msq.IQuantMethodProvider
 import fr.proline.core.om.model.msq._
+import fr.proline.core.om.provider.msq.IQuantMethodProvider
 
 class SQLQuantMethodProvider(val udsDbCtx: UdsDbConnectionContext) extends IQuantMethodProvider {
   

@@ -1,35 +1,35 @@
 package fr.proline.core.om.provider.msi.impl
 
-import scala.Array.canBuildFrom
 import scala.collection.Seq
+import scala.collection.mutable.ArrayBuffer
 
 import com.typesafe.scalalogging.LazyLogging
 
-import fr.proline.context.DatabaseConnectionContext
+import fr.proline.context.MsiDbConnectionContext
 import fr.proline.core.om.model.msi.{ LocatedPtm, Peptide }
 import fr.proline.core.om.provider.msi.IPeptideProvider
 import fr.proline.core.om.util.PeptidesOMConverterUtil
-import fr.proline.core.orm.ps.repository.{ PsPeptideRepository => pepRepo }
+import fr.proline.core.orm.msi.repository.{ MsiPeptideRepository => MsiPepRepo }
 
 /**
- * ORMPeptideProvider provides access to Peptide stored in PS database.
+ * ORMPeptideProvider provides access to Peptide stored in MSI database.
  *
- * Specified EntityManager should be a PSdb EntityManager
+ * Specified EntityManager should be a MSIdb EntityManager
  */
-class ORMPeptideProvider(val psDbCtx: DatabaseConnectionContext) extends IPeptideProvider with LazyLogging {
+class ORMPeptideProvider(val msiDbCtx: MsiDbConnectionContext) extends IPeptideProvider with LazyLogging {
 
   val converter: PeptidesOMConverterUtil = new PeptidesOMConverterUtil()
 
   def getPeptidesAsOptions(peptideIds: Seq[Long]): Array[Option[Peptide]] = {
-    var foundOMPepBuilder = Array.newBuilder[Option[Peptide]]
-    peptideIds foreach (id => {
-      val psPep = psDbCtx.getEntityManager.find(classOf[fr.proline.core.orm.ps.Peptide], id);
-      if (psPep != null) {
-        foundOMPepBuilder += Some(converter.convertPeptidePsORM2OM(psPep))
-      } else
-        foundOMPepBuilder += None
-    })
-    return foundOMPepBuilder.result()
+    
+    val foundOmPeps = new ArrayBuffer[Option[Peptide]](peptideIds.length)
+    for (pepId <- peptideIds ) {
+      val msiPep = msiDbCtx.getEntityManager.find(classOf[fr.proline.core.orm.msi.Peptide], pepId)
+      val foundOmPep = if (msiPep == null) None else Some(converter.convertPeptideORM2OM(msiPep))
+      foundOmPeps += foundOmPep
+    }
+    
+    foundOmPeps.toArray
   }
 
   def getPeptides(peptideIds: Seq[Long]): Array[Peptide] = {
@@ -43,22 +43,14 @@ class ORMPeptideProvider(val psDbCtx: DatabaseConnectionContext) extends IPeptid
       ptmStr = Peptide.makePtmString(pepPtms)
     }
 
-    val foundORMPep = pepRepo.findPeptideForSequenceAndPtmStr(psDbCtx.getEntityManager, peptideSeq, ptmStr)
+    val foundORMPep = MsiPepRepo.findPeptideForSequenceAndPtmStr(msiDbCtx.getEntityManager, peptideSeq, ptmStr)
 
     if (foundORMPep == null) {
       None
     } else {
-      Some(converter.convertPeptidePsORM2OM(foundORMPep))
+      Some(converter.convertPeptideORM2OM(foundORMPep))
     }
 
-  }
-
-  def getPeptidesAsOptionsBySeqAndPtms(peptideSeqsAndPtms: Seq[(String, Array[LocatedPtm])]): Array[Option[Peptide]] = {
-    var result = Array.newBuilder[Option[Peptide]]
-    peptideSeqsAndPtms.foreach(entry => {
-      result += this.getPeptide(entry._1, entry._2)
-    })
-    result.result
   }
 
 }

@@ -213,7 +213,6 @@ object ResetIdsRsmDuplicator extends IRsmDuplicator with LazyLogging {
         msiMasterProtMatch.setDescription(masterProtMatch.description)
         msiMasterProtMatch.setGeneName(masterProtMatch.geneName)
         msiMasterProtMatch.setScore(masterProtMatch.score)
-        msiMasterProtMatch.setCoverage(masterProtMatch.coverage)
         msiMasterProtMatch.setPeptideCount(masterProtMatch.sequenceMatches.length)
         msiMasterProtMatch.setPeptideMatchCount(masterProtMatch.peptideMatchesCount)
         msiMasterProtMatch.setIsDecoy(masterProtMatch.isDecoy)
@@ -279,14 +278,12 @@ object ResetIdsRsmDuplicator extends IRsmDuplicator with LazyLogging {
         //  }
         //}
 
-        // Determine the typical protein match id using the sequence coverage
+        // Determine the typical protein match id using the accession number
         val masterProteinSet = masterProteinSetOpt.get
         var reprProtMatchId = masterProteinSet.getRepresentativeProteinMatchId
 
         if (reprProtMatchId <= 0) {
-          val reprProtMatchTmpId = masterProteinSet.samesetProteinMatchIds.reduce { (a, b) =>
-            if (masterProtMatchByTmpId(a).coverage > masterProtMatchByTmpId(b).coverage) a else b
-          }
+          val reprProtMatchTmpId = masterProteinSet.samesetProteinMatchIds.minBy(masterProtMatchByTmpId(_).accession)
           reprProtMatchId = masterProtMatchIdByTmpId(reprProtMatchTmpId)
         }
 

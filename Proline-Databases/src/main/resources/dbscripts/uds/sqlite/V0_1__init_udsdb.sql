@@ -4,14 +4,6 @@ CREATE TABLE activation (
                 PRIMARY KEY (type)
 );
 
-CREATE TABLE admin_infos (
-                model_version TEXT(50) NOT NULL,
-                db_creation_date TEXT,
-                model_update_date TEXT,
-                configuration TEXT NOT NULL,
-                PRIMARY KEY (model_version)
-);
-
 CREATE TABLE aggregation (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 child_nature TEXT NOT NULL
@@ -57,7 +49,7 @@ CREATE TABLE data_set (
                 keywords TEXT,
                 creation_timestamp TEXT NOT NULL,
                 modification_log TEXT,
-                children_count INTEGER NOT NULL,
+                child_count INTEGER NOT NULL,
                 serialized_properties TEXT,
                 result_set_id INTEGER,
                 result_summary_id INTEGER,
@@ -194,10 +186,15 @@ CREATE TABLE instrument_config (
                 FOREIGN KEY (activation_type) REFERENCES activation (type)
 );
 
-CREATE TABLE instrument_config_fragmentation_rule_map (
-                instrument_config_id INTEGER NOT NULL,
+CREATE TABLE fragmentation_rule_set (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                name TEXT(200) NOT NULL
+);
+
+CREATE TABLE fragmentation_rule_set_map (
                 fragmentation_rule_id INTEGER NOT NULL,
-                PRIMARY KEY (instrument_config_id, fragmentation_rule_id)
+                fragmentation_rule_set_id INTEGER NOT NULL,
+                PRIMARY KEY (fragmentation_rule_id, fragmentation_rule_set_id)
 );
 
 CREATE TABLE master_quant_channel (
@@ -332,10 +329,8 @@ CREATE TABLE raw_file (
                 sample_name TEXT(250),
                 creation_timestamp TEXT,
                 serialized_properties TEXT,
-                instrument_id INTEGER NOT NULL,
                 owner_id INTEGER NOT NULL,
                 PRIMARY KEY (identifier),
-                FOREIGN KEY (instrument_id) REFERENCES instrument (id),
                 FOREIGN KEY (owner_id) REFERENCES user_account (id)
 );
 
@@ -412,6 +407,8 @@ CREATE UNIQUE INDEX quant_channel_context_idx ON quant_channel (master_quant_cha
 CREATE UNIQUE INDEX quant_channel_number_idx ON quant_channel (master_quant_channel_id,number);
 
 CREATE INDEX object_tree_schema_name_idx ON object_tree (schema_name);
+
+CREATE UNIQUE INDEX fragmentation_rule_set_name_idx ON fragmentation_rule_set ( name );
 
 CREATE UNIQUE INDEX biological_group_number_idx ON biological_group (quantitation_id,number);
 

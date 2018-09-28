@@ -154,7 +154,7 @@ public class DatabaseConnectionContext implements Closeable {
 	}
 
 	/**
-	 * Retrieves current ProlineDatabaseType (UDS, PDI, PS, MSI...).
+	 * Retrieves current ProlineDatabaseType (UDS, LCMS, MSI).
 	 * 
 	 * @return current ProlineDatabaseType or <code>null</code> if not set.
 	 */

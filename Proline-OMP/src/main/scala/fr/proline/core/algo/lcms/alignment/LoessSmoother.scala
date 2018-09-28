@@ -8,7 +8,7 @@ import fr.proline.core.om.model.lcms._
 class LoessSmoother extends IAlnSmoother {
   
   // TODO: smoothingParams are ignored here, maybe we should change the API
-  def smoothLandmarks( landmarks: Seq[Landmark], smoothingParams: AlnSmoothingParams ): Seq[Landmark] = {
+  def smoothLandmarks( landmarks: Seq[Landmark], smoothingParams: Option[AlnSmoothingParams]): Seq[Landmark] = {
     
     // Create an array of landmarks
     val filteredLandmarks = landmarks.groupBy(_.time).map { lmg => computeMedianLandmark(lmg._2) } toArray

@@ -9,7 +9,10 @@ import fr.proline.core.dal.tables.SelectQueryBuilder1
 import fr.proline.core.dal.tables.msi.MsiDbResultSetTable
 import fr.proline.core.om.builder.ResultSetBuilder
 import fr.proline.core.om.model.msi._
-import fr.proline.core.om.provider.msi.{IResultSetProvider, PeptideMatchFilter, ResultSetFilter}
+import fr.proline.core.om.provider.PeptideCacheExecutionContext
+import fr.proline.core.om.provider.msi.IResultSetProvider
+import fr.proline.core.om.provider.msi.PeptideMatchFilter
+import fr.proline.core.om.provider.msi.ResultSetFilter
 
 import scala.collection.mutable.LongMap
 
@@ -17,9 +20,8 @@ trait SQLResultSetLoader extends LazyLogging {
 
   import fr.proline.core.dal.helper.MsiDbHelper
 
-  val msiDbCtx: MsiDbConnectionContext
-  val psDbCtx: DatabaseConnectionContext
-  val udsDbCtx: UdsDbConnectionContext
+  protected val udsDbCtx: UdsDbConnectionContext
+  protected val msiDbCtx: MsiDbConnectionContext
 
   val RSCols = MsiDbResultSetTable.columns
 
@@ -38,6 +40,8 @@ trait SQLResultSetLoader extends LazyLogging {
     pepMatches: Array[PeptideMatch],
     protMatches: Array[ProteinMatch]
   ): Array[ResultSet] = {
+    require(udsDbCtx != null, "udsDbCtx is null")
+
 
     // Build some maps
     val pepMatchesByRsId = pepMatches.groupByLong(_.resultSetId)
@@ -51,7 +55,7 @@ trait SQLResultSetLoader extends LazyLogging {
     val msiSearchById = if (msiSearchIds.isEmpty) LongMap.empty[MSISearch]
     else {
       require(udsDbCtx != null, "An UDSdb context must be provided")
-      val msiSearches = new SQLMsiSearchProvider(udsDbCtx, msiDbCtx, psDbCtx).getMSISearches(msiSearchIds)
+      val msiSearches = new SQLMsiSearchProvider(udsDbCtx, msiDbCtx).getMSISearches(msiSearchIds)
       msiSearches.mapByLong(_.id)
     }
 
@@ -107,10 +111,11 @@ trait SQLResultSetLoader extends LazyLogging {
 }
 
 class SQLResultSetProvider(
-  val msiDbCtx: MsiDbConnectionContext,
-  val psDbCtx: DatabaseConnectionContext,
-  val udsDbCtx: UdsDbConnectionContext
+  val peptideCacheExecContext: PeptideCacheExecutionContext
 ) extends SQLResultSetLoader with IResultSetProvider {
+
+  protected val udsDbCtx: UdsDbConnectionContext = peptideCacheExecContext.getUDSDbConnectionContext
+  protected val msiDbCtx: MsiDbConnectionContext = peptideCacheExecContext.getMSIDbConnectionContext
 
   def getResultSets(
     rsIds: Seq[Long],
@@ -126,14 +131,14 @@ class SQLResultSetProvider(
     )
 
     // Load peptide matches
-    val pepMatchProvider = new SQLPeptideMatchProvider(msiDbCtx, psDbCtx)
+    val pepMatchProvider = new SQLPeptideMatchProvider(peptideCacheExecContext)
     val pepMatches = pepMatchProvider.getResultSetsPeptideMatches(rsIds, pepMatchFilter)
 
     // Load protein matches
     val protMatchProvider = new SQLProteinMatchProvider(msiDbCtx)
     val protMatches = protMatchProvider.getResultSetsProteinMatches(rsIds)
 
-    val resultSets = this.getResultSets(rsIds, false, pepMatches, protMatches)
+    val resultSets = this.getResultSets(rsIds, isValidatedContent = false, pepMatches, protMatches)
     
     logger.info(s"${rsIds.length} result sets loaded in ${ (System.currentTimeMillis() - start) / 1000 } s")
 

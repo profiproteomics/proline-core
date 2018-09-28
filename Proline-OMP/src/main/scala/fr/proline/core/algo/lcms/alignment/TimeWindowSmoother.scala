@@ -7,11 +7,14 @@ class TimeWindowSmoother extends IAlnSmoother {
   import fr.proline.core.om.model.lcms._
   import scala.collection.mutable.ArrayBuffer
   
-  def smoothLandmarks( landmarks: Seq[Landmark], smoothingParams: AlnSmoothingParams ): Seq[Landmark] = {
-   
-    val smoothingTimeInterval = smoothingParams.windowSize
-    val smoothingWindowOverlap = smoothingParams.windowOverlap
-    val minWindowLandmarks = smoothingParams.minWindowLandmarks
+  def smoothLandmarks( landmarks: Seq[Landmark], smoothingParams: Option[AlnSmoothingParams]): Seq[Landmark] = {
+
+    require(smoothingParams.isDefined, "Time range smoother requires window size, window overlaps and minWindowLandmarks parameters")
+    require(smoothingParams.get.minWindowLandmarks.isDefined, "Time range smoother requires minWindowLandmarks parameter")
+
+    val smoothingTimeInterval = smoothingParams.get.windowSize
+    val smoothingWindowOverlap = smoothingParams.get.windowOverlap
+    val minWindowLandmarks = smoothingParams.get.minWindowLandmarks.get
     
     // Create an array of landmarks
     val nbLandmarks = landmarks.length

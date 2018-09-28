@@ -1,17 +1,16 @@
 package fr.proline.core.service.uds
 
 import javax.persistence.EntityManager
+
 import scala.collection.JavaConversions.collectionAsScalaIterable
 import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.LongMap
 import scala.collection.mutable.HashMap
-
 import com.typesafe.scalalogging.LazyLogging
-
 import fr.profi.util.collection._
 import fr.profi.util.primitives._
 import fr.proline.api.service.IService
-import fr.proline.context.{IExecutionContext, DatabaseConnectionContext}
+import fr.proline.context.{DatabaseConnectionContext, IExecutionContext}
 import fr.proline.core.algo.msi._
 import fr.proline.core.algo.msi.filtering._
 import fr.proline.core.algo.msi.scoring.PepSetScoring
@@ -19,9 +18,11 @@ import fr.proline.core.algo.msi.validation._
 import fr.proline.core.dal.context._
 import fr.proline.core.dal.helper.{MsiDbHelper, UdsDbHelper}
 import fr.proline.core.om.model.msi._
+import fr.proline.core.om.provider.PeptideCacheExecutionContext
+import fr.proline.core.om.provider.msi.cache.PeptideCacheRegistry
 import fr.proline.core.om.provider.msi.impl.SQLResultSetProvider
 import fr.proline.core.orm.uds.{Dataset => UdsDataset}
-import fr.proline.core.service.msi.{ResultSetValidator, ResultSetMerger, ResultSummaryMerger, ValidationConfig}
+import fr.proline.core.service.msi.{ResultSetMerger, ResultSetValidator, ResultSummaryMerger, ValidationConfig}
 import fr.proline.core.om.provider.msi.ResultSetFilter
 
 // Singleton for Proline-Cortex
@@ -79,7 +80,6 @@ class IdentificationTreeValidator(
   //require( execContext.isJPA, "a JPA execution context is needed" )
 
   private val udsDbCtx = execContext.getUDSDbConnectionContext()
-  private val psDbCtx = execContext.getPSDbConnectionContext()
   private val msiDbCtx = execContext.getMSIDbConnectionContext()
   private val msiDbHelper = new MsiDbHelper(msiDbCtx)
 
@@ -89,18 +89,18 @@ class IdentificationTreeValidator(
   def runService(): Boolean = {
 
     // Retrieve UDSdb entity manager
-    val udsEM = udsDbCtx.getEntityManager()
+    val udsEM = udsDbCtx.getEntityManager
 
     // Retrieve identification datasets ids
     val udsIdentTreeDS = udsEM.find(classOf[UdsDataset], identTreeId)
     //println("udsIdentTreeDS.getChildren",udsIdentTreeDS.getChildren)
     val projectId = udsIdentTreeDS.getProject.getId
-    val udsIdentDatasets = udsIdentTreeDS.getIdentificationDatasets()
+    val udsIdentDatasets = udsIdentTreeDS.getIdentificationDatasets
 
     // Retrieve target result sets ids
-    val targetRsIds = udsIdentDatasets.map(_.getResultSetId.longValue).toArray
+    val targetRsIds: Array[Long] = udsIdentDatasets.map(_.getResultSetId.longValue).toArray
     this.logger.debug("TARGET RS ids count = " + targetRsIds.length)
-    this.logger.debug("First TARGET RS id = " + targetRsIds(0))
+    this.logger.debug("first RS id = " + targetRsIds(0))
 
     // Retrieve decoy RS ids if they exists
     val decoyRsIdByTargetRsId = msiDbHelper.getDecoyRsIdByTargetRsId(targetRsIds)
@@ -118,8 +118,7 @@ class IdentificationTreeValidator(
     val rsFilterOpt = if (pepMatchFilters.isEmpty) None
     else {
       pepMatchFilters.get.find { filter =>
-        // TODO: rename RANK to PRETTY_RANK
-        filter.filterParameter == PepMatchFilterParams.RANK.toString()
+        filter.filterParameter == PepMatchFilterParams.PRETTY_RANK.toString
       } map { rankFilter =>
         val maxPrettyRank = toInt(rankFilter.getThresholdValue())
         new ResultSetFilter(maxPeptideMatchPrettyRank = Some(maxPrettyRank))
@@ -129,7 +128,7 @@ class IdentificationTreeValidator(
     else logger.debug("Unable to retrieve a rank filter")
     
     // Load result sets
-    val rsProvider = new SQLResultSetProvider(msiDbCtx, psDbCtx, udsDbCtx)
+    val rsProvider = new SQLResultSetProvider(PeptideCacheExecutionContext(execContext))
     
     // Create a mapping between result set ids and computed result summaries
     val rsmByRsId = new LongMap[ResultSummary]
@@ -156,7 +155,7 @@ class IdentificationTreeValidator(
         this.logger.debug("Validating target result set...")
         val rsm = this._validateResultSet(targetRS)
         
-        if (mergeResultSets == false) {
+        if (!mergeResultSets) {
           
           this.logger.debug("Removing non-validated entities from target RS and decoy RS...")
           val validatedRsOpt = rsm.getValidatedResultSet()
@@ -237,7 +236,7 @@ class IdentificationTreeValidator(
    * Validates dataset tree recursively from leaves to root
    */
   private def _validateDatasetTree(udsEM: EntityManager, udsDatasets: List[UdsDataset], rsmByRsId: LongMap[ResultSummary]) {
-    if (udsDatasets.length == 1 && udsDatasets(0).getParentDataset == null) return
+    if (udsDatasets.length == 1 && udsDatasets.head.getParentDataset == null) return
 
     this.logger.info(s"Validating tree node with ${udsDatasets.length} dataset(s)")
 

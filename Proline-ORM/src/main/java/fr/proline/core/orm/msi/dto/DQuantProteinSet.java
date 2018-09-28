@@ -8,17 +8,19 @@ public class DQuantProteinSet {
 	Integer peptideMatchesCount;
 	Long quantChannelId;
 	Long proteinSetId = 0l;
-    Long proteinMatchId = 0l;
-    
-    
-    // Necessary Construtor for JSON parsing !
+	Long proteinMatchId = 0l;
+
+	// Necessary Construtor for JSON parsing !
 	protected DQuantProteinSet() {
 		super();
 	}
-	
-	
-	public DQuantProteinSet(Float rawAbundance, Float abundance, Integer selectionLevel,
-			Integer peptideMatchesCount, Long quantChannelId) {
+
+	public DQuantProteinSet(
+		Float rawAbundance,
+		Float abundance,
+		Integer selectionLevel,
+		Integer peptideMatchesCount,
+		Long quantChannelId) {
 		super();
 		this.rawAbundance = rawAbundance;
 		this.abundance = abundance;
@@ -26,34 +28,43 @@ public class DQuantProteinSet {
 		this.peptideMatchesCount = peptideMatchesCount;
 		this.quantChannelId = quantChannelId;
 	}
-	
+
 	public Float getRawAbundance() {
 		return rawAbundance;
 	}
+
 	public void setRawAbundance(Float rawAbundance) {
 		this.rawAbundance = rawAbundance;
 	}
+
 	public Float getAbundance() {
 		return abundance;
 	}
+
 	public void setAbundance(Float abundance) {
 		this.abundance = abundance;
 	}
+
 	public Integer getSelectionLevel() {
 		return selectionLevel;
 	}
+
 	public void setSelectionLevel(Integer selectionLevel) {
 		this.selectionLevel = selectionLevel;
 	}
+
 	public Integer getPeptideMatchesCount() {
 		return peptideMatchesCount;
 	}
+
 	public void setPeptideMatchesCount(Integer peptideMatchesCount) {
 		this.peptideMatchesCount = peptideMatchesCount;
 	}
+
 	public Long getQuantChannelId() {
 		return quantChannelId;
 	}
+
 	public void setQuantChannelId(Long quantChannelId) {
 		this.quantChannelId = quantChannelId;
 	}
@@ -73,7 +84,5 @@ public class DQuantProteinSet {
 	public void setProteinMatchId(Long proteinMatchId) {
 		this.proteinMatchId = proteinMatchId;
 	}
-	
-	
-	
+
 }

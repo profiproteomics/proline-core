@@ -126,7 +126,7 @@ public abstract class DatabaseTestCase {
 		return m_connector;
 	}
 
-	public void initDatabase() throws Exception, ClassNotFoundException {
+	public void initDatabase() throws Exception {
 		final DatabaseTestConnector connector = getConnector();
 
 		DatabaseUpgrader.upgradeDatabase(connector, getMigrationScriptsLocation(), getMigrationClassLocation(), false);

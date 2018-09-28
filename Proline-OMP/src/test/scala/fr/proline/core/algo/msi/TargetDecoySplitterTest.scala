@@ -1,54 +1,21 @@
 package fr.proline.core.algo.msi
 
-import scala.collection.mutable.HashMap
-
-import org.junit.Assert.assertEquals
-import org.junit.Assert.assertTrue
-import org.junit.Ignore
-
 import com.typesafe.scalalogging.StrictLogging
-
 import fr.proline.core.dbunit._
 import fr.proline.core.om.model.msi.PeptideMatch
 import fr.proline.core.om.model.msi.ResultSet
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
+import org.junit.Test
 
-/*object TargetDecoySplitterTest extends AbstractDatasetImporterTestCase with StrictLogging {
-
-  val driverType = DriverType.H2
-  val useJPA = false
-
-  private var _datFileName: String = "/dat_samples/STR_F136482_CTD.dat"
-  private var absoluteDatFileNameSet = false
-  def datFileName_=(value: String): Unit = {
-    _datFileName = value
-    absoluteDatFileNameSet = true
-  }
-
-  def datFileName = _datFileName
-
-  private def buildFakeParserContext: ProviderDecoratedExecutionContext = {
-    val executionContext = new BasicExecutionContext(null, null, null, null, null)
-
-    val parserContext = ProviderDecoratedExecutionContext(executionContext) // Use Object factory
-
-    parserContext.putProvider(classOf[IPeptideProvider], PeptideFakeProvider)
-    parserContext.putProvider(classOf[IPTMProvider], PTMFakeProvider)
-    parserContext.putProvider(classOf[IProteinProvider], ProteinFakeProvider)
-    parserContext.putProvider(classOf[ISeqDatabaseProvider], SeqDbFakeProvider)
-
-    parserContext
-  }
-  
-}*/
+import scala.collection.mutable.HashMap
 
 // TODO: move into fr.proline.core.algo.msi
 class TargetDecoySplitterTest extends StrictLogging {
   
   val resultFile = DbUnitResultFileUtils.loadDbUnitResultFile(STR_F136482_CTD)
 
-  // THIS TEST THROWS A NULL POINTER EXCEPTION
-  
-  @Ignore
+  @Test
   def testSplit() {
 
     val targetRS = resultFile.getResultSet(false)
@@ -98,10 +65,10 @@ class TargetDecoySplitterTest extends StrictLogging {
     }
     
     assertEquals(nbrQueries, pepMatchesByMsQueryInitialId.size)
-    assertEquals(19, pepMatchesByMsQueryInitialId.get(145).get.length)
+    assertEquals(37, pepMatchesByMsQueryInitialId.get(-145).get.length)
     
-    val pepMatchQ145 = pepMatchesByMsQueryInitialId.get(145).get.filter(_.peptide.sequence == "VAIPK")
-    assertEquals(2, pepMatchQ145.size)
+    val pepMatchQ145 = pepMatchesByMsQueryInitialId.get(-145).get.filter(_.peptide.sequence == "VAIPK")
+    assertEquals(4, pepMatchQ145.size)
     assertEquals(pepMatchQ145(0).peptideId, pepMatchQ145(1).peptideId)
 
   }

@@ -12,35 +12,35 @@ import fr.profi.util.StringUtils;
 
 public final class UdsEnzymeRepository {
 
-    private UdsEnzymeRepository() {
-    }
-
-    public static Enzyme findEnzymeForName(final EntityManager udsEm, final String name) {
-
-	JPAUtils.checkEntityManager(udsEm);
-
-	if (StringUtils.isEmpty(name)) {
-	    throw new IllegalArgumentException("Invalid name");
+	private UdsEnzymeRepository() {
 	}
 
-	Enzyme result = null;
+	public static Enzyme findEnzymeForName(final EntityManager udsEm, final String name) {
 
-	final TypedQuery<Enzyme> query = udsEm.createNamedQuery("findUdsEnzymeForName", Enzyme.class);
-	query.setParameter("name", name.toUpperCase());
+		JPAUtils.checkEntityManager(udsEm);
 
-	final List<Enzyme> enzymes = query.getResultList();
+		if (StringUtils.isEmpty(name)) {
+			throw new IllegalArgumentException("Invalid name");
+		}
 
-	if ((enzymes != null) && !enzymes.isEmpty()) {
+		Enzyme result = null;
 
-	    if (enzymes.size() == 1) {
-		result = enzymes.get(0);
-	    } else {
-		throw new NonUniqueResultException("There are more than one Enzyme for given name");
-	    }
+		final TypedQuery<Enzyme> query = udsEm.createNamedQuery("findUdsEnzymeForName", Enzyme.class);
+		query.setParameter("name", name.toUpperCase());
 
+		final List<Enzyme> enzymes = query.getResultList();
+
+		if ((enzymes != null) && !enzymes.isEmpty()) {
+
+			if (enzymes.size() == 1) {
+				result = enzymes.get(0);
+			} else {
+				throw new NonUniqueResultException("There are more than one Enzyme for given name");
+			}
+
+		}
+
+		return result;
 	}
-
-	return result;
-    }
 
 }

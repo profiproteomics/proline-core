@@ -1,19 +1,13 @@
 package fr.proline.core.service.msq.quantify
 
-import scala.collection.JavaConversions.collectionAsScalaIterable
-import scala.collection.JavaConversions.setAsJavaSet
-import scala.collection.JavaConverters.asJavaCollectionConverter
-import scala.collection.mutable.ArrayBuffer
-import scala.collection.mutable.HashMap
-import scala.collection.mutable.LongMap
 import com.typesafe.scalalogging.LazyLogging
 import fr.profi.jdbc.easy._
 import fr.profi.mzdb.MzDbReader
 import fr.profi.util.collection._
 import fr.proline.context.IExecutionContext
-import fr.proline.core.algo.msq.config.ILabelFreeQuantConfig
-import fr.proline.core.dal.DoJDBCWork
+import fr.proline.core.util.collection._
 import fr.proline.core.dal.DoJDBCReturningWork
+import fr.proline.core.dal.DoJDBCWork
 import fr.proline.core.dal.tables.SelectQueryBuilder._
 import fr.proline.core.dal.tables.SelectQueryBuilder1
 import fr.proline.core.dal.tables.lcms.LcmsDbFeatureMs2EventTable
@@ -22,22 +16,25 @@ import fr.proline.core.dal.tables.msi.MsiDbResultSummaryTable
 import fr.proline.core.dal.tables.msi.MsiDbSpectrumTable
 import fr.proline.core.om.model.lcms.LcMsRun
 import fr.proline.core.om.model.lcms.LcMsScan
-import fr.proline.core.om.model.lcms.MapSet
 import fr.proline.core.om.model.lcms.RawFile
-import fr.proline.core.om.model.msi.ResultSummary
 import fr.proline.core.om.model.msi.Peptide
 import fr.proline.core.om.model.msi.PeptideMatch
+import fr.proline.core.om.model.msi.ResultSummary
 import fr.proline.core.om.model.msi.Spectrum
+import fr.proline.core.om.provider.PeptideCacheExecutionContext
+import fr.proline.core.om.provider.ProviderDecoratedExecutionContext
+import fr.proline.core.om.provider.lcms.IRunProvider
 import fr.proline.core.om.provider.lcms.impl.SQLRunProvider
 import fr.proline.core.om.provider.lcms.impl.SQLScanSequenceProvider
-import fr.proline.core.om.provider.msi.impl.SQLLazyResultSummaryProvider
-import fr.proline.core.om.provider.msi.impl.SQLSpectrumProvider
-import fr.proline.core.orm.msi.{ ResultSet => MsiResultSet }
-import fr.proline.core.orm.uds.MasterQuantitationChannel
-import fr.proline.core.orm.uds.{RawFile => UdsRawFile}
 import fr.proline.core.om.provider.msi.impl.SQLResultSummaryProvider
-import fr.proline.core.om.provider.lcms.IRunProvider
-import fr.proline.core.om.provider.ProviderDecoratedExecutionContext
+import fr.proline.core.om.provider.msi.impl.SQLSpectrumProvider
+import fr.proline.core.orm.uds.MasterQuantitationChannel
+
+import scala.collection.JavaConversions.collectionAsScalaIterable
+import scala.collection.JavaConverters.asJavaCollectionConverter
+import scala.collection.mutable
+import scala.collection.mutable.ArrayBuffer
+import scala.collection.mutable.LongMap
 
 class MasterQuantChannelEntityCache(
   executionContext: IExecutionContext,
@@ -49,7 +46,6 @@ class MasterQuantChannelEntityCache(
   protected val udsEm = udsDbCtx.getEntityManager
   protected val msiDbCtx = executionContext.getMSIDbConnectionContext
   protected val msiEm = msiDbCtx.getEntityManager
-  protected val psDbCtx = executionContext.getPSDbConnectionContext
   protected lazy val lcmsDbCtx = executionContext.getLCMSDbConnectionContext
   
   protected lazy val lcMsRunProvider: IRunProvider = {
@@ -70,74 +66,71 @@ class MasterQuantChannelEntityCache(
   val quantChannelIds = udsQuantChannels.map { _.getId } toArray
   val quantChannelsCount = quantChannelIds.length
   
-  val identRsmIds = udsQuantChannels.map { udsQuantChannel =>
-    val qcId = udsQuantChannel.getId()
+  val quantChannelRsmIds = udsQuantChannels.map { udsQuantChannel =>
+    val qcId = udsQuantChannel.getId
     val identRsmId = udsQuantChannel.getIdentResultSummaryId
-    require(identRsmId != 0, "the quant_channel with id='" + qcId + "' is not assocciated with an identification result summary")
-
+    require(identRsmId != 0, "the quant_channel with id='" + qcId + "' is not associated with an identification result summary")
     identRsmId
-
   }.toList.distinct
 
-  require(identRsmIds.length > 0, "result sets have to be validated first")
+  require(quantChannelRsmIds.nonEmpty, "result sets have to be validated first")
 
-  val identRsIdByRsmId = {
+  private val quantChannelsRsIdByRsmId = {
     DoJDBCReturningWork.withEzDBC(msiDbCtx) { msiEzDBC =>
-      
+
       val sqlQuery = new SelectQueryBuilder1(MsiDbResultSummaryTable).mkSelectQuery( (t,c) =>
-        List(t.ID,t.RESULT_SET_ID) -> "WHERE "~ t.ID ~" IN ("~ identRsmIds.mkString(",") ~")"
+        List(t.ID,t.RESULT_SET_ID) -> "WHERE "~ t.ID ~" IN ("~ quantChannelRsmIds.mkString(",") ~")"
       )
       msiEzDBC.select(sqlQuery) { r => r.nextLong -> r.nextLong } toLongMap()
     }
   }
 
-  val msiIdentResultSets = {
-    val identRsIds = identRsIdByRsmId.values.asJavaCollection
-    msiEm.createQuery("FROM fr.proline.core.orm.msi.ResultSet WHERE id IN (:ids)",
-      classOf[fr.proline.core.orm.msi.ResultSet])
+  val quantChannelMsiResultSets = {
+    val identRsIds = quantChannelsRsIdByRsmId.values.asJavaCollection
+    msiEm.createQuery("FROM fr.proline.core.orm.msi.ResultSet WHERE id IN (:ids)", classOf[fr.proline.core.orm.msi.ResultSet])
       .setParameter("ids", identRsIds).getResultList().toList
   }
-  
-  val identResultSummaries = {
+
+  val quantChannelResultSummaries = {
 
     // Load the result summaries corresponding to the quant channels
     this.logger.info("loading result summaries...")
 
     // Instantiate a RSM provider
-    val rsmProvider = new SQLResultSummaryProvider(msiDbCtx, psDbCtx,udsDbCtx)
-    rsmProvider.getResultSummaries( identRsmIds, true)
-    
+    val rsmProvider = new SQLResultSummaryProvider(PeptideCacheExecutionContext(executionContext))
+    rsmProvider.getResultSummaries( quantChannelRsmIds, loadResultSet = true)
+
   }
 
   // Retrieve corresponding peaklist ids
-  // TODO: update the ORM definition so that peaklistId is available from msiSearch object    
+  // TODO: update the ORM definition so that peaklistId is available from msiSearch object
   //protected lazy val identRsIdByPeaklistId = msiIdentResultSets.toLongMap { rs => rs.getMsiSearch.getPeaklist.getId -> rs.getId }
   //protected lazy val peaklistIds = this.identRsIdByPeaklistId.keys.toList
   //val peaklistIds = msiIdentResultSets map { _.getMsiSearch().getPeaklist().getId() }
-  
-  lazy val peaklistIdByIdentRsId = msiIdentResultSets.toLongMapWith { rs => rs.getId -> rs.getMsiSearch.getPeaklist.getId }
 
-  lazy val runIdByRsmId = {
+  lazy val peaklistIdByIdentRsId: mutable.LongMap[Long] = quantChannelMsiResultSets.toLongMapWith { rs => rs.getId -> rs.getMsiSearch.getPeaklist.getId }
+
+  lazy val runIdByQCRsmId = {
     Map() ++ udsQuantChannels.map { udsQC =>
-      udsQC.getIdentResultSummaryId() -> udsQC.getRun().getId()
+      udsQC.getIdentResultSummaryId -> udsQC.getRun.getId
     }
   }
-  
-  lazy val runById: LongMap[LcMsRun] = this.getLcMsRuns.mapByLong(_.id)
-  
+
+  lazy val runById: LongMap[LcMsRun] = this.getSortedLcMsRuns.mapByLong(_.id)
+
   lazy val rawFileByPeaklistId: LongMap[RawFile] = udsQuantChannels.toList.toLongMapWith { udsQuantChannel =>
-    val identRsId = identRsIdByRsmId(udsQuantChannel.getIdentResultSummaryId)
+    val identRsId = quantChannelsRsIdByRsmId(udsQuantChannel.getIdentResultSummaryId)
     peaklistIdByIdentRsId(identRsId) -> runById(udsQuantChannel.getRun.getId).rawFile
     //peaklistIdByIdentRsId(identRsId) -> udsQuantChannel.getRun().getRawFile()
   }
-  
+
   lazy val ms2SpectrumDescriptors = {
     new Ms2SpectrumDescriptorProvider(executionContext).loadMs2SpectrumDescriptors(rawFileByPeaklistId)
   }
-  
+
   lazy val spectrumIdByRsIdAndScanNumber = {
-    
-    val identRsIdByPeaklistId = msiIdentResultSets.toLongMapWith { rs => rs.getMsiSearch.getPeaklist.getId -> rs.getId }
+
+    val identRsIdByPeaklistId = quantChannelMsiResultSets.toLongMapWith { rs => rs.getMsiSearch.getPeaklist.getId -> rs.getId }
 
     // Map spectrum id by scan number and result set id
     val spectrumIdMap = LongMap[LongMap[Long]]()
@@ -155,7 +148,7 @@ class MasterQuantChannelEntityCache(
 
     spectrumIdMap
   }
-  
+
   lazy val scanNumberBySpectrumId = {
 
     // Map spectrum id by scan number and result set id
@@ -166,28 +159,28 @@ class MasterQuantChannelEntityCache(
 
       val scanNumber = spectrumDescriptor.firstScan
       val spectrumId = spectrumDescriptor.id
-      
+
       scanNumberBySpectrumId += spectrumId -> scanNumber
     }
 
     scanNumberBySpectrumId.result
   }
-  
+
   private var peptideByRunIdAndScanNumber: LongMap[LongMap[Peptide]] = null
   private var psmByRunIdAndScanNumber: LongMap[LongMap[ArrayBuffer[PeptideMatch]]] = null
-  
+
   def getPepAndPsmByRunIdAndScanNumber(mergedRsm: ResultSummary) : (LongMap[LongMap[Peptide]], LongMap[LongMap[ArrayBuffer[PeptideMatch]]]) = {
     if(peptideByRunIdAndScanNumber == null) {
       val validPepIdSet = mergedRsm.peptideInstances.withFilter(_.validatedProteinSetsCount > 0).map(_.peptideId).toSet
-      
+
       val peptideMap = new collection.mutable.LongMap[LongMap[Peptide]]()
       val psmMap = new collection.mutable.LongMap[LongMap[ArrayBuffer[PeptideMatch]]]()
-      
-      for( rsm <- this.identResultSummaries ) {
-        val runId = runIdByRsmId(rsm.id)
+
+      for( rsm <- this.quantChannelResultSummaries ) {
+        val runId = runIdByQCRsmId(rsm.id)
         val valPepMatchIds = rsm.peptideInstances.withFilter(_.validatedProteinSetsCount > 0).flatMap( _.getPeptideMatchIds )
         val pepMatchById = rsm.resultSet.get.getPeptideMatchById
-  
+
         for (valPepMatchId <- valPepMatchIds) {
           val valPepMatch = pepMatchById(valPepMatchId)
           if (validPepIdSet.contains(valPepMatch.peptideId)) {
@@ -201,12 +194,12 @@ class MasterQuantChannelEntityCache(
       peptideByRunIdAndScanNumber = peptideMap
       psmByRunIdAndScanNumber = psmMap
     }
-    
+
     (peptideByRunIdAndScanNumber, psmByRunIdAndScanNumber)
   }
-  
+
   // TODO: load scan sequences here ???
-  def getLcMsRuns(): Array[LcMsRun] = {
+  def getSortedLcMsRuns(): Array[LcMsRun] = {
     
    // Retrieve master quant channels sorted by their number
     val sortedQuantChannels = udsMasterQuantChannel.getQuantitationChannels()
@@ -216,10 +209,10 @@ class MasterQuantChannelEntityCache(
 
     // Load the LC-MS runs
     var runNumber = 0
-    lcMsRunProvider.getRuns(runIds, loadScanSequence = false).map { lcMsRun =>
+    lcMsRunProvider.getRuns(runIds, loadScanSequence = false).sortByLongSeq(runIds, _.id).map { lcMsRun =>
       runNumber += 1
       lcMsRun.copy(number = runNumber)
-    }
+    }.toArray
   }
   
   // TODO: move to SQLScanSequenceProvider provider

@@ -18,70 +18,70 @@ import javax.persistence.Table;
 @Table(name = "ratio_definition")
 public class RatioDefinition implements Serializable {
 
-    private static final long serialVersionUID = 1L;
+	private static final long serialVersionUID = 1L;
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
-    private long id;
+	@Id
+	@GeneratedValue(strategy = GenerationType.AUTO)
+	private long id;
 
-    private int number;
+	private int number;
 
-    // uni-directional many-to-one association to BiologicalGroup
-    @ManyToOne
-    @JoinColumn(name = "numerator_id")
-    private BiologicalGroup numerator;
+	// uni-directional many-to-one association to BiologicalGroup
+	@ManyToOne
+	@JoinColumn(name = "numerator_id")
+	private BiologicalGroup numerator;
 
-    // uni-directional many-to-one association to BiologicalGroup
-    @ManyToOne
-    @JoinColumn(name = "denominator_id")
-    private BiologicalGroup denominator;
+	// uni-directional many-to-one association to BiologicalGroup
+	@ManyToOne
+	@JoinColumn(name = "denominator_id")
+	private BiologicalGroup denominator;
 
-    // bi-directional many-to-one association to GroupSetup
-    @ManyToOne
-    @JoinColumn(name = "group_setup_id")
-    private GroupSetup groupSetup;
+	// bi-directional many-to-one association to GroupSetup
+	@ManyToOne
+	@JoinColumn(name = "group_setup_id")
+	private GroupSetup groupSetup;
 
-    public RatioDefinition() {
-    }
+	public RatioDefinition() {
+	}
 
-    public long getId() {
-	return id;
-    }
+	public long getId() {
+		return id;
+	}
 
-    public void setId(final long pId) {
-	id = pId;
-    }
+	public void setId(final long pId) {
+		id = pId;
+	}
 
-    public int getNumber() {
-	return number;
-    }
+	public int getNumber() {
+		return number;
+	}
 
-    public void setNumber(final int pNumber) {
-	number = pNumber;
-    }
+	public void setNumber(final int pNumber) {
+		number = pNumber;
+	}
 
-    public BiologicalGroup getNumerator() {
-	return this.numerator;
-    }
+	public BiologicalGroup getNumerator() {
+		return this.numerator;
+	}
 
-    public void setNumerator(BiologicalGroup numerator) {
-	this.numerator = numerator;
-    }
+	public void setNumerator(BiologicalGroup numerator) {
+		this.numerator = numerator;
+	}
 
-    public BiologicalGroup getDenominator() {
-	return this.denominator;
-    }
+	public BiologicalGroup getDenominator() {
+		return this.denominator;
+	}
 
-    public void setDenominator(BiologicalGroup denominator) {
-	this.denominator = denominator;
-    }
+	public void setDenominator(BiologicalGroup denominator) {
+		this.denominator = denominator;
+	}
 
-    public GroupSetup getGroupSetup() {
-	return this.groupSetup;
-    }
+	public GroupSetup getGroupSetup() {
+		return this.groupSetup;
+	}
 
-    public void setGroupSetup(GroupSetup groupSetup) {
-	this.groupSetup = groupSetup;
-    }
+	public void setGroupSetup(GroupSetup groupSetup) {
+		this.groupSetup = groupSetup;
+	}
 
 }

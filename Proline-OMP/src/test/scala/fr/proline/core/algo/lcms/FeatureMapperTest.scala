@@ -41,7 +41,7 @@ class FeatureMapperTest extends JUnitSuite with MustMatchers with StrictLogging 
     assert( mapSet.childMaps.length === nbMaps )
     
     val childMaps = mapSet.childMaps
-    val ftMappingParams = FeatureMappingParams(mozTol=10.0, mozTolUnit= "PPM", timeTol=20f )
+    val ftMappingParams = FeatureMappingParams(mozTol = Some(10.0), mozTolUnit = Some("PPM"), timeTol = 20f)
     val ftMapping = FeatureMapper.computePairwiseFtMapping(
       childMaps(0).features, childMaps(1).features, ftMappingParams, false
     )

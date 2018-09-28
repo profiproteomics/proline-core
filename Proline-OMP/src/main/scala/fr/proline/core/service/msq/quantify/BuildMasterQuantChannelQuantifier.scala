@@ -37,6 +37,7 @@ object BuildMasterQuantChannelQuantifier {
       case scConfig: SpectralCountConfig => {
         new WeightedSpectralCountQuantifier(
           executionContext = executionContext,
+          experimentalDesign = experimentalDesign,
           udsMasterQuantChannel = udsMasterQuantChannel,
           quantConfig = scConfig
         )

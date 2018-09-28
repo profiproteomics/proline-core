@@ -4,47 +4,46 @@ import java.io.Serializable;
 
 import javax.persistence.*;
 
-
 /**
  * The persistent class for the processed_map_feature_item database table.
  * 
  */
 @Entity
-@Table(name="processed_map_feature_item")
-@NamedQuery(name="ProcessedMapFeatureItem.findAll", query="SELECT p FROM ProcessedMapFeatureItem p")
+@Table(name = "processed_map_feature_item")
+@NamedQuery(name = "ProcessedMapFeatureItem.findAll", query = "SELECT p FROM ProcessedMapFeatureItem p")
 public class ProcessedMapFeatureItem implements Serializable {
 	private static final long serialVersionUID = 1L;
 
 	@EmbeddedId
 	private ProcessedMapFeatureItemPK id;
 
-	@Column(name="calibrated_moz")
+	@Column(name = "calibrated_moz")
 	private double calibratedMoz;
 
-	@Column(name="corrected_elution_time")
+	@Column(name = "corrected_elution_time")
 	private float correctedElutionTime;
 
-	@Column(name="is_clusterized")
+	@Column(name = "is_clusterized")
 	private Boolean isClusterized;
 
-	@Column(name="normalized_intensity")
+	@Column(name = "normalized_intensity")
 	private float normalizedIntensity;
 
-	@Column(name="selection_level")
+	@Column(name = "selection_level")
 	private Integer selectionLevel;
 
-	@Column(name="serialized_properties")
+	@Column(name = "serialized_properties")
 	private String serializedProperties;
 
 	//uni-directional many-to-one association to Feature
 	@ManyToOne
-	@JoinColumn(name="feature_id")
+	@JoinColumn(name = "feature_id")
 	@MapsId("featureId")
 	private Feature feature;
 
 	//bi-directional many-to-one association to ProcessedMap
 	@ManyToOne
-	@JoinColumn(name="processed_map_id")
+	@JoinColumn(name = "processed_map_id")
 	@MapsId("processedMapId")
 	private ProcessedMap processedMap;
 

@@ -1,17 +1,17 @@
 package fr.proline.core.om.provider.lcms.impl
 
-import scala.collection.mutable.ArrayBuffer
-
 import fr.profi.jdbc.ResultSetRow
+import fr.profi.util.primitives._
 import fr.proline.context.LcMsDbConnectionContext
-import fr.proline.core.dal.{ DoJDBCWork, DoJDBCReturningWork }
+import fr.proline.core.dal.DoJDBCReturningWork
 import fr.proline.core.dal.tables.SelectQueryBuilder._
 import fr.proline.core.dal.tables.SelectQueryBuilder1
-import fr.proline.core.dal.tables.lcms.{ LcmsDbScanSequenceTable, LcmsDbScanTable }
+import fr.proline.core.dal.tables.lcms.LcmsDbScanSequenceTable
+import fr.proline.core.dal.tables.lcms.LcmsDbScanTable
 import fr.proline.core.om.model.lcms._
 import fr.proline.core.om.provider.lcms.IScanSequenceProvider
-import fr.profi.util.sql._
-import fr.profi.util.primitives._
+
+import scala.collection.mutable.ArrayBuffer
 
 class SQLScanSequenceProvider(val lcmsDbCtx: LcMsDbConnectionContext) extends IScanSequenceProvider {
   

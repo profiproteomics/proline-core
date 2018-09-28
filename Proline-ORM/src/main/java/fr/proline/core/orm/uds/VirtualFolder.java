@@ -21,102 +21,102 @@ import javax.persistence.Table;
 @Table(name = "virtual_folder")
 public class VirtualFolder implements Serializable {
 
-    private static final long serialVersionUID = 1L;
+	private static final long serialVersionUID = 1L;
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
-    private long id;
+	@Id
+	@GeneratedValue(strategy = GenerationType.AUTO)
+	private long id;
 
-    private String name;
+	private String name;
 
-    private String path;
+	private String path;
 
-    @Column(name = "serialized_properties")
-    private String serializedProperties;
+	@Column(name = "serialized_properties")
+	private String serializedProperties;
 
-    // bi-directional many-to-one association to Document
-    @OneToMany(mappedBy = "folder")
-    private Set<Document> documents;
+	// bi-directional many-to-one association to Document
+	@OneToMany(mappedBy = "folder")
+	private Set<Document> documents;
 
-    // bi-directional many-to-one association to Project
-    @ManyToOne
-    @JoinColumn(name = "project_id")
-    private Project project;
+	// bi-directional many-to-one association to Project
+	@ManyToOne
+	@JoinColumn(name = "project_id")
+	private Project project;
 
-    // bi-directional many-to-one association to VirtualFolder
-    @ManyToOne
-    @JoinColumn(name = "parent_virtual_folder_id")
-    private VirtualFolder parentFolder;
+	// bi-directional many-to-one association to VirtualFolder
+	@ManyToOne
+	@JoinColumn(name = "parent_virtual_folder_id")
+	private VirtualFolder parentFolder;
 
-    // bi-directional many-to-one association to VirtualFolder
-    @OneToMany(mappedBy = "parentFolder")
-    private Set<VirtualFolder> subFolders;
+	// bi-directional many-to-one association to VirtualFolder
+	@OneToMany(mappedBy = "parentFolder")
+	private Set<VirtualFolder> subFolders;
 
-    public VirtualFolder() {
-    }
-    
-    public long getId() {
-	return id;
-    }
+	public VirtualFolder() {
+	}
 
-    public void setId(final long pId) {
-	id = pId;
-    }
+	public long getId() {
+		return id;
+	}
 
-    public String getName() {
-	return this.name;
-    }
+	public void setId(final long pId) {
+		id = pId;
+	}
 
-    public void setName(String name) {
-	this.name = name;
-    }
+	public String getName() {
+		return this.name;
+	}
 
-    public String getPath() {
-	return this.path;
-    }
+	public void setName(String name) {
+		this.name = name;
+	}
 
-    public void setPath(String path) {
-	this.path = path;
-    }
+	public String getPath() {
+		return this.path;
+	}
 
-    public String getSerializedProperties() {
-	return this.serializedProperties;
-    }
+	public void setPath(String path) {
+		this.path = path;
+	}
 
-    public void setSerializedProperties(String serializedProperties) {
-	this.serializedProperties = serializedProperties;
-    }
+	public String getSerializedProperties() {
+		return this.serializedProperties;
+	}
 
-    public Set<Document> getDocuments() {
-	return this.documents;
-    }
+	public void setSerializedProperties(String serializedProperties) {
+		this.serializedProperties = serializedProperties;
+	}
 
-    public void setDocuments(Set<Document> documents) {
-	this.documents = documents;
-    }
+	public Set<Document> getDocuments() {
+		return this.documents;
+	}
 
-    public Project getProject() {
-	return this.project;
-    }
+	public void setDocuments(Set<Document> documents) {
+		this.documents = documents;
+	}
 
-    public void setProject(Project project) {
-	this.project = project;
-    }
+	public Project getProject() {
+		return this.project;
+	}
 
-    public VirtualFolder getParentFolder() {
-	return this.parentFolder;
-    }
+	public void setProject(Project project) {
+		this.project = project;
+	}
 
-    public void setParentFolder(VirtualFolder parentFolder) {
-	this.parentFolder = parentFolder;
-    }
+	public VirtualFolder getParentFolder() {
+		return this.parentFolder;
+	}
 
-    public Set<VirtualFolder> getSubFolders() {
-	return this.subFolders;
-    }
+	public void setParentFolder(VirtualFolder parentFolder) {
+		this.parentFolder = parentFolder;
+	}
 
-    public void setSubFolders(Set<VirtualFolder> subFolders) {
-	this.subFolders = subFolders;
-    }
+	public Set<VirtualFolder> getSubFolders() {
+		return this.subFolders;
+	}
+
+	public void setSubFolders(Set<VirtualFolder> subFolders) {
+		this.subFolders = subFolders;
+	}
 
 }

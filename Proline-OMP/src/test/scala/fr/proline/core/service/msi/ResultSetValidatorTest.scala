@@ -1,135 +1,42 @@
 package fr.proline.core.service.msi
 
-import scala.collection.mutable.{HashMap, ArrayBuffer}
-
-import org.junit.{Assert, Test}
-
 import com.typesafe.scalalogging.StrictLogging
-
 import fr.profi.util.primitives._
+import fr.profi.util.serialization.ProfiJson
 import fr.proline.core.algo.msi.InferenceMethod
-import fr.proline.core.algo.msi.filtering.{ IPeptideMatchFilter, FilterPropertyKeys, _ }
 import fr.proline.core.algo.msi.filtering.pepmatch._
-import fr.proline.core.algo.msi.filtering.proteinset.{ ScoreProtSetFilter, SpecificPeptidesPSFilter }
+import fr.proline.core.algo.msi.filtering.proteinset.{ScoreProtSetFilter, SpecificPeptidesPSFilter}
+import fr.proline.core.algo.msi.filtering.{FilterPropertyKeys, IPeptideMatchFilter, _}
 import fr.proline.core.algo.msi.scoring.PepSetScoring
-import fr.proline.core.algo.msi.validation.{ BasicTDAnalyzer, _ }
 import fr.proline.core.algo.msi.validation.pepmatch.TDPepMatchValidatorWithFDROptimization
 import fr.proline.core.algo.msi.validation.proteinset.ProtSetRulesValidatorWithFDROptimization
-import fr.proline.core.dal.AbstractEmptyDatastoreTestCase
-import fr.proline.core.dal.DbUnitResultFileLoading
+import fr.proline.core.algo.msi.validation.{BasicTDAnalyzer, _}
+import fr.proline.core.dal.AbstractDatastoreTestCase
 import fr.proline.core.dbunit._
-import fr.proline.core.om.model.msi.{ ResultSet, PeptideMatch, FilterDescriptor }
-import fr.proline.core.om.provider.msi._
-import fr.proline.core.om.provider.msi.impl._
+import fr.proline.core.om.model.msi.{FilterDescriptor, PeptideMatch, ResultSet}
 import fr.proline.repository.DriverType
-import fr.profi.util.serialization.ProfiJson
+import org.junit.{Assert, Test}
 
+import scala.collection.mutable.{ArrayBuffer, HashMap}
 
-//abstract class AbstractResultSetValidator extends AbstractResultSetTestCase with StrictLogging {
-//abstract class AbstractResultSetValidator extends AbstractDbUnitResultFileTestCase with StrictLogging {
-abstract class AbstractResultSetValidator extends AbstractEmptyDatastoreTestCase with DbUnitResultFileLoading with StrictLogging {
-  
-  /*var executionContext: IExecutionContext = null  
-  var rsProvider: IResultSetProvider = null
-  protected var readRS: ResultSet = null
-  
-  // Define the interface to be implemented
-  val driverType: DriverType
-  val fileName: String
-  val targetRSId: Long
-  val decoyRSId: Option[Long]*/
-  val useJPA = false
-  
-  override def getRS(): ResultSet = {
-    this.resetRSValidation(readRS)
-    if (readRS.decoyResultSet.isDefined) this.resetRSValidation(readRS.decoyResultSet.get)
-    this.readRS
-  }
-  
-  protected def resetRSValidation(rs: ResultSet) = {
-    rs.peptideMatches.foreach(_.isValidated = true)
-  }
-  
-  /*
-  private def _loadRS(): ResultSet = {
-    val rsFilter = ResultSetFilter( maxPeptideMatchRank = 10 )
-    val rs = rsProvider.getResultSet(targetRSId,Some(rsFilter)).get
-    // SMALL HACK because of DBUNIT BUG (see bioproj defect #7548)
-    if (decoyRSId.isDefined) rs.decoyResultSet = rsProvider.getResultSet(decoyRSId.get)
-    rs
-  }
-  
-  @BeforeClass
-  @throws(classOf[Exception])
-  def setUp() = {
+object ResultSetValidatorF122817Test extends AbstractDatastoreTestCase with StrictLogging {
 
-    logger.info("Initializing DBs")
-    super.initDBsDBManagement(driverType)
+  override val driverType = DriverType.H2
+  override val dbUnitResultFile = STR_F122817_Mascot_v2_3
+  override val useJPA = false
 
-    //Load Data
-    pdiDBTestCase.loadDataSet(DbUnitSampleDataset.PROTEINS.getResourcePath)
-    psDBTestCase.loadDataSet("/dbunit_samples/"+fileName+"/ps-db.xml")
-    msiDBTestCase.loadDataSet("/dbunit_samples/"+fileName+"/msi-db.xml")
-    udsDBTestCase.loadDataSet("/dbunit_samples/"+fileName+"/uds-db.xml")
-
-    logger.info("PDI, PS, MSI and UDS dbs succesfully initialized !")
-
-    val (execContext, rsProv) = buildSQLContext() //buildJPAContext()
-    executionContext = execContext
-    rsProvider = rsProv
-    readRS = this._loadRS()
-  }
-
-  def buildSQLContext() = {
-    val udsDbCtx = ContextFactory.buildDbConnectionContext(dsConnectorFactoryForTest.getUdsDbConnector, false)
-    val pdiDbCtx = ContextFactory.buildDbConnectionContext(dsConnectorFactoryForTest.getPdiDbConnector, true)
-    val psDbCtx = ContextFactory.buildDbConnectionContext(dsConnectorFactoryForTest.getPsDbConnector, false)
-    val msiDbCtx = ContextFactory.buildDbConnectionContext(dsConnectorFactoryForTest.getMsiDbConnector(1), false)
-
-    val executionContext = new BasicExecutionContext(udsDbCtx, pdiDbCtx, psDbCtx, msiDbCtx, null)
-
-    val parserContext = ProviderDecoratedExecutionContext(executionContext) // Use Object factory
-
-    parserContext.putProvider(classOf[IPeptideProvider], new SQLPeptideProvider(psDbCtx))
-    parserContext.putProvider(classOf[IPTMProvider], new SQLPTMProvider(psDbCtx))
-
-    val rsProvider = new SQLResultSetProvider(msiDbCtx, psDbCtx, udsDbCtx)
-
-    (parserContext, rsProvider)
-  }
-
-  def buildJPAContext() = {
-    val executionContext = ContextFactory.buildExecutionContext(dsConnectorFactoryForTest, 1, true) // Full JPA
-    val rsProvider = new ORMResultSetProvider(executionContext.getMSIDbConnectionContext, executionContext.getPSDbConnectionContext, executionContext.getPDIDbConnectionContext)
-
-    (executionContext, rsProvider)
-  }
-  
-  @AfterClass
-  override def tearDown() {
-    if (executionContext != null) executionContext.closeAll()
-    super.tearDown()
-  }*/
-  
-}
-
-
-object ResultSetValidatorF122817Test extends AbstractResultSetValidator with StrictLogging {
-
-  val driverType = DriverType.H2
-  val dbUnitResultFile = STR_F122817_Mascot_v2_3
   val targetRSId: Long = 1L
-  val decoyRSId = Option.empty[Long]
-  
+
 }
 
 class ResultSetValidatorF122817Test extends StrictLogging {
   
-  val targetRS = ResultSetValidatorF122817Test.getRS
+  val targetRS = ResultSetValidatorF122817Test.getRS(ResultSetValidatorF122817Test.targetRSId)
+  ResultSetValidatorF122817Test.resetRSValidation(targetRS)
   val executionContext = ResultSetValidatorF122817Test.executionContext
   
-  require( targetRS != null, "targetRS is null")
-  require( executionContext != null, "executionContext is null")
+  require( targetRS != null, "targetRS is null" )
+  require( executionContext != null, "executionContext is null" )
 
   @Test
   def testScoreValidationOnNoneDecoy() {
@@ -175,10 +82,12 @@ class ResultSetValidatorF122817Test extends StrictLogging {
   
 }
 
-object ResultSetValidatorF136482Test extends AbstractResultSetValidator with StrictLogging {
+object ResultSetValidatorF136482Test extends AbstractDatastoreTestCase with StrictLogging {
 
-  val driverType = DriverType.H2
-  val dbUnitResultFile = STR_F136482_CTD
+  override val driverType = DriverType.H2
+  override val dbUnitResultFile = STR_F136482_CTD
+  override val useJPA: Boolean = false
+
   val targetRSId = 2L
   val decoyRSId = Some(1L)
   
@@ -187,7 +96,8 @@ object ResultSetValidatorF136482Test extends AbstractResultSetValidator with Str
 class ResultSetValidatorF136482Test extends StrictLogging {
   
   protected val DEBUG_TESTS = false
-  val targetRS = ResultSetValidatorF136482Test.getRS
+  val targetRS = ResultSetValidatorF136482Test.getRS(ResultSetValidatorF136482Test.targetRSId, ResultSetValidatorF136482Test.decoyRSId)
+  ResultSetValidatorF136482Test.resetRSValidation(targetRS)
   val executionContext = ResultSetValidatorF136482Test.executionContext
   
   require( targetRS != null, "targetRS is null")
@@ -861,10 +771,12 @@ class ResultSetValidatorF136482Test extends StrictLogging {
 
 }
 
-object ResultSetValidatorF068213Test extends AbstractResultSetValidator with StrictLogging {
+object ResultSetValidatorF068213Test extends AbstractDatastoreTestCase with StrictLogging {
 
-  val driverType = DriverType.H2
-  val dbUnitResultFile = GRE_F068213_M2_4_TD_EColi
+  override val driverType = DriverType.H2
+  override val dbUnitResultFile = GRE_F068213_M2_4_TD_EColi
+  override val useJPA: Boolean = false
+
   val targetRSId = 2L
   val decoyRSId = Some(1L)
 
@@ -872,7 +784,8 @@ object ResultSetValidatorF068213Test extends AbstractResultSetValidator with Str
 
 class ResultSetValidatorF068213Test extends StrictLogging {
   
-  val targetRS = ResultSetValidatorF068213Test.getRS
+  val targetRS = ResultSetValidatorF068213Test.getRS(ResultSetValidatorF068213Test.targetRSId, ResultSetValidatorF068213Test.decoyRSId)
+  ResultSetValidatorF068213Test.resetRSValidation(targetRS)
   val executionContext = ResultSetValidatorF068213Test.executionContext
   
   require( targetRS != null, "targetRS is null")
@@ -1009,10 +922,12 @@ class ResultSetValidatorF068213Test extends StrictLogging {
 
 }
 
-object ResultSetValidatorF027737Test extends AbstractResultSetValidator with StrictLogging {
+object ResultSetValidatorF027737Test extends AbstractDatastoreTestCase with StrictLogging {
 
-  val driverType = DriverType.H2
-  val dbUnitResultFile = TLS_F027737_MTD_no_varmod
+  override val driverType = DriverType.H2
+  override val dbUnitResultFile = TLS_F027737_MTD_no_varmod
+  override val useJPA: Boolean = false
+
   val targetRSId = 2L
   val decoyRSId = Some(1L)
 
@@ -1020,7 +935,8 @@ object ResultSetValidatorF027737Test extends AbstractResultSetValidator with Str
 
 class ResultSetValidatorF027737Test extends StrictLogging {
   
-  val targetRS = ResultSetValidatorF027737Test.getRS
+  val targetRS = ResultSetValidatorF027737Test.getRS(ResultSetValidatorF027737Test.targetRSId, ResultSetValidatorF027737Test.decoyRSId)
+  ResultSetValidatorF027737Test.resetRSValidation(targetRS)
   val executionContext = ResultSetValidatorF027737Test.executionContext
   
   require( targetRS != null, "targetRS is null")

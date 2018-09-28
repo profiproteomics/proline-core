@@ -4,14 +4,17 @@ package fr.proline.core.dbunit
  * @author David Bouyssie
  *
  */
-// TODO: rename the file in DbUnitResultFileLocation
-sealed abstract class DbUnitResultFileLocation {
+abstract class DbUnitResultFileLocation {
   
   def datastoreDirPath: String
   lazy val udsDbDatasetPath = datastoreDirPath + "/uds-db.xml"
-  lazy val psDbDatasetPath = datastoreDirPath + "/ps-db.xml"
   lazy val msiDbDatasetPath = datastoreDirPath + "/msi-db.xml"
+  lazy val lcmsDbDatasetPath = datastoreDirPath + "/lcms-db.xml"
 
+}
+
+case object Init_Dataset extends DbUnitResultFileLocation {
+  val datastoreDirPath = JInit_Dataset.datastoreDirPath
 }
 
 case object GRE_F068213_M2_4_TD_EColi extends DbUnitResultFileLocation {
@@ -40,4 +43,8 @@ case object STR_F136482_CTD extends DbUnitResultFileLocation {
 
 case object TLS_F027737_MTD_no_varmod extends DbUnitResultFileLocation {
   val datastoreDirPath = "/dbunit_samples/TLS_F027737_MTD_no_varmod"
+}
+
+case object SmallRuns_XIC extends DbUnitResultFileLocation {
+  val datastoreDirPath = "/dbunit_samples/SmallRuns_XIC"
 }

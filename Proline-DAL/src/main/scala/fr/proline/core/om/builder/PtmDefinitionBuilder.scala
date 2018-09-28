@@ -3,15 +3,15 @@ package fr.proline.core.om.builder
 import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.LongMap
 import fr.profi.util.primitives._
-import fr.proline.core.dal.tables.ps._
+import fr.proline.core.dal.tables.msi._
 import fr.proline.core.om.model.msi._
 
 object PtmDefinitionBuilder {
   
-  protected val PepPtmCols = PsDbPeptidePtmColumns
-  protected val PtmCols = PsDbPtmColumns
-  protected val PtmEvCols = PsDbPtmEvidenceColumns
-  protected val PtmSpecifCols = PsDbPtmSpecificityColumns
+  protected val PepPtmCols = MsiDbPeptidePtmColumns
+  protected val PtmCols = MsiDbPtmColumns
+  protected val PtmEvCols = MsiDbPtmEvidenceColumns
+  protected val PtmSpecifCols = MsiDbPtmSpecificityColumns
 
   /**
    * 

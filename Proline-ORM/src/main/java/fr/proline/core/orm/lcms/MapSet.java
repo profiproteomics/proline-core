@@ -6,47 +6,46 @@ import java.io.Serializable;
 import java.sql.Timestamp;
 import java.util.List;
 
-
 /**
  * The persistent class for the map_set database table.
  * 
  */
 @Entity
-@Table(name="map_set")
-@NamedQuery(name="MapSet.findAll", query="SELECT m FROM MapSet m")
+@Table(name = "map_set")
+@NamedQuery(name = "MapSet.findAll", query = "SELECT m FROM MapSet m")
 public class MapSet implements Serializable {
 	private static final long serialVersionUID = 1L;
 
 	@Id
 	private Long id;
 
-	@Column(name="creation_timestamp")
+	@Column(name = "creation_timestamp")
 	private Timestamp creationTimestamp;
 
-	@Column(name="map_count")
+	@Column(name = "map_count")
 	private Integer mapCount;
 
 	private String name;
 
-	@Column(name="serialized_properties")
+	@Column(name = "serialized_properties")
 	private String serializedProperties;
 
 	//bi-directional many-to-one association to MapAlignment
-	@OneToMany(mappedBy="mapSet")
+	@OneToMany(mappedBy = "mapSet")
 	private List<MapAlignment> mapAlignments;
 
 	//uni-directional many-to-one association to ProcessedMap
 	@ManyToOne
-	@JoinColumn(name="master_map_id")
+	@JoinColumn(name = "master_map_id")
 	private ProcessedMap masterMap;
 
 	//uni-directional many-to-one association to ProcessedMap
 	@ManyToOne
-	@JoinColumn(name="aln_reference_map_id")
+	@JoinColumn(name = "aln_reference_map_id")
 	private ProcessedMap alnReferenceMap;
 
 	//bi-directional many-to-one association to ProcessedMap
-	@OneToMany(mappedBy="mapSet")
+	@OneToMany(mappedBy = "mapSet")
 	private List<ProcessedMap> processedMaps;
 
 	public MapSet() {

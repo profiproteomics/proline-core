@@ -3,29 +3,32 @@ package fr.proline.core.om.provider.msi.impl
 import fr.profi.util.collection._
 import fr.profi.util.misc.MapIfNotNull
 import fr.profi.util.serialization.ProfiJson
-import fr.proline.context._
 import fr.proline.core.dal.DoJDBCReturningWork
 import fr.proline.core.dal.helper.MsiDbHelper
 import fr.proline.core.dal.tables.SelectQueryBuilder._
 import fr.proline.core.dal.tables.SelectQueryBuilder1
+import fr.proline.core.dal.tables.msi.MsiDbResultSummaryColumns
 import fr.proline.core.dal.tables.msi.MsiDbResultSummaryTable
 import fr.proline.core.om.model.msi._
+import fr.proline.core.om.provider.PeptideCacheExecutionContext
 
 class SQLLazyResultSummaryProvider(
-  val msiDbCtx: MsiDbConnectionContext,
-  val psDbCtx: DatabaseConnectionContext,
-  val udsDbCtx: UdsDbConnectionContext = null
+  val peptideCacheExecutionContext: PeptideCacheExecutionContext
 ) extends SQLLazyResultSetLoader {
+
+
+  override val udsDbCtx = peptideCacheExecutionContext.getUDSDbConnectionContext
+  override val msiDbCtx = peptideCacheExecutionContext.getMSIDbConnectionContext
 
   // Instantiate a MSIdb helper
   val msiDbHelper = new MsiDbHelper(msiDbCtx)
   
   // Instantiate some providers
-  val pepMatchProvider = new SQLPeptideMatchProvider(msiDbCtx, psDbCtx)
+  val pepMatchProvider = new SQLPeptideMatchProvider(peptideCacheExecutionContext)
   val protMatchProvider = new SQLProteinMatchProvider(msiDbCtx)
-  val pepInstProvider = new SQLPeptideInstanceProvider(msiDbCtx,psDbCtx)
+  val pepInstProvider = new SQLPeptideInstanceProvider(peptideCacheExecutionContext)
 
-  val RSMCols = MsiDbResultSummaryTable.columns
+  val RSMCols: MsiDbResultSummaryColumns.type = MsiDbResultSummaryTable.columns
   
   def getLazyResultSummary(
     rsmId: Long,
@@ -53,7 +56,7 @@ class SQLLazyResultSummaryProvider(
     
     // Load lazy result sets
     val lazyResultSets = if (loadFullResultSet) {
-      val lazyRsProvider = new SQLLazyResultSetProvider(msiDbCtx, psDbCtx, udsDbCtx)
+      val lazyRsProvider = new SQLLazyResultSetProvider( peptideCacheExecutionContext)
       lazyRsProvider.getLazyResultSets(rsIds)
     } else {
       this.getResultSummariesLazyResultSets(rsmIds, decoyRsmIds, rsIds)
@@ -128,7 +131,7 @@ class SQLLazyResultSummaryProvider(
     }
     lazy val proteinSetsByRsmId = proteinSets.groupBy(_.resultSummaryId)
     
-    val rsms = for( rsmDescriptor <- rsmDescriptors ) yield {
+    val rsms: Array[LazyResultSummary] = for(rsmDescriptor <- rsmDescriptors ) yield {
       
       val loadDecoyRsmOpt = if( rsmDescriptor.decoyResultSummaryId == 0 ) None
       else {
@@ -152,7 +155,7 @@ class SQLLazyResultSummaryProvider(
       )
     }
     
-    rsms.toArray
+    rsms
   }
   
   protected def getResultSummaryDescriptors(

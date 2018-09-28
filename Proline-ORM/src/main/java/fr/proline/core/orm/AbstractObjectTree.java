@@ -17,7 +17,7 @@ import javax.persistence.Table;
  * 
  */
 @Entity
-@Table(name="object_tree")
+@Table(name = "object_tree")
 public abstract class AbstractObjectTree implements Serializable {
 
 	protected static final long serialVersionUID = 1L;

@@ -23,92 +23,92 @@ import javax.persistence.Table;
 @Table(name = "group_setup")
 public class GroupSetup implements Serializable {
 
-    private static final long serialVersionUID = 1L;
+	private static final long serialVersionUID = 1L;
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
-    private long id;
+	@Id
+	@GeneratedValue(strategy = GenerationType.AUTO)
+	private long id;
 
-    private String name;
-    
-    private int number;
+	private String name;
 
-    @Column(name = "serialized_properties")
-    private String serializedProperties;
+	private int number;
 
-    // bi-directional many-to-many association to BiologicalGroup
-    @ManyToMany(mappedBy = "groupSetups")
-    @OrderBy("number")
-    private List<BiologicalGroup> biologicalGroups;
+	@Column(name = "serialized_properties")
+	private String serializedProperties;
 
-    // bi-directional many-to-one association to Dataset
-    @ManyToOne
-    @JoinColumn(name = "quantitation_id")
-    private Dataset dataset;
+	// bi-directional many-to-many association to BiologicalGroup
+	@ManyToMany(mappedBy = "groupSetups")
+	@OrderBy("number")
+	private List<BiologicalGroup> biologicalGroups;
 
-    // bi-directional many-to-one association to RatioDefinition
-    @OneToMany(mappedBy = "groupSetup")
-    @OrderBy("number")
-    private List<RatioDefinition> ratioDefinitions;
+	// bi-directional many-to-one association to Dataset
+	@ManyToOne
+	@JoinColumn(name = "quantitation_id")
+	private Dataset dataset;
 
-    public GroupSetup() {
-    }
+	// bi-directional many-to-one association to RatioDefinition
+	@OneToMany(mappedBy = "groupSetup")
+	@OrderBy("number")
+	private List<RatioDefinition> ratioDefinitions;
 
-    public long getId() {
-	return id;
-    }
+	public GroupSetup() {
+	}
 
-    public void setId(final long pId) {
-	id = pId;
-    }
+	public long getId() {
+		return id;
+	}
 
-    public String getName() {
-	return this.name;
-    }
+	public void setId(final long pId) {
+		id = pId;
+	}
 
-    public void setName(String name) {
-	this.name = name;
-    }
-    
-    public int getNumber() {
-	return number;
-    }
+	public String getName() {
+		return this.name;
+	}
 
-    public void setNumber(final int pNumber) {
-	number = pNumber;
-    }
+	public void setName(String name) {
+		this.name = name;
+	}
 
-    public String getSerializedProperties() {
-	return this.serializedProperties;
-    }
+	public int getNumber() {
+		return number;
+	}
 
-    public void setSerializedProperties(String serializedProperties) {
-	this.serializedProperties = serializedProperties;
-    }
+	public void setNumber(final int pNumber) {
+		number = pNumber;
+	}
 
-    public List<BiologicalGroup> getBiologicalGroups() {
-	return biologicalGroups;
-    }
+	public String getSerializedProperties() {
+		return this.serializedProperties;
+	}
 
-    public void setBiologicalGroups(final List<BiologicalGroup> biologicalGroups) {
-	this.biologicalGroups = biologicalGroups;
-    }
+	public void setSerializedProperties(String serializedProperties) {
+		this.serializedProperties = serializedProperties;
+	}
 
-    // TODO: return a true QuantitationDataset object when it is implemented
-    public Dataset getQuantitationDataset() {
-	return this.dataset;
-    }
+	public List<BiologicalGroup> getBiologicalGroups() {
+		return biologicalGroups;
+	}
 
-    public void setQuantitationDataset(Dataset dataset) {
-	this.dataset = dataset;
-    }
+	public void setBiologicalGroups(final List<BiologicalGroup> biologicalGroups) {
+		this.biologicalGroups = biologicalGroups;
+	}
 
-    public List<RatioDefinition> getRatioDefinitions() {
-	return ratioDefinitions;
-    }
+	// TODO: return a true QuantitationDataset object when it is implemented
+	public Dataset getQuantitationDataset() {
+		return this.dataset;
+	}
 
-    public void setRatioDefinitions(final List<RatioDefinition> ratioDefinitions) {
-	this.ratioDefinitions = ratioDefinitions;
-    }
+	public void setQuantitationDataset(Dataset dataset) {
+		this.dataset = dataset;
+	}
+
+	public List<RatioDefinition> getRatioDefinitions() {
+		return ratioDefinitions;
+	}
+
+	public void setRatioDefinitions(final List<RatioDefinition> ratioDefinitions) {
+		this.ratioDefinitions = ratioDefinitions;
+	}
 
 }

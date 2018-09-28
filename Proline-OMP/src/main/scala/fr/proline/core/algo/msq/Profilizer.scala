@@ -109,7 +109,7 @@ class Profilizer( expDesign: ExperimentalDesign, groupSetupNumber: Int = 1, mast
   private var minAbundanceByQcIds = Array.emptyFloatArray
   
   /**
-   * Computes MasterQauntPeptide profiles.
+   * Computes MasterQuantPeptide profiles.
    */
   def computeMasterQuantPeptideProfiles( masterQuantPeptides: Seq[MasterQuantPeptide], config: ProfilizerConfig ) {    
     require( masterQuantPeptides.length >= 10, "at least 10 peptides are required for profile analysis")
@@ -413,11 +413,7 @@ class Profilizer( expDesign: ExperimentalDesign, groupSetupNumber: Int = 1, mast
       
       // Summarize abundances of the current profile cluster
       val mqPepAbundanceMatrix = clusteredMqPeps.map( _.getAbundancesForQuantChannels(expDesignSetup.qcIds) ).toArray
-      
-      if(mqPepsCluster.name == "sp|Q04491|SEC13_YEAST") {
-          println(mqPepsCluster.name + " abRow: " + mqPepAbundanceMatrix.mkString(","))
-      }
-      
+
       val abRow = this.summarizeMatrix(mqPepAbundanceMatrix, abSumMethod)
       //println(mqPepsCluster.name + " abRow: " + abRow.mkString("\t"))
       abundanceMatrixBuffer += abRow

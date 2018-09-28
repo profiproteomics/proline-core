@@ -37,8 +37,11 @@ public class UncachedDataStoreConnectorFactoryTest extends DatabaseTestCase {
 		final IDatabaseConnector connector = getConnector();
 
 		final Map<Object, Object> props = new HashMap<Object, Object>();
-		props.put("hibernate.show_sql", "true");
-		props.put("hibernate.format_sql", "true");
+
+		//	Use the two following lines for debug purpose only
+
+		//	props.put("hibernate.show_sql", "true");
+		//	props.put("hibernate.format_sql", "true");
 
 		connector.setAdditionalProperties(props);
 
@@ -53,30 +56,6 @@ public class UncachedDataStoreConnectorFactoryTest extends DatabaseTestCase {
 			transac = udsEm.getTransaction();
 			transac.begin();
 			transacOk = false;
-
-			/* Create a Test PDI Db */
-			final ExternalDb pdiDb = new ExternalDb();
-			pdiDb.setType(ProlineDatabaseType.PDI);
-			pdiDb.setConnectionMode(ConnectionMode.MEMORY);
-			pdiDb.setDbName("pdi_test");
-			pdiDb.setDbUser("sa");
-			pdiDb.setDbPassword("");
-			pdiDb.setDbVersion("0.1");
-			pdiDb.setIsBusy(false);
-
-			udsEm.persist(pdiDb);
-
-			/* Create a Test PS Db */
-			final ExternalDb psDb = new ExternalDb();
-			psDb.setType(ProlineDatabaseType.PS);
-			psDb.setConnectionMode(ConnectionMode.MEMORY);
-			psDb.setDbName("ps_test");
-			psDb.setDbUser("sa");
-			psDb.setDbPassword("");
-			psDb.setDbVersion("0.1");
-			psDb.setIsBusy(false);
-
-			udsEm.persist(psDb);
 
 			/* Create a TEST Project */
 			final UserAccount projectOwner = new UserAccount();
@@ -97,8 +76,8 @@ public class UncachedDataStoreConnectorFactoryTest extends DatabaseTestCase {
 			msiDb.setType(ProlineDatabaseType.MSI);
 			msiDb.setConnectionMode(ConnectionMode.MEMORY);
 			msiDb.setDbName("msi_1_test");
-			msiDb.setDbUser("sa");
-			msiDb.setDbPassword("");
+			//msiDb.setDbUser("sa");
+			//msiDb.setDbPassword("");
 			msiDb.setDbVersion("0.1");
 			msiDb.setIsBusy(false);
 
@@ -112,8 +91,8 @@ public class UncachedDataStoreConnectorFactoryTest extends DatabaseTestCase {
 			lcMsDb.setType(ProlineDatabaseType.LCMS);
 			lcMsDb.setConnectionMode(ConnectionMode.MEMORY);
 			lcMsDb.setDbName("lcms_1_test");
-			lcMsDb.setDbUser("sa");
-			lcMsDb.setDbPassword("");
+			//lcMsDb.setDbUser("sa");
+			//lcMsDb.setDbPassword("");
 			lcMsDb.setDbVersion("0.1");
 			lcMsDb.setIsBusy(false);
 
@@ -165,10 +144,6 @@ public class UncachedDataStoreConnectorFactoryTest extends DatabaseTestCase {
 		/* Explicitly upgrade all Databases */
 		DataStoreUpgrader.upgradeAllDatabases(connectorFactory, true);
 
-		assertNotNull("PDI Db Connector", connectorFactory.getPdiDbConnector());
-
-		assertNotNull("PS Db Connector", connectorFactory.getPsDbConnector());
-
 		assertNotNull("MSI DB Connector for Project " + m_projectId,
 			connectorFactory.getMsiDbConnector(m_projectId));
 
@@ -181,7 +156,7 @@ public class UncachedDataStoreConnectorFactoryTest extends DatabaseTestCase {
 	public void tearDown() {
 		/*
 		 * Special tearDown here : first close the DatabaseTestConnector (for UDS Db) then close all created
-		 * in-memory test Databases (PDI, PS, MSI, LCMS Dbs...) Note : UDS Db is closed twice (by tearDown and
+		 * in-memory test Databases (UDS, MSI, LCMS Dbs...) Note : UDS Db is closed twice (by tearDown and
 		 * DatabaseManager.closeAll), this cause a harmless IllegalStateException "Connection pool has been
 		 * disposed".
 		 */

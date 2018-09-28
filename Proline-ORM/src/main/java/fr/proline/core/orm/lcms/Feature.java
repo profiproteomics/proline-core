@@ -8,63 +8,62 @@ import java.io.Serializable;
 import java.text.DecimalFormat;
 import java.util.List;
 
-
 /**
  * The persistent class for the feature database table.
  * 
  */
 @Entity
-@NamedQuery(name="Feature.findAll", query="SELECT f FROM Feature f")
+@NamedQuery(name = "Feature.findAll", query = "SELECT f FROM Feature f")
 public class Feature implements Serializable {
 	private static final long serialVersionUID = 1L;
 
 	private static DecimalFormat df = new DecimalFormat("#.000");
-	
+
 	@Id
 	private Long id;
 
-	@Column(name="apex_intensity")
+	@Column(name = "apex_intensity")
 	private float apexIntensity;
 
 	private Integer charge;
 
-	@Column(name="compound_id")
+	@Column(name = "compound_id")
 	private Long compoundId;
 
 	private float duration;
 
-	@Column(name="elution_time")
+	@Column(name = "elution_time")
 	private float elutionTime;
 
 	private float intensity;
 
-	@Column(name="is_cluster")
+	@Column(name = "is_cluster")
 	private Boolean isCluster;
 
-	@Column(name="is_overlapping")
+	@Column(name = "is_overlapping")
 	private Boolean isOverlapping;
 
-	@Column(name="map_layer_id")
+	@Column(name = "map_layer_id")
 	private Long mapLayerId;
 
 	private double moz;
 
-	@Column(name="ms1_count")
+	@Column(name = "ms1_count")
 	private Integer ms1Count;
 
-	@Column(name="ms2_count")
+	@Column(name = "ms2_count")
 	private Integer ms2Count;
 
 	@Column(name = "peakel_count")
 	private int peakelCount;
-	
-	@Column(name="quality_score")
+
+	@Column(name = "quality_score")
 	private float qualityScore;
 
-	@Column(name="serialized_properties")
+	@Column(name = "serialized_properties")
 	private String serializedProperties;
 
-	@Column(name="theoretical_feature_id")
+	@Column(name = "theoretical_feature_id")
 	private Long theoreticalFeatureId;
 
 	//bi-directional many-to-one association to Map
@@ -74,31 +73,31 @@ public class Feature implements Serializable {
 
 	//uni-directional many-to-one association to Scan
 	@ManyToOne
-	@JoinColumn(name="first_scan_id")
+	@JoinColumn(name = "first_scan_id")
 	private Scan firstScan;
 
 	//uni-directional many-to-one association to Scan
 	@ManyToOne
-	@JoinColumn(name="last_scan_id")
+	@JoinColumn(name = "last_scan_id")
 	private Scan lastScan;
 
 	//uni-directional many-to-one association to Scan
 	@ManyToOne
-	@JoinColumn(name="apex_scan_id")
+	@JoinColumn(name = "apex_scan_id")
 	private Scan apexScan;
 
 	//bi-directional many-to-one association to FeatureClusterItem
-	@OneToMany(mappedBy="clusterFeature")
+	@OneToMany(mappedBy = "clusterFeature")
 	private List<FeatureClusterItem> featureClusterItems;
 
 	//bi-directional many-to-one association to FeatureMs2Event
-	@OneToMany(mappedBy="feature")
+	@OneToMany(mappedBy = "feature")
 	private List<FeatureMs2Event> featureMs2Events;
 
 	//bi-directional many-to-one association to FeaturePeakelItem
-	@OneToMany(mappedBy="feature")
+	@OneToMany(mappedBy = "feature")
 	private List<FeaturePeakelItem> featurePeakelItems;
-	
+
 	// serializedProperties as a map
 	@Transient
 	private java.util.Map<String, Object> serializedPropertiesMap;
@@ -209,7 +208,7 @@ public class Feature implements Serializable {
 	public void setMs2Count(Integer ms2Count) {
 		this.ms2Count = ms2Count;
 	}
-	
+
 	public int getPeakelCount() {
 		return peakelCount;
 	}
@@ -350,26 +349,24 @@ public class Feature implements Serializable {
 	}
 
 	public void setSerializedPropertiesMap(
-			java.util.Map<String, Object> serializedPropertiesMap) {
+		java.util.Map<String, Object> serializedPropertiesMap) {
 		this.serializedPropertiesMap = serializedPropertiesMap;
 	}
 
 	@SuppressWarnings("unchecked")
-	public java.util.Map<String, Object> getSerializedPropertiesAsMap()
-			throws Exception {
+	public java.util.Map<String, Object> getSerializedPropertiesAsMap() throws Exception {
 		if ((serializedPropertiesMap == null) && (serializedProperties != null)) {
 			serializedPropertiesMap = JsonSerializer.getMapper().readValue(
-					getSerializedProperties(), java.util.Map.class);
+				getSerializedProperties(), java.util.Map.class
+			);
 		}
 		return serializedPropertiesMap;
 	}
 
-	public void setSerializedPropertiesAsMap(
-			java.util.Map<String, Object> serializedPropertiesMap)
-			throws Exception {
+	public void setSerializedPropertiesAsMap(java.util.Map<String, Object> serializedPropertiesMap) throws Exception {
 		this.serializedPropertiesMap = serializedPropertiesMap;
 		this.serializedProperties = JsonSerializer.getMapper()
-				.writeValueAsString(serializedPropertiesMap);
+			.writeValueAsString(serializedPropertiesMap);
 	}
 
 }

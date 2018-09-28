@@ -4,13 +4,11 @@ import org.junit.After
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
-
 import com.typesafe.scalalogging.StrictLogging
-
 import fr.proline.context.DatabaseConnectionContext
 import fr.proline.core.dal._
 import fr.proline.core.dal.context._
-import fr.proline.core.dbunit.DbUnitInitDataset
+import fr.proline.core.dbunit.Init_Dataset
 import fr.proline.core.orm.uds.UserAccount
 import fr.proline.repository.ProlineDatabaseType
 import fr.proline.repository.util.DatabaseTestCase
@@ -32,10 +30,9 @@ class AuthenticationTest extends DatabaseTestCase with StrictLogging {
 
     logger.info("Initializing UDS db")
     initDatabase()
-    //loadDataSet("/dbunit_samples/" + fileName + "/uds-db.xml")
-    loadDataSet(DbUnitInitDataset.UDS_DB.getResourcePath)
+    loadDataSet(Init_Dataset.udsDbDatasetPath)
     
-    logger.info("UDS db succesfully initialized !")
+    logger.info("UDS db successfully initialized !")
     buildUDSConnectionContext()
 
     // Persist the user account

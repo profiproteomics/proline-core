@@ -41,8 +41,8 @@ class MasterMapBuilderTest extends JUnitSuite  with StrictLogging {
     val mapSet = mapSetFakeGen.generateMapSet(lcmsRun, rawMap)
     
     // Build the corresponding master map
-    val ftMappingParams = FeatureMappingParams(mozTol=10.0, mozTolUnit= "PPM", timeTol=20f )  
-    val ftClusteringParams = ClusteringParams(ftMappingParams, intensityComputation = "MOST_INTENSE", timeComputation= "MOST_INTENSE")
+    val ftMappingParams = FeatureMappingParams(mozTol = Some(10.0), mozTolUnit = Some("PPM"), timeTol = 20f )
+    val ftClusteringParams = ClusteringParams(mozTol = 10.0, mozTolUnit = "PPM", timeTol = 20f, intensityComputation = "MOST_INTENSE", timeComputation= "MOST_INTENSE")
       /*
       mozTol=10., mozTolUnit= "PPM", timeTol=20f,
       intensityComputation = "MOST_INTENSE",
@@ -50,7 +50,7 @@ class MasterMapBuilderTest extends JUnitSuite  with StrictLogging {
       */
     
     val masterFtFilter = new Filter( "INTENSITY", "GT", 0.0 )
-    val masterMap = BuildMasterMap(mapSet, Seq(lcmsRun.scanSequence.get), masterFtFilter, ftMappingParams,ftClusteringParams)
+    val masterMap = BuildMasterMap(mapSet, Seq(lcmsRun.scanSequence.get), Some(masterFtFilter), ftMappingParams,ftClusteringParams)
     
     // We should have less master features than the number of input features
     assertTrue(masterMap.features.length <= nbFeatures)

@@ -31,7 +31,7 @@ package object context {
       }
       
       val isTxCommitedByDbCtx = HashMap() ++ enabledTxByDbCtx.keys.map( _ -> false )
-  
+      
       try {
         
         // Begin local transactions
@@ -47,9 +47,13 @@ package object context {
           if( isLocalTx ) dbCtx.commitTransaction()
           isTxCommitedByDbCtx(dbCtx) = true
         }
-      
-      } finally {
         
+      } catch {
+        case t: Throwable => {
+          logger.error("Can't perform transactional work because:", t)
+          throw t
+        }
+      } finally {
         isLocalTxByDbCtx.map { case (dbCtx,isLocalTx) =>
           if ( isLocalTx && isTxCommitedByDbCtx(dbCtx) == false) {
             try {
@@ -89,8 +93,6 @@ package object context {
      * Exceptions are not caught but transactions are always rolled back if they were not committed.
      * 
      * @param udsTx Enable UDSdb transaction.
-     * @param psTx Enable PSdb transaction.
-     * @param pdiTx Enable PDIdb transaction.
      * @param msiTx Enable MSIdb transaction.
      * @param lcmsTx Enable LCMSdb transaction.
      * @param txWork The code to be executed inside the transactions.
@@ -98,8 +100,6 @@ package object context {
      */
     def tryInTransactions(
       udsTx: Boolean = false,
-      psTx: Boolean = false,
-      pdiTx: Boolean = false,
       msiTx: Boolean = false,
       lcmsTx: Boolean = false,
       txWork: => Unit
@@ -108,8 +108,6 @@ package object context {
       // Map enabled transaction by database contexts
       val enabledTxByDbCtx = Map(
         execCtx.getUDSDbConnectionContext -> udsTx,
-        execCtx.getPSDbConnectionContext -> psTx,
-        execCtx.getPDIDbConnectionContext -> pdiTx,
         execCtx.getMSIDbConnectionContext -> msiTx,
         execCtx.getLCMSDbConnectionContext -> lcmsTx
       )

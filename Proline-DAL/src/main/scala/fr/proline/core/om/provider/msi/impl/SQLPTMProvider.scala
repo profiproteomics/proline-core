@@ -1,31 +1,26 @@
 package fr.proline.core.om.provider.msi.impl
 
-import scala.collection.mutable.ArrayBuffer
-import scala.collection.mutable.HashMap
-import scala.collection.mutable.LongMap
-
 import fr.profi.util.primitives._
-import fr.proline.context.DatabaseConnectionContext
+import fr.proline.context.MsiDbConnectionContext
 import fr.proline.core.dal.DoJDBCReturningWork
 import fr.proline.core.om.builder.PtmDefinitionBuilder
 import fr.proline.core.om.model.msi.PtmDefinition
 import fr.proline.core.om.model.msi.PtmLocation
 import fr.proline.core.om.provider.msi.IPTMProvider
-import fr.proline.repository.ProlineDatabaseType
 
-class SQLPTMProvider(val psDbCtx: DatabaseConnectionContext) extends IPTMProvider {
-  
-  require( psDbCtx.getProlineDatabaseType == ProlineDatabaseType.PS, "PsDb connection required")
+import scala.collection.mutable.LongMap
+
+class SQLPTMProvider(val msiDbCtx: MsiDbConnectionContext) extends IPTMProvider {
   
   /** Returns a map */
   lazy val ptmDefinitionById: LongMap[PtmDefinition] = {
     
-    DoJDBCReturningWork.withEzDBC(psDbCtx) { psEzDBC =>
+    DoJDBCReturningWork.withEzDBC(msiDbCtx) { msEzDBC =>
 
       val ptmRecordById = new LongMap[AnyMapLike]()
       
       // Load PTM records
-      psEzDBC.selectAndProcess("SELECT * FROM ptm") { row =>
+      msEzDBC.selectAndProcess("SELECT * FROM ptm") { row =>
   
         // Build the PTM record
         val ptmRecord = row.toAnyMap()
@@ -34,7 +29,7 @@ class SQLPTMProvider(val psDbCtx: DatabaseConnectionContext) extends IPTMProvide
       }
   
       // Execute SQL query to load PTM evidence records
-      val ptmEvidRecords = psEzDBC.selectAllRecords("SELECT * FROM ptm_evidence") /*{ row =>
+      val ptmEvidRecords = msEzDBC.selectAllRecords("SELECT * FROM ptm_evidence") /*{ row =>
   
         // Build the PTM record
         val ptmEvidRecord = row.toAnyMap()
@@ -49,13 +44,13 @@ class SQLPTMProvider(val psDbCtx: DatabaseConnectionContext) extends IPTMProvide
       // Group PTM evidences by PTM id
       val ptmEvidRecordsByPtmIdAndSpecifId = ptmEvidRecords.groupBy(r => (r.getLong("ptm_id"), r.getLongOrElse("specificity_id", 0)))
       
-      val ptmClassificationRecords = psEzDBC.selectAllRecords("SELECT * FROM ptm_classification")
+      val ptmClassificationRecords = msEzDBC.selectAllRecords("SELECT * FROM ptm_classification")
       val ptmClassificationRecordsById = ptmClassificationRecords.map(r => { r.getLong("id") -> r.getString("name")}).toMap
       
       val ptmDefById = new scala.collection.mutable.LongMap[PtmDefinition]()
   
       // Load PTM specificity records
-      psEzDBC.selectAndProcess("SELECT * FROM ptm_specificity") { row =>
+      msEzDBC.selectAndProcess("SELECT * FROM ptm_specificity") { row =>
         
         // Build the PTM specificity record
         val ptmSpecifRecord = row

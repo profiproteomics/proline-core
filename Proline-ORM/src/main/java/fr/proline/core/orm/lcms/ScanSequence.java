@@ -6,46 +6,40 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
-
 /**
  * The persistent class for the scan_sequence database table.
  * 
  */
 @Entity
-@Table(name="scan_sequence")
-@NamedQuery(name="ScanSequence.findAll", query="SELECT s FROM ScanSequence s")
+@Table(name = "scan_sequence")
+@NamedQuery(name = "ScanSequence.findAll", query = "SELECT s FROM ScanSequence s")
 public class ScanSequence implements Serializable {
 	private static final long serialVersionUID = 1L;
 
 	@Id
 	private Long id;
 
-	@Column(name="max_intensity")
+	@Column(name = "max_intensity")
 	private double maxIntensity;
 
-	@Column(name="min_intensity")
+	@Column(name = "min_intensity")
 	private double minIntensity;
 
-	@Column(name="ms1_scan_count")
+	@Column(name = "ms1_scan_count")
 	private Integer ms1ScanCount;
 
-	@Column(name="ms2_scan_count")
+	@Column(name = "ms2_scan_count")
 	private Integer ms2ScanCount;
 
-	@Column(name="raw_file_identifier")
+	@Column(name = "raw_file_identifier")
 	private String rawFileIdentifier;
 
-	@Column(name="serialized_properties")
+	@Column(name = "serialized_properties")
 	private String serializedProperties;
 
 	//bi-directional many-to-one association to Scan
-	@OneToMany(mappedBy="scanSequence")
+	@OneToMany(mappedBy = "scanSequence")
 	private List<Scan> scans;
-
-	//uni-directional many-to-one association to Instrument
-	@ManyToOne
-	@JoinColumn(name = "instrument_id")
-	private Instrument instrument;
 
 	public ScanSequence() {
 	}
@@ -130,14 +124,6 @@ public class ScanSequence implements Serializable {
 			return scan;
 		}
 		return null;
-	}
-
-	public Instrument getInstrument() {
-		return this.instrument;
-	}
-
-	public void setInstrument(Instrument instrument) {
-		this.instrument = instrument;
 	}
 
 	@Override

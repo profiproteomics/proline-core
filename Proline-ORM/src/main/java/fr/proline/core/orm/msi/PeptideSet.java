@@ -28,75 +28,76 @@ import fr.proline.core.orm.util.JsonSerializer;
 @Table(name = "peptide_set")
 public class PeptideSet implements Serializable {
 
-    private static final long serialVersionUID = 1L;
+	private static final long serialVersionUID = 1L;
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
-    private long id;
+	@Id
+	@GeneratedValue(strategy = GenerationType.AUTO)
+	private long id;
 
-    @Column(name = "is_subset")
-    private boolean isSubset;
-    
-    private float score;
+	@Column(name = "is_subset")
+	private boolean isSubset;
 
-    // uni-directional many-to-one association to Scoring
-    @ManyToOne
-    @JoinColumn(name = "scoring_id")
-    private Scoring scoring;
+	private float score;
 
-    @Column(name = "sequence_count")
-    private int sequenceCount;
+	// uni-directional many-to-one association to Scoring
+	@ManyToOne
+	@JoinColumn(name = "scoring_id")
+	private Scoring scoring;
 
-    @Column(name = "peptide_count")
-    private int peptideCount;
-    
-    @Column(name = "peptide_match_count")
-    private int peptideMatchCount;
+	@Column(name = "sequence_count")
+	private int sequenceCount;
 
-    @Column(name = "result_summary_id")
-    private long resultSummaryId;
+	@Column(name = "peptide_count")
+	private int peptideCount;
 
-    @Column(name = "serialized_properties")
-    private String serializedProperties;
+	@Column(name = "peptide_match_count")
+	private int peptideMatchCount;
 
-    // bi-directional many-to-one association to ProteinSet
-    @ManyToOne
-    @JoinColumn(name = "protein_set_id")
-    private ProteinSet proteinSet;
+	@Column(name = "result_summary_id")
+	private long resultSummaryId;
 
-    // bi-directional many-to-one association to PeptideSetPeptideInstanceItem
-    @OneToMany(mappedBy = "peptideSet")
-    private Set<PeptideSetPeptideInstanceItem> peptideSetPeptideInstanceItems;
+	@Column(name = "serialized_properties")
+	private String serializedProperties;
 
-    // uni-directional many-to-many association to ProteinMatch
-    @ManyToMany
-    @JoinTable(name = "peptide_set_protein_match_map", joinColumns = { @JoinColumn(name = "peptide_set_id") }, inverseJoinColumns = { @JoinColumn(name = "protein_match_id") })
-    private Set<ProteinMatch> proteinMatches;
+	// bi-directional many-to-one association to ProteinSet
+	@ManyToOne
+	@JoinColumn(name = "protein_set_id")
+	private ProteinSet proteinSet;
 
-    // Transient Variables not saved in database
-    @Transient
-    private Map<String, Object> serializedPropertiesMap;
-    
-    public PeptideSet() {
-    }
+	// bi-directional many-to-one association to PeptideSetPeptideInstanceItem
+	@OneToMany(mappedBy = "peptideSet")
+	private Set<PeptideSetPeptideInstanceItem> peptideSetPeptideInstanceItems;
 
-    public long getId() {
-	return id;
-    }
+	// uni-directional many-to-many association to ProteinMatch
+	@ManyToMany
+	@JoinTable(name = "peptide_set_protein_match_map", joinColumns = { @JoinColumn(name = "peptide_set_id") }, inverseJoinColumns = {
+			@JoinColumn(name = "protein_match_id") })
+	private Set<ProteinMatch> proteinMatches;
 
-    public void setId(final long pId) {
-	id = pId;
-    }
+	// Transient Variables not saved in database
+	@Transient
+	private Map<String, Object> serializedPropertiesMap;
 
-    public boolean getIsSubset() {
-	return this.isSubset;
-    }
+	public PeptideSet() {
+	}
 
-    public void setIsSubset(boolean isSubset) {
-	this.isSubset = isSubset;
-    }
-    
-    public int getSequenceCount() {
+	public long getId() {
+		return id;
+	}
+
+	public void setId(final long pId) {
+		id = pId;
+	}
+
+	public boolean getIsSubset() {
+		return this.isSubset;
+	}
+
+	public void setIsSubset(boolean isSubset) {
+		this.isSubset = isSubset;
+	}
+
+	public int getSequenceCount() {
 		return sequenceCount;
 	}
 
@@ -104,91 +105,90 @@ public class PeptideSet implements Serializable {
 		this.sequenceCount = sequenceCount;
 	}
 
-    public int getPeptideCount() {
-	return this.peptideCount;
-    }
+	public int getPeptideCount() {
+		return this.peptideCount;
+	}
 
-    public void setPeptideCount(int peptideCount) {
-	this.peptideCount = peptideCount;
-    }
+	public void setPeptideCount(int peptideCount) {
+		this.peptideCount = peptideCount;
+	}
 
 	public int getPeptideMatchCount() {
-	return this.peptideMatchCount;
-    }
+		return this.peptideMatchCount;
+	}
 
-    public void setPeptideMatchCount(int peptideMatchCount) {
-	this.peptideMatchCount = peptideMatchCount;
-    }
+	public void setPeptideMatchCount(int peptideMatchCount) {
+		this.peptideMatchCount = peptideMatchCount;
+	}
 
-    public long getResultSummaryId() {
-	return resultSummaryId;
-    }
+	public long getResultSummaryId() {
+		return resultSummaryId;
+	}
 
-    public void setResultSummaryId(final long pResultSummaryId) {
-	resultSummaryId = pResultSummaryId;
-    }
+	public void setResultSummaryId(final long pResultSummaryId) {
+		resultSummaryId = pResultSummaryId;
+	}
 
-    public float getScore() {
-	return this.score;
-    }
+	public float getScore() {
+		return this.score;
+	}
 
-    public void setScore(float score) {
-	this.score = score;
-    }
+	public void setScore(float score) {
+		this.score = score;
+	}
 
-    public Scoring getScoring() {
-	return this.scoring;
-    }
+	public Scoring getScoring() {
+		return this.scoring;
+	}
 
-    public void setScoring(Scoring scoring) {
-	this.scoring = scoring;
-    }
+	public void setScoring(Scoring scoring) {
+		this.scoring = scoring;
+	}
 
-    public String getSerializedProperties() {
-	return this.serializedProperties;
-    }
+	public String getSerializedProperties() {
+		return this.serializedProperties;
+	}
 
-    public void setSerializedProperties(String serializedProperties) {
-	this.serializedProperties = serializedProperties;
-    }
+	public void setSerializedProperties(String serializedProperties) {
+		this.serializedProperties = serializedProperties;
+	}
 
-    public ProteinSet getProteinSet() {
-	return this.proteinSet;
-    }
+	public ProteinSet getProteinSet() {
+		return this.proteinSet;
+	}
 
-    public void setProteinSet(ProteinSet proteinSet) {
-	this.proteinSet = proteinSet;
-    }
+	public void setProteinSet(ProteinSet proteinSet) {
+		this.proteinSet = proteinSet;
+	}
 
-    public Set<PeptideSetPeptideInstanceItem> getPeptideSetPeptideInstanceItems() {
-	return this.peptideSetPeptideInstanceItems;
-    }
+	public Set<PeptideSetPeptideInstanceItem> getPeptideSetPeptideInstanceItems() {
+		return this.peptideSetPeptideInstanceItems;
+	}
 
-    public void setPeptideSetPeptideInstanceItems(
-	    Set<PeptideSetPeptideInstanceItem> peptideSetPeptideInstanceItems) {
-	this.peptideSetPeptideInstanceItems = peptideSetPeptideInstanceItems;
-    }
+	public void setPeptideSetPeptideInstanceItems(
+		Set<PeptideSetPeptideInstanceItem> peptideSetPeptideInstanceItems) {
+		this.peptideSetPeptideInstanceItems = peptideSetPeptideInstanceItems;
+	}
 
-    public Set<ProteinMatch> getProteinMatches() {
-	return this.proteinMatches;
-    }
+	public Set<ProteinMatch> getProteinMatches() {
+		return this.proteinMatches;
+	}
 
-    public void setProteinMatches(Set<ProteinMatch> proteinMatches) {
-	this.proteinMatches = proteinMatches;
-    }
-
+	public void setProteinMatches(Set<ProteinMatch> proteinMatches) {
+		this.proteinMatches = proteinMatches;
+	}
 
 	@SuppressWarnings("unchecked")
 	public Map<String, Object> getSerializedPropertiesAsMap() throws Exception {
-	if ((serializedPropertiesMap == null) && (serializedProperties != null)) {
-	    serializedPropertiesMap = JsonSerializer.getMapper().readValue(getSerializedProperties(),Map.class);
+		if ((serializedPropertiesMap == null) && (serializedProperties != null)) {
+			serializedPropertiesMap = JsonSerializer.getMapper().readValue(getSerializedProperties(), Map.class);
+		}
+		return serializedPropertiesMap;
 	}
-	return serializedPropertiesMap;
-    }
 
-    public void setSerializedPropertiesAsMap(Map<String, Object> serializedPropertiesMap) throws Exception {
-	this.serializedPropertiesMap = serializedPropertiesMap;
-	this.serializedProperties = JsonSerializer.getMapper().writeValueAsString(serializedPropertiesMap);
-    }
+	public void setSerializedPropertiesAsMap(Map<String, Object> serializedPropertiesMap) throws Exception {
+		this.serializedPropertiesMap = serializedPropertiesMap;
+		this.serializedProperties = JsonSerializer.getMapper().writeValueAsString(serializedPropertiesMap);
+	}
 
 }

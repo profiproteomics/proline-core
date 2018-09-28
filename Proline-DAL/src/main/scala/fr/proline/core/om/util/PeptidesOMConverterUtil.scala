@@ -1,25 +1,15 @@
 package fr.proline.core.om.util
 
+import javax.persistence.EntityManager
+
 import scala.collection.JavaConversions.asScalaSet
 import scala.collection.JavaConversions.collectionAsScalaIterable
 import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.HashMap
-import fr.proline.core.om.model.msi.IonTypes
-import fr.proline.core.om.model.msi.LocatedPtm
-import fr.proline.core.om.model.msi.Peptide
-import fr.proline.core.om.model.msi.PeptideInstance
-import fr.proline.core.om.model.msi.PeptideMatch
-import fr.proline.core.om.model.msi.PeptideSet
-import fr.proline.core.om.model.msi.PeptideSetItem
-import fr.proline.core.om.model.msi.PtmDefinition
-import fr.proline.core.om.model.msi.PtmEvidence
-import fr.proline.core.om.model.msi.PtmNames
-import fr.proline.core.orm.msi.repository.{ProteinSetRepositorty => proSetRepo}
-import javax.persistence.EntityManager
-import javax.persistence.Persistence
-import fr.proline.repository.ProlineDatabaseType
-import fr.proline.core.orm.util.DataStoreConnectorFactory
 
+import fr.proline.core.om.model.msi._
+import fr.proline.core.orm.msi.repository.{ ProteinSetRepositorty => MsiProSetRepo }
+import fr.proline.core.orm.util.DataStoreConnectorFactory
 import fr.proline.core.util.ResidueUtils._
 
 /**
@@ -43,11 +33,11 @@ class PeptidesOMConverterUtil(useCachedObject: Boolean = true) {
   type MsiPeptideInstance = fr.proline.core.orm.msi.PeptideInstance
   type MsiPeptideSet = fr.proline.core.orm.msi.PeptideSet
   type MsiSeqDatabase = fr.proline.core.orm.msi.SeqDatabase
-  type PsPeptide = fr.proline.core.orm.ps.Peptide
-  type PsPeptidePtm = fr.proline.core.orm.ps.PeptidePtm
-  type PsPtmSpecificity = fr.proline.core.orm.ps.PtmSpecificity
-
-  val psPrecursorType = fr.proline.core.orm.ps.PtmEvidence.Type.Precursor
+  type MsiPeptide = fr.proline.core.orm.msi.Peptide
+  type MsiPeptidePtm = fr.proline.core.orm.msi.PeptidePtm
+  type MsiPtmSpecificity = fr.proline.core.orm.msi.PtmSpecificity
+  
+  val msiPrecursorType = fr.proline.core.orm.msi.PtmEvidence.Type.Precursor
 
   //implicit def javaIntToScalaInt(javaInt: java.lang.Integer) = javaInt.intValue
 
@@ -69,9 +59,11 @@ class PeptidesOMConverterUtil(useCachedObject: Boolean = true) {
    * @param msiEM EntityManager to the MSIdb the data are issued from
    * @return an OM PeptideInstance corresponding to specified ORM PeptideInstance.
    */
-  def convertPeptideInstanceORM2OM(msiPepInst: MsiPeptideInstance,
+  def convertPeptideInstanceORM2OM(
+    msiPepInst: MsiPeptideInstance,
     loadPepMatches: Boolean,
-    msiEM: EntityManager): PeptideInstance = {
+    msiEM: EntityManager
+  ): PeptideInstance = {
 
     //Verify if object is in cache
     if (useCachedObject && peptideInstancesCache.contains(msiPepInst.getId())) {
@@ -105,7 +97,7 @@ class PeptidesOMConverterUtil(useCachedObject: Boolean = true) {
       while (msiPepMatchChildIT.hasNext()) {
 
         val nextMsiPMChild = msiPepMatchChildIT.next()
-        val msiPepInstChild = proSetRepo.findPeptideInstanceForPepMatch(msiEM, nextMsiPMChild.getId)
+        val msiPepInstChild = MsiProSetRepo.findPeptideInstanceForPepMatch(msiEM, nextMsiPMChild.getId)
 
         if (!pepInstChildById.contains(msiPepInstChild.getId)) {
           //Convert child ORM Peptide Instance to OM Peptide Instance
@@ -126,21 +118,18 @@ class PeptidesOMConverterUtil(useCachedObject: Boolean = true) {
     val pepInstChildren = pepInstChildById.values.toArray
 
     //Get Peptide, Unmodified Peptide && PeptideInstance 
-    val psDBConnector = dataStoreConnectorFactory.getPsDbConnector()
-    val em = psDBConnector.createEntityManager()
+    val msiPeptide = msiPepInst.getPeptide()
+    val msiUnmodifiedPep = msiEM.find(classOf[MsiPeptide], msiPepInst.getUnmodifiedPeptideId())
+    val unmodifiedPep = if (msiUnmodifiedPep == null) None else Some(convertPeptideORM2OM(msiUnmodifiedPep))
 
-    val psPeptide = em.find(classOf[PsPeptide], msiPepInst.getPeptide().getId())
-    val psUnmodifiedPep = em.find(classOf[PsPeptide], msiPepInst.getUnmodifiedPeptideId())
-    var unmodifiedPep = if (psUnmodifiedPep == null) None else Some(convertPeptidePsORM2OM(psUnmodifiedPep))
-
-    val msiUnmodifiedPepInst = proSetRepo.findPeptideInstanceForPeptide(msiEM, msiPepInst.getUnmodifiedPeptideId())
+    val msiUnmodifiedPepInst = MsiProSetRepo.findPeptideInstanceForPeptide(msiEM, msiPepInst.getUnmodifiedPeptideId())
     val unmodifiedPepInst = if (msiUnmodifiedPepInst == null) None
     else Some(convertPeptideInstanceORM2OM(msiUnmodifiedPepInst, loadPepMatches, msiEM))
 
     //Create OM PeptideInstance 
     val convertedPepInst = new PeptideInstance(
       id = msiPepInst.getId(),
-      peptide = convertPeptidePsORM2OM(psPeptide),
+      peptide = convertPeptideORM2OM(msiPeptide),
       //peptideMatchIds = pepMatchIds,
       peptideMatches = pepMatches,
       children = pepInstChildren,
@@ -207,7 +196,7 @@ class PeptidesOMConverterUtil(useCachedObject: Boolean = true) {
 
     val msiPepSetItems = msiPepSet.getPeptideSetPeptideInstanceItems()
     val msiPepSetItemIT = msiPepSetItems.iterator()
-    val pepSetItems = new Array[PeptideSetItem](msiPepSetItems.size);
+    val pepSetItems = new Array[PeptideSetItem](msiPepSetItems.size)
 
     index = 0
     while (msiPepSetItemIT.hasNext()) {
@@ -238,157 +227,164 @@ class PeptidesOMConverterUtil(useCachedObject: Boolean = true) {
 
     if (useCachedObject) peptideSetsCache += pepSet.id -> pepSet
 
-    return pepSet;
+    return pepSet
   }
 
-  def convertPeptidePsORM2OM(psPeptide: PsPeptide): Peptide = {
+  def convertPeptideORM2OM(msiPeptide: MsiPeptide): Peptide = {
 
     // Check if object is in cache 
-    if (useCachedObject && peptidesCache.contains(psPeptide.getId)) {
-      return peptidesCache(psPeptide.getId)
+    if (useCachedObject && peptidesCache.contains(msiPeptide.getId)) {
+      return peptidesCache(msiPeptide.getId)
     }
 
     // **** Create OM LocatedPtm for specified Peptide
-    val psPtms = psPeptide.getPtms()
-    val locatedPtms = if (psPtms == null) {
+    val msiPtms = msiPeptide.getPtms()
+    val locatedPtms = if (msiPtms == null) {
       new Array[LocatedPtm](0)
     } else {
-      val ptmArray = new Array[LocatedPtm](psPtms.size())
-      val psPepPtmIt = psPtms.iterator()
+      val ptmArray = new Array[LocatedPtm](msiPtms.size())
+      val msiPepPtmIt = msiPtms.iterator()
 
       var index = 0
-      while (psPepPtmIt.hasNext()) {
-        ptmArray(index) = convertPeptidePtmPsORM2OM(psPepPtmIt.next())
+      while (msiPepPtmIt.hasNext()) {
+        ptmArray(index) = convertPeptidePtmORM2OM(msiPepPtmIt.next())
         index += 1
       }
 
       ptmArray
     }
+    
+    if (locatedPtms.isEmpty && msiPeptide.getPtmString() != null && msiPeptide.getPtmString().isEmpty() == false) {
+      println("missing ptms: "+msiPeptide.getId + " "+msiPeptide.getSequence + " " +msiPeptide.getPtmString())
+    }
 
     // **** Create OM Peptide
     val peptide = new Peptide(
-      id = psPeptide.getId,
-      sequence = psPeptide.getSequence(),
-      ptmString = psPeptide.getPtmString(),
+      id = msiPeptide.getId,
+      sequence = msiPeptide.getSequence(),
+      ptmString = msiPeptide.getPtmString(),
       ptms = locatedPtms,
-      calculatedMass = psPeptide.getCalculatedMass(),
-      properties = null)
+      calculatedMass = msiPeptide.getCalculatedMass(),
+      properties = null
+    )
+    
     if (useCachedObject) peptidesCache.put(peptide.id, peptide)
 
     peptide
   }
 
   /**
-   *  Convert from fr.proline.core.orm.ps.PeptidePtm (ORM) to fr.proline.core.om.model.msi.LocatedPtm (OM).
+   *  Convert from fr.proline.core.orm.msi.PeptidePtm (ORM) to fr.proline.core.om.model.msi.LocatedPtm (OM).
    *
    * LocatedPtm, PtmDefinition, PtmEvidence and PtmNames will be created from specified
    * PeptidePtm and associated PtmSpecificity, PtmEvidence and Ptm
    *
    *
-   * @param ptmPsORM : fr.proline.core.orm.ps.PeptidePtm to convert
+   * @param msiPeptidePtm : fr.proline.core.orm.msi.PeptidePtm to convert
    * @return created LocatedPtm (with associated objects)
    */
-  def convertPeptidePtmPsORM2OM(psPeptidePtm: PsPeptidePtm): LocatedPtm = {
+  def convertPeptidePtmORM2OM(msiPeptidePtm: MsiPeptidePtm): LocatedPtm = {
 
     import fr.profi.util.regex.RegexUtils._
 
     // Check if object is in cache 
-    if (useCachedObject && locatedPTMsCache.contains(psPeptidePtm.getId)) {
-      return locatedPTMsCache(psPeptidePtm.getId)
+    if (useCachedObject && locatedPTMsCache.contains(msiPeptidePtm.getId)) {
+      return locatedPTMsCache(msiPeptidePtm.getId)
     }
 
     var precursorEvidence: PtmEvidence = null
-    val psPtmEvidencesIt = psPeptidePtm.getSpecificity().getPtm().getEvidences().iterator();
+    val msiPtmEvidencesIt = msiPeptidePtm.getSpecificity().getPtm().getEvidences().iterator()
 
-    while (psPtmEvidencesIt.hasNext() && precursorEvidence == null) {
-      val psPtmEvidence = psPtmEvidencesIt.next()
-      if (psPtmEvidence.getType().equals(psPrecursorType)) {
-        precursorEvidence = new PtmEvidence(IonTypes.Precursor,
-          psPtmEvidence.getComposition(),
-          psPtmEvidence.getMonoMass(),
-          psPtmEvidence.getAverageMass(),
-          psPtmEvidence.getIsRequired())
+    while (msiPtmEvidencesIt.hasNext() && precursorEvidence == null) {
+      val msiPtmEvidence = msiPtmEvidencesIt.next()
+      if (msiPtmEvidence.getType() == msiPrecursorType) {
+        precursorEvidence = new PtmEvidence(
+          IonTypes.Precursor,
+          msiPtmEvidence.getComposition(),
+          msiPtmEvidence.getMonoMass(),
+          msiPtmEvidence.getAverageMass(),
+          msiPtmEvidence.getIsRequired())
       }
     }
 
     // Create OM PtmDefinition from ORM PtmSpecificity
-    val ptmDefinition = convertPtmSpecificityORM2OM(psPeptidePtm.getSpecificity())
+    val ptmDefinition = convertPtmSpecificityORM2OM(msiPeptidePtm.getSpecificity())
 
     //Create OM LocatedPtm from ORM PeptidePtm
     val locatedPtm = new LocatedPtm(
       definition = ptmDefinition,
-      seqPosition = psPeptidePtm.getSeqPosition(),
-      monoMass = psPeptidePtm.getMonoMass(),
-      averageMass = psPeptidePtm.getAverageMass(),
+      seqPosition = msiPeptidePtm.getSeqPosition(),
+      monoMass = msiPeptidePtm.getMonoMass(),
+      averageMass = msiPeptidePtm.getAverageMass(),
       composition = precursorEvidence.composition,
       isNTerm = if (ptmDefinition.location =~ """.+N-term$""") true else false,
       isCTerm = if (ptmDefinition.location =~ """.+C-term$""") true else false)
-    if (useCachedObject) locatedPTMsCache.put(psPeptidePtm.getId(), locatedPtm)
+    if (useCachedObject) locatedPTMsCache.put(msiPeptidePtm.getId(), locatedPtm)
 
     locatedPtm
   }
 
   /**
-   *  Convert from fr.proline.core.orm.ps.PeptideSpecificity(ORM) to fr.proline.core.om.model.msi.PtmDefinition (OM).
+   *  Convert from fr.proline.core.orm.msi.PeptideSpecificity(ORM) to fr.proline.core.om.model.msi.PtmDefinition (OM).
    *
    *
-   * @param ptmSpecificityORM : fr.proline.core.orm.ps.PeptideSpecificity to convert
+   * @param ptmSpecificityORM : fr.proline.core.orm.msi.PeptideSpecificity to convert
    * @return created PtmDefinition (with associated objects)
    */
-  def convertPtmSpecificityORM2OM(psPtmSpecificity: PsPtmSpecificity): PtmDefinition = {
+  def convertPtmSpecificityORM2OM(msiPtmSpecificity: MsiPtmSpecificity): PtmDefinition = {
 
     import collection.JavaConversions.collectionAsScalaIterable
 
     //Verify PtmDefinition exist in cache
-    if (useCachedObject && ptmDefinitionsCache.contains(psPtmSpecificity.getId))
-      return ptmDefinitionsCache(psPtmSpecificity.getId)
+    if (useCachedObject && ptmDefinitionsCache.contains(msiPtmSpecificity.getId))
+      return ptmDefinitionsCache(msiPtmSpecificity.getId)
 
     //*********** Create PtmNames from Ptm
-    val psPtm = psPtmSpecificity.getPtm()
-    val psPtmShortName = psPtm.getShortName()
+    val msiPtm = msiPtmSpecificity.getPtm()
+    val msiPtmShortName = msiPtm.getShortName()
     var ptmNames: PtmNames = null
-    if (useCachedObject && ptmNamesCache.contains(psPtmShortName))
-      ptmNames = ptmNamesCache(psPtmShortName)
+    if (useCachedObject && ptmNamesCache.contains(msiPtmShortName))
+      ptmNames = ptmNamesCache(msiPtmShortName)
     if (ptmNames == null) {
-      ptmNames = new PtmNames(psPtmShortName, psPtm.getFullName())
+      ptmNames = new PtmNames(msiPtmShortName, msiPtm.getFullName())
       if (useCachedObject)
-        ptmNamesCache.put(psPtmShortName, ptmNames)
+        ptmNamesCache.put(msiPtmShortName, ptmNames)
     }
 
     //*************** PtmEvidences ***************//    
 
     //Get PtmEvidences referencing PtmSpecificity of specified PeptidePtm. Creates corresponding OM objects
-    val psPtmEvidences = psPtmSpecificity.getEvidences()
-    var ptmEvidences = new ArrayBuffer[PtmEvidence](psPtmEvidences.size())
+    val msiPtmEvidences = msiPtmSpecificity.getEvidences()
+    var ptmEvidences = new ArrayBuffer[PtmEvidence](msiPtmEvidences.size())
     var precursorFound = false
 
-    for (psPtmEvid <- collectionAsScalaIterable(psPtmEvidences)) {
+    for (msiPtmEvid <- collectionAsScalaIterable(msiPtmEvidences)) {
 
-      if (psPtmEvid.getType().equals(psPrecursorType))
+      if (msiPtmEvid.getType() == msiPrecursorType)
         precursorFound = true
 
       ptmEvidences += new PtmEvidence(
-        ionType = IonTypes.withName(psPtmEvid.getType().name()),
-        composition = psPtmEvid.getComposition(),
-        monoMass = psPtmEvid.getMonoMass(),
-        averageMass = psPtmEvid.getAverageMass(),
-        isRequired = psPtmEvid.getIsRequired())
+        ionType = IonTypes.withName(msiPtmEvid.getType().name()),
+        composition = msiPtmEvid.getComposition(),
+        monoMass = msiPtmEvid.getMonoMass(),
+        averageMass = msiPtmEvid.getAverageMass(),
+        isRequired = msiPtmEvid.getIsRequired())
     }
     if (!precursorFound) {
 
       //"Precursor" PtmEvidence for this Ptm
       var precursorEvidence: PtmEvidence = null;
-      val psPtmEvidencesIt = psPtmSpecificity.getPtm().getEvidences().iterator();
-      while (psPtmEvidencesIt.hasNext() && precursorEvidence == null) {
-        val psPtmEvidence = psPtmEvidencesIt.next();
+      val msiPtmEvidencesIt = msiPtmSpecificity.getPtm().getEvidences().iterator();
+      while (msiPtmEvidencesIt.hasNext() && precursorEvidence == null) {
+        val msiPtmEvidence = msiPtmEvidencesIt.next();
 
-        if (psPtmEvidence.getType().equals(psPrecursorType)) {
+        if (msiPtmEvidence.getType() == msiPrecursorType) {
           precursorEvidence = new PtmEvidence(
             ionType = IonTypes.Precursor,
-            psPtmEvidence.getComposition(),
-            psPtmEvidence.getMonoMass(),
-            psPtmEvidence.getAverageMass(),
-            psPtmEvidence.getIsRequired())
+            msiPtmEvidence.getComposition(),
+            msiPtmEvidence.getMonoMass(),
+            msiPtmEvidence.getAverageMass(),
+            msiPtmEvidence.getIsRequired())
         }
       }
 
@@ -397,16 +393,17 @@ class PeptidesOMConverterUtil(useCachedObject: Boolean = true) {
 
     // Create OM PtmDefinition from ORM PtmSpecificity
     val ptmDef = new PtmDefinition(
-      id = psPtmSpecificity.getId(),
-      location = psPtmSpecificity.getLocation(),
+      id = msiPtmSpecificity.getId(),
+      location = msiPtmSpecificity.getLocation(),
       names = ptmNames,
       ptmEvidences = ptmEvidences.toArray,
-      residue = characterToScalaChar(psPtmSpecificity.getResidue),
-      classification = psPtmSpecificity.getClassification().getName().toString(),
-      ptmId = psPtmSpecificity.getPtm().getId()
+      residue = characterToScalaChar(msiPtmSpecificity.getResidue),
+      classification = msiPtmSpecificity.getClassification().getName().toString(),
+      ptmId = msiPtmSpecificity.getPtm().getId()
     )
+    
     if (useCachedObject)
-      ptmDefinitionsCache.put(psPtmSpecificity.getId(), ptmDef);
+      ptmDefinitionsCache.put(msiPtmSpecificity.getId(), ptmDef)
 
     ptmDef
   }

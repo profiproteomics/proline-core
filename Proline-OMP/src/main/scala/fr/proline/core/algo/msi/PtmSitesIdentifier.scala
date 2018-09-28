@@ -50,10 +50,10 @@ class PtmSitesIdentifier() extends LazyLogging {
             //	         pm.properties.get.ptmSiteProperties.get.getMascotProbabilityBySite.isDefined &&
             //	         pm.properties.get.ptmSiteProperties.get.getMascotProbabilityBySite.get.contains(ptm.toReadableString()))
             // VDS Workaround test for issue #16643
-            var result = false;
+            var result = false
             if (pm.properties.isDefined && pm.properties.get.ptmSiteProperties.isDefined && pm.properties.get.ptmSiteProperties.get.getMascotProbabilityBySite.isDefined) {
               if (pm.properties.get.ptmSiteProperties.get.getMascotProbabilityBySite.get.contains(ptm.toReadableString()))
-                result = true;
+                result = true
               else {
                 result = pm.properties.get.ptmSiteProperties.get.getMascotProbabilityBySite.get.contains(toOtherReadableString(ptm))
               }
@@ -145,7 +145,7 @@ class PtmSitesIdentifier() extends LazyLogging {
         }
       }
     }
-    logger.info(ptmSites.size + " Ptm sites identified")
+    logger.info(ptmSites.size + " Ptm sites were identified")
     ptmSites
   }
 

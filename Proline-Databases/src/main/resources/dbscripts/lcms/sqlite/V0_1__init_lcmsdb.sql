@@ -106,14 +106,6 @@ CREATE TABLE feature_scoring (
                 serialized_properties TEXT
 );
 
-CREATE TABLE instrument (
-                id INTEGER NOT NULL,
-                name TEXT(100) NOT NULL,
-                source TEXT(100) NOT NULL,
-                serialized_properties TEXT,
-                PRIMARY KEY (id)
-);
-
 CREATE TABLE map (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 name TEXT(1000) NOT NULL,
@@ -328,9 +320,7 @@ CREATE TABLE scan_sequence (
                 ms1_scan_count INTEGER NOT NULL,
                 ms2_scan_count INTEGER NOT NULL,
                 serialized_properties TEXT,
-                instrument_id INTEGER NOT NULL,
-                PRIMARY KEY (id),
-                FOREIGN KEY (instrument_id) REFERENCES instrument (id)
+                PRIMARY KEY (id)
 );
 
 CREATE TABLE theoretical_feature (

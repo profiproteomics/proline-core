@@ -38,10 +38,10 @@ class SQLProcessedMapProvider(
     // If peakels were loaded group them by processed map id
     /*val peakelsByRawMapId = if( loadPeakels == false ) Map.empty[Long,Array[Peakel]]
     else peakelProvider.getPeakels(rawMapIds).groupBy(_.rawMapId)*/
-    val peakelsByProcMapId = if( loadPeakels == false ) Map.empty[Long,Array[Peakel]]
+    val peakelsByProcMapId = if( !loadPeakels ) Map.empty[Long,Array[Peakel]]
     else {
       featuresByProcMapId.view.map { case(procMapId,features) =>
-        procMapId -> features.flatMap( _.relations.peakelItems.map(_.getPeakel.get) )
+        procMapId -> features.flatMap( _.relations.peakelItems.map(_.getPeakel().get) )
       } toMap
     }
     
@@ -61,7 +61,7 @@ class SQLProcessedMapProvider(
         
         val processedMapId = r.getLong(ProcMapCols.ID.aliasedString)
         val featureScoring = featureScoringById.get(r.getLong(LcMsMapCols.FEATURE_SCORING_ID))
-        val peakelsOpt = if( loadPeakels == false ) Option.empty[Array[Peakel]]
+        val peakelsOpt = if( !loadPeakels ) Option.empty[Array[Peakel]]
         else Some( peakelsByProcMapId(processedMapId) )
         //else Some( rawMapIds.flatMap( rawMapId => peakelsByProcMapId.getOrElse(rawMapId,Array.empty[Peakel]) ) )
         
@@ -186,7 +186,7 @@ class SQLProcessedMapProvider(
         val ftId = toLong(processedFtRecord.getAny(FtCols.ID))
         
         // Try to retrieve overlapping features
-        val olpFeatures = if (olpFtIdsByFtId.contains(ftId) == false ) null
+        val olpFeatures = if (!olpFtIdsByFtId.contains(ftId) ) null
         else olpFtIdsByFtId(ftId) map { olpFtId => olpFeatureById(olpFtId) }
         
         // Retrieve peakel items

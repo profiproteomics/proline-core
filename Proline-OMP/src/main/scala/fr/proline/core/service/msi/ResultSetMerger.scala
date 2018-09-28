@@ -1,27 +1,25 @@
 package fr.proline.core.service.msi
 
-import scala.collection.mutable.ArrayBuffer
-import scala.collection.mutable.LongMap
-
 import com.typesafe.scalalogging.LazyLogging
-
 import fr.profi.jdbc.easy._
 import fr.proline.api.service.IService
-import fr.proline.context.DatabaseConnectionContext
 import fr.proline.context.IExecutionContext
 import fr.proline.core.algo.msi.AdditionMode
 import fr.proline.core.algo.msi.ResultSetAdder
-import fr.proline.core.dal.DoJDBCReturningWork
 import fr.proline.core.dal.DoJDBCWork
 import fr.proline.core.dal.context._
 import fr.proline.core.dal.helper.MsiDbHelper
 import fr.proline.core.dal.tables.msi.MsiDbResultSetRelationTable
-import fr.proline.core.om.model.msi.ResultSet
+import fr.proline.core.om.model.msi.{ResultSet, ResultSetProperties}
+import fr.proline.core.om.provider.PeptideCacheExecutionContext
 import fr.proline.core.om.provider.msi.IResultSetProvider
 import fr.proline.core.om.provider.msi.impl.ORMResultSetProvider
 import fr.proline.core.om.provider.msi.impl.SQLResultSetProvider
 import fr.proline.core.om.storer.msi.RsStorer
 import fr.proline.core.om.storer.msi.impl.StorerContext
+
+import scala.collection.mutable.ArrayBuffer
+import scala.collection.mutable.LongMap
 
 object ResultSetMerger {
 
@@ -38,17 +36,9 @@ object ResultSetMerger {
   private def getResultSetProvider(execContext: IExecutionContext, useJPA: Boolean): IResultSetProvider = {
 
     if (execContext.isJPA && useJPA) {
-      new ORMResultSetProvider(
-        execContext.getMSIDbConnectionContext,
-        execContext.getPSDbConnectionContext,
-        execContext.getUDSDbConnectionContext
-      )
+      new ORMResultSetProvider(execContext.getMSIDbConnectionContext)
     } else {
-      new SQLResultSetProvider(
-        execContext.getMSIDbConnectionContext,
-        execContext.getPSDbConnectionContext,
-        execContext.getUDSDbConnectionContext
-      )
+      new SQLResultSetProvider(PeptideCacheExecutionContext(execContext))
     }
 
   }
@@ -63,11 +53,11 @@ class ResultSetMerger(
   useJPA: Boolean = false
 ) extends IService with LazyLogging {
 
-  var mergedResultSet: ResultSet = null
+  var mergedResultSet: ResultSet = _
 
-  def mergedResultSetId = if (mergedResultSet == null) 0L else mergedResultSet.id
+  def mergedResultSetId: Long = if (mergedResultSet == null) 0L else mergedResultSet.id
 
-  override protected def beforeInterruption = {
+  override protected def beforeInterruption: Unit = {
     logger.info("ResultSetMerger thread is going to be interrupted.")
   }
 
@@ -149,10 +139,10 @@ class ResultSetMerger(
     }
     
     executeOnProgress() //execute registered action during progress
-    
+
     // Check that resultSets have FULL content
     for (rs <- resultSetById.values) {
-    	require( rs.isValidatedContent == false, "use ResultSummaryMerger if you want to deal with validated result sets")
+    	require( !rs.isValidatedContent, "use ResultSummaryMerger if you want to deal with validated result sets")
     }
     
     this._mergeAndStoreResultSets(
@@ -177,31 +167,33 @@ class ResultSetMerger(
 
     val targetRsCount = targetRsIds.length
     val decoyRsCount = decoyRsIds.length
+    val additionMode = aggregationMode.getOrElse(AdditionMode.AGGREGATION)
 
     if (targetRsCount != decoyRsCount) {
       logger.warn(s"Inconsistent number of TARGET-DECOY ResultSets: $targetRsCount TARGET RS VS $decoyRsCount DECOY RS")
     }
 
-    mergedResultSet = {
-      logger.debug("Merging TARGET ResultSets ...")
-      
-      val targetRsAdder = new ResultSetAdder(
-        resultSetId = ResultSet.generateNewId,
-        isValidatedContent = false,
-        isDecoy = false,
-        additionMode = aggregationMode.getOrElse(AdditionMode.AGGREGATION)
-      )      
-      for (rsId <- targetRsIds) {
-        targetRsAdder.addResultSet(resultSetProvider(rsId))
-        //logger.info("Additioner state : " + targetMergerAlgo.mergedProteinMatches.size + " ProMs, " + targetMergerAlgo.peptideById.size + " Peps," + targetMergerAlgo.mergedProteinMatches.map(_.sequenceMatches).flatten.length + " SeqMs")
-      }
-      
-      
-      targetRsAdder.toResultSet
+
+    logger.debug("Merging TARGET ResultSets ...")
+
+    val targetRsAdder = new ResultSetAdder(
+      resultSetId = ResultSet.generateNewId,
+      isValidatedContent = false,
+      isDecoy = false,
+      additionMode = additionMode
+    )
+    for (rsId <- targetRsIds) {
+      targetRsAdder.addResultSet(resultSetProvider(rsId))
+      //logger.info("Additioner state : " + targetMergerAlgo.mergedProteinMatches.size + " ProMs, " + targetMergerAlgo.peptideById.size + " Peps," + targetMergerAlgo.mergedProteinMatches.map(_.sequenceMatches).flatten.length + " SeqMs")
     }
-    
+
+    mergedResultSet = targetRsAdder.toResultSet()
+    val rsProperties = mergedResultSet.properties.getOrElse(new ResultSetProperties())
+    rsProperties.setMergeMode(Some(additionMode.toString))
+    mergedResultSet.properties = Some(rsProperties)
+
     executeOnProgress() //execute registered action during progress
-    
+
     if (decoyRsCount > 0) {
       logger.debug("Merging DECOY ResultSets ...")
       
@@ -209,17 +201,20 @@ class ResultSetMerger(
         resultSetId = ResultSet.generateNewId,
         isValidatedContent = false,
         isDecoy = true,
-        additionMode = aggregationMode.getOrElse(AdditionMode.AGGREGATION)
+        additionMode = additionMode
       )
-      
+
       for (decoyRsId <- decoyRsIds) {
         decoyRsAdder.addResultSet(resultSetProvider(decoyRsId))
       }
 
-      val decoyRs = decoyRsAdder.toResultSet
-      
+      val decoyRs = decoyRsAdder.toResultSet()
+      val rsProperties = decoyRs.properties.getOrElse(new ResultSetProperties())
+      rsProperties.setMergeMode(Some(additionMode.toString))
+      decoyRs.properties = Some(rsProperties)
+
       executeOnProgress() //execute registered action during progress
-      
+
       DoJDBCWork.withEzDBC(storerContext.getMSIDbConnectionContext) { msiEzDBC =>
         /* Store merged decoy result set */
         _storeMergedResultSet(storerContext, msiEzDBC, decoyRs, decoyRsIds)
@@ -229,9 +224,9 @@ class ResultSetMerger(
 
       logger.debug("Merged DECOY ResultSet Id: " + decoyRs.id)
     }
-    
+
     executeOnProgress() //execute registered action during progress
-    
+
     DoJDBCWork.withEzDBC(storerContext.getMSIDbConnectionContext) { msiEzDBC =>
       /* Store merged target result set */
       _storeMergedResultSet(storerContext, msiEzDBC, mergedResultSet, targetRsIds)
@@ -247,7 +242,7 @@ class ResultSetMerger(
     childRsIds: Seq[Long]
   ) {
     
-    require( childRsIds.isEmpty == false, "childRsIds is empty")
+    require( childRsIds.nonEmpty, "childRsIds is empty")
     
     val distinctRsIds = childRsIds.distinct
 

@@ -1,8 +1,8 @@
 package fr.proline.core.om.util
 
-import fr.proline.core.om.model.msi.LocatedPtm
-import fr.proline.core.orm.ps.PeptidePtm
 import scala.collection.mutable.HashSet
+import fr.proline.core.om.model.msi.LocatedPtm
+import fr.proline.core.orm.msi.PeptidePtm
 
 object OMComparatorUtil {
 
@@ -45,7 +45,7 @@ object OMComparatorUtil {
     if( ormPepPtmSet.size != omPepPtmSet.size )
       return false;
     
-    val remainingORMPepPtmSetBuilder = scala.collection.mutable.Set.newBuilder[fr.proline.core.orm.ps.PeptidePtm] 
+    val remainingORMPepPtmSetBuilder = scala.collection.mutable.Set.newBuilder[fr.proline.core.orm.msi.PeptidePtm] 
     remainingORMPepPtmSetBuilder ++=(ormPepPtmSet)
     val remainingORMPepPtmSet = remainingORMPepPtmSetBuilder.result
     val omPepPtmIt = omPepPtmSet.toIterator

@@ -1,17 +1,12 @@
 package fr.proline.core.service.lcms
 
+import com.typesafe.scalalogging.LazyLogging
 import fr.profi.jdbc.easy._
-import fr.proline.api.service.IService
 import fr.proline.context.LcMsDbConnectionContext
-import fr.proline.core.dal.{ DoJDBCWork, DoJDBCReturningWork }
-import fr.proline.core.algo.lcms.AlignmentParams
-import fr.proline.core.algo.lcms.LcmsMapAligner
+import fr.proline.core.algo.lcms.alignment.AlignmentResult
+import fr.proline.core.dal.DoJDBCWork
 import fr.proline.core.om.model.lcms.MapSet
 import fr.proline.core.om.storer.lcms.MapAlnSetStorer
-import fr.proline.core.service.lcms._
-import fr.proline.repository.IDatabaseConnector
-import fr.proline.core.algo.lcms.alignment.AlignmentResult
-import com.typesafe.scalalogging.LazyLogging
 
 object AlignMapSet {
 

@@ -1,42 +1,32 @@
 package fr.proline.core.om.provider.msi.impl
 
-import scala.collection.mutable.HashMap
-import scala.collection.mutable.ArrayBuffer
+import fr.profi.chemistry.model.Enzyme
+import fr.profi.chemistry.model.EnzymeCleavage
 import fr.profi.jdbc.easy.EasyDBC
 import fr.profi.util.primitives._
-import fr.profi.util.sql.StringOrBoolAsBool._
 import fr.proline.context._
 import fr.proline.core.dal.DoJDBCReturningWork
-import fr.proline.core.dal.tables.{SelectQueryBuilder1, SelectQueryBuilder2}
 import fr.proline.core.dal.tables.SelectQueryBuilder._
+import fr.proline.core.dal.tables.SelectQueryBuilder1
+import fr.proline.core.dal.tables.SelectQueryBuilder2
 import fr.proline.core.dal.tables.msi._
 import fr.proline.core.dal.tables.uds._
 import fr.proline.core.om.builder.EnzymeBuilder._
-import fr.proline.core.om.builder.InstrumentConfigBuilder._
 import fr.proline.core.om.builder.MsiSearchBuilder._
-import fr.proline.core.om.builder.PeaklistBuilder._
 import fr.proline.core.om.model.msi._
 import fr.proline.core.om.provider.msi.IMSISearchProvider
-import fr.proline.repository.ProlineDatabaseType
-import fr.profi.chemistry.model.Enzyme
-import fr.profi.chemistry.model.EnzymeCleavage
 
 class SQLMsiSearchProvider(
   val udsDbCtx: UdsDbConnectionContext,
-  val msiDbCtx: MsiDbConnectionContext,
-  val psDbCtx: DatabaseConnectionContext
+  val msiDbCtx: MsiDbConnectionContext
 ) extends IMSISearchProvider {
-  
-  require( udsDbCtx.getProlineDatabaseType == ProlineDatabaseType.UDS, "UdsDb connection required")
-  require( msiDbCtx.getProlineDatabaseType == ProlineDatabaseType.MSI, "MsiDb connection required")
-  require( psDbCtx.getProlineDatabaseType == ProlineDatabaseType.PS, "PsDb connection required")
   
   import SQLInstrumentConfigProvider._
   import SQLMsiSearchProvider._
   import SQLPeaklistProvider._
   import SQLPeaklistSoftwareProvider._
   
-  protected lazy val ptmProvider = new SQLPTMProvider(psDbCtx)
+  protected lazy val ptmProvider = new SQLPTMProvider(msiDbCtx)
 
   def getMSISearches(msiSearchIds: Seq[Long]): Array[MSISearch] = {
     if( msiSearchIds.isEmpty ) return Array()
@@ -44,10 +34,7 @@ class SQLMsiSearchProvider(
     DoJDBCReturningWork.withEzDBC(udsDbCtx) { udsEzDBC =>
       
       DoJDBCReturningWork.withEzDBC(msiDbCtx) { msiEzDBC =>
-  
-        val searchSettingsIdByMsiSearchId = new HashMap[Long, Long]
-        val peaklistIdByMsiSearchId = new HashMap[Long, Long]
-        
+
         val msiSearchQuery = new SelectQueryBuilder1(MsiDbMsiSearchTable).mkSelectQuery( (t,c) =>
           List(t.*) -> "WHERE "~ t.ID ~" IN("~ msiSearchIds.mkString(",") ~")"
         )
@@ -66,7 +53,8 @@ class SQLMsiSearchProvider(
           enzymeId => selectAndMapEnzymeCleavageRecords(udsEzDBC, enzymeId),
           instConfigIds => selectInstConfigRecords(udsEzDBC, instConfigIds),
           instIds => selectInstrumentRecords(udsEzDBC, instIds),
-          instConfigIds => selectFragmentationSeriesRecords(udsEzDBC, instConfigIds),
+          fragRuleSetsIds => selectFragRuleSetsRecords(udsEzDBC, fragRuleSetsIds),
+          fragRuleSetsIds => selectFragmentationSeriesRecords(udsEzDBC, fragRuleSetsIds),
           ptmProvider
         )
         
@@ -98,6 +86,7 @@ class SQLMsiSearchProvider(
           enzymeId => selectAndMapEnzymeCleavageRecords(udsEzDBC, enzymeId),
           instConfigIds => selectInstConfigRecords(udsEzDBC, instConfigIds),
           instIds => selectInstrumentRecords(udsEzDBC, instIds),
+          fragRuleSetsIds => selectFragRuleSetsRecords(udsEzDBC, fragRuleSetsIds),
           instConfigIds => selectFragmentationSeriesRecords(udsEzDBC, instConfigIds),
           searchSettingsId => selectAndMapSearchedSeqDbRecords(msiEzDBC, searchSettingsId),
           ptmProvider
@@ -233,7 +222,7 @@ object SQLMsiSearchProvider {
   
   def selectAndMapSearchedSeqDbRecords(msiEzDBC: EasyDBC, searchSettingsId: Long): (IValueContainer => SeqDatabase) => Seq[SeqDatabase] = {
     
-    val sqb2 = new SelectQueryBuilder2(MsiDbSeqDatabaseTable, MsiDbSearchSettingsSeqDatabaseMapTable)
+    val sqb2 = new SelectQueryBuilder2[MsiDbSeqDatabaseColumns.type,MsiDbSearchSettingsSeqDatabaseMapColumns.type ](MsiDbSeqDatabaseTable, MsiDbSearchSettingsSeqDatabaseMapTable)
     
     val sqlQuery = sqb2.mkSelectQuery( (t1, c1, t2, c2) =>
       List(t1.*,t2.SEARCHED_SEQUENCES_COUNT,t2.SERIALIZED_PROPERTIES) ->

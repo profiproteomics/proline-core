@@ -16,60 +16,60 @@ import javax.persistence.Table;
 @Entity
 @Table(name = "peptide_set_protein_match_map")
 public class PeptideSetProteinMatchMap implements Serializable {
-    private static final long serialVersionUID = 1L;
+	private static final long serialVersionUID = 1L;
 
-    @EmbeddedId
-    private PeptideSetProteinMatchMapPK id;
+	@EmbeddedId
+	private PeptideSetProteinMatchMapPK id;
 
-    @ManyToOne
-    @JoinColumn(name = "result_summary_id")
-    private ResultSummary resultSummary;
+	@ManyToOne
+	@JoinColumn(name = "result_summary_id")
+	private ResultSummary resultSummary;
 
-    // bi-directional many-to-one association to ProteinMatch
-    @ManyToOne
-    @JoinColumn(name = "protein_match_id")
-    @MapsId("proteinMatchId")
-    private ProteinMatch proteinMatch;
+	// bi-directional many-to-one association to ProteinMatch
+	@ManyToOne
+	@JoinColumn(name = "protein_match_id")
+	@MapsId("proteinMatchId")
+	private ProteinMatch proteinMatch;
 
-    // bi-directional many-to-one association to PeptideSet
-    @ManyToOne
-    @JoinColumn(name = "peptide_set_id")
-    @MapsId("PeptideSetId")
-    private PeptideSet peptideSet;
+	// bi-directional many-to-one association to PeptideSet
+	@ManyToOne
+	@JoinColumn(name = "peptide_set_id")
+	@MapsId("PeptideSetId")
+	private PeptideSet peptideSet;
 
-    public PeptideSetProteinMatchMap() {
-    }
+	public PeptideSetProteinMatchMap() {
+	}
 
-    public PeptideSetProteinMatchMapPK getId() {
-	return this.id;
-    }
+	public PeptideSetProteinMatchMapPK getId() {
+		return this.id;
+	}
 
-    public void setId(PeptideSetProteinMatchMapPK id) {
-	this.id = id;
-    }
+	public void setId(PeptideSetProteinMatchMapPK id) {
+		this.id = id;
+	}
 
-    public ResultSummary getResultSummary() {
-	return this.resultSummary;
-    }
+	public ResultSummary getResultSummary() {
+		return this.resultSummary;
+	}
 
-    public void setResultSummary(ResultSummary resultSummary) {
-	this.resultSummary = resultSummary;
-    }
+	public void setResultSummary(ResultSummary resultSummary) {
+		this.resultSummary = resultSummary;
+	}
 
-    public ProteinMatch getProteinMatch() {
-	return this.proteinMatch;
-    }
+	public ProteinMatch getProteinMatch() {
+		return this.proteinMatch;
+	}
 
-    public void setProteinMatch(ProteinMatch proteinMatch) {
-	this.proteinMatch = proteinMatch;
-    }
+	public void setProteinMatch(ProteinMatch proteinMatch) {
+		this.proteinMatch = proteinMatch;
+	}
 
-    public PeptideSet getPeptideSet() {
-	return peptideSet;
-    }
+	public PeptideSet getPeptideSet() {
+		return peptideSet;
+	}
 
-    public void setPeptideSet(final PeptideSet pPeptideSet) {
-	peptideSet = pPeptideSet;
-    }
+	public void setPeptideSet(final PeptideSet pPeptideSet) {
+		peptideSet = pPeptideSet;
+	}
 
 }

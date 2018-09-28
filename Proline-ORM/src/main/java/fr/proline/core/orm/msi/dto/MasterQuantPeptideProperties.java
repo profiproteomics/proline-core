@@ -3,17 +3,15 @@ package fr.proline.core.orm.msi.dto;
 import java.util.HashMap;
 import java.util.List;
 
-
 public class MasterQuantPeptideProperties {
-	
+
 	public MasterQuantPeptideProperties() {
 		super();
 	}
 
 	List<Long> m_mqProtSetIds;
-	HashMap<String, List<MasterQuantPeptideProfile>>  m_mqPepProfileByGroupSetupNumber ;
-	
-	
+	HashMap<String, List<MasterQuantPeptideProfile>> m_mqPepProfileByGroupSetupNumber;
+
 	public List<Long> getMQProtSetIds() {
 		return m_mqProtSetIds;
 	}
@@ -29,7 +27,7 @@ public class MasterQuantPeptideProperties {
 	public void setMqProtSetProfilesByGroupSetupNumber(HashMap<String, List<MasterQuantPeptideProfile>> mqPepProfileByGroupSetupNumber) {
 		this.m_mqPepProfileByGroupSetupNumber = mqPepProfileByGroupSetupNumber;
 	}
-	
+
 	static class MasterQuantPeptideProfile {
 		List<ComputedRatio> ratios;
 
@@ -41,6 +39,7 @@ public class MasterQuantPeptideProperties {
 		public List<ComputedRatio> getRatios() {
 			return ratios;
 		}
+
 		public void setRatios(List<ComputedRatio> ratios) {
 			this.ratios = ratios;
 		}

@@ -4,21 +4,24 @@ import fr.profi.util.serialization.ProfiJson
 import fr.proline.context.UdsDbConnectionContext
 import fr.proline.core.algo.msq.config.profilizer.ProfilizerConfig
 import fr.proline.core.dal.DoJDBCReturningWork
-import fr.proline.core.dal.tables._
 import fr.proline.core.dal.tables.SelectQueryBuilder._
+import fr.proline.core.dal.tables._
 import fr.proline.core.dal.tables.uds.UdsDbDataSetObjectTreeMapTable
 import fr.proline.core.dal.tables.uds.UdsDbObjectTreeTable
-import fr.proline.core.om.model.msq._
 import fr.proline.core.om.provider.msq.IProfilizerConfigProvider
-import fr.proline.core.orm.uds.ObjectTreeSchema.{ SchemaName => ObjectTreeSchemaName }
+import fr.proline.core.orm.uds.ObjectTreeSchema.{SchemaName => ObjectTreeSchemaName}
 
 class SQLProfilizerConfigProvider(val udsDbCtx: UdsDbConnectionContext) extends IProfilizerConfigProvider {
   
   private val DsObjectTreeMapTable = UdsDbDataSetObjectTreeMapTable
   private val ObjectTreeTable = UdsDbObjectTreeTable
   private val profilizerConfigSchemaName = ObjectTreeSchemaName.POST_QUANT_PROCESSING_CONFIG
-  
+
   def getProfilizerConfig( quantitationId:Long ): Option[ProfilizerConfig] = {
+    getProfilizerConfigAsString(quantitationId).map(ProfiJson.deserialize[ProfilizerConfig](_))
+  }
+
+  def getProfilizerConfigAsString( quantitationId:Long ): Option[String] = {
     
     DoJDBCReturningWork.withEzDBC(udsDbCtx) { udsEzDBC =>
       
@@ -30,8 +33,7 @@ class SQLProfilizerConfigProvider(val udsDbCtx: UdsDbConnectionContext) extends 
       )
       
       udsEzDBC.selectHeadOption(objTreeSqlQuery) { r =>
-        val profilizerConfigAsStr = r.nextString
-        ProfiJson.deserialize[ProfilizerConfig](profilizerConfigAsStr)
+        r.nextString
       }
       
     } // END of DoJDBCReturningWork

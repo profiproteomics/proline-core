@@ -1,6 +1,5 @@
 package fr.proline.core.algo.msq.summarizing
 
-import scala.collection.JavaConversions.{ collectionAsScalaIterable, setAsJavaSet }
 import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.HashMap
 import scala.collection.mutable.LongMap
@@ -8,7 +7,6 @@ import scala.collection.mutable.LongMap
 import com.typesafe.scalalogging.LazyLogging
 
 import fr.profi.util.collection._
-import fr.profi.util.ms._
 import fr.proline.core.om.model.lcms.{MapSet,Feature}
 import fr.proline.core.om.model.msi._
 import fr.proline.core.om.model.msq._
@@ -109,8 +107,6 @@ class LabelFreeEntitiesSummarizer(
       for( (masterFt,mqPepIon) <- unidentifiedMQPepIonByMft ) {
         masterQuantPeptides += BuildMasterQuantPeptide( Array(mqPepIon), None, quantMergedRsmId )
       }
-      
-      
       
       masterQuantPeptides.toArray
     }

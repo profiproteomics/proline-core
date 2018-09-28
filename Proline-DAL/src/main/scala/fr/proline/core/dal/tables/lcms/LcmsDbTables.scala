@@ -161,21 +161,6 @@ object LcmsDbFeatureScoringTable extends LcmsDbFeatureScoringTable {
   val columns = LcmsDbFeatureScoringColumns
 }
 
-object LcmsDbInstrumentColumns extends ColumnEnumeration {
-  val $tableName = LcmsDbInstrumentTable.name
-  val ID = Column("id")
-  val NAME = Column("name")
-  val SOURCE = Column("source")
-  val SERIALIZED_PROPERTIES = Column("serialized_properties")
-}
-
-abstract class LcmsDbInstrumentTable extends TableDefinition[LcmsDbInstrumentColumns.type]
-
-object LcmsDbInstrumentTable extends LcmsDbInstrumentTable {
-  val name = "instrument"
-  val columns = LcmsDbInstrumentColumns
-}
-
 object LcmsDbMapColumns extends ColumnEnumeration {
   val $tableName = LcmsDbMapTable.name
   val ID = Column("id")
@@ -513,7 +498,6 @@ object LcmsDbScanSequenceColumns extends ColumnEnumeration {
   val MS1_SCAN_COUNT = Column("ms1_scan_count")
   val MS2_SCAN_COUNT = Column("ms2_scan_count")
   val SERIALIZED_PROPERTIES = Column("serialized_properties")
-  val INSTRUMENT_ID = Column("instrument_id")
 }
 
 abstract class LcmsDbScanSequenceTable extends TableDefinition[LcmsDbScanSequenceColumns.type]
@@ -576,7 +560,6 @@ object LcmsDb {
     LcmsDbFeatureOverlapMappingTable,
     LcmsDbFeaturePeakelItemTable,
     LcmsDbFeatureScoringTable,
-    LcmsDbInstrumentTable,
     LcmsDbMapTable,
     LcmsDbMapAlignmentTable,
     LcmsDbMapLayerTable,

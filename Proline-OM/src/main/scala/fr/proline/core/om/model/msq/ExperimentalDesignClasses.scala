@@ -205,10 +205,8 @@ case class MasterQuantChannel(
   var id: Long = 0,
   val number: Int,
   val name: Option[String] = None,
-  // TODO: remove from MasterQuantChannelProperties
   @JsonDeserialize(contentAs = classOf[java.lang.Long] )
   val identDatasetId: Option[Long] = None,
-  // TODO: remove from MasterQuantChannelProperties
   @JsonDeserialize(contentAs = classOf[java.lang.Long] )
   val identResultSummaryId: Option[Long] = None,
   @JsonDeserialize(contentAs = classOf[java.lang.Long] )

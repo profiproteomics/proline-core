@@ -14,74 +14,77 @@ import fr.profi.util.StringUtils;
 
 public final class MsiPeptideRepository {
 
-    private MsiPeptideRepository() {
-    }
-
-    public static List<Peptide> findPeptidesForSequence(final EntityManager msiEm, final String seq) {
-
-	JPAUtils.checkEntityManager(msiEm);
-
-	if (StringUtils.isEmpty(seq)) {
-	    throw new IllegalArgumentException("Invalid seq");
+	private MsiPeptideRepository() {
 	}
 
-	final TypedQuery<Peptide> query = msiEm.createNamedQuery("findMsiPepsForSeq", Peptide.class);
-	query.setParameter("seq", seq.toUpperCase());
+	public static List<Peptide> findPeptidesForSequence(final EntityManager msiEm, final String seq) {
 
-	return query.getResultList();
-    }
+		JPAUtils.checkEntityManager(msiEm);
 
-    /**
-     * Retrieve Msi Peptides by a Collection (List, Set...) of Ids.
-     * 
-     * @param ids
-     *            <code>Collection</code> of Peptide Ids to retrieve (must not be <code>null</code>).
-     * @return List of found Peptides (can be empty if none found).
-     */
-    public static List<Peptide> findPeptidesForIds(final EntityManager msiEm, final Collection<Long> ids) {
+		if (StringUtils.isEmpty(seq)) {
+			throw new IllegalArgumentException("Invalid seq");
+		}
 
-	JPAUtils.checkEntityManager(msiEm);
+		final TypedQuery<Peptide> query = msiEm.createNamedQuery("findMsiPepsForSeq", Peptide.class);
+		query.setParameter("seq", seq.toUpperCase());
 
-	return JPARepositoryUtils.executeInQueryAsBatch(
-		msiEm.createNamedQuery("findMsiPepsForIds", Peptide.class), "ids", ids);
-    }
-
-    public static Peptide findPeptideForSequenceAndPtmStr(final EntityManager msiEm, final String seq,
-	    final String ptmStr) {
-
-	JPAUtils.checkEntityManager(msiEm);
-
-	if (StringUtils.isEmpty(seq)) {
-	    throw new IllegalArgumentException("Invalid seq");
+		return query.getResultList();
 	}
 
-	Peptide result = null;
+	/**
+	 * Retrieve Msi Peptides by a Collection (List, Set...) of Ids.
+	 * 
+	 * @param ids
+	 *            <code>Collection</code> of Peptide Ids to retrieve (must not be <code>null</code>).
+	 * @return List of found Peptides (can be empty if none found).
+	 */
+	public static List<Peptide> findPeptidesForIds(final EntityManager msiEm, final Collection<Long> ids) {
 
-	TypedQuery<Peptide> query = null;
+		JPAUtils.checkEntityManager(msiEm);
 
-	if (ptmStr == null) { // Assume NULL <> "" (empty)
-	    query = msiEm.createNamedQuery("findMsiPeptForSeq", Peptide.class);
-	} else {
-	    query = msiEm.createNamedQuery("findMsiPeptForSeqAndPtmStr", Peptide.class);
-	    query.setParameter("ptmStr", ptmStr.toUpperCase());
+		return JPARepositoryUtils.executeInQueryAsBatch(
+			msiEm.createNamedQuery("findMsiPepsForIds", Peptide.class), "ids", ids);
 	}
 
-	query.setParameter("seq", seq.toUpperCase()); // In all cases give a Peptide sequence
+	public static Peptide findPeptideForSequenceAndPtmStr(
+		final EntityManager msiEm,
+		final String seq,
+		final String ptmStr) {
 
-	final List<Peptide> peptides = query.getResultList();
+		JPAUtils.checkEntityManager(msiEm);
 
-	if ((peptides != null) && !peptides.isEmpty()) {
+		if (StringUtils.isEmpty(seq)) {
+			throw new IllegalArgumentException("Invalid seq");
+		}
 
-	    if (peptides.size() == 1) {
-		result = peptides.get(0);
-	    } else {
-		throw new NonUniqueResultException(
-			"There are more than one Peptide for given sequence and ptmString");
-	    }
+		Peptide result = null;
 
+		TypedQuery<Peptide> query = null;
+
+		if (ptmStr == null) { // Assume NULL <> "" (empty)
+			query = msiEm.createNamedQuery("findMsiPepsForSeqWOPtm", Peptide.class);
+		} else {
+			query = msiEm.createNamedQuery("findMsiPeptForSeqAndPtmStr", Peptide.class);
+			query.setParameter("ptmStr", ptmStr.toUpperCase());
+		}
+
+		query.setParameter("seq", seq.toUpperCase()); // In all cases give a Peptide sequence
+
+		final List<Peptide> peptides = query.getResultList();
+
+		if ((peptides != null) && !peptides.isEmpty()) {
+
+			if (peptides.size() == 1) {
+				result = peptides.get(0);
+			} else {
+				throw new NonUniqueResultException(
+					"There are more than one Peptide for given sequence and ptmString"
+				);
+			}
+
+		}
+
+		return result;
 	}
-
-	return result;
-    }
 
 }

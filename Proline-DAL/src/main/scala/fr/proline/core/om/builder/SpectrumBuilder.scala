@@ -41,7 +41,7 @@ object SpectrumBuilder {
       mozList = mozListOpt,
       intensityList = intensityListOpt,
       peaksCount = r.getInt(SpectrumCols.PEAK_COUNT),
-      instrumentConfigId = r.getLong(SpectrumCols.INSTRUMENT_CONFIG_ID),
+      fragmentationRuleSetId = r.getLongOption(SpectrumCols.FRAGMENTATION_RULE_SET_ID),
       peaklistId = r.getLong(SpectrumCols.PEAKLIST_ID),
       properties = propsOpt
     )

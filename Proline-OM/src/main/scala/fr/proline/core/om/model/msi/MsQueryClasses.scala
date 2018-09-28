@@ -1,12 +1,11 @@
 package fr.proline.core.om.model.msi
 
-import scala.collection.mutable.HashMap
-import scala.beans.BeanProperty
-import com.fasterxml.jackson.annotation.JsonCreator
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize
-import fr.profi.util.misc.InMemoryIdGen
 import fr.profi.util.StringUtils
+import fr.profi.util.misc.InMemoryIdGen
+
+import scala.beans.BeanProperty
 
 trait MsQuery {
   

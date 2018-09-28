@@ -17,8 +17,6 @@ import fr.proline.core.dal.tables.msi.MsiDbBioSequenceColumns
 
 class SQLBioSequenceProvider(val msiDbCtx: MsiDbConnectionContext) {
   
-  require( msiDbCtx.getProlineDatabaseType == ProlineDatabaseType.MSI, "MsiDb connection required")
-  
   private val BioSeqCols = MsiDbBioSequenceColumns
   private val bioSeqQB = new SelectQueryBuilder1(MsiDbBioSequenceTable)
   

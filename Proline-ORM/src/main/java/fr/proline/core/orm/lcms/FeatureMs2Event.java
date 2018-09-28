@@ -10,14 +10,13 @@ import javax.persistence.NamedQuery;
 import javax.persistence.MapsId;
 import javax.persistence.Table;
 
-
 /**
  * The persistent class for the feature_ms2_event database table.
  * 
  */
 @Entity
-@Table(name="feature_ms2_event")
-@NamedQuery(name="FeatureMs2Event.findAll", query="SELECT f FROM FeatureMs2Event f")
+@Table(name = "feature_ms2_event")
+@NamedQuery(name = "FeatureMs2Event.findAll", query = "SELECT f FROM FeatureMs2Event f")
 public class FeatureMs2Event implements Serializable {
 	private static final long serialVersionUID = 1L;
 
@@ -26,18 +25,18 @@ public class FeatureMs2Event implements Serializable {
 
 	//bi-directional many-to-one association to Feature
 	@ManyToOne
-	@JoinColumn(name="feature_id")
+	@JoinColumn(name = "feature_id")
 	@MapsId("featureId")
 	private Feature feature;
 
 	//bi-directional many-to-one association to RawMap
 	@ManyToOne
-	@JoinColumn(name="raw_map_id")
+	@JoinColumn(name = "raw_map_id")
 	private RawMap rawMap;
 
 	//uni-directional many-to-one association to Scan
 	@ManyToOne
-	@JoinColumn(name="ms2_event_id")
+	@JoinColumn(name = "ms2_event_id")
 	@MapsId("ms2_event_id")
 	private Scan scan;
 

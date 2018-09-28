@@ -1,18 +1,21 @@
 package fr.proline.core.om.provider.lcms.impl
 
-import scala.collection.mutable.ArrayBuffer
-import scala.collection.mutable.HashMap
 import fr.profi.jdbc.ResultSetRow
 import fr.profi.jdbc.easy.EasyDBC
+import fr.profi.util.primitives._
 import fr.proline.context.LcMsDbConnectionContext
-import fr.proline.core.dal.{ DoJDBCWork, DoJDBCReturningWork }
+import fr.proline.core.dal.DoJDBCReturningWork
 import fr.proline.core.dal.tables.SelectQueryBuilder._
-import fr.proline.core.dal.tables.{ SelectQueryBuilder1 }
-import fr.proline.core.dal.tables.lcms.{ LcmsDbMapSetTable,LcmsDbMasterFeatureItemTable, LcmsDbProcessedMapTable }
+import fr.proline.core.dal.tables.SelectQueryBuilder1
+import fr.proline.core.dal.tables.lcms.LcmsDbMapSetTable
+import fr.proline.core.dal.tables.lcms.LcmsDbMasterFeatureItemTable
+import fr.proline.core.dal.tables.lcms.LcmsDbProcessedMapTable
 import fr.proline.core.om.model.lcms._
 import fr.proline.core.om.provider.lcms.IMapSetProvider
-import fr.profi.util.primitives._
-//import fr.profi.util.sql._
+
+import scala.collection.mutable.ArrayBuffer
+import scala.collection.mutable.HashMap
+
   
 class SQLMapSetProvider(
   val lcmsDbCtx: LcMsDbConnectionContext
@@ -181,7 +184,7 @@ class SQLMapSetProvider(
     
     // Retrieve master map features
     val masterFeatures = masterMap.features
-    masterMap.rawMapReferences = childMaps map { cm => RawMapIdentifier(cm.getRawMapIds().apply(0)) }
+    masterMap.rawMapReferences = childMaps map { cm => RawMapIdentifier(cm.getRawMapIds().head) }
     
     // Check if master feature children are already loaded in memory 
     if( masterFeatures(0).children != null ) {
@@ -204,7 +207,7 @@ class SQLMapSetProvider(
     val mftItemQuery = new SelectQueryBuilder1(LcmsDbMasterFeatureItemTable).mkSelectQuery( (t,c) =>
       List(t.*) -> "WHERE "~ t.MASTER_MAP_ID ~" = "~ masterMapId
     )
-    val mftItemRecords = ezDBC.selectAndProcess( mftItemQuery ) { mftItemRecord =>      
+    val mftItemRecords = ezDBC.selectAndProcess( mftItemQuery ) { mftItemRecord =>
       
       // Retrieve master and child FT IDs
       val masterFtId = toLong(mftItemRecord.getAny(MftItemCols.MASTER_FEATURE_ID))

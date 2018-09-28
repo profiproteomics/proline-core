@@ -1,10 +1,7 @@
 package fr.proline.core.dbunit
 
-import java.io.File
 import org.junit.Assert._
 import org.junit.Test
-import fr.profi.util.resources.pathToStreamOrResourceToStream
-import fr.proline.core.dbunit._
 
 /**
  * @author David Bouyssie

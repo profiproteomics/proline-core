@@ -43,21 +43,16 @@ case class InstrumentConfig(
   val ms1Analyzer: String,
   val msnAnalyzer: String,
   var activationType: String,
-  var fragmentationRules: Option[Array[FragmentationRule]] = None,
-  
   var properties: Option[InstrumentConfigProperties] = None
 ) {
   
   // Secondary constructors were the name is automatically built
   def this( id: Long, instrument: Instrument, ms1Analyzer: String, msnAnalyzer: String,
-            activationType: String, fragmentationRules: Option[Array[FragmentationRule]]) {
+            activationType: String) {
     this( id,InstrumentConfig.makeName(instrument.name,activationType,ms1Analyzer,msnAnalyzer),
-          instrument,ms1Analyzer,msnAnalyzer,activationType,fragmentationRules)
+          instrument,ms1Analyzer,msnAnalyzer,activationType)
   }
-  def this( id: Long, instrument: Instrument, ms1Analyzer: String, msnAnalyzer: String, activationType: String) {
-    this( id,instrument,ms1Analyzer,msnAnalyzer,activationType,None)
-  }
-      
+
 }
 
 case class InstrumentConfigProperties ( 

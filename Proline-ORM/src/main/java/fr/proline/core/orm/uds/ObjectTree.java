@@ -20,7 +20,7 @@ import javax.persistence.Table;
 @Table(name = "object_tree")
 public class ObjectTree implements Serializable {
 
-    private static final long serialVersionUID = 1L;
+	private static final long serialVersionUID = 1L;
 
 	@Id
 	@GeneratedValue(strategy = GenerationType.AUTO)
@@ -39,9 +39,9 @@ public class ObjectTree implements Serializable {
 	@JoinColumn(name = "schema_name")
 	private ObjectTreeSchema schema;
 
-    public ObjectTree() {
-    }
-    
+	public ObjectTree() {
+	}
+
 	public long getId() {
 		return id;
 	}
@@ -82,5 +82,4 @@ public class ObjectTree implements Serializable {
 		this.schema = schema;
 	}
 
-    
 }

@@ -4,24 +4,20 @@ import com.typesafe.scalalogging.StrictLogging
 import fr.proline.repository.DriverType
 import fr.proline.repository.ProlineDatabaseType
 import fr.proline.repository.util.DatabaseTestCase
-import fr.proline.core.om.provider.msi.impl.SQLPeptideProvider
+import fr.proline.core.om.provider.msi.cache.PeptideCache
 
 class AbstractMultipleDBTestCase extends StrictLogging {
 
-  private val m_fakeException = new RuntimeException("_FakeException_ AbstractMultipleDBTestCase instance creation")
-
-  private val m_testCaseLock = new AnyRef()
+  protected val m_fakeException = new RuntimeException("_FakeException_ AbstractMultipleDBTestCase instance creation")
+  protected val m_testCaseLock = new AnyRef()
+  protected var m_toreDown = false
 
   /* All mutable fields are @GuardedBy("m_testCaseLock") */
-
-  var pdiDBTestCase: PDIDatabaseTestCase = null
   var msiDBTestCase: MSIDatabaseTestCase = null
-  var psDBTestCase: PSDatabaseTestCase = null
+
   var udsDBTestCase: UDSDatabaseTestCase = null
 
   var dsConnectorFactoryForTest: DataStoreConnectorFactoryForTest = null
-
-  private var m_toreDown = false
 
   def initDBsDBManagement(driverType: DriverType) {
 
@@ -31,24 +27,22 @@ class AbstractMultipleDBTestCase extends StrictLogging {
         throw new IllegalStateException("TestCase ALREADY torn down")
       }
 
-      logger.info("Creating UDS, PDI, PS, MSI Database TestCases")
+      logger.info("Creating UDS and MSI Database TestCases")
 
       udsDBTestCase = new UDSDatabaseTestCase(driverType)
       udsDBTestCase.initDatabase()
 
-      pdiDBTestCase = new PDIDatabaseTestCase(driverType)
-      pdiDBTestCase.initDatabase()
-
-      psDBTestCase = new PSDatabaseTestCase(driverType)
-      psDBTestCase.initDatabase()
-
       msiDBTestCase = new MSIDatabaseTestCase(driverType)
       msiDBTestCase.initDatabase()
 
-      dsConnectorFactoryForTest = new DataStoreConnectorFactoryForTest(udsDBTestCase.getConnector, pdiDBTestCase.getConnector, psDBTestCase.getConnector, msiDBTestCase.getConnector, null, false)
-
-      SQLPeptideProvider.clear() // Clear peptide cache between tests
-    } // End of synchronized block on m_testCaseLock
+      dsConnectorFactoryForTest = new DataStoreConnectorFactoryForTest(
+        udsDBTestCase.getConnector,
+        msiDBTestCase.getConnector,
+        lcMsDb = null,
+        initialize = false
+      )
+      
+      } // End of synchronized block on m_testCaseLock
 
   }
 
@@ -92,21 +86,6 @@ class AbstractMultipleDBTestCase extends StrictLogging {
           msiDBTestCase.tearDown()
         }
 
-        if (psDBTestCase != null) {
-          logger.debug("Closing PS Db TestCase")
-          if (psDBTestCase.getConnector.isMemory) {
-            val connection = psDBTestCase.getConnector.getDataSource.getConnection
-            logger.warn("Removing all objects from in-memory PS Db")
-            connection.createStatement().execute("DROP ALL OBJECTS")
-          }
-          psDBTestCase.tearDown()
-        }
-
-        if (pdiDBTestCase != null) {
-          logger.debug("Closing PDI Db TestCase")
-          pdiDBTestCase.tearDown()
-        }
-
         if (udsDBTestCase != null) {
           logger.debug("Closing UDS Db TestCase")
           // FIXME: same workaround as above
@@ -118,7 +97,6 @@ class AbstractMultipleDBTestCase extends StrictLogging {
           udsDBTestCase.tearDown()
         }
 
-        SQLPeptideProvider.clear() // Clear peptide cache between tests
 
         logger.info("All Database TestCases closed successfully")
       }
@@ -162,26 +140,6 @@ class UDSDatabaseTestCase(val driverType: DriverType) extends DatabaseAndDriverT
 
 }
 
-class PDIDatabaseTestCase(val driverType: DriverType) extends DatabaseAndDriverTestCase {
-
-  override def getProlineDatabaseType() = {
-    ProlineDatabaseType.PDI
-  }
-
-  val propertiesFile = "db_pdi.properties"
-
-}
-
-class PSDatabaseTestCase(val driverType: DriverType) extends DatabaseAndDriverTestCase {
-
-  override def getProlineDatabaseType() = {
-    ProlineDatabaseType.PS
-  }
-
-  val propertiesFile = "db_ps.properties"
-
-}
-
 class MSIDatabaseTestCase(val driverType: DriverType) extends DatabaseAndDriverTestCase {
 
   override def getProlineDatabaseType() = {
@@ -189,5 +147,15 @@ class MSIDatabaseTestCase(val driverType: DriverType) extends DatabaseAndDriverT
   }
 
   val propertiesFile = "db_msi.properties"
+
+}
+
+class LCMSDatabaseTestCase(val driverType: DriverType) extends DatabaseAndDriverTestCase {
+
+  override def getProlineDatabaseType() = {
+    ProlineDatabaseType.LCMS
+  }
+
+  val propertiesFile = "db_lcms.properties"
 
 }

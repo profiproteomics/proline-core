@@ -147,10 +147,12 @@ CREATE TABLE public.search_settings (
                 is_decoy BOOLEAN NOT NULL,
                 serialized_properties TEXT,
                 instrument_config_id BIGINT NOT NULL,
+                fragmentation_rule_set_id BIGINT,
                 CONSTRAINT search_settings_pk PRIMARY KEY (id)
 );
 COMMENT ON TABLE public.search_settings IS 'The settings used in a given MSI search';
 COMMENT ON COLUMN public.search_settings.serialized_properties IS 'A JSON string which stores optional properties (see corresponding JSON schema for more details).';
+COMMENT ON COLUMN public.search_settings.fragmentation_rule_set_id IS 'References the fragmentation_rule_set defined in UDS_db';
 
 
 ALTER SEQUENCE public.search_settings_id_seq OWNED BY public.search_settings.id;
@@ -292,7 +294,7 @@ CREATE TABLE public.spectrum (
                 peak_count INTEGER NOT NULL,
                 serialized_properties TEXT,
                 peaklist_id BIGINT NOT NULL,
-                instrument_config_id BIGINT NOT NULL,
+                fragmentation_rule_set_id BIGINT,
                 CONSTRAINT spectrum_pk PRIMARY KEY (id)
 );
 COMMENT ON TABLE public.spectrum IS 'The fragmentation spectrum submitted to the search engine. It can be a merge of multiple ms2 spectra. Time and scan values correspond then to the first and the last spectrum of the merge. In PMF studies only precursor attributes are used.';
@@ -304,6 +306,7 @@ COMMENT ON COLUMN public.spectrum.precursor_charge IS 'The parent ion charge whi
 COMMENT ON COLUMN public.spectrum.is_summed IS 'Indicates whether this spectrum is the sum of multiple spectra.';
 COMMENT ON COLUMN public.spectrum.first_time IS 'The chromatographic time at which this spectrum has been acquired.';
 COMMENT ON COLUMN public.spectrum.serialized_properties IS 'A JSON string which stores optional properties (see corresponding JSON schema for more details).';
+COMMENT ON COLUMN public.spectrum.fragmentation_rule_set_id IS 'References the fragmentation_rule_set defined in UDS_db';
 
 
 ALTER SEQUENCE public.spectrum_id_seq OWNED BY public.spectrum.id;
@@ -1093,13 +1096,6 @@ ON UPDATE NO ACTION
 NOT DEFERRABLE;
 
 ALTER TABLE public.search_settings ADD CONSTRAINT instrument_config_search_settings_fk
-FOREIGN KEY (instrument_config_id)
-REFERENCES public.instrument_config (id)
-ON DELETE RESTRICT
-ON UPDATE NO ACTION
-NOT DEFERRABLE;
-
-ALTER TABLE public.spectrum ADD CONSTRAINT instrument_config_spectrum_fk
 FOREIGN KEY (instrument_config_id)
 REFERENCES public.instrument_config (id)
 ON DELETE RESTRICT

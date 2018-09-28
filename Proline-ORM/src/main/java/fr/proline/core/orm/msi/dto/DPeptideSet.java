@@ -4,17 +4,15 @@ import fr.proline.core.orm.msi.PeptideSet;
 
 public class DPeptideSet {
 
-
 	private long m_id;
 	private int m_sequenceCount;
 	private int m_peptideCount;
 	private int m_peptideMatchCount;
 	private float m_score;
 	private long m_resultSummaryId;
-	
+
 	private DPeptideInstance[] dpeptideInstances = null;
 
-	
 	public DPeptideSet(long id, float score, int sequenceCount, int peptideCount, int peptideMatchCount, long resultSummaryId) {
 		super();
 		this.m_id = id;
@@ -25,7 +23,6 @@ public class DPeptideSet {
 		this.m_resultSummaryId = resultSummaryId;
 	}
 
-	
 	public DPeptideSet(PeptideSet ps) {
 		super();
 		this.m_id = ps.getId();
@@ -68,7 +65,7 @@ public class DPeptideSet {
 	public float getScore() {
 		return m_score;
 	}
-	
+
 	public long getResultSummaryId() {
 		return m_resultSummaryId;
 	}

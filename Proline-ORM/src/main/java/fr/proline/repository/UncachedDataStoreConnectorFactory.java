@@ -15,7 +15,7 @@ import fr.proline.core.orm.uds.Project;
 import fr.proline.core.orm.uds.repository.ExternalDbRepository;
 
 public class UncachedDataStoreConnectorFactory implements IDataStoreConnectorFactory {
-	
+
 	private static final String APP_NAME = "Proline";
 
 	/* Constants */
@@ -28,8 +28,6 @@ public class UncachedDataStoreConnectorFactory implements IDataStoreConnectorFac
 
 	/* All instance variables are @GuardedBy("m_managerLock") */
 	private IDatabaseConnector m_udsDbConnector;
-	private Map<Object, Object> pdiDbPropertiesMap;
-	private Map<Object, Object> psDbPropertiesMap;
 	private final Map<Long, Map<Object, Object>> m_msiDbPropertiesMaps = new HashMap<Long, Map<Object, Object>>();
 	private final Map<Long, Map<Object, Object>> m_lcMsDbPropertiesMaps = new HashMap<Long, Map<Object, Object>>();
 
@@ -82,58 +80,6 @@ public class UncachedDataStoreConnectorFactory implements IDataStoreConnectorFac
 
 			m_udsDbConnector = udsDbConnector;
 			m_applicationName = applicationName;
-			
-			EntityManager udsEm = null;
-
-			try {
-				udsEm = udsDbConnector.createEntityManager();
-
-				final DriverType udsDriverType = udsDbConnector.getDriverType();
-
-				/* Try to load PDI Db Connector */
-				final ExternalDb pdiDb = ExternalDbRepository.findExternalByType(udsEm, ProlineDatabaseType.PDI);
-
-				if (pdiDb == null) {
-					LOG.warn("No ExternalDb for PDI Db");
-				} else {
-					this.pdiDbPropertiesMap = pdiDb.toPropertiesMap(udsDriverType);
-					this.pdiDbPropertiesMap.put("ApplicationName", m_applicationName);
-				}
-
-				/* Try to load PS Db Connector */
-				final ExternalDb psDb = ExternalDbRepository.findExternalByType(udsEm, ProlineDatabaseType.PS);
-
-				if (psDb == null) {
-					LOG.warn("No ExternalDb for PS Db");
-				} else {
-					this.psDbPropertiesMap = psDb.toPropertiesMap(udsDriverType);
-					this.psDbPropertiesMap.put("ApplicationName", m_applicationName);
-				}
-
-			} catch (Exception ex) {
-				/* Log and re-throw */
-				final String message = "Error initializing UncachedDataStoreConnectorFactory";
-				LOG.error(message, ex);
-
-				/*
-				 * Close and set to null partially created connectors, so we can
-				 * retry to initialize UncachedDataStoreConnectorFactory with a valid
-				 * UDS connector.
-				 */
-				closeAll();
-
-				throw new RuntimeException(message, ex);
-			} finally {
-
-				if (udsEm != null) {
-					try {
-						udsEm.close();
-					} catch (Exception exClose) {
-						LOG.error("Error closing UDS Db EntityManager", exClose);
-					}
-				}
-
-			}
 
 		} // End of synchronized block on m_managerLock
 
@@ -142,7 +88,7 @@ public class UncachedDataStoreConnectorFactory implements IDataStoreConnectorFac
 	public void initialize(final Map<Object, Object> udsDbProperties) {
 		initialize(udsDbProperties, "Proline");
 	}
-	
+
 	public void initialize(final Map<Object, Object> udsDbProperties, String applicationName) {
 
 		synchronized (m_managerLock) {
@@ -160,11 +106,10 @@ public class UncachedDataStoreConnectorFactory implements IDataStoreConnectorFac
 
 	}
 
-
 	public void initialize(final String udsDbPropertiesFileName) {
 		initialize(udsDbPropertiesFileName, "Proline");
 	}
-	
+
 	public void initialize(final String udsDbPropertiesFileName, String applicationName) {
 
 		synchronized (m_managerLock) {
@@ -202,29 +147,15 @@ public class UncachedDataStoreConnectorFactory implements IDataStoreConnectorFac
 	}
 
 	@Override
-	public IDatabaseConnector getPdiDbConnector() {
-		checkInitialization();
-		
-		return DatabaseConnectorFactory.createDatabaseConnectorInstance(ProlineDatabaseType.PDI, this.pdiDbPropertiesMap);
-	}
-
-	@Override
-	public IDatabaseConnector getPsDbConnector() {
-		checkInitialization();
-		
-		return DatabaseConnectorFactory.createDatabaseConnectorInstance(ProlineDatabaseType.PS, this.psDbPropertiesMap);
-	}
-
-	@Override
 	public IDatabaseConnector getMsiDbConnector(final long projectId) {
 		return getProjectDbConnector(projectId, ProlineDatabaseType.MSI, this.m_msiDbPropertiesMaps);
 	}
-	
+
 	@Override
 	public IDatabaseConnector getLcMsDbConnector(final long projectId) {
 		return getProjectDbConnector(projectId, ProlineDatabaseType.LCMS, this.m_lcMsDbPropertiesMaps);
 	}
-	
+
 	private IDatabaseConnector getProjectDbConnector(
 		final long projectId,
 		final ProlineDatabaseType prolineDbType,
@@ -238,12 +169,12 @@ public class UncachedDataStoreConnectorFactory implements IDataStoreConnectorFac
 			final Long key = Long.valueOf(projectId);
 
 			Map<Object, Object> propertiesMap = propertiesMaps.get(key);
-			
+
 			if (propertiesMap == null) {
 				propertiesMap = retrieveExternalDbProperties(prolineDbType, projectId);
 				propertiesMaps.put(key, propertiesMap);
 			}
-			
+
 			dbConnector = DatabaseConnectorFactory.createDatabaseConnectorInstance(prolineDbType, propertiesMap);
 
 		} // End of synchronized block on m_managerLock
@@ -275,7 +206,7 @@ public class UncachedDataStoreConnectorFactory implements IDataStoreConnectorFac
 		} // End of synchronized block on m_managerLock
 
 	}
-	
+
 	@Override
 	public void closeLcMsDbConnector(long projectId) {
 
@@ -290,7 +221,7 @@ public class UncachedDataStoreConnectorFactory implements IDataStoreConnectorFac
 			}
 		}
 	}
-	
+
 	@Override
 	public void closeMsiDbConnector(long projectId) {
 
@@ -305,7 +236,7 @@ public class UncachedDataStoreConnectorFactory implements IDataStoreConnectorFac
 			}
 		}
 	}
-	
+
 	@Override
 	public void closeProjectConnectors(long projectId) {
 		this.closeLcMsDbConnector(projectId);
@@ -320,7 +251,7 @@ public class UncachedDataStoreConnectorFactory implements IDataStoreConnectorFac
 		}
 
 	}
-	
+
 	protected Map<Object, Object> retrieveExternalDbProperties(final ProlineDatabaseType prolineDbType, final long projectId) {
 		Map<Object, Object> propertiesMap = null;
 
@@ -340,7 +271,11 @@ public class UncachedDataStoreConnectorFactory implements IDataStoreConnectorFac
 			if (externalDb == null) {
 				LOG.warn("No ExternalDb for {} Db of project #{}", prolineDbType, projectId);
 			} else {
-				propertiesMap = externalDb.toPropertiesMap(udsDbConnector.getDriverType());
+				propertiesMap = externalDb.toPropertiesMap(
+					udsDbConnector.getDriverType(),
+					(String) udsDbConnector.getProperty(AbstractDatabaseConnector.PERSISTENCE_JDBC_USER_KEY),
+					(String) udsDbConnector.getProperty(AbstractDatabaseConnector.PERSISTENCE_JDBC_PASSWORD_KEY)
+				);
 				propertiesMap.put("ApplicationName", m_applicationName);
 			}
 

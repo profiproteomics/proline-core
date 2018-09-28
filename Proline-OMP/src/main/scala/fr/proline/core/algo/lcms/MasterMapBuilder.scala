@@ -12,7 +12,7 @@ object BuildMasterMap {
   def apply(
     mapSet: MapSet,
     scanSeqs: Seq[LcMsScanSequence],
-    masterFtFilter: Filter,
+    masterFtFilter: Option[Filter],
     ftMappingParams: FeatureMappingParams,
     ftClusteringParams: ClusteringParams // used to clusterize ambiguous ft mappings
   ): ProcessedMap = {
@@ -35,7 +35,7 @@ object BuildMasterMap {
 class MasterMapBuilder(
     mapSet: MapSet,
     scanSeqs: Seq[LcMsScanSequence],
-    masterFtFilter: Filter,
+    masterFtFilter: Option[Filter],
     ftMappingParams: FeatureMappingParams,
     ftClusteringParams: ClusteringParams // used to clusterize ambiguous ft mappings
   ) extends LazyLogging {
@@ -59,8 +59,8 @@ class MasterMapBuilder(
   }
   
   // TODO: check filter name (must be intensity or relative_intensity)
-  val ftSelector = FeatureSelector( masterFtFilter.name )
-  val filterTree = FilterNode(filter=masterFtFilter)
+  val ftSelector = FeatureSelector( masterFtFilter.map(_.name) )
+  val filterTree = FilterNode(filter = if (masterFtFilter.isDefined) masterFtFilter.get else null)
   
   def buildMasterMap(): ProcessedMap = {
     

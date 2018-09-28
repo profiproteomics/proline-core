@@ -65,7 +65,7 @@ public class BiologicalSplSplAnalysisMap implements Serializable {
 	public void setSampleAnalysis(SampleAnalysis sampleAnalysis) {
 		this.sampleAnalysis = sampleAnalysis;
 	}
-	
+
 	public int getSampleAnalysisNumber() {
 		return sampleAnalysisNumber;
 	}
@@ -73,5 +73,5 @@ public class BiologicalSplSplAnalysisMap implements Serializable {
 	public void setSampleAnalysisNumber(int sampleAnalysisNumber) {
 		this.sampleAnalysisNumber = sampleAnalysisNumber;
 	}
-	
+
 }

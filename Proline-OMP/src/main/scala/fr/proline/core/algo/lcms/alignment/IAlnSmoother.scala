@@ -6,12 +6,12 @@ trait IAlnSmoother {
   
   import fr.proline.core.om.model.lcms._
   
-  def smoothLandmarks( landmarks: Seq[Landmark], smoothingParams: AlnSmoothingParams ): Seq[Landmark]
+  def smoothLandmarks( landmarks: Seq[Landmark], smoothingParams: Option[AlnSmoothingParams]): Seq[Landmark]
   
   @deprecated("0.1.1","use smoothLandmarks instead")
   def smoothMapAlignment(mapAlignment: MapAlignment, smoothingParams: AlnSmoothingParams ): MapAlignment = {
     
-    val smoothedLandmarks = this.smoothLandmarks(mapAlignment.getLandmarks,smoothingParams)
+    val smoothedLandmarks = this.smoothLandmarks(mapAlignment.getLandmarks,Some(smoothingParams))
     
     val( timeList, deltaTimeList ) = ( new Array[Float](smoothedLandmarks.length), new Array[Float](smoothedLandmarks.length) )
     smoothedLandmarks.indices.foreach { i =>

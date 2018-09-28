@@ -3,59 +3,10 @@ package fr.proline.core.dal
 import java.sql.SQLException
 
 import com.typesafe.scalalogging.LazyLogging
-
 import fr.profi.util.ThreadLogger
 import fr.proline.context._
+import fr.proline.core.om.provider.PeptideCacheExecutionContext
 import fr.proline.repository._
-
-object BuildExecutionContext extends LazyLogging {
-
-  /**
-   * Creates a BasicExecutionContext instance from given IDataStoreConnectorFactory and project Id.
-   *
-   * @param dsFactory
-   *            Factory of Proline DataStore connectors.
-   * @param projectId
-   *            Id of project to retrieve project specific Dbs (MSI, LCMS).
-   * @param useJPA
-   *            If <code>true</code> all returned Db contexts wrap a new <code>EntityManager</code> for
-   *            relevant Proline Db. If <code>false</code> all returned Db contexts wrap a new SQL JDBC
-   *            <code>Connection</code>.
-   * @return A new instance of ExecutionContext
-   */
-  @deprecated("0.6.0","Use BuildLazyExecutionContext factory instead")
-  def apply(dsFactory: IDataStoreConnectorFactory, projectId: Long, useJPA: Boolean): IExecutionContext = {
-    val currentThread = Thread.currentThread
-
-    if (!currentThread.getUncaughtExceptionHandler.isInstanceOf[ThreadLogger]) {
-      currentThread.setUncaughtExceptionHandler(new ThreadLogger(logger.underlying.getName()))
-    }
-
-    val udsDbConnector = dsFactory.getUdsDbConnector
-    val udsDbCtx = if (udsDbConnector == null) null
-    else BuildUdsDbConnectionContext(udsDbConnector, useJPA)
-
-    val pdiDbConnector = dsFactory.getPdiDbConnector
-    val pdiDbCtx = if (pdiDbConnector == null) null
-    else BuildDbConnectionContext(pdiDbConnector, useJPA)
-    
-    val psDbConnector = dsFactory.getPsDbConnector
-    val psDbCtx = if (psDbConnector == null) null
-    else BuildDbConnectionContext(psDbConnector, useJPA)
-
-    /* Project specific Dbs */
-    val msiDbConnector = dsFactory.getMsiDbConnector(projectId)
-    val msiDbCtx = if (msiDbConnector == null) null
-    else BuildMsiDbConnectionContext(msiDbConnector, useJPA)
-    
-    val lcMsDbConnector = dsFactory.getLcMsDbConnector(projectId)
-    val lcMsDbCtx = if (lcMsDbConnector == null) null
-    else BuildLcMsDbConnectionContext(lcMsDbConnector, useJPA)
-
-    new BasicExecutionContext(udsDbCtx, pdiDbCtx, psDbCtx, msiDbCtx, lcMsDbCtx)
-  }
-
-}
 
 object BuildLazyExecutionContext extends LazyLogging {
 
@@ -90,18 +41,6 @@ object BuildLazyExecutionContext extends LazyLogging {
       else BuildUdsDbConnectionContext(udsDbConnector, useJPA, onConnectionContextClose)
     }
     
-    val pdiDbCtxBuilder = { () =>
-      val pdiDbConnector = dsFactory.getPdiDbConnector
-      if (pdiDbConnector == null) null
-      else BuildDbConnectionContext(pdiDbConnector, useJPA, onConnectionContextClose)
-    }
-    
-    val psDbCtxBuilder = { () =>
-      val psDbConnector = dsFactory.getPsDbConnector
-      if (psDbConnector == null) null
-      else BuildDbConnectionContext(psDbConnector, useJPA, onConnectionContextClose)
-    }
-    
     /* Project specific Dbs */
     val msiDbCtxBuilder = { () =>
       val msiDbConnector = dsFactory.getMsiDbConnector(projectId)
@@ -115,14 +54,15 @@ object BuildLazyExecutionContext extends LazyLogging {
       else BuildLcMsDbConnectionContext(lcMsDbConnector, useJPA, onConnectionContextClose)
     }
 
-    new LazyExecutionContext(
+    val lazyContext = new LazyExecutionContext(
+      projectId,
       useJPA,
       udsDbCtxBuilder,
-      pdiDbCtxBuilder,
-      psDbCtxBuilder,
       msiDbCtxBuilder,
       lcMsDbCtxBuilder
     )
+
+    new PeptideCacheExecutionContext(lazyContext)
   }
 
 }

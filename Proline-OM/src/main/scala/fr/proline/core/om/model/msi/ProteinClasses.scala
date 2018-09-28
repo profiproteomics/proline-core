@@ -1,11 +1,10 @@
 package fr.proline.core.om.model.msi
 
-import scala.collection.mutable.ArrayBuffer
-import scala.collection.mutable.HashMap
-import scala.beans.BeanProperty
 import com.fasterxml.jackson.annotation.JsonProperty
 import fr.profi.util.lang.EnhancedEnum
 import fr.profi.util.misc.InMemoryIdGen
+
+import scala.beans.BeanProperty
 
 object BioSequenceAlphabet extends EnhancedEnum {
   val AA, RNA, DNA = Value
@@ -93,28 +92,7 @@ object Protein extends InMemoryIdGen {
     coverage
   }
 
-  /*import org.biojava.bio.BioException
-  import org.biojava.bio.proteomics._
-  import org.biojava.bio.seq._
-  import org.biojava.bio.symbol._
 
-  def calcMass(sequence: String): Double = {
-    try {
-      new MassCalc(SymbolPropertyTable.AVG_MASS, false).getMass(ProteinTools.createProtein(sequence))
-    } catch {
-      case e: BioException => Double.NaN
-    }
-  }*/
-
-  /*def calcPI(sequence: String): Float = {
-    try {
-      (new IsoelectricPointCalc().getPI(ProteinTools.createProtein(sequence), true, true)).toFloat
-    } catch {
-      case e: IllegalAlphabetException => Float.NaN
-      case be: BioException            => Float.NaN
-    }
-  }*/
-  
   def calcMass(sequence: String): Double = {
     try {
       massComputer.computeMass(sequence)
@@ -189,7 +167,6 @@ case class ProteinMatch(
   var geneName: String = null,
   var score: Float = 0,
   var scoreType: String = null,
-  var coverage: Float = 0,
   var peptideMatchesCount: Int = 0,
   var sequenceMatches: Array[SequenceMatch] = null,
   

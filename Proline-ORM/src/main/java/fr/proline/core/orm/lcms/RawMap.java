@@ -5,38 +5,37 @@ import javax.persistence.*;
 import java.io.Serializable;
 import java.util.List;
 
-
 /**
  * The persistent class for the raw_map database table.
  * 
  */
 @Entity
-@Table(name="raw_map")
-@NamedQuery(name="RawMap.findAll", query="SELECT r FROM RawMap r")
+@Table(name = "raw_map")
+@NamedQuery(name = "RawMap.findAll", query = "SELECT r FROM RawMap r")
 public class RawMap implements Serializable {
 	private static final long serialVersionUID = 1L;
 
 	@Id
 	private Long id;
 
-	@Column(name="peak_picking_software_id")
+	@Column(name = "peak_picking_software_id")
 	private Long peakPickingSoftwareId;
 
-	@Column(name="peakel_fitting_model_id")
+	@Column(name = "peakel_fitting_model_id")
 	private Long peakelFittingModelId;
 
 	//bi-directional many-to-one association to FeatureMs2Event
-	@OneToMany(mappedBy="rawMap")
+	@OneToMany(mappedBy = "rawMap")
 	private List<FeatureMs2Event> featureMs2Events;
 
 	//bi-directional one-to-one association to Map
 	@OneToOne
-	@JoinColumn(name="id")
+	@JoinColumn(name = "id")
 	private Map map;
 
 	//uni-directional many-to-one association to ScanSequence
 	@ManyToOne
-	@JoinColumn(name="scan_sequence_id")
+	@JoinColumn(name = "scan_sequence_id")
 	private ScanSequence scanSequence;
 
 	public RawMap() {

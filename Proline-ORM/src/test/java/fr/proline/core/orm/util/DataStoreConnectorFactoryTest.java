@@ -25,171 +25,146 @@ import fr.proline.repository.util.DatabaseTestCase;
 
 public class DataStoreConnectorFactoryTest extends DatabaseTestCase {
 
-    private static final Logger LOG = LoggerFactory.getLogger(DataStoreConnectorFactoryTest.class);
+	private static final Logger LOG = LoggerFactory.getLogger(DataStoreConnectorFactoryTest.class);
 
-    private long m_projectId;
+	private long m_projectId;
 
-    @Override
-    public ProlineDatabaseType getProlineDatabaseType() {
-	return ProlineDatabaseType.UDS;
-    }
+	@Override
+	public ProlineDatabaseType getProlineDatabaseType() {
+		return ProlineDatabaseType.UDS;
+	}
 
-    @Before
-    public void setUp() throws Exception {
-	final IDatabaseConnector connector = getConnector();
+	@Before
+	public void setUp() throws Exception {
+		final IDatabaseConnector connector = getConnector();
 
-	final Map<Object, Object> props = new HashMap<Object, Object>();
-	props.put("hibernate.show_sql", "true");
-	props.put("hibernate.format_sql", "true");
+		final Map<Object, Object> props = new HashMap<Object, Object>();
 
-	connector.setAdditionalProperties(props);
+		//	Use the two following lines for debug purpose only
 
-	initDatabase();
+		//	props.put("hibernate.show_sql", "true");
+		//	props.put("hibernate.format_sql", "true");
 
-	final EntityManager udsEm = connector.createEntityManager();
+		connector.setAdditionalProperties(props);
 
-	EntityTransaction transac = null;
-	boolean transacOk = false;
+		initDatabase();
 
-	try {
-	    transac = udsEm.getTransaction();
-	    transac.begin();
-	    transacOk = false;
+		final EntityManager udsEm = connector.createEntityManager();
 
-	    /* Create a Test PDI Db */
-	    final ExternalDb pdiDb = new ExternalDb();
-	    pdiDb.setType(ProlineDatabaseType.PDI);
-	    pdiDb.setConnectionMode(ConnectionMode.MEMORY);
-	    pdiDb.setDbName("pdi_test");
-	    pdiDb.setDbUser("sa");
-	    pdiDb.setDbPassword("");
-	    pdiDb.setDbVersion("0.1");
-	    pdiDb.setIsBusy(false);
-
-	    udsEm.persist(pdiDb);
-
-	    /* Create a Test PS Db */
-	    final ExternalDb psDb = new ExternalDb();
-	    psDb.setType(ProlineDatabaseType.PS);
-	    psDb.setConnectionMode(ConnectionMode.MEMORY);
-	    psDb.setDbName("ps_test");
-	    psDb.setDbUser("sa");
-	    psDb.setDbPassword("");
-	    psDb.setDbVersion("0.1");
-	    psDb.setIsBusy(false);
-
-	    udsEm.persist(psDb);
-
-	    /* Create a TEST Project */
-	    final UserAccount projectOwner = new UserAccount();
-	    projectOwner.setPasswordHash("notEncryptedPassword");
-	    projectOwner.setCreationMode("manual");
-	    projectOwner.setLogin("Bob");
-
-	    udsEm.persist(projectOwner);
-
-	    final Project project = new Project(projectOwner);
-	    project.setName("Mon projet");
-	    project.setDescription("Un super projet");
-
-	    udsEm.persist(project);
-
-	    /* Create a Project MSI Db */
-	    final ExternalDb msiDb = new ExternalDb();
-	    msiDb.setType(ProlineDatabaseType.MSI);
-	    msiDb.setConnectionMode(ConnectionMode.MEMORY);
-	    msiDb.setDbName("msi_1_test");
-	    msiDb.setDbUser("sa");
-	    msiDb.setDbPassword("");
-	    msiDb.setDbVersion("0.1");
-	    msiDb.setIsBusy(false);
-
-	    msiDb.addProject(project);
-	    project.addExternalDatabase(msiDb); // Reverse association
-
-	    udsEm.persist(msiDb);
-
-	    /* Create a Project LCMS Db */
-	    final ExternalDb lcMsDb = new ExternalDb();
-	    lcMsDb.setType(ProlineDatabaseType.LCMS);
-	    lcMsDb.setConnectionMode(ConnectionMode.MEMORY);
-	    lcMsDb.setDbName("lcms_1_test");
-	    lcMsDb.setDbUser("sa");
-	    lcMsDb.setDbPassword("");
-	    lcMsDb.setDbVersion("0.1");
-	    lcMsDb.setIsBusy(false);
-
-	    lcMsDb.addProject(project);
-	    project.addExternalDatabase(lcMsDb); // Reverse association
-
-	    udsEm.persist(lcMsDb);
-
-	    transac.commit();
-	    transacOk = true;
-
-	    m_projectId = project.getId();
-	} finally {
-
-	    if ((transac != null) & !transacOk) {
-		LOG.info("Rollbacking UDS Db transaction");
+		EntityTransaction transac = null;
+		boolean transacOk = false;
 
 		try {
-		    transac.rollback();
-		} catch (Exception ex) {
-		    LOG.error("Error rollbacking UDS Db transaction", ex);
+			transac = udsEm.getTransaction();
+			transac.begin();
+			transacOk = false;
+
+			/* Create a TEST Project */
+			final UserAccount projectOwner = new UserAccount();
+			projectOwner.setPasswordHash("notEncryptedPassword");
+			projectOwner.setCreationMode("manual");
+			projectOwner.setLogin("Bob");
+
+			udsEm.persist(projectOwner);
+
+			final Project project = new Project(projectOwner);
+			project.setName("Mon projet");
+			project.setDescription("Un super projet");
+
+			udsEm.persist(project);
+
+			/* Create a Project MSI Db */
+			final ExternalDb msiDb = new ExternalDb();
+			msiDb.setType(ProlineDatabaseType.MSI);
+			msiDb.setConnectionMode(ConnectionMode.MEMORY);
+			msiDb.setDbName("msi_1_test");
+			//msiDb.setDbUser("sa");
+			//msiDb.setDbPassword("");
+			msiDb.setDbVersion("0.1");
+			msiDb.setIsBusy(false);
+
+			msiDb.addProject(project);
+			project.addExternalDatabase(msiDb); // Reverse association
+
+			udsEm.persist(msiDb);
+
+			/* Create a Project LCMS Db */
+			final ExternalDb lcMsDb = new ExternalDb();
+			lcMsDb.setType(ProlineDatabaseType.LCMS);
+			lcMsDb.setConnectionMode(ConnectionMode.MEMORY);
+			lcMsDb.setDbName("lcms_1_test");
+			//lcMsDb.setDbUser("sa");
+			//lcMsDb.setDbPassword("");
+			lcMsDb.setDbVersion("0.1");
+			lcMsDb.setIsBusy(false);
+
+			lcMsDb.addProject(project);
+			project.addExternalDatabase(lcMsDb); // Reverse association
+
+			udsEm.persist(lcMsDb);
+
+			transac.commit();
+			transacOk = true;
+
+			m_projectId = project.getId();
+		} finally {
+
+			if ((transac != null) & !transacOk) {
+				LOG.info("Rollbacking UDS Db transaction");
+
+				try {
+					transac.rollback();
+				} catch (Exception ex) {
+					LOG.error("Error rollbacking UDS Db transaction", ex);
+				}
+
+			}
+
+			try {
+				udsEm.close();
+			} catch (Exception exClose) {
+				LOG.error("Error closing UDS EntityManager", exClose);
+			}
+
 		}
-
-	    }
-
-	    try {
-		udsEm.close();
-	    } catch (Exception exClose) {
-		LOG.error("Error closing UDS EntityManager", exClose);
-	    }
 
 	}
 
-    }
+	@Override
+	public String getPropertiesFileName() {
+		return "database.properties";
+	}
 
-    @Override 
-    public String getPropertiesFileName(){
-    	return "database.properties";
-    }
-    
-    @Test
-    public void testDatabaseManager() {
-	final DataStoreConnectorFactory connectorFactory = DataStoreConnectorFactory.getInstance();
+	@Test
+	public void testDatabaseManager() {
+		final DataStoreConnectorFactory connectorFactory = DataStoreConnectorFactory.getInstance();
 
-	connectorFactory.initialize(getConnector());
+		connectorFactory.initialize(getConnector());
 
-	assertTrue("DatabaseManager is initialized", connectorFactory.isInitialized());
+		assertTrue("DatabaseManager is initialized", connectorFactory.isInitialized());
 
-	/* Explicitly upgrade all Databases */
-	DataStoreUpgrader.upgradeAllDatabases(connectorFactory, false);
+		/* Explicitly upgrade all Databases */
+		DataStoreUpgrader.upgradeAllDatabases(connectorFactory, false);
 
-	assertNotNull("PDI Db Connector", connectorFactory.getPdiDbConnector());
+		assertNotNull("MSI DB Connector for Project " + m_projectId,
+			connectorFactory.getMsiDbConnector(m_projectId));
 
-	assertNotNull("PS Db Connector", connectorFactory.getPsDbConnector());
+		assertNotNull("LCMS DB Connector for Project " + m_projectId,
+			connectorFactory.getLcMsDbConnector(m_projectId));
+	}
 
-	assertNotNull("MSI DB Connector for Project " + m_projectId,
-		connectorFactory.getMsiDbConnector(m_projectId));
+	@After
+	@Override
+	public void tearDown() {
+		/*
+		 * Special tearDown here : first close the DatabaseTestConnector (for UDS Db) then close all created
+		 * in-memory test Databases (UDS, MSI, LCMS Dbs...) Note : UDS Db is closed twice (by tearDown and
+		 * DatabaseManager.closeAll), this cause a harmless IllegalStateException "Connection pool has been
+		 * disposed".
+		 */
+		super.tearDown();
 
-	assertNotNull("LCMS DB Connector for Project " + m_projectId,
-		connectorFactory.getLcMsDbConnector(m_projectId));
-    }
-
-    @After
-    @Override
-    public void tearDown() {
-	/*
-	 * Special tearDown here : first close the DatabaseTestConnector (for UDS Db) then close all created
-	 * in-memory test Databases (PDI, PS, MSI, LCMS Dbs...) Note : UDS Db is closed twice (by tearDown and
-	 * DatabaseManager.closeAll), this cause a harmless IllegalStateException "Connection pool has been
-	 * disposed".
-	 */
-	super.tearDown();
-
-	DataStoreConnectorFactory.getInstance().closeAll();
-    }
+		DataStoreConnectorFactory.getInstance().closeAll();
+	}
 
 }

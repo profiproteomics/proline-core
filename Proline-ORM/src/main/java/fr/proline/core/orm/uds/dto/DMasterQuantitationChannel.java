@@ -12,34 +12,37 @@ import fr.proline.core.orm.util.JsonSerializer;
  */
 public class DMasterQuantitationChannel {
 
-	private long id ;
-	
+	private long id;
+
 	private String name;
-	
+
 	private Long quantResultSummaryId;
-	
+
 	private List<DQuantitationChannel> quantitationChannels;
-	
+
 	private Dataset dataset;
-	
+
 	private String serializedProperties;
-	
+
 	// serializedProperties as a map
 	private Map<String, Object> serializedPropertiesMap;
-	
+
 	// object corresponding to the ident_dataset_id stored in the serialized properties
 	private DDataset identDataset;
-	
+
+	private Long identResultSummaryId;
+
 	public DMasterQuantitationChannel() {
-		
+
 	}
 
-	
-
-	public DMasterQuantitationChannel(long m_id, String m_name,
-			Long quantResultSummaryId,
-			List<DQuantitationChannel> quantitationChannels, Dataset dataset,
-			String serializedProperties) {
+	public DMasterQuantitationChannel(
+		long m_id,
+		String m_name,
+		Long quantResultSummaryId,
+		List<DQuantitationChannel> quantitationChannels,
+		Dataset dataset,
+		String serializedProperties) {
 		super();
 		this.id = m_id;
 		this.name = m_name;
@@ -78,7 +81,7 @@ public class DMasterQuantitationChannel {
 	}
 
 	public void setQuantitationChannels(
-			List<DQuantitationChannel> quantitationChannels) {
+		List<DQuantitationChannel> quantitationChannels) {
 		this.quantitationChannels = quantitationChannels;
 	}
 
@@ -103,7 +106,7 @@ public class DMasterQuantitationChannel {
 	}
 
 	public void setSerializedPropertiesMap(
-			Map<String, Object> serializedPropertiesMap) {
+		Map<String, Object> serializedPropertiesMap) {
 		this.serializedPropertiesMap = serializedPropertiesMap;
 	}
 
@@ -114,19 +117,26 @@ public class DMasterQuantitationChannel {
 	public void setIdentDataset(DDataset identDataset) {
 		this.identDataset = identDataset;
 	}
-	
-	@SuppressWarnings("unchecked")
-    public Map<String, Object> getSerializedPropertiesAsMap() throws Exception {
-    	if ((serializedPropertiesMap == null) && (serializedProperties != null)) {
-    		serializedPropertiesMap = JsonSerializer.getMapper().readValue(getSerializedProperties(), Map.class);
-    	}
-    	return serializedPropertiesMap;
-    }
 
-    public void setSerializedPropertiesAsMap(Map<String, Object> serializedPropertiesMap) throws Exception {
-    	this.serializedPropertiesMap = serializedPropertiesMap;
-    	this.serializedProperties = JsonSerializer.getMapper().writeValueAsString(serializedPropertiesMap);
-    }
-	
+	public Long getIdentResultSummaryId() {
+		return identResultSummaryId;
+	}
+
+	public void setIdentResultSummaryId(Long identRsmId) {
+		this.identResultSummaryId = identRsmId;
+	}
+
+	@SuppressWarnings("unchecked")
+	public Map<String, Object> getSerializedPropertiesAsMap() throws Exception {
+		if ((serializedPropertiesMap == null) && (serializedProperties != null)) {
+			serializedPropertiesMap = JsonSerializer.getMapper().readValue(getSerializedProperties(), Map.class);
+		}
+		return serializedPropertiesMap;
+	}
+
+	public void setSerializedPropertiesAsMap(Map<String, Object> serializedPropertiesMap) throws Exception {
+		this.serializedPropertiesMap = serializedPropertiesMap;
+		this.serializedProperties = JsonSerializer.getMapper().writeValueAsString(serializedPropertiesMap);
+	}
 
 }

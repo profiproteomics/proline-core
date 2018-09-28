@@ -3,7 +3,6 @@ package fr.proline.core.orm.msi.dto;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
 public class DQuantPeptide {
-	
 
 	Float rawAbundance;
 	Float abundance;
@@ -11,25 +10,28 @@ public class DQuantPeptide {
 	Integer peptideMatchesCount;
 	Long quantChannelId;
 	Float elutionTime;
-    
-    @JsonIgnore
+
+	@JsonIgnore
 	Long peptideId;
-    
-    @JsonIgnore
+
+	@JsonIgnore
 	Long peptideInstanceId;
-	
+
 	// to display psm count from identification (which is different from the quantification psm count)
-    @JsonIgnore
+	@JsonIgnore
 	private Integer identPeptideMatchCount;
-    
-    // Necessary Construtor for JSON parsing !
+
+	// Necessary Construtor for JSON parsing !
 	protected DQuantPeptide() {
 		super();
 	}
-	
 
-	public DQuantPeptide(Float rawAbundance, Float abundance, Integer selectionLevel,
-			Integer peptideMatchesCount, Long quantChannelId) {
+	public DQuantPeptide(
+		Float rawAbundance,
+		Float abundance,
+		Integer selectionLevel,
+		Integer peptideMatchesCount,
+		Long quantChannelId) {
 		super();
 		this.rawAbundance = rawAbundance;
 		this.abundance = abundance;
@@ -37,48 +39,54 @@ public class DQuantPeptide {
 		this.peptideMatchesCount = peptideMatchesCount;
 		this.quantChannelId = quantChannelId;
 	}
-	
+
 	public Float getRawAbundance() {
 		return rawAbundance;
 	}
+
 	public void setRawAbundance(Float rawAbundance) {
 		this.rawAbundance = rawAbundance;
 	}
+
 	public Float getAbundance() {
 		return abundance;
 	}
+
 	public void setAbundance(Float abundance) {
 		this.abundance = abundance;
 	}
+
 	public Integer getSelectionLevel() {
 		return selectionLevel;
 	}
+
 	public void setSelectionLevel(Integer selectionLevel) {
 		this.selectionLevel = selectionLevel;
 	}
+
 	public Integer getPeptideMatchesCount() {
 		return peptideMatchesCount;
 	}
+
 	public void setPeptideMatchesCount(Integer peptideMatchesCount) {
 		this.peptideMatchesCount = peptideMatchesCount;
 	}
+
 	public Long getQuantChannelId() {
 		return quantChannelId;
 	}
+
 	public void setQuantChannelId(Long quantChannelId) {
 		this.quantChannelId = quantChannelId;
 	}
-
 
 	public Float getElutionTime() {
 		return elutionTime;
 	}
 
-
 	public void setElutionTime(Float elutionTime) {
 		this.elutionTime = elutionTime;
 	}
-
 
 	public Long getPeptideId() {
 		return peptideId;
@@ -89,7 +97,6 @@ public class DQuantPeptide {
 		this.peptideId = peptideId;
 	}
 
-
 	public Long getPeptideInstanceId() {
 		return peptideInstanceId;
 	}
@@ -99,7 +106,6 @@ public class DQuantPeptide {
 		this.peptideInstanceId = peptideInstanceId;
 	}
 
-
 	public Integer getIdentPeptideMatchCount() {
 		return identPeptideMatchCount;
 	}
@@ -108,6 +114,5 @@ public class DQuantPeptide {
 	public void setIdentPeptideMatchCount(Integer identPeptideMatchCount) {
 		this.identPeptideMatchCount = identPeptideMatchCount;
 	}
-
 
 }

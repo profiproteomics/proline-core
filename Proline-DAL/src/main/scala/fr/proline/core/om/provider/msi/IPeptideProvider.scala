@@ -1,9 +1,9 @@
 package fr.proline.core.om.provider.msi
 
-import fr.proline.core.om.model.msi.LocatedPtm
-import fr.proline.core.om.model.msi.Peptide
-import fr.proline.context.DatabaseConnectionContext
+import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.HashMap
+import fr.proline.context.DatabaseConnectionContext
+import fr.proline.core.om.model.msi.LocatedPtm
 import fr.proline.core.om.model.msi.Peptide
 
 trait IPeptideProvider {
@@ -26,7 +26,7 @@ trait IPeptideProvider {
   
   //def getPeptidesForSequences( peptideSeqs: Seq[String] ): Array[Peptide]
   
-  def getPeptide( peptideId:Long ): Option[Peptide] = getPeptidesAsOptions( Array(peptideId) )(0)
+  def getPeptide( peptideId: Long ): Option[Peptide] = getPeptidesAsOptions( Array(peptideId) )(0)
   
   /**
    *  Get Peptide (wrapped in Option) with specified sequence and LocatedPtms.
@@ -38,7 +38,11 @@ trait IPeptideProvider {
    */
   def getPeptide(peptideSeq:String, pepPtms:Array[LocatedPtm] ) : Option[Peptide]
   
-  def getPeptidesAsOptionsBySeqAndPtms(peptideSeqsAndPtms: Seq[(String, Array[LocatedPtm])] ) : Array[Option[Peptide]]
+  def getPeptidesAsOptionsBySeqAndPtms(peptideSeqsAndPtms: Seq[(String, Array[LocatedPtm])]): Array[Option[Peptide]] = {
+    Array() ++ peptideSeqsAndPtms.map(entry => {
+      this.getPeptide(entry._1, entry._2)
+    })
+  }
 }
 
 
@@ -91,15 +95,5 @@ object PeptideFakeProvider extends IPeptideProvider {
   		return Some(pep)
 	  }
   }
-   
-	def getPeptidesAsOptionsBySeqAndPtms(peptideSeqsAndPtms: Seq[(String, Array[LocatedPtm])]) : Array[Option[Peptide]] = {
-	    var result = Array.newBuilder[Option[Peptide]]
-       peptideSeqsAndPtms.foreach( entry =>  {
-         result += this.getPeptide(entry._1,entry._2)
-       })
-       result.result
-	}
-	
-
   
 }

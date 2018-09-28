@@ -139,17 +139,22 @@ public final class DatabaseUtils {
 		loadDataSet(connector.getDatabaseTester(), xmlStream);
 	}
 	
+	public static FlatXmlDataSetBuilder createDatatSetBuilder() {
+		final FlatXmlDataSetBuilder builder = new FlatXmlDataSetBuilder();
+		builder.setColumnSensing(true);
+		return builder;
+	}
+	
 	public static void loadDataSet(final IDatabaseTester databaseTester, final String datasetName)
 			throws Exception {
 
-		final DataFileLoader dataLoader = new FlatXmlDataFileLoader();
+		final DataFileLoader dataLoader = new FlatXmlDataFileLoader(createDatatSetBuilder());
 		final IDataSet dataSet = dataLoader.load(datasetName);
 		databaseTester.setDataSet(dataSet);
 	}
 	
 	public static void loadDataSet(final IDatabaseTester databaseTester, final InputStream xmlStream) throws Exception {
-		FlatXmlDataSetBuilder builder = new FlatXmlDataSetBuilder();
-		IDataSet dataSet = builder.build(xmlStream);
+		IDataSet dataSet = createDatatSetBuilder().build(xmlStream);
 		databaseTester.setDataSet(dataSet);
 	}
 	
@@ -161,7 +166,7 @@ public final class DatabaseUtils {
 	public static void loadCompositeDataSet(final IDatabaseTester databaseTester, final String[] datasetNames)
 			throws Exception {
 
-		final DataFileLoader dataLoader = new FlatXmlDataFileLoader();
+		final DataFileLoader dataLoader = new FlatXmlDataFileLoader(createDatatSetBuilder());
 
 		final IDataSet[] datasets = new IDataSet[datasetNames.length];
 

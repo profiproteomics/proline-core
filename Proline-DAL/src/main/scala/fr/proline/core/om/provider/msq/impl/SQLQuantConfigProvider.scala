@@ -20,8 +20,23 @@ class SQLQuantConfigProvider(val udsDbCtx: UdsDbConnectionContext) extends IQuan
   
   private val DsObjectTreeMapTable = UdsDbDataSetObjectTreeMapTable
   private val ObjectTreeTable = UdsDbObjectTreeTable
-  
+
   def getQuantConfigAndMethod( quantitationId:Long ): Option[(IQuantConfig,IQuantMethod)] = {
+
+    val quantConfigAsStrAndquantMethodOpt = getQuantConfigAsString(quantitationId)
+
+    if (!quantConfigAsStrAndquantMethodOpt.isDefined) return None
+    val (quantConfigAsStr, schemaName, quantMethod) = quantConfigAsStrAndquantMethodOpt.get
+
+    val quantConfig: IQuantConfig = schemaName match {
+      case LABEL_FREE_QUANT_CONFIG => ProfiJson.deserialize[LabelFreeQuantConfig](quantConfigAsStr)
+      case ISOBARIC_TAGGING_QUANT_CONFIG => ProfiJson.deserialize[IsobaricTaggingQuantConfig](quantConfigAsStr)
+      case _ => throw new Exception("this quant method is not supported yet")
+    }
+    Some(quantConfig, quantMethod)
+  }
+
+  def getQuantConfigAsString( quantitationId:Long ): Option[(String,ObjectTreeSchemaName, IQuantMethod)] = {
     
     DoJDBCReturningWork.withEzDBC(udsDbCtx) { udsEzDBC =>
       
@@ -44,14 +59,7 @@ class SQLQuantConfigProvider(val udsDbCtx: UdsDbConnectionContext) extends IQuan
       )
       
       val quantConfigAsStr = udsEzDBC.selectString(objTreeSqlQuery)
-      
-      val quantConfig: IQuantConfig = schemaName match {
-        case LABEL_FREE_QUANT_CONFIG => ProfiJson.deserialize[LabelFreeQuantConfig](quantConfigAsStr)
-        case ISOBARIC_TAGGING_QUANT_CONFIG => ProfiJson.deserialize[IsobaricTaggingQuantConfig](quantConfigAsStr)
-        case _ => throw new Exception("this quant method is not supported yet")
-      }
-      
-      Some( (quantConfig,quantMethod) )
+      Some( (quantConfigAsStr, schemaName, quantMethod) )
       
     } // END of DoJDBCReturningWork
 

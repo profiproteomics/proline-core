@@ -12,10 +12,6 @@ public interface IDataStoreConnectorFactory {
 
 	IDatabaseConnector getUdsDbConnector();
 
-	IDatabaseConnector getPdiDbConnector();
-
-	IDatabaseConnector getPsDbConnector();
-
 	IDatabaseConnector getMsiDbConnector(long projectId);
 
 	IDatabaseConnector getLcMsDbConnector(long projectId);

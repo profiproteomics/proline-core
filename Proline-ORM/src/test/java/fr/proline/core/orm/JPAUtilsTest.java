@@ -25,126 +25,126 @@ import fr.proline.repository.util.JPAUtils;
 
 public class JPAUtilsTest extends DatabaseTestCase {
 
-    private static final Logger LOG = LoggerFactory.getLogger(JPAUtilsTest.class);
+	private static final Logger LOG = LoggerFactory.getLogger(JPAUtilsTest.class);
 
-    @Override
-    public ProlineDatabaseType getProlineDatabaseType() {
-	return ProlineDatabaseType.UDS;
-    }
+	@Override
+	public ProlineDatabaseType getProlineDatabaseType() {
+		return ProlineDatabaseType.UDS;
+	}
 
-    @Before
-    public void setUp() throws Exception {
-	initDatabase();
-    }
-    
-    @Override 
-    public String getPropertiesFileName(){
-    	return "database.properties";
-    }
+	@Before
+	public void setUp() throws Exception {
+		initDatabase();
+	}
 
-    @Test
-    public void testUtils() {
-	final EntityManager udsEm = getConnector().createEntityManager();
-	EntityTransaction transac = null;
-	boolean transacOk = false;
+	@Override
+	public String getPropertiesFileName() {
+		return "database.properties";
+	}
 
-	try {
-	    udsEm.setFlushMode(FlushModeType.COMMIT);
+	@Test
+	public void testUtils() {
+		final EntityManager udsEm = getConnector().createEntityManager();
+		EntityTransaction transac = null;
+		boolean transacOk = false;
 
-	    transac = udsEm.getTransaction();
-	    transac.begin();
-	    transacOk = false;
+		try {
+			udsEm.setFlushMode(FlushModeType.COMMIT);
 
-	    final Instrument inst1 = new Instrument();
-	    inst1.setName("Instrument 1");
-	    inst1.setSource("Src 1");
+			transac = udsEm.getTransaction();
+			transac.begin();
+			transacOk = false;
 
-	    udsEm.persist(inst1);
+			final Instrument inst1 = new Instrument();
+			inst1.setName("Instrument 1");
+			inst1.setSource("Src 1");
 
-	    final Instrument inst2 = new Instrument();
-	    inst2.setName("Instrument 2");
-	    inst2.setSource("Src 2");
+			udsEm.persist(inst1);
 
-	    udsEm.persist(inst2);
+			final Instrument inst2 = new Instrument();
+			inst2.setName("Instrument 2");
+			inst2.setSource("Src 2");
 
-	    udsEm.flush(); // Flush to see persisted entities from JDBC context
+			udsEm.persist(inst2);
 
-	    final JDBCReturningWork<Long> jdbcWork = new JDBCReturningWork<Long>() {
+			udsEm.flush(); // Flush to see persisted entities from JDBC context
 
-		@Override
-		public Long execute(final Connection connection) throws SQLException {
-		    Long result = null;
+			final JDBCReturningWork<Long> jdbcWork = new JDBCReturningWork<Long>() {
 
-		    final Statement stm = connection.createStatement();
+				@Override
+				public Long execute(final Connection connection) throws SQLException {
+					Long result = null;
 
-		    try {
+					final Statement stm = connection.createStatement();
 
-			if (stm.execute("select count(*) from instrument")) {
-			    final ResultSet rs = stm.getResultSet();
+					try {
 
-			    while ((result == null) && rs.next()) {
-				final Object obj = rs.getObject(1); // 1st column
+						if (stm.execute("select count(*) from instrument")) {
+							final ResultSet rs = stm.getResultSet();
 
-				if (obj instanceof Long) {
-				    result = (Long) obj;
+							while ((result == null) && rs.next()) {
+								final Object obj = rs.getObject(1); // 1st column
+
+								if (obj instanceof Long) {
+									result = (Long) obj;
+								}
+
+							}
+
+							rs.close();
+						}
+
+					} finally {
+
+						try {
+							stm.close();
+						} catch (SQLException exClose) {
+							LOG.error("Error closing count statement", exClose);
+						}
+
+					}
+
+					return result;
 				}
 
-			    }
+			};
 
-			    rs.close();
+			final Long result = JPAUtils.doReturningWork(udsEm, jdbcWork);
+
+			assertTrue("At least 2 instruments persisted", (result != null) && (result.longValue() >= 2L));
+
+			LOG.info("Found instruments : {}", result);
+
+			transac.commit();
+			transacOk = true;
+		} finally {
+
+			if ((transac != null) && !transacOk) {
+				LOG.info("Rollbacking Uds Db transaction...");
+
+				try {
+					transac.rollback();
+				} catch (Exception ex) {
+					LOG.error("Error rollbacking Uds Db transaction", ex);
+				}
+
 			}
 
-		    } finally {
-
-			try {
-			    stm.close();
-			} catch (SQLException exClose) {
-			    LOG.error("Error closing count statement", exClose);
+			if (udsEm != null) {
+				try {
+					udsEm.close();
+				} catch (Exception exClose) {
+					LOG.error("Error closing UDS EntityManager", exClose);
+				}
 			}
 
-		    }
-
-		    return result;
 		}
-
-	    };
-
-	    final Long result = JPAUtils.doReturningWork(udsEm, jdbcWork);
-
-	    assertTrue("At least 2 instruments persisted", (result != null) && (result.longValue() >= 2L));
-
-	    LOG.info("Found instruments : {}", result);
-
-	    transac.commit();
-	    transacOk = true;
-	} finally {
-
-	    if ((transac != null) && !transacOk) {
-		LOG.info("Rollbacking Uds Db transaction...");
-
-		try {
-		    transac.rollback();
-		} catch (Exception ex) {
-		    LOG.error("Error rollbacking Uds Db transaction", ex);
-		}
-
-	    }
-
-	    if (udsEm != null) {
-		try {
-		    udsEm.close();
-		} catch (Exception exClose) {
-		    LOG.error("Error closing UDS EntityManager", exClose);
-		}
-	    }
 
 	}
 
-    }
-
-    @After
-    public void tearDown() {
-	super.tearDown();
-    }
+	@After
+	public void tearDown() {
+		super.tearDown();
+	}
 
 }

@@ -13,71 +13,73 @@ import fr.proline.repository.util.JPAUtils;
 
 public final class ExternalDbRepository {
 
-    private ExternalDbRepository() {
-    }
-
-    public static ExternalDb findExternalByType(final EntityManager udsEm, final ProlineDatabaseType dbType) {
-
-	JPAUtils.checkEntityManager(udsEm);
-
-	if (dbType == null) {
-	    throw new IllegalArgumentException("DbType is null");
+	private ExternalDbRepository() {
 	}
 
-	ExternalDb result = null;
+	public static ExternalDb findExternalByType(final EntityManager udsEm, final ProlineDatabaseType dbType) {
 
-	final TypedQuery<ExternalDb> query = udsEm.createNamedQuery("findExternalDbByType", ExternalDb.class);
-	query.setParameter("type", dbType);
+		JPAUtils.checkEntityManager(udsEm);
 
-	final List<ExternalDb> externalDbs = query.getResultList();
+		if (dbType == null) {
+			throw new IllegalArgumentException("DbType is null");
+		}
 
-	if ((externalDbs != null) && !externalDbs.isEmpty()) {
+		ExternalDb result = null;
 
-	    if (externalDbs.size() == 1) {
-		result = externalDbs.get(0);
-	    } else {
-		throw new NonUniqueResultException("There are more than one ExternalDb for given dbType");
-	    }
+		final TypedQuery<ExternalDb> query = udsEm.createNamedQuery("findExternalDbByType", ExternalDb.class);
+		query.setParameter("type", dbType);
 
+		final List<ExternalDb> externalDbs = query.getResultList();
+
+		if ((externalDbs != null) && !externalDbs.isEmpty()) {
+
+			if (externalDbs.size() == 1) {
+				result = externalDbs.get(0);
+			} else {
+				throw new NonUniqueResultException("There are more than one ExternalDb for given dbType");
+			}
+
+		}
+
+		return result;
 	}
 
-	return result;
-    }
+	public static ExternalDb findExternalByTypeAndProject(
+		final EntityManager udsEm,
+		final ProlineDatabaseType dbType,
+		final Project project) {
 
-    public static ExternalDb findExternalByTypeAndProject(final EntityManager udsEm,
-	    final ProlineDatabaseType dbType, final Project project) {
+		JPAUtils.checkEntityManager(udsEm);
 
-	JPAUtils.checkEntityManager(udsEm);
+		if (dbType == null) {
+			throw new IllegalArgumentException("DbType is null");
+		}
 
-	if (dbType == null) {
-	    throw new IllegalArgumentException("DbType is null");
+		if (project == null) {
+			throw new IllegalArgumentException("Project is null");
+		}
+
+		ExternalDb result = null;
+
+		final TypedQuery<ExternalDb> query = udsEm.createNamedQuery("findExternalDbByTypeAndProject",
+			ExternalDb.class);
+		query.setParameter("type", dbType);
+		query.setParameter("project", project);
+
+		final List<ExternalDb> externalDbs = query.getResultList();
+
+		if ((externalDbs != null) && !externalDbs.isEmpty()) {
+
+			if (externalDbs.size() == 1) {
+				result = externalDbs.get(0);
+			} else {
+				throw new NonUniqueResultException(
+					"There are more than one ExternalDb for given dbType and project");
+			}
+
+		}
+
+		return result;
 	}
-
-	if (project == null) {
-	    throw new IllegalArgumentException("Project is null");
-	}
-
-	ExternalDb result = null;
-
-	final TypedQuery<ExternalDb> query = udsEm.createNamedQuery("findExternalDbByTypeAndProject",
-		ExternalDb.class);
-	query.setParameter("type", dbType);
-	query.setParameter("project", project);
-
-	final List<ExternalDb> externalDbs = query.getResultList();
-
-	if ((externalDbs != null) && !externalDbs.isEmpty()) {
-
-	    if (externalDbs.size() == 1) {
-		result = externalDbs.get(0);
-	    } else {
-		throw new NonUniqueResultException(
-			"There are more than one ExternalDb for given dbType and project");
-	    }
-
-	}
-
-	return result;
-    }
 
 }

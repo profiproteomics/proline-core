@@ -9,14 +9,12 @@ import fr.proline.core.dal.tables.SelectQueryBuilder1
 import fr.proline.core.dal.tables.msi.MsiDbPeaklistTable
 import fr.proline.core.om.builder.PeaklistBuilder
 import fr.proline.core.om.model.msi.Peaklist
-import fr.proline.repository.ProlineDatabaseType
 
 /**
  * @author David Bouyssie
  *
  */
 class SQLPeaklistProvider(val msiDbCtx: MsiDbConnectionContext) {
-  require( msiDbCtx.getProlineDatabaseType == ProlineDatabaseType.MSI, "MsiDb connection required")
   
   def getPeaklists(peaklistIds: Seq[Long]): Array[Peaklist] = {
     if( peaklistIds.isEmpty ) return Array()

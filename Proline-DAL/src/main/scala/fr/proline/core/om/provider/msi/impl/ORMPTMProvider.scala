@@ -1,21 +1,19 @@
 package fr.proline.core.om.provider.msi.impl
 
-import scala.collection.JavaConversions.collectionAsScalaIterable
-import scala.collection.JavaConverters.asJavaCollectionConverter
-
 import com.typesafe.scalalogging.LazyLogging
-
-import fr.proline.context.DatabaseConnectionContext
-import fr.proline.core.om.model.msi.{ PtmDefinition, PtmLocation }
+import fr.proline.context.MsiDbConnectionContext
+import fr.proline.core.om.model.msi.PtmDefinition
+import fr.proline.core.om.model.msi.PtmLocation
 import fr.proline.core.om.provider.msi.IPTMProvider
 import fr.proline.core.om.util.PeptidesOMConverterUtil
-import fr.proline.core.orm.ps.PtmSpecificity
-import fr.proline.core.orm.ps.repository.{ PsPtmRepository => psPtmRepo }
+import fr.proline.core.orm.msi.repository.{MsiPtmRepository => MsiPtmRepo}
 import fr.proline.core.util.ResidueUtils._
 
-import fr.proline.core.util.ResidueUtils._
+import scala.collection.JavaConversions.collectionAsScalaIterable
+import scala.collection.JavaConverters.asJavaCollectionConverter
+import scala.collection.mutable.HashMap
 
-class ORMPTMProvider(val psDbCtx: DatabaseConnectionContext) extends IPTMProvider with LazyLogging {
+class ORMPTMProvider(val msiDbCtx: MsiDbConnectionContext) extends IPTMProvider with LazyLogging {
 
   val converter = new PeptidesOMConverterUtil(true)
 
@@ -23,9 +21,10 @@ class ORMPTMProvider(val psDbCtx: DatabaseConnectionContext) extends IPTMProvide
 
     var foundPtmDefBuilder = Array.newBuilder[Option[PtmDefinition]]
 
-    val ptmSpecificityORMs = psDbCtx.getEntityManager.createQuery("FROM fr.proline.core.orm.ps.PtmSpecificity ptm_specificity WHERE id IN (:ids)",
-      classOf[fr.proline.core.orm.ps.PtmSpecificity])
-      .setParameter("ids", ptmDefIds.asJavaCollection).getResultList().toList
+    val ptmSpecificityORMs = msiDbCtx.getEntityManager.createQuery(
+      "FROM fr.proline.core.orm.msi.PtmSpecificity ptm_specificity WHERE id IN (:ids)",
+      classOf[fr.proline.core.orm.msi.PtmSpecificity]
+    ).setParameter("ids", ptmDefIds.asJavaCollection).getResultList.toList
 
     var resultIndex = 0
     ptmDefIds.foreach(ptmDefId => {
@@ -53,7 +52,7 @@ class ORMPTMProvider(val psDbCtx: DatabaseConnectionContext) extends IPTMProvide
   }
 
   def getPtmDefinition(ptmName: String, ptmResidu: Char, ptmLocation: PtmLocation.Location): Option[PtmDefinition] = {
-    val foundPtmSpecificity = psPtmRepo.findPtmSpecificityForNameLocResidu(psDbCtx.getEntityManager, ptmName, ptmLocation.toString, scalaCharToCharacter(ptmResidu))
+    val foundPtmSpecificity = MsiPtmRepo.findPtmSpecificityForNameLocResidue(msiDbCtx.getEntityManager, ptmName, ptmLocation.toString, scalaCharToCharacter(ptmResidu))
 
     if (foundPtmSpecificity == null) {
       None
@@ -63,23 +62,34 @@ class ORMPTMProvider(val psDbCtx: DatabaseConnectionContext) extends IPTMProvide
 
   }
 
-  
+  private lazy val ptmDefinitionById: Map[Long, PtmDefinition] = {
+
+    var foundPtmDefBuilder = new HashMap[Long, PtmDefinition]
+    msiDbCtx.getEntityManager.createQuery(
+      "FROM fr.proline.core.orm.msi.PtmSpecificity ptm_specificity",
+      classOf[fr.proline.core.orm.msi.PtmSpecificity]
+    ).getResultList.foreach(ptmSpec => {
+      val ptm = converter.convertPtmSpecificityORM2OM(ptmSpec)
+      foundPtmDefBuilder.put(ptm.id, ptm)
+    })
+    foundPtmDefBuilder.toMap
+    
+  }
   def getPtmDefinition(ptmMonoMass: Double, ptmMonoMassMargin: Double, ptmResidue: Char, ptmLocation: PtmLocation.Location): Option[PtmDefinition] = {
-//    var ptmToReturn: PtmDefinition = null
-//    this.ptmDefinitionById.values.foreach(ptm => {
-//      ptm.ptmEvidences.foreach(e => {
-//        if (scala.math.abs(ptmMonoMass - e.monoMass) <= ptmMonoMassMargin
-//          && ptm.residue == ptmResidue
-//          && ptm.location == ptmLocation.toString) {
-//          ptmToReturn = ptm
-//        }
-//      })
-//    })
-//    Some(ptmToReturn)
-    None
+    var ptmToReturn: PtmDefinition = null
+    this.ptmDefinitionById.values.foreach(ptm => {
+      ptm.ptmEvidences.foreach(e => {
+        if (scala.math.abs(ptmMonoMass - e.monoMass) <= ptmMonoMassMargin
+          && ptm.residue == ptmResidue
+          && ptm.location == ptmLocation.toString) {
+          return Some(ptm)
+        }
+      })
+    })
+    Some(ptmToReturn)
   }
   def getPtmId(shortName: String): Option[Long] = {
-    val foundPtm = psPtmRepo.findPtmForShortName(psDbCtx.getEntityManager, shortName)
+    val foundPtm = MsiPtmRepo.findPtmForShortName(msiDbCtx.getEntityManager, shortName)
 
     if (foundPtm == null) {
       None

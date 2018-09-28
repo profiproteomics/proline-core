@@ -238,12 +238,20 @@ CREATE UNIQUE INDEX public.instrument_config_name_idx
  ON public.instrument_config
  ( name );
 
-CREATE TABLE public.instrument_config_fragmentation_rule_map (
-                instrument_config_id BIGINT NOT NULL,
+
+ CREATE TABLE public.fragmentation_rule_set (
+             id IDENTITY NOT NULL,
+             name VARCHAR(200) NOT NULL,
+             CONSTRAINT fragmentation_rule_set_pk PRIMARY KEY (id)
+ );
+
+CREATE UNIQUE INDEX public.fragmentation_rule_set_name_idx ON public.fragmentation_rule_set ( name );
+
+CREATE TABLE public.fragmentation_rule_set_map (
                 fragmentation_rule_id BIGINT NOT NULL,
-                CONSTRAINT instrument_config_fragmentation_rule_map_pk PRIMARY KEY (instrument_config_id, fragmentation_rule_id)
+                fragmentation_rule_set_id BIGINT NOT NULL,
+                CONSTRAINT fragmentation_rule_set_map_pk PRIMARY KEY (fragmentation_rule_id, fragmentation_rule_set_id)
 );
-COMMENT ON TABLE public.instrument_config_fragmentation_rule_map IS 'The set of fragmentation rules associated with this instrument configuration.';
 
 
 CREATE TABLE public.user_account (
@@ -278,7 +286,6 @@ CREATE TABLE public.raw_file (
                 sample_name VARCHAR(250),
                 creation_timestamp TIMESTAMP,
                 serialized_properties LONGVARCHAR,
-                instrument_id BIGINT NOT NULL,
                 owner_id BIGINT NOT NULL,
                 CONSTRAINT raw_file_pk PRIMARY KEY (identifier)
 );
@@ -775,20 +782,6 @@ CREATE UNIQUE INDEX public.quant_channel_number_idx
  ON public.quant_channel
  ( master_quant_channel_id, number );
 
-CREATE TABLE public.admin_infos (
-                model_version VARCHAR(50) NOT NULL,
-                db_creation_date TIMESTAMP,
-                model_update_date TIMESTAMP,
-                configuration LONGVARCHAR NOT NULL,
-                CONSTRAINT admin_infos_pkey PRIMARY KEY (model_version)
-);
-COMMENT ON TABLE public.admin_infos IS 'This table gives information about the current database model.';
-COMMENT ON COLUMN public.admin_infos.model_version IS 'The version number of the database schema.';
-COMMENT ON COLUMN public.admin_infos.db_creation_date IS 'The creation date of the database.';
-COMMENT ON COLUMN public.admin_infos.model_update_date IS 'The modification date of the database schema.';
-COMMENT ON COLUMN public.admin_infos.configuration IS 'The configuration properties. configuration contains :
-  * absolute root path for shared documents, organized by projects';
-
 
 /*
 Warning: H2 Database does not support this relationship's delete action (RESTRICT).
@@ -836,12 +829,12 @@ FOREIGN KEY (fragment_series_id)
 REFERENCES public.fragmentation_series (id)
 ON UPDATE NO ACTION;
 
-ALTER TABLE public.instrument_config_fragmentation_rule_map ADD CONSTRAINT fragmentation_rule_instrument_config_fragmentation_rule_map_fk
-FOREIGN KEY (fragmentation_rule_id)
-REFERENCES public.fragmentation_rule (id)
-ON DELETE CASCADE
-ON UPDATE NO ACTION;
-
+ALTER TABLE public.fragmentation_rule_set_map ADD CONSTRAINT fragmentation_rule_set_fragmentation_rule_set_map_fk
+FOREIGN KEY (fragmentation_rule_set_id)
+REFERENCES public.fragmentation_rule_set (id)
+ON DELETE NO ACTION
+ON UPDATE NO ACTION
+NOT DEFERRABLE;
 /*
 Warning: H2 Database does not support this relationship's delete action (RESTRICT).
 */
@@ -858,19 +851,14 @@ FOREIGN KEY (instrument_id)
 REFERENCES public.instrument (id)
 ON UPDATE NO ACTION;
 
-/*
-Warning: H2 Database does not support this relationship's delete action (RESTRICT).
-*/
-ALTER TABLE public.raw_file ADD CONSTRAINT instrument_raw_file_fk
-FOREIGN KEY (instrument_id)
-REFERENCES public.instrument (id)
-ON UPDATE NO ACTION;
 
-ALTER TABLE public.instrument_config_fragmentation_rule_map ADD CONSTRAINT instrument_config_instrument_config_fragmentation_rule_map_fk
-FOREIGN KEY (instrument_config_id)
-REFERENCES public.instrument_config (id)
-ON DELETE CASCADE
-ON UPDATE NO ACTION;
+ALTER TABLE public.fragmentation_rule_set_map ADD CONSTRAINT fragmentation_rule_fragmentation_rule_set_map_fk
+FOREIGN KEY (fragmentation_rule_id)
+REFERENCES public.fragmentation_rule (id)
+ON DELETE NO ACTION
+ON UPDATE NO ACTION
+NOT DEFERRABLE;
+
 
 /*
 Warning: H2 Database does not support this relationship's delete action (RESTRICT).

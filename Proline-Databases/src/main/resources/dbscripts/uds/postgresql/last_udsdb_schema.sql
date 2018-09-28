@@ -143,6 +143,22 @@ COMMENT ON COLUMN public.enzyme_cleavage.enzyme_id IS 'The enzyme this cleavage 
 
 ALTER SEQUENCE public.enzyme_cleavage_id_seq OWNED BY public.enzyme_cleavage.id;
 
+
+CREATE SEQUENCE public.fragmentation_rule_set_id_seq;
+
+CREATE TABLE public.fragmentation_rule_set (
+                id BIGINT NOT NULL DEFAULT nextval('public.fragmentation_rule_set_id_seq'),
+                name VARCHAR(200) NOT NULL,
+                CONSTRAINT id PRIMARY KEY (id)
+);
+
+
+ALTER SEQUENCE public.fragmentation_rule_set_id_seq OWNED BY public.fragmentation_rule_set.id;
+
+CREATE UNIQUE INDEX fragmentation_rule_set_name_idx
+ ON public.fragmentation_rule_set
+ ( name );
+
 CREATE SEQUENCE public.fragmentation_series_id_seq;
 
 CREATE TABLE public.fragmentation_series (
@@ -219,6 +235,14 @@ COMMENT ON COLUMN public.fragmentation_rule.required_series_id IS 'The ion serie
 
 
 ALTER SEQUENCE public.fragmentation_rule_id_seq OWNED BY public.fragmentation_rule.id;
+
+
+CREATE TABLE public.fragmentation_rule_set_map (
+                fragmentation_rule_id BIGINT NOT NULL,
+                fragmentation_rule_set_id BIGINT NOT NULL,
+                CONSTRAINT fragmentation_rule_set_map_pk PRIMARY KEY (fragmentation_rule_id, fragmentation_rule_set_id)
+);
+
 
 CREATE TABLE public.activation (
                 type VARCHAR(100) NOT NULL,
@@ -326,7 +350,6 @@ CREATE TABLE public.raw_file (
                 sample_name VARCHAR(250),
                 creation_timestamp TIMESTAMP,
                 serialized_properties TEXT,
-                instrument_id BIGINT NOT NULL,
                 owner_id BIGINT NOT NULL,
                 CONSTRAINT raw_file_pk PRIMARY KEY (identifier)
 );
@@ -340,7 +363,6 @@ COMMENT ON COLUMN public.raw_file.mzdb_file_directory IS 'The path of the direct
 COMMENT ON COLUMN public.raw_file.sample_name IS 'The name of the sample which have been analysed.';
 COMMENT ON COLUMN public.raw_file.creation_timestamp IS 'The timestamp corresponding to the creation date of the raw file.';
 COMMENT ON COLUMN public.raw_file.serialized_properties IS 'A JSON string which stores optional properties (see corresponding JSON schema for more details).';
-COMMENT ON COLUMN public.raw_file.instrument_id IS 'The instrument that has performed the raw file acquisition.';
 COMMENT ON COLUMN public.raw_file.owner_id IS 'The owner of this raw file. The owner may have  permissions higher than other user accounts.';
 
 
@@ -484,7 +506,7 @@ CREATE TABLE public.data_set (
                 keywords VARCHAR,
                 creation_timestamp TIMESTAMP NOT NULL,
                 modification_log TEXT,
-                children_count INTEGER DEFAULT 0 NOT NULL,
+                child_count INTEGER DEFAULT 0 NOT NULL,
                 serialized_properties TEXT,
                 result_set_id BIGINT,
                 result_summary_id BIGINT,
@@ -887,21 +909,6 @@ CREATE UNIQUE INDEX quant_channel_number_idx
  ON public.quant_channel
  ( master_quant_channel_id, number );
 
-CREATE TABLE public.admin_infos (
-                model_version VARCHAR(50) NOT NULL,
-                db_creation_date TIMESTAMP,
-                model_update_date TIMESTAMP,
-                configuration TEXT NOT NULL,
-                CONSTRAINT admin_infos_pkey PRIMARY KEY (model_version)
-);
-COMMENT ON TABLE public.admin_infos IS 'This table gives information about the current database model.';
-COMMENT ON COLUMN public.admin_infos.model_version IS 'The version number of the database schema.';
-COMMENT ON COLUMN public.admin_infos.db_creation_date IS 'The creation date of the database.';
-COMMENT ON COLUMN public.admin_infos.model_update_date IS 'The modification date of the database schema.';
-COMMENT ON COLUMN public.admin_infos.configuration IS 'The configuration properties. configuration contains :
-  * absolute root path for shared documents, organized by projects';
-
-
 ALTER TABLE public.data_set ADD CONSTRAINT aggregation_data_set_fk
 FOREIGN KEY (aggregation_id)
 REFERENCES public.aggregation (id)
@@ -944,10 +951,17 @@ ON DELETE RESTRICT
 ON UPDATE NO ACTION
 NOT DEFERRABLE;
 
-ALTER TABLE public.instrument_config_fragmentation_rule_map ADD CONSTRAINT fragmentation_rule_instrument_config_fragmentation_rule_map_fk
+ALTER TABLE public.fragmentation_rule_set_map ADD CONSTRAINT fragmentation_rule_set_fragmentation_rule_set_map_fk
+FOREIGN KEY (fragmentation_rule_set_id)
+REFERENCES public.fragmentation_rule_set (id)
+ON DELETE NO ACTION
+ON UPDATE NO ACTION
+NOT DEFERRABLE;
+
+ALTER TABLE public.fragmentation_rule_set_map ADD CONSTRAINT fragmentation_rule_fragmentation_rule_set_map_fk
 FOREIGN KEY (fragmentation_rule_id)
 REFERENCES public.fragmentation_rule (id)
-ON DELETE CASCADE
+ON DELETE NO ACTION
 ON UPDATE NO ACTION
 NOT DEFERRABLE;
 
@@ -962,20 +976,6 @@ ALTER TABLE public.instrument_config ADD CONSTRAINT instrument_instrument_config
 FOREIGN KEY (instrument_id)
 REFERENCES public.instrument (id)
 ON DELETE RESTRICT
-ON UPDATE NO ACTION
-NOT DEFERRABLE;
-
-ALTER TABLE public.raw_file ADD CONSTRAINT instrument_raw_file_fk
-FOREIGN KEY (instrument_id)
-REFERENCES public.instrument (id)
-ON DELETE RESTRICT
-ON UPDATE NO ACTION
-NOT DEFERRABLE;
-
-ALTER TABLE public.instrument_config_fragmentation_rule_map ADD CONSTRAINT instrument_config_instrument_config_fragmentation_rule_map_fk
-FOREIGN KEY (instrument_config_id)
-REFERENCES public.instrument_config (id)
-ON DELETE CASCADE
 ON UPDATE NO ACTION
 NOT DEFERRABLE;
 

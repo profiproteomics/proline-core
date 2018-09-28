@@ -1,6 +1,11 @@
 package fr.proline.context;
 
 public interface IExecutionContext {
+	
+	/**
+	 * The ID of the project associated to this IExecutionContext.
+	 */
+	long getProjectId();
 
 	/**
 	 * Retrieves current connection context for UDS Db.
@@ -8,20 +13,6 @@ public interface IExecutionContext {
 	 * @return UDS DatabaseConnectionContext
 	 */
 	UdsDbConnectionContext getUDSDbConnectionContext();
-
-	/**
-	 * Retrieves current connection context for PDI Db.
-	 * 
-	 * @return PDI DatabaseConnectionContext
-	 */
-	DatabaseConnectionContext getPDIDbConnectionContext();
-
-	/**
-	 * Retrieves current connection context for PS Db.
-	 * 
-	 * @return PS DatabaseConnectionContext
-	 */
-	DatabaseConnectionContext getPSDbConnectionContext();
 
 	/**
 	 * Retrieves current connection context for the MSI Db of the active project.

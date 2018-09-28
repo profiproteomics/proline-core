@@ -106,7 +106,16 @@ case class FragmentIonType private (
 
 //@JsonInclude( Include.NON_NULL )
 case class FragmentIonTypeProperties()
-  
+
+object FragmentationRuleSet extends InMemoryIdGen
+case class FragmentationRuleSet(
+           // Required fields
+           val id: Long,
+           val name: String,
+           var fragmentationRules: Array[FragmentationRule] = Array.empty[FragmentationRule]
+)
+
+
 trait FragmentationRule {
   // Required fields
   val description: String

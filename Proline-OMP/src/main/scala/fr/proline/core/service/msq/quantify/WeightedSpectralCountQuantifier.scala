@@ -1,40 +1,28 @@
 package fr.proline.core.service.msq.quantify
 
-import scala.collection.JavaConversions.iterableAsScalaIterable
-import scala.collection.mutable.ArrayBuffer
-import scala.collection.mutable.HashMap
-import scala.collection.mutable.LongMap
 import com.typesafe.scalalogging.LazyLogging
 import fr.profi.util.primitives.toLong
 import fr.profi.util.serialization.ProfiJson
-import fr.proline.context.IExecutionContext
-import fr.proline.context.MsiDbConnectionContext
-import fr.proline.core.algo.msq.config.PeptidesSCDescription
-import fr.proline.core.algo.msq.config.ProteinSetSCDescription
-import fr.proline.core.algo.msq.config.SpectralCountConfig
+import fr.proline.context.{IExecutionContext, MsiDbConnectionContext}
+import fr.proline.core.algo.msq.config.{PeptidesSCDescription, ProteinSetSCDescription, SpectralCountConfig}
 import fr.proline.core.algo.msq.spectralcount.PepInstanceFilteringLeafSCUpdater
 import fr.proline.core.dal.DoJDBCReturningWork
 import fr.proline.core.dal.tables.SelectQueryBuilder.any2ClauseAdd
 import fr.proline.core.dal.tables.SelectQueryBuilder1
 import fr.proline.core.dal.tables.msi.MsiDbResultSummaryRelationTable
-import fr.proline.core.om.model.msi.PeptideSet
-import fr.proline.core.om.model.msi.ProteinSet
-import fr.proline.core.om.model.msi.ResultSummary
-import fr.proline.core.om.model.msq.MasterQuantChannelProperties
-import fr.proline.core.om.model.msq.MasterQuantPeptide
-import fr.proline.core.om.model.msq.MasterQuantPeptideIon
-import fr.proline.core.om.model.msq.MasterQuantProteinSet
-import fr.proline.core.om.model.msq.QuantPeptide
-import fr.proline.core.om.model.msq.QuantProteinSet
-import fr.proline.core.om.model.msq.SpectralCountProperties
+import fr.proline.core.dal.tables.uds.UdsDbDataSetTable
+import fr.proline.core.om.model.msi._
+import fr.proline.core.om.model.msq._
+import fr.proline.core.om.provider.PeptideCacheExecutionContext
 import fr.proline.core.om.provider.msi.impl.SQLResultSummaryProvider
 import fr.proline.core.om.storer.msi.impl.RsmDuplicator
 import fr.proline.core.orm.msi.ObjectTreeSchema.SchemaName
-import fr.proline.core.orm.msi.PeptideInstance
-import fr.proline.core.orm.msi.ProteinMatch
 import fr.proline.core.orm.msi.repository.ObjectTreeSchemaRepository
+import fr.proline.core.orm.msi.{ResultSummary => MsiResultSummary}
 import fr.proline.core.orm.uds.MasterQuantitationChannel
-import fr.proline.core.dal.tables.uds.UdsDbDataSetTable
+
+import scala.collection.JavaConversions.{asScalaSet, iterableAsScalaIterable}
+import scala.collection.mutable.{ArrayBuffer, HashMap, LongMap}
 
 
 /**
@@ -50,13 +38,14 @@ import fr.proline.core.dal.tables.uds.UdsDbDataSetTable
  */
 class WeightedSpectralCountQuantifier(
   val executionContext: IExecutionContext,
+  val experimentalDesign: ExperimentalDesign,
   val udsMasterQuantChannel: MasterQuantitationChannel,
   val quantConfig: SpectralCountConfig
 ) extends AbstractMasterQuantChannelQuantifier with LazyLogging {
   
   
-  protected val identRSMIds = entityCache.identRsmIds
-  protected var quantClonedMergedRSM : ResultSummary  = null
+  protected val identRSMIds = entityCache.quantChannelRsmIds
+  protected var quantClonedMergedRSM : fr.proline.core.om.model.msi.ResultSummary  = _
   
   /**
    * "{"spectral_count_result":{[
@@ -74,13 +63,13 @@ class WeightedSpectralCountQuantifier(
     var isLocalMsiTx = false //Is transaction started here
     try {
 
-      if(!msiDbCtx.isInTransaction()) {
+      if(!msiDbCtx.isInTransaction) {
         //  Begin new ORM transaction
         msiDbCtx.beginTransaction()
         isLocalMsiTx = true
       }
       
-      if(!udsDbCtx.isInTransaction()) {
+      if(!udsDbCtx.isInTransaction) {
         //  Begin new ORM transaction
         udsDbCtx.beginTransaction()
         isLocalUdsTx = true
@@ -88,10 +77,9 @@ class WeightedSpectralCountQuantifier(
 
   
       // Store the master quant result set
-      val msiQuantResultSet = this.storeMsiQuantResultSet(entityCache.msiIdentResultSets)
-      val quantRsId = msiQuantResultSet.getId()
-  
-      // Create corresponding master quant result summary
+      val msiQuantResultSet = this.storeMsiQuantResultSet()
+      val quantRsId = msiQuantResultSet.getId
+
       val msiQuantRSM = this.storeMsiQuantResultSummary(msiQuantResultSet)
       val quantRsmId = msiQuantRSM.getId
   
@@ -104,12 +92,10 @@ class WeightedSpectralCountQuantifier(
       var start = System.currentTimeMillis()
   
       // Store master quant result summary
-      val rsmProvider = new SQLResultSummaryProvider(msiDbCtx, psDbCtx, udsDbCtx)
+      val rsmProvider = new SQLResultSummaryProvider(PeptideCacheExecutionContext(executionContext))
       val rsmDuplicator =  new RsmDuplicator(rsmProvider)  
-      quantClonedMergedRSM = rsmDuplicator.cloneAndStoreRSM(this.mergedResultSummary, msiQuantRSM, msiQuantResultSet, false, msiEm) 
-  
-   
-  
+      quantClonedMergedRSM = rsmDuplicator.cloneAndStoreRSM(this.mergedResultSummary, msiQuantRSM, msiQuantResultSet, eraseSourceIds = false, msiEm)
+
       var end = System.currentTimeMillis()
       logger.debug("-- Clone IDF RSM to Quant RSM : " + (end - start) + " ms")
       
@@ -148,7 +134,7 @@ class WeightedSpectralCountQuantifier(
       // !! Warning : Returned values are linked to Identification RSM (OM Objects) and not to Quantitation RSM (ORM Objects)
       val (mqPeptides, mqProtSets) = computeMasterQuantValues(
         udsMasterQuantChannel,
-        entityCache.identResultSummaries,
+        entityCache.quantChannelResultSummaries.toSeq,
         identRSMsIdByWeightRefRSMId, 
         proteinSetSCStructsByProtSetId
       )
@@ -156,7 +142,7 @@ class WeightedSpectralCountQuantifier(
       end = System.currentTimeMillis()
       logger.debug("-- computeMasterQuantValues : " + (end - end2) + " ms")
   
-      this.logger.info("storing " + mqPeptides.size + " master peptide quant data...")
+      this.logger.info("storing " + mqPeptides.length + " master peptide quant data...")
   
       // Iterate over master quant peptides to store corresponding spectral counts
       for (mqPeptide <- mqPeptides) {
@@ -166,7 +152,7 @@ class WeightedSpectralCountQuantifier(
       end2 = System.currentTimeMillis()
       logger.debug("-- storing master peptide quant data : " + (end2 - end) + " ms")
   
-      this.logger.info("storing " + mqProtSets.size + " master proteins set quant data...")
+      this.logger.info("storing " + mqProtSets.length + " master proteins set quant data...")
   
       // Iterate over master quant protein sets to store corresponding spectral counts
       for (mqProtSet <- mqProtSets) {
@@ -193,23 +179,24 @@ class WeightedSpectralCountQuantifier(
   
   private def createWeightRsmsIdentRsmsMap() : HashMap[Long, ArrayBuffer[Long]] = {
         
-    val dsDefined = quantConfig.identDatasetId.isDefined    
+    val dsDefined = masterQc.identDatasetId.isDefined
 
     if(!dsDefined)    {
       //Use RSM hierarchy to create Map : don't work on merge RS !!      
         val rsmIdsInHierarchy = new ArrayBuffer[Long]()
         rsmIdsInHierarchy += mergedResultSummary.id
-        rsmIdsInHierarchy ++= getAllowedRSMIdsList(rsmIdsInHierarchy)         
+        rsmIdsInHierarchy ++= getAllowedRSMIdsList(rsmIdsInHierarchy)
       createWeightRsmMapUsingRsms(identRSMIds, rsmIdsInHierarchy)
     } else {     
        //Use DS hierarchy to create Map : should be preferred => set DS iD mandatory ?
       createWeightRsmMapUsingDatasets()
+
     }
   }
 
       /*****  Use DS hierarchy to create Map  ****/
   private def createWeightRsmMapUsingDatasets() : HashMap[Long, ArrayBuffer[Long]] = {
-      val dsId = quantConfig.identDatasetId.get
+      val dsId = masterQc.identDatasetId.get
       var identRsmIdsByWeightRsmIds = new HashMap[Long, ArrayBuffer[Long]]()   
       var currentWRsmId = -1L
       if(quantConfig.weightsRefRsmIds.contains(mergedResultSummary.id)){
@@ -274,7 +261,7 @@ class WeightedSpectralCountQuantifier(
 				  }
 			}
 		}
-    if(!childs.isEmpty)
+    if(childs.nonEmpty)
       childs ++= getAllowedRSMIdsList(childs)
     childs
   }
@@ -289,7 +276,7 @@ class WeightedSpectralCountQuantifier(
     childsRsmIds.foreach(childId => {
       if (quantConfig.weightsRefRsmIds.contains(childId) || mergedResultSummary.id.equals(childId)) { //child is a peptide ref. RSM or mergedResultSummary !
         val childList = resultMap.getOrElseUpdate(childId, new ArrayBuffer[Long]()) // Get Child already associated to this parent
-        childList += (childId) //add current child/parent to list 
+        childList += childId //add current child/parent to list
         resultMap.put(childId, childList)
       } else {
         childToSearchIdsBuilder += childId //Else search in hierarchy 
@@ -299,7 +286,7 @@ class WeightedSpectralCountQuantifier(
 		
 		val childsPerParent = new HashMap[Long, ArrayBuffer[Long]]()
 		val childToSearchIds = childToSearchIdsBuilder.result
-		if(!childToSearchIds.isEmpty){
+		if(childToSearchIds.nonEmpty){
 			DoJDBCReturningWork.withEzDBC( msiDbCtx) { msiEzDBC =>
 				val sqlQuery = new SelectQueryBuilder1(MsiDbResultSummaryRelationTable).mkSelectQuery( (t,c) =>
 					List(t.PARENT_RESULT_SUMMARY_ID,t.CHILD_RESULT_SUMMARY_ID) -> "WHERE "~ t.CHILD_RESULT_SUMMARY_ID ~" IN("~ childToSearchIds.mkString(",") ~")" )
@@ -327,7 +314,7 @@ class WeightedSpectralCountQuantifier(
     				tmpChildPerParentMap.remove(childId)
 		    	} else { //Current Child is an identification RSM		    	
   	    		val childList = resultMap.getOrElseUpdate(parentID, new ArrayBuffer[Long]()) // Get Child already associated to this parent
-    				childList += (childId) //add child from temporary Map to final Map !
+    				childList += childId //add child from temporary Map to final Map !
     				resultMap.put(parentID,childList )
 		    	} 
 		    })		    
@@ -352,7 +339,7 @@ class WeightedSpectralCountQuantifier(
 		})
 		
 		val newChilds = newChildsBuilder.result
-		if(!newChilds.isEmpty){
+		if(newChilds.nonEmpty){
       val returnedResultMap = createWeightRsmMapUsingRsms(newChilds, rsmIdsInHierarchy, tmpChildPerParentMap)
 		  returnedResultMap.foreach(entry => {
 		    val retParentId = entry._1
@@ -391,11 +378,11 @@ class WeightedSpectralCountQuantifier(
     quantClonedMergedRSM.proteinSets.filter(_.isValidated).foreach(protSet => {
 
       //-- Get Typical Protein Match Accession 
-      val pmAccession: String = if (protSet.getRepresentativeProteinMatch != null && protSet.getRepresentativeProteinMatch.isDefined) {
-        protSet.getRepresentativeProteinMatch.get.accession
+      val pmAccession: String = if (protSet.getRepresentativeProteinMatch != null && protSet.getRepresentativeProteinMatch().isDefined) {
+        protSet.getRepresentativeProteinMatch().get.accession
       } else {
-        val typicalPM = msiEm.find(classOf[fr.proline.core.orm.msi.ProteinMatch], protSet.getRepresentativeProteinMatchId)
-        typicalPM.getAccession()
+        val typicalPM = msiEm.find(classOf[fr.proline.core.orm.msi.ProteinMatch], protSet.getRepresentativeProteinMatchId())
+        typicalPM.getAccession
       }
 
       
@@ -405,7 +392,7 @@ class WeightedSpectralCountQuantifier(
 
       //-- Get peptide specific PSM count and create Map : peptide => List ProtSet.Id identified by peptide for further weight computation
       var nbrPSMSpecif: Int = 0
-      protSet.peptideSet.getPeptideInstances.foreach(pepI => {
+      protSet.peptideSet.getPeptideInstances().foreach(pepI => {
         val proSetIds = protSetIdByPepIdPerRSMId.getOrElseUpdate(mergedResultSummary.id, new HashMap[Long, ArrayBuffer[Long]]()).getOrElseUpdate(pepI.peptideId, new ArrayBuffer[Long])
         proSetIds += protSet.id
         if (pepI.validatedProteinSetsCount == 1) {
@@ -432,9 +419,9 @@ class WeightedSpectralCountQuantifier(
             val pepSet : PeptideSet = getPeptideSet(refRSMsByID(rsmId), pmAccession)           
             //Go through Peptide Instance in peptide set identifying merged RSM typical protein in current peptide reference RSM 
             if(pepSet != null) {
-	            pepSet.getPeptideInstances.foreach( pepInst =>{
+	            pepSet.getPeptideInstances().foreach( pepInst =>{
 	            	val proSetIds = protSetIdByPepIdPerRSMId.getOrElseUpdate(rsmId, new HashMap[Long, ArrayBuffer[Long]]()).getOrElseUpdate(pepInst.peptideId, new ArrayBuffer[Long])
-	    			    proSetIds += protSet.id
+	    			proSetIds += protSet.id
 	    		
 	              if(protSetSCDescr.refRSMPeptidesInfo.pepSpecificIds.contains(pepInst.peptideId)){ //Seen as specific in ref RSM
 	                currentRSMpepSpecif += pepInst.peptideId
@@ -458,7 +445,7 @@ class WeightedSpectralCountQuantifier(
 
     //**** Compute Peptides Weight 
     identRSMsByPepRefRSM.keySet.foreach(rsmId=>{
-      computePeptideWeight(rsmId, proteinSetSCDescriptionByProtSetId, protSetIdByPepIdPerRSMId.get(rsmId).get)
+      computePeptideWeight(rsmId, proteinSetSCDescriptionByProtSetId, protSetIdByPepIdPerRSMId(rsmId))
     })
 
     proteinSetSCDescriptionByProtSetId
@@ -484,7 +471,7 @@ class WeightedSpectralCountQuantifier(
       val newPepRefRSM = if (rsmId == mergedResultSummary.id) {
         mergedResultSummary
       } else {
-        entityCache.identResultSummaries.find(_.id == rsmId).get
+        entityCache.quantChannelResultSummaries.find(_.id == rsmId).get
       }
       
        // TODO FIXME Assume first peptideInstance.totalLeavesMatchCount give global information !
@@ -500,8 +487,8 @@ class WeightedSpectralCountQuantifier(
 	  logger.info("loading result summaries...")
 
     // Instantiate a RSM provider
-    val rsmProvider = new SQLResultSummaryProvider(msiDbCtx, psDbCtx, udsDbCtx)
-    val newlyLoadedRSMs = rsmProvider.getResultSummaries(notLoadedRSMIds, true)
+    val rsmProvider = new SQLResultSummaryProvider(PeptideCacheExecutionContext(executionContext))
+    val newlyLoadedRSMs = rsmProvider.getResultSummaries(notLoadedRSMIds, loadResultSet = true)
     
     for (rsm <- newlyLoadedRSMs) {
     	// TODO FIXME Assume first peptideInstance.totalLeavesMatchCount give global information !
@@ -552,7 +539,7 @@ class WeightedSpectralCountQuantifier(
           })
         }
 
-        return peptideSetForPM 
+      peptideSetForPM
     }
   
   
@@ -581,13 +568,13 @@ class WeightedSpectralCountQuantifier(
 	        } else {
 	          //Not specific peptide,  weight = nbr PSM Specific of current ProtSet / Sum ( nbr PSM Specific of all ProtSet identified by this pep)
 	          var sumNbrSpecificPSMs = 0
-	          protSetIdByPep.get(pepId).get.foreach(protSetId => {
+	          protSetIdByPep(pepId).foreach(protSetId => {
 	            if (proteinWeightStructByProtSetId.contains(protSetId))
 	              sumNbrSpecificPSMs += proteinWeightStructByProtSetId(protSetId).peptideInfoByRSMId(rsmId).nbrPSMSpecific
 	          })
 	
 	          if (sumNbrSpecificPSMs > 0)
-	            pepInfo.weightByPeptideId.put(pepId, (pepInfo.nbrPSMSpecific.toFloat / sumNbrSpecificPSMs.toFloat))
+	            pepInfo.weightByPeptideId.put(pepId, pepInfo.nbrPSMSpecific.toFloat / sumNbrSpecificPSMs.toFloat)
 	          else
 	            pepInfo.weightByPeptideId.put(pepId, 0)
 	        }
@@ -597,39 +584,27 @@ class WeightedSpectralCountQuantifier(
   }
 
   protected lazy val quantPeptidesObjectTreeSchema = {
-    ObjectTreeSchemaRepository.loadOrCreateObjectTreeSchema(msiEm, SchemaName.SPECTRAL_COUNTING_QUANT_PEPTIDES.toString())
+    ObjectTreeSchemaRepository.loadOrCreateObjectTreeSchema(msiEm, SchemaName.SPECTRAL_COUNTING_QUANT_PEPTIDES.toString)
   }
 
   protected lazy val quantPeptideIonsObjectTreeSchema = {
-    ObjectTreeSchemaRepository.loadOrCreateObjectTreeSchema(msiEm, SchemaName.SPECTRAL_COUNTING_QUANT_PEPTIDE_IONS.toString())
+    ObjectTreeSchemaRepository.loadOrCreateObjectTreeSchema(msiEm, SchemaName.SPECTRAL_COUNTING_QUANT_PEPTIDE_IONS.toString)
   }
 
-  protected def getMergedResultSummary(msiDbCtx: MsiDbConnectionContext): ResultSummary = {
-    if (quantConfig.identResultSummaryId.isEmpty)
-      createMergedResultSummary(msiDbCtx)
-    else {
-      logger.debug("Read Merged RSM with ID " + quantConfig.identResultSummaryId.get)
+  override protected def getMergedResultSummary(msiDbCtx: MsiDbConnectionContext): ResultSummary = {
+    require(masterQc.identResultSummaryId.isDefined, "mergedIdentRsmIdOpt is not defined")
+    val identRsm = super.getMergedResultSummary(msiDbCtx)
 
-      // Instantiate a RSM provider
-      val rsmProvider = new SQLResultSummaryProvider(msiDbCtx = msiDbCtx, psDbCtx = psDbCtx, udsDbCtx = udsDbCtx)
-      val idfRSM = rsmProvider.getResultSummary(quantConfig.identResultSummaryId.get, true).get
+    // FIXME: it should not be stored here but rather in the dedicated object tree
+    val spectralCountProperties = if (quantConfig.weightsRefRsmIds != null && !quantConfig.weightsRefRsmIds.isEmpty) {
+        Some(new SpectralCountProperties(weightsRefRsmIds = quantConfig.weightsRefRsmIds))
+    } else None
 
-      // FIXME: it should not be stored here but rather in the dedicated object tree
-        val spectralCountProperties = if(quantConfig.weightsRefRsmIds != null && !quantConfig.weightsRefRsmIds.isEmpty) { 
-        	Some( new SpectralCountProperties(weightsRefRSMIds = quantConfig.weightsRefRsmIds.toArray) )    	     	 
-        } else None
-            
-        if(spectralCountProperties.isDefined){
-        	logger.debug("SpectralCountProperties content : ")
-        	spectralCountProperties.get.weightsRefRSMIds.foreach({ l=>
-        	logger.debug(" Next LONG : {} "+ l.toString)
-        	})
-		}
-        
-      val mqchProperties =  new MasterQuantChannelProperties(identResultSummaryId=quantConfig.identResultSummaryId,identDatasetId= quantConfig.identDatasetId, spectralCountProperties=spectralCountProperties)
-      udsMasterQuantChannel.setSerializedProperties(ProfiJson.serialize(mqchProperties))
-      idfRSM
-    }
+    // Update MQC properties
+    val mqcProperties = new MasterQuantChannelProperties(spectralCountProperties)
+    udsMasterQuantChannel.setSerializedProperties(ProfiJson.serialize(mqcProperties))
+      
+    identRsm
 
   }
 
@@ -648,7 +623,7 @@ class WeightedSpectralCountQuantifier(
   ): (Array[MasterQuantPeptide], Array[MasterQuantProteinSet]) = {
 
     // Map quant channel id by resultSummary id    
-    val qcIdByRsmId = udsMasterQuantChannel.getQuantitationChannels().map(qc => qc.getIdentResultSummaryId() -> qc.getId).toMap
+    val qcIdByRsmId = udsMasterQuantChannel.getQuantitationChannels.map(qc => qc.getIdentResultSummaryId -> qc.getId).toMap
 
     val refPepInstanceByPepId = quantClonedMergedRSM.peptideInstances.map(pi => pi.peptideId -> pi).toMap
 
@@ -720,11 +695,11 @@ class WeightedSpectralCountQuantifier(
 
           
           //Go through peptides instances,  compute SC and create QuantPeptide
-          peptideSetForPM.getPeptideInstances.foreach(pepInst => {
+          peptideSetForPM.getPeptideInstances().foreach(pepInst => {
             if (currentWeightRefRSMPepInfo.weightByPeptideId.get(pepInst.peptideId).isEmpty) {
               logger.warn("************ NOT FOUND Pep " + pepInst.peptideId + " in Parent but exist in RSM " + pepInst.resultSummaryId)
             } else {
-              val weight = currentWeightRefRSMPepInfo.weightByPeptideId.get(pepInst.peptideId).get
+              val weight = currentWeightRefRSMPepInfo.weightByPeptideId(pepInst.peptideId)
               val isPepSpecific = currentWeightRefRSMPepInfo.pepSpecificIds.contains(pepInst.peptideId) // Math.abs(weight - 1.0f) < MathUtils.EPSILON_FLOAT
               val qPep = if (quantPepByPepID.contains(pepInst.peptideId)) {
                 quantPepByPepID(pepInst.peptideId)
@@ -757,9 +732,9 @@ class WeightedSpectralCountQuantifier(
             }
           }) //End go through PeptideInstance of ProtSet's PeptideSet
 
-          var protSetId = peptideSetForPM.getProteinSetId
+          var protSetId = peptideSetForPM.getProteinSetId()
           if (protSetId == 0) { //Subset. Not defined
-            val currentIdRSM = entityCache.identResultSummaries.filter(_.id.equals(rsm.id))(0)
+            val currentIdRSM = entityCache.quantChannelResultSummaries.filter(_.id.equals(rsm.id))(0)
             protSetId = searchProtSetOf(currentIdRSM, peptideSetForPM.id)
           }
 
@@ -810,7 +785,7 @@ class WeightedSpectralCountQuantifier(
       )
     })
 
-    return (mqPeptides.toArray, mqProtSets.toArray)
+    (mqPeptides.toArray, mqProtSets.toArray)
   }
 
   private def searchProtSetOf(currentRSM: ResultSummary, pepSetId: Long): Long = {
@@ -820,7 +795,7 @@ class WeightedSpectralCountQuantifier(
       val nextPepSet = pepSetIt.next
       if (nextPepSet.strictSubsetIds != null && nextPepSet.strictSubsetIds.contains(pepSetId)) {
         if (nextPepSet.getProteinSetId != 0) {
-          return nextPepSet.getProteinSetId
+          return nextPepSet.getProteinSetId()
         } else { //Search parent of parent ... 
           return searchProtSetOf(currentRSM, nextPepSet.id)
         }
@@ -831,7 +806,7 @@ class WeightedSpectralCountQuantifier(
 
   private def createProtMatchesAccByPeptideSet(rsm: ResultSummary): Map[PeptideSet, Seq[(Long, String)]] = {
      val rs = rsm.resultSet.get
-    val protMById = rs.getProteinMatchById
+    val protMById = rs.getProteinMatchById()
     val result = scala.collection.mutable.Map[PeptideSet, Seq[(Long, String)]]()
     val pepSetById = rsm.peptideSets.map(pepSet => pepSet.id -> pepSet).toMap
 
@@ -849,7 +824,7 @@ class WeightedSpectralCountQuantifier(
       result.put(protSet.peptideSet, seqBuilder.result)
 
       //Do Subset PeptideSet
-      protSet.peptideSet.getStrictSubsetIds.foreach(psId => {
+      protSet.peptideSet.getStrictSubsetIds().foreach(psId => {
         val subPepSet = pepSetById(psId)
         val subSeqBuilder = Seq.newBuilder[(Long, String)]
         subPepSet.proteinMatchIds.foreach(pmId => {

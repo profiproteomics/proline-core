@@ -4,8 +4,7 @@ public enum DbUnitSampleDataset {
 	
     MSI_SEARCH("/dbunit/datasets/msi/MsiSearch_Dataset.xml"),
     RESULT_SET("/dbunit/datasets/msi/Resultset_Dataset.xml"),
-    PROTEINS("/dbunit/datasets/pdi/Proteins_Dataset.xml"),
-    PEPTIDES("/dbunit/datasets/ps/Peptides_Dataset.xml"),
+    PEPTIDES("/dbunit/datasets/msi/Peptides_Dataset.xml"),
     PROJECT("/dbunit/datasets/uds/Project_Dataset.xml"),
     QUANTI_15N("/dbunit/datasets/uds/Quanti_15N_Dataset.xml");
     

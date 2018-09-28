@@ -91,7 +91,7 @@ object PgMsiSearchWriter extends AbstractSQLMsiSearchWriter() with LazyLogging {
         "SELECT " + msQueryTableCols + " FROM " + tmpMsQueryTableName)
       */
 
-      // Retrieve generated spectrum ids
+      // Retrieve generated MS query ids
       val msQueryIdByInitialId = msiEzDBC.select(msqIdQuery, msiSearchId) { r =>
         (toLong(r.nextAny) -> toLong(r.nextAny))
       } toMap
@@ -106,9 +106,6 @@ object PgMsiSearchWriter extends AbstractSQLMsiSearchWriter() with LazyLogging {
 
   private def _copyMsQuery(pgBulkLoader: CopyIn, msQuery: MsQuery, msiSearchId: Long, spectrumId: Option[Long]): Unit = {
     
-    //if( spectrumId <= 0 )
-    //throw new Exception("spectrum must first be persisted")
-
     // Build a row containing MS queries values
     val msQueryValues = List(
       //msQuery.id,
