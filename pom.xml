@@ -30,7 +30,7 @@
     <mzdb.version>0.9.0-SNAPSHOT</mzdb.version>  <!-- Tag version -->
   </properties>
   <scm>
-    <connection>scm:svn:https://bioproj.extra.cea.fr/svn/proline/Proline-Core/branches/0.6.0_remove_PSdb</connection>
+    <connection>scm:svn:https://bioproj.extra.cea.fr/svn/proline/Proline-Core/trunk</connection>
   </scm>
 
   <dependencyManagement>
