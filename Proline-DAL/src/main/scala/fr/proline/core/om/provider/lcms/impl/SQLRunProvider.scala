@@ -92,8 +92,9 @@ class SQLRunProvider(
       Some( Map() ++ scanSeqs.map( scanSeq => scanSeq.runId -> scanSeq ) )
     }
 
-    var runIdx = 0
+
     val runs = new Array[LcMsRun](distinctRunIds.length)
+    val runIdxById = distinctRunIds.zipWithIndex.toLongMap
 
     // Load runs
     DoJDBCReturningWork.withEzDBC(udsDbCtx) { ezDBC =>
@@ -113,8 +114,8 @@ class SQLRunProvider(
         val runScanSeq = scanSeqByIdAsOpt.map( _(runRecord.getLong(RunCols.ID)) )
         
         // Build the run
-        runs(runIdx) = this.buildRun(runRecord, rawFile, runScanSeq)
-        runIdx += 1
+        val run = this.buildRun(runRecord, rawFile, runScanSeq)
+        runs(runIdxById(run.id)) = run
       }
       runs
     }
