@@ -35,6 +35,9 @@ NOT DEFERRABLE;
 --- MANUAL ADDITION: rename constraint "data_set_master_quant_channel_fk" to "quant_data_set_master_quant_channel_fk" ---
 ALTER TABLE public.master_quant_channel RENAME CONSTRAINT data_set_master_quant_channel_fk TO quant_data_set_master_quant_channel_fk;
 
+-- Set name of existing quant channels (having an empty name) --
+UPDATE quant_channel SET name = context_key WHERE (name = '') IS NOT FALSE;
+
 -- Add UNIQUE constraint for "quant_channel.name" and a given "master_quant_channel" --
 CREATE UNIQUE INDEX quant_channel_unique_name_idx
  ON public.quant_channel
@@ -95,9 +98,6 @@ ALTER TABLE quant_label ALTER COLUMN number SET NOT NULL;
 
 -- Rename quant_method.type value 'isobaric_tag' to 'isobaric_tagging' --
 UPDATE quant_method SET type = 'isobaric_tagging' WHERE type = 'isobaric_tag'; 
-
--- Set name of existing quant channels (having an empty name) --
-UPDATE quant_channel SET name = context_key WHERE (name = '') IS NOT FALSE;
 
 -- Update fragmentation_rule_set and associated tables
 INSERT INTO fragmentation_rule_set (name) SELECT DISTINCT (name) FROM instrument_config;
