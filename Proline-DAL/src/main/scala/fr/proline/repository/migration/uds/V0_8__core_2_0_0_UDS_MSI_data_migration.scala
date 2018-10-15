@@ -739,8 +739,12 @@ object V0_8__core_2_0_0_UDS_MSI_data_migration extends LazyLogging {
 
         // Determine whether the quant RSM have been cloned from an indent RSM or not
         if (identRsmIdOpt.isEmpty) {
-          logger.debug(s"Updating relations of the quant RSM with ID=$quantRsmId...")
-          createdQuantRsmIdByMqcId.put(mqcId, quantRsmId)
+          if(quantRsmId != null && quantRsmId>0) {
+            logger.debug(s"Updating relations of the quant RSM with ID=$quantRsmId...")
+            createdQuantRsmIdByMqcId.put(mqcId, quantRsmId)
+          } else {
+            logger.error(s" MasterQuant Channel $mqcId don't reference RSMs !! ")
+          }
         }
         else {
           // Update RSM relations of RSMs that were cloned from an ident RSM
