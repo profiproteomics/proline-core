@@ -65,7 +65,7 @@ public class V0_10__RSxMergeType implements JdbcMigration  {
                 try {
                     propsAsJson = jsonParser.parse(prop).getAsJsonObject();
                 } catch ( Exception e)  {
-                    LOG.error("Error while trying to parse to 'result set' properties");
+                    LOG.info("Error while trying to parse to 'result set' properties. May be null, assume empty");
                     propsAsJson = jsonParser.parse("{}").getAsJsonObject();
                 }
 
