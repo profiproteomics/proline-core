@@ -146,7 +146,7 @@ class V0_8__core_2_0_0_UDS_MSI_data_migration extends JdbcMigration with LazyLog
 
               val isMigrationOK = me._transferPsDbDataToMsiDb(dataBaseName, extDbJsonProps, sbUrlPs.toString, connProps, msiConn)
               if(isMigrationOK) // update MSIData only if transfer is OK
-                me._upgradeMsiDbData(extDbId, msiConn, udsConn, DriverType.POSTGRESQL, jsonParser)
+                me._upgradeMsiDbData(extDbId, msiConn, udsConn, DriverType.POSTGRESQL)
 
               // Close MSIdb connections
               try {
