@@ -105,7 +105,7 @@ class V0_8__core_2_0_0_UDS_MSI_data_migration extends JdbcMigration with LazyLog
           extDbJsonProps = jsonParser.parse(serialProperties).getAsJsonObject
         } catch {
           case e: Exception => {
-            logger.error("***   Error while trying to access to External_db properties",e)
+             logger.warn("***   Error while trying to access to External_db properties. May be null., assume empty.",e)
             // We use a fallback to an empty JSON object to avoid error if processing an externalDb that has no serialized properties.
             extDbJsonProps = jsonParser.parse("{}").getAsJsonObject
           }
@@ -145,7 +145,8 @@ class V0_8__core_2_0_0_UDS_MSI_data_migration extends JdbcMigration with LazyLog
               sbUrlPs.append("jdbc:postgresql://").append(userHost).append("/").append("ps_db")
 
               val isMigrationOK = me._transferPsDbDataToMsiDb(dataBaseName, extDbJsonProps, sbUrlPs.toString, connProps, msiConn)
-              me._upgradeMsiDbData(extDbId, msiConn, udsConn, DriverType.POSTGRESQL)
+              if(isMigrationOK) // update MSIData only if transfer is OK			  
+				me._upgradeMsiDbData(extDbId, msiConn, udsConn, DriverType.POSTGRESQL)
 
               // Close MSIdb connections
               try {
@@ -238,6 +239,7 @@ class V0_8__core_2_0_0_UDS_MSI_data_migration extends JdbcMigration with LazyLog
         updateQuantPropObjectTreePropsStmt.setLong(2,objectTreed)
         updateQuantPropObjectTreePropsStmt.executeUpdate()
       }
+	  quantConfigPropsRs.close()
 
       // *** Put MasterQuantChannelProperties IDs in the master_quant_channel table
       // SpectralCountProperties => weightsRefRSMIds should be weightsRefRsmIds to have the correct serialization key
@@ -260,7 +262,7 @@ class V0_8__core_2_0_0_UDS_MSI_data_migration extends JdbcMigration with LazyLog
           propsAsJson = jsonParser.parse(propsAsStr).getAsJsonObject
         } catch {
           case e: Exception => {
-            logger.error("Error while trying to parse to 'master quant channel' properties")
+            logger.warn("** Error while trying to parse to 'master quant channel' properties. May be null, assume empty")
             propsAsJson = jsonParser.parse("{}").getAsJsonObject
           }
         }
@@ -309,15 +311,10 @@ class V0_8__core_2_0_0_UDS_MSI_data_migration extends JdbcMigration with LazyLog
       me._tryToCloseStatement(updateExternalDbState)
       me._tryToCloseStatement(deletePsDbRowStmt)
       me._tryToCloseStatement(updateQuantLabelNumberStmt)
+	  me._tryToCloseStatement(updateQuantPropObjectTreePropsStmt)
       me._tryToCloseStatement(updateExternalDbState)
       udsStmt.close()
 
-      // Close connection to avoid to update the schema_version of UDS if migration failed
-      // TODO: remove me because we should not close the connection provided by Flyway
-      // https://stackoverflow.com/questions/47865766/flyway-jdbc-migration-connection-trouble
-      /*if (!allMigrationsOK) {
-          udsConn.close();
-        }*/
     }
   }
 
@@ -330,7 +327,7 @@ object V0_8__core_2_0_0_UDS_MSI_data_migration extends LazyLogging {
     "(SELECT object_tree_id FROM master_quant_component WHERE master_quant_component.id = ?)"
   
   private def _mkSqlQueryForSequenceValueSetting(sequenceName: String, tableName: String): String = {
-    return "SELECT setval('" + sequenceName + "', COALESCE((SELECT MAX(id)+1 FROM " + tableName + "), 1), false)"
+    "SELECT setval('" + sequenceName + "', COALESCE((SELECT MAX(id)+1 FROM " + tableName + "), 1), false)"
   }
 
   // Define some to SQL queries used to fix the current value of Postgres PKs sequences
@@ -441,7 +438,7 @@ object V0_8__core_2_0_0_UDS_MSI_data_migration extends LazyLogging {
       // FIXME: use 'windows-1251' encoding because some of some special characters (i.e. ® icon) => it may not be cross-platform
       // Example: 950|1341|Native iodoacetyl Tandem Mass Tag®|iodoTMT
       cpManagerMsi.copyIn("COPY ptm(id,unimod_id,full_name,short_name) FROM STDIN WITH DELIMITER AS '|' CSV ENCODING 'windows-1251'", new ByteArrayInputStream(ptmCsvContent.toString.getBytes))
-      if (ptmWithNoUnimodCsvContent.length > 0)
+      if (ptmWithNoUnimodCsvContent.nonEmpty)
         cpManagerMsi.copyIn("COPY ptm(id,full_name,short_name) FROM STDIN WITH DELIMITER AS '|' CSV ENCODING 'windows-1251'", new ByteArrayInputStream(ptmWithNoUnimodCsvContent.toString.getBytes))
 
       // Clear the ptmCsvContent StringBuilder and close the psPtmRs
@@ -630,6 +627,7 @@ object V0_8__core_2_0_0_UDS_MSI_data_migration extends LazyLogging {
 
       // Clear StringBuilder
       ptmCsvContent.setLength(0)
+	  ptmWithNoUnimodCsvContent.setLength(0)
 
       // Close prepared statements
       _tryToCloseStatement(msiUpdatePtmSpecificityStmt)
@@ -711,18 +709,34 @@ object V0_8__core_2_0_0_UDS_MSI_data_migration extends LazyLogging {
       }
       
       // Retrieve Ident/Quant RSM <-> MQC mapping
-      val selectQuantRsmMqcMappingQuery = "SELECT id, ident_result_summary_id, quant_result_summary_id FROM master_quant_channel "+
+      val selectQuantRsmMqcMappingQuery = "SELECT id, ident_result_summary_id, quant_result_summary_id, serialized_properties FROM master_quant_channel "+
       s"WHERE quantitation_id IN (SELECT id FROM data_set WHERE project_id = $projectId and type = 'QUANTITATION')"
 
       val createdQuantRsmIdByMqcId = new LongMap[Long]
       val mqcIdByQuantRsmId = new LongMap[Long]
       udsEzDBC.selectAndProcess(selectQuantRsmMqcMappingQuery) { r =>
         val mqcId = r.nextLong
-        val identRsmIdOpt = r.nextLongOption
+        var identRsmIdOpt = r.nextLongOption
         val quantRsmId = r.nextLong
-        
+        val propsAsStr = r.nextString
+		
         mqcIdByQuantRsmId.put(quantRsmId, mqcId)
         
+        // IdentRsm may be null. Have to get info from serialized properties !
+        if (identRsmIdOpt.isEmpty) {
+          //test if not in serialized props
+          val jsonParser = new JsonParser
+          var propsAsJson: Option[JsonObject] = None
+          try {
+            propsAsJson = Some(jsonParser.parse(propsAsStr).getAsJsonObject)
+          } catch {
+            case e: Exception => propsAsJson = None
+          }
+          if (propsAsJson.isDefined && propsAsJson.get.has("ident_result_summary_id")) {
+            identRsmIdOpt = Some(propsAsJson.get.get("ident_result_summary_id").getAsLong)
+          }
+        }
+	
         // Determine whether the quant RSM have been cloned from an indent RSM or not
         if (identRsmIdOpt.isEmpty) {
           logger.debug(s"Updating relations of the quant RSM with ID=$quantRsmId...")
@@ -735,7 +749,7 @@ object V0_8__core_2_0_0_UDS_MSI_data_migration extends LazyLogging {
           
           logger.debug(s"Updating relations of the ident RSM with ID=$parentRsmId...")
           childRsmIds.foreach { childRsmId =>
-            insertRsmRelation(parentRsmId, childRsmId)
+            insertRsmRelation(quantRsmId, childRsmId)
           }
         }
       }
@@ -767,9 +781,13 @@ object V0_8__core_2_0_0_UDS_MSI_data_migration extends LazyLogging {
       val quantRsmIds = msiEzDBC.selectLongs("SELECT id FROM result_summary WHERE is_quantified = 't'")
       
       for (quantRsmId <- quantRsmIds) {
-        val mqcId = mqcIdByQuantRsmId(quantRsmId)
-        val sortedQcIds = sortedQcIdsByMqcId(mqcId).toArray
-
+		val sortedQcIds : Array[Long] = if(mqcIdByQuantRsmId.contains(quantRsmId)) { //may have no Dataset/MQCh in UDS if was cleared from trash
+		  val mqcId = mqcIdByQuantRsmId(quantRsmId)
+          sortedQcIdsByMqcId(mqcId).toArray
+        } else {
+          Array.empty[Long]
+        }
+		
         this._updateMqProtSets(msiDbCtx, quantRsmId, sortedQcIds, mqPeptideProvider, mqProtSetProvider)
       }
 
@@ -790,11 +808,21 @@ object V0_8__core_2_0_0_UDS_MSI_data_migration extends LazyLogging {
     mqPeptideProvider: SQLMasterQuantPeptideProvider,
     mqProtSetProvider: SQLMasterQuantProteinSetProvider
   ) {
-    val qcIdCount = sortedQcIds.length
+
     val mqPeps = mqPeptideProvider.getQuantResultSummariesMQPeptides(Seq(quantRsmId))
     val mqPepById = mqPeps.mapByLong(_.id)
     val mqProtSets = mqProtSetProvider.getQuantResultSummariesMQProteinSets(Seq(quantRsmId), loadMQPeptides = false)
-
+    val finalSortedQcIds = if(sortedQcIds.isEmpty) { //Should get information from masterQuantPeptideIons
+      val qcIdSet = new LongMap[Unit]
+      for (mqPep <- mqPeps; mqPepIon <- mqPep.masterQuantPeptideIons) {
+        mqPepIon.properties.get.getBestPeptideMatchIdMap().keys.foreach { qcIdSet.put(_, ()) }
+      }
+      // we assume here that qcIds are sorted by number field...
+      qcIdSet.keys.toArray.sorted
+    } else
+      sortedQcIds
+    val qcIdCount = finalSortedQcIds.length
+	
     this.logger.info(s"Updating MasterQuantProtSets of quant RSM with id=$quantRsmId...")
 
     DoJDBCWork.tryTransactionWithEzDBC(msiDbCtx) { ezDBC =>
@@ -833,7 +861,7 @@ object V0_8__core_2_0_0_UDS_MSI_data_migration extends LazyLogging {
                 }
                 assert(psmCountByQcId.size <= qcIdCount, "Invalid number of QC ids")
 
-                profile.peptideMatchesCounts = sortedQcIds.map(psmCountByQcId)
+                profile.peptideMatchesCounts = finalSortedQcIds.map(psmCountByQcId)
               }
             }
 
@@ -845,7 +873,7 @@ object V0_8__core_2_0_0_UDS_MSI_data_migration extends LazyLogging {
 
             // Retrieve quant protein sets sorted by quant channel
             val quantProtSetMap = mqProtSet.quantProteinSetMap
-            val quantProtSets = sortedQcIds.map { quantProtSetMap.getOrElse(_, null) }
+            val quantProtSets = finalSortedQcIds.map { quantProtSetMap.getOrElse(_, null) }
 
             // Update MasterQuantProtSets object tree
             objTreeUpdateStmt.executeWith(
