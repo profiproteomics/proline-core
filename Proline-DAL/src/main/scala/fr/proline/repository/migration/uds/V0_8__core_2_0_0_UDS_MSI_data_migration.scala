@@ -745,7 +745,7 @@ object V0_8__core_2_0_0_UDS_MSI_data_migration extends LazyLogging {
         else {
           // Update RSM relations of RSMs that were cloned from an ident RSM
           val parentRsmId = identRsmIdOpt.get
-          val childRsmIds = childRsmIdsByParentRsmId(parentRsmId)
+          val childRsmIds = childRsmIdsByParentRsmId.getOrElse(parentRsmId, new ArrayBuffer[Long]())
           
           logger.debug(s"Updating relations of the ident RSM with ID=$parentRsmId...")
           childRsmIds.foreach { childRsmId =>
