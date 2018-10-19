@@ -65,6 +65,7 @@ class V0_8__core_2_0_0_UDS_MSI_data_migration extends JdbcMigration with LazyLog
 
     // Create a statement that will be used for SELECT operations on the UDSdb
     val udsStmt = udsConn.createStatement
+    val udsStmt2 = udsConn.createStatement //for nested queries
 
     // Create a prepared statement to update the serialized properties of the external_db table
     val updateExternalDbState = udsConn.prepareStatement("UPDATE external_db SET serialized_properties=? WHERE type='MSI' and name=?")
@@ -247,6 +248,7 @@ class V0_8__core_2_0_0_UDS_MSI_data_migration extends JdbcMigration with LazyLog
       val mqcPropsRs = udsStmt.executeQuery("SELECT id, serialized_properties FROM master_quant_channel WHERE serialized_properties IS NOT NULL")
       var mqcId: Long = 0L
       var propsAsStr: String = null
+
       while (mqcPropsRs.next) {
 
         // Properties example:
@@ -269,8 +271,16 @@ class V0_8__core_2_0_0_UDS_MSI_data_migration extends JdbcMigration with LazyLog
 
         // Copy ident_dataset_id property to table
         if (propsAsJson.has("ident_dataset_id")) {
-          updateMqcPropsStmt.setLong(1, propsAsJson.get("ident_dataset_id").getAsLong)
-          propsAsJson.remove("ident_dataset_id")
+          //Test if exist in UDS !
+          val dsId =  propsAsJson.get("ident_dataset_id").getAsLong
+          val resDsId = udsStmt2.executeQuery(s"SELECT count(id) FROM data_set WHERE id = $dsId")
+          resDsId.next()
+          val count = resDsId.getInt(1)
+          if(count>0) {
+            updateMqcPropsStmt.setLong(1,dsId)
+            propsAsJson.remove("ident_dataset_id")
+          }
+          resDsId.close()
         } else
           updateMqcPropsStmt.setNull(1, java.sql.Types.BIGINT)
 
@@ -302,6 +312,7 @@ class V0_8__core_2_0_0_UDS_MSI_data_migration extends JdbcMigration with LazyLog
 
       } // ends while (mqcPropsRs.next())
       mqcPropsRs.close()
+      udsStmt2.close()
 
     } finally {
       sbUrlMsi.setLength(0)
@@ -314,7 +325,7 @@ class V0_8__core_2_0_0_UDS_MSI_data_migration extends JdbcMigration with LazyLog
       me._tryToCloseStatement(updateQuantPropObjectTreePropsStmt)
       me._tryToCloseStatement(updateExternalDbState)
       udsStmt.close()
-
+      udsStmt2.close()
     }
   }
 
