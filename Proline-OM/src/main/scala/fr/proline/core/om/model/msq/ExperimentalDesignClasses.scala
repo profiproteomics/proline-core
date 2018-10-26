@@ -7,9 +7,7 @@ import fr.profi.util.misc.InMemoryIdGen
 case class SimplifiedExperimentalDesign(
   val biologicalSamples: Array[BiologicalSample],
   val biologicalGroups: Array[BiologicalGroup],
-  val masterQuantChannels: Array[MasterQuantChannel],
-  /** Used for fractionated samples **/
-  val parentMasterQuantChannel: Option[MasterQuantChannel] = None
+  val masterQuantChannels: Array[MasterQuantChannel]
 ) {
   def toExperimentalDesign() = {
     ExperimentalDesign(
@@ -23,8 +21,7 @@ case class SimplifiedExperimentalDesign(
           ratioDefinitions = Array()
         )
       ),
-      masterQuantChannels = masterQuantChannels,
-      parentMasterQuantChannel = parentMasterQuantChannel
+      masterQuantChannels = masterQuantChannels
     )
   }
 }
@@ -32,7 +29,7 @@ case class SimplifiedExperimentalDesign(
 // TODO: rename MasterQuantChannelExpDesign
 case class ExperimentalDesignSetup(
   val expDesign: ExperimentalDesign,
-  val groupSetupNumber: Int = 1, // CBy : dont know where the param comes from ??
+  val groupSetupNumber: Int = 1,
   val masterQCNumber: Int
 ) {
   
@@ -84,9 +81,7 @@ case class ExperimentalDesignSetup(
 case class ExperimentalDesign(
   val biologicalSamples: Array[BiologicalSample],
   val groupSetups: Array[GroupSetup],
-  val masterQuantChannels: Array[MasterQuantChannel],
-  /** Used for fractionated samples **/
-  val parentMasterQuantChannel: Option[MasterQuantChannel] = None
+  val masterQuantChannels: Array[MasterQuantChannel]
 ) {
   
   @transient lazy val groupSetupByNumber = Map() ++ groupSetups.map( gs => gs.number -> gs )
@@ -190,6 +185,7 @@ case class QuantChannel(
   val runId: Option[Long] = None,
   @JsonDeserialize(contentAs = classOf[java.lang.Long] )
   val quantLabelId: Option[Long] = None
+
 ) {
   if( name == null ) name = ""
 }

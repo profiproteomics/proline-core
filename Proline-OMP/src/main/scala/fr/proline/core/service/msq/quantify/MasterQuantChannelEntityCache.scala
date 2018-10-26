@@ -66,16 +66,16 @@ class MasterQuantChannelEntityCache(
   val quantChannelIds = udsQuantChannels.map { _.getId } toArray
   val quantChannelsCount = quantChannelIds.length
   
-  val quantChannelRsmIds = udsQuantChannels.map { udsQuantChannel =>
+  lazy val quantChannelRsmIds = udsQuantChannels.map { udsQuantChannel =>
     val qcId = udsQuantChannel.getId
     val identRsmId = udsQuantChannel.getIdentResultSummaryId
     require(identRsmId != 0, "the quant_channel with id='" + qcId + "' is not associated with an identification result summary")
     identRsmId
   }.toList.distinct
 
-  require(quantChannelRsmIds.nonEmpty, "result sets have to be validated first")
+//  require(quantChannelRsmIds.nonEmpty, "result sets have to be validated first")
 
-  private val quantChannelsRsIdByRsmId = {
+  lazy private val quantChannelsRsIdByRsmId = {
     DoJDBCReturningWork.withEzDBC(msiDbCtx) { msiEzDBC =>
 
       val sqlQuery = new SelectQueryBuilder1(MsiDbResultSummaryTable).mkSelectQuery( (t,c) =>
@@ -85,13 +85,13 @@ class MasterQuantChannelEntityCache(
     }
   }
 
-  val quantChannelMsiResultSets = {
+  lazy val quantChannelMsiResultSets = {
     val identRsIds = quantChannelsRsIdByRsmId.values.asJavaCollection
     msiEm.createQuery("FROM fr.proline.core.orm.msi.ResultSet WHERE id IN (:ids)", classOf[fr.proline.core.orm.msi.ResultSet])
       .setParameter("ids", identRsIds).getResultList().toList
   }
 
-  val quantChannelResultSummaries = {
+  lazy val quantChannelResultSummaries = {
 
     // Load the result summaries corresponding to the quant channels
     this.logger.info("loading result summaries...")

@@ -350,10 +350,10 @@ case class MapSet(
     } else {
       // Convert time into the reference map scale
       val toRefMapAlnSetOpt = _mapAlnSetByMapIdPair.get(refMapId -> alnRefMapId)
-      if (toRefMapAlnSetOpt.isEmpty) None
-      else {
+      if (toRefMapAlnSetOpt.isEmpty) {
+        None
+      } else {
         val refMapTime = toRefMapAlnSetOpt.get.calcTargetMapElutionTime(time, mass)
-       
         // Convert reference map time into the target map scale
         val mapAlnSetOpt = _mapAlnSetByMapIdPair.get(alnRefMapId -> targetMapId)
         mapAlnSetOpt.map(_.calcTargetMapElutionTime(refMapTime, mass))

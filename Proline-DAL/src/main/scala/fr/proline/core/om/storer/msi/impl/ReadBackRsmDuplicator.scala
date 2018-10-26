@@ -66,7 +66,7 @@ class RsmDuplicator(rsmProvider: IResultSummaryProvider) extends IRsmDuplicator 
 
     // Iterate over merged peptide instances to create quant peptide instances
     var end = System.currentTimeMillis()
-    this.logger.info("cloning master quant peptide instances... (" + sourcePepInstances.length + "). From start method " + (end - start))
+    this.logger.info("cloning master quant peptide instances... (" + sourcePepInstances.length + "). From start method " + (end - start) + " ms")
     start = end
 
     // Define some vars
@@ -107,7 +107,7 @@ class RsmDuplicator(rsmProvider: IResultSummaryProvider) extends IRsmDuplicator 
     }
 
     end  = System.currentTimeMillis()
-    this.logger.debug("getting all peptides ("+ pepIds.length+") and child peptidesMatch in 2 queries... (" + pepMatchIds.length + "). duration "+(end-start))
+    this.logger.debug("getting all peptides ("+ pepIds.length+") and child peptidesMatch in 2 queries... (" + pepMatchIds.length + "). duration: "+(end-start) + " ms")
     start = end
 
     var cumul1 = 0l
@@ -372,7 +372,7 @@ class RsmDuplicator(rsmProvider: IResultSummaryProvider) extends IRsmDuplicator 
 
     } //End go through sameSet PeptideSet
     end  = System.currentTimeMillis()
-    this.logger.info("END storing quantified sameset peptide sets and protein sets... steps duration "+(end-start))
+    this.logger.info("END storing quantified sameset peptide sets and protein sets... steps duration "+(end-start) + " ms")
     start = end
 
     //Start creating subSet peptideSet data
@@ -412,7 +412,7 @@ class RsmDuplicator(rsmProvider: IResultSummaryProvider) extends IRsmDuplicator 
     }  //End go through subSets PeptideSet
 
     end  = System.currentTimeMillis()
-    this.logger.info("END storing quantified subset peptide sets and protein sets... steps duration "+(end-start))
+    this.logger.info("END storing quantified subset peptide sets and protein sets... steps duration "+(end-start) + " ms")
     start = end
     //Create PeptideSet Relations
     for(sourcePepSet <- sourcePeptideSets){
@@ -456,16 +456,20 @@ class RsmDuplicator(rsmProvider: IResultSummaryProvider) extends IRsmDuplicator 
     }
 
     end  = System.currentTimeMillis()
-    this.logger.info("END storing  peptide sets relations ... steps duration "+(end-start))
+    this.logger.info("END storing  peptide sets relations ... steps duration "+(end-start) + " ms")
+    start = end
     msiEm.flush()
+    this.logger.info("ENtity manager flushed. duration "+(end-start) + " ms")
     //VDS CHANGE MERGE RSM !!!!
     // Update sourceRSM id
     //ONLY FOR RESET ID
     if (eraseSourceIds) {
+      logger.info("Erase source RSM id")
       sourceRSM.id = emptyRSM.getId
       sourceRSM
     } else {
       //  ONLY FOR READBACK
+      logger.info("read back source RSM")
       rsmProvider.getResultSummary(emptyRSM.getId, true).get
     }
   }
