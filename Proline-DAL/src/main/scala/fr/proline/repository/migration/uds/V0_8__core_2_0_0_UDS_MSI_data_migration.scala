@@ -378,7 +378,6 @@ object V0_8__core_2_0_0_UDS_MSI_data_migration extends LazyLogging {
     val cpManagerPs = psConn.asInstanceOf[PGConnection].getCopyAPI
 
     // Declare some HashMaps
-    val msiPeptideIds = new util.ArrayList[Long] // this list should be unique
     val msiPtmSpecIds = new util.HashSet[Long]
 
     val ptmCsvContent = new StringBuilder
@@ -407,14 +406,17 @@ object V0_8__core_2_0_0_UDS_MSI_data_migration extends LazyLogging {
       msiPtmSpecificityRs.close()
 
       // Retrieve the list of modified peptide ids
-      val modifiedPeptideIdsRs = msiStmt.executeQuery("SELECT DISTINCT peptide_id FROM peptide_readable_ptm_string")
+      val modifiedPeptideIdsRs = msiStmt.executeQuery("SELECT peptide_id FROM peptide_readable_ptm_string")
       modifiedPeptideIdsRs.setFetchSize(fetchSize)
+      val redundantPeptideIds = new util.ArrayList[Long]
       while (modifiedPeptideIdsRs.next) {
         val msiPeptideId = modifiedPeptideIdsRs.getLong("peptide_id")
         if (msiPeptideId > 0)
-          msiPeptideIds.add(msiPeptideId)
+          redundantPeptideIds.add(msiPeptideId)
       }
       modifiedPeptideIdsRs.close()
+      val msiPeptideIds = redundantPeptideIds.toArray().distinct
+      redundantPeptideIds.clear()
 
       logger.info("Number of peptides having PTMs in MSIdb: {}", msiPeptideIds.size)
 
@@ -553,15 +555,8 @@ object V0_8__core_2_0_0_UDS_MSI_data_migration extends LazyLogging {
 
       // Create temporary table tmp_msi_modified_peptide containing all MSIdb peptides having a PTM
       psStmt.executeUpdate("CREATE TEMP TABLE tmp_msi_modified_peptide (peptide_id bigint) ON COMMIT DELETE ROWS")
-      logger.debug("CREATE TEMP TABLE LENGHT ...")
-      val psTempCountRs = psStmt.executeQuery("SELECT count(*) FROM tmp_msi_modified_peptide ")
-      if (psTempCountRs.next())
-        logger.debug("** NBR records == " + psTempCountRs.getInt(1))
-      else
-        logger.debug("** UNKNOWN NBR records ")
 
       recordCount = 0
-      import scala.collection.JavaConversions._
       for (msiPeptideId <- msiPeptideIds) {
         recordCount += 1
         ptmCsvContent.append(msiPeptideId).append("\n")
@@ -577,33 +572,25 @@ object V0_8__core_2_0_0_UDS_MSI_data_migration extends LazyLogging {
 
       // Fill peptide_ptm table in the MSIdb
       logger.info("Inserting records in the 'peptide_ptm' table of the MSIdb...")
-      val psCountPeptidePtmRs = psStmt.executeQuery("SELECT count(*) FROM peptide_ptm " + "RIGHT JOIN tmp_msi_modified_peptide ON peptide_ptm.peptide_id = tmp_msi_modified_peptide.peptide_id")
-      if (psCountPeptidePtmRs.next())
-        logger.debug("** NBR records == " + psCountPeptidePtmRs.getInt(1))
-      else
-        logger.debug("** UNKNOWN NBR records ")
 
-      val psPeptidePtmRs = psStmt.executeQuery("SELECT * FROM peptide_ptm " + "RIGHT JOIN tmp_msi_modified_peptide ON peptide_ptm.peptide_id = tmp_msi_modified_peptide.peptide_id")
+      val psPeptidePtmRs = psStmt.executeQuery("SELECT id, seq_position, mono_mass, average_mass, peptide_ptm.peptide_id, ptm_specificity_id FROM peptide_ptm " + "RIGHT JOIN tmp_msi_modified_peptide ON peptide_ptm.peptide_id = tmp_msi_modified_peptide.peptide_id")
       psPeptidePtmRs.setFetchSize(fetchSize)
       var totalNbr = 0
       while (psPeptidePtmRs.next) {
-        val peptidePtmId = psPeptidePtmRs.getLong("id")
-        val peptidePtmSeqPos = psPeptidePtmRs.getInt("seq_position")
-        val peptidePtmMonoMass = psPeptidePtmRs.getDouble("mono_mass")
-        val peptidePtmAverageMass = psPeptidePtmRs.getDouble("average_mass")
-        val peptidePtmPeptideIdFK = psPeptidePtmRs.getLong("peptide_id")
-        val peptidePtmSpecificityIdFK = psPeptidePtmRs.getLong("ptm_specificity_id")
+        val peptidePtmId = psPeptidePtmRs.getLong(1)
+        val peptidePtmSeqPos = psPeptidePtmRs.getInt(2)
+        val peptidePtmMonoMass = psPeptidePtmRs.getDouble(3)
+        val peptidePtmAverageMass = psPeptidePtmRs.getDouble(4)
+        val peptidePtmPeptideIdFK = psPeptidePtmRs.getLong(5)
+        val peptidePtmSpecificityIdFK = psPeptidePtmRs.getLong(6)
 
-        if (msiPeptideIds.contains(peptidePtmPeptideIdFK)) {
-          recordCount += 1
-          totalNbr += 1
-          ptmCsvContent.append(peptidePtmId).append("|").append(peptidePtmSeqPos).append("|").append(peptidePtmMonoMass).append("|").append(peptidePtmAverageMass).append("|").append(peptidePtmPeptideIdFK).append("|").append(peptidePtmSpecificityIdFK).append("\n")
-          if (recordCount % batchSize == 0) {
-            logger.info(s"Processed $recordCount rows in current batch...")
-            this._copyPeptidePtmTableContent(cpManagerMsi, ptmCsvContent)
-            ptmCsvContent.setLength(0)
-            recordCount = 0
-          }
+        recordCount += 1
+        totalNbr += 1
+        ptmCsvContent.append(peptidePtmId).append("|").append(peptidePtmSeqPos).append("|").append(peptidePtmMonoMass).append("|").append(peptidePtmAverageMass).append("|").append(peptidePtmPeptideIdFK).append("|").append(peptidePtmSpecificityIdFK).append("\n")
+        if (recordCount % batchSize == 0) {
+          this._copyPeptidePtmTableContent(cpManagerMsi, ptmCsvContent)
+          ptmCsvContent.setLength(0)
+          recordCount = 0
         }
       }
 
@@ -633,7 +620,6 @@ object V0_8__core_2_0_0_UDS_MSI_data_migration extends LazyLogging {
       }
     } finally {
       // Clear buffers
-      msiPeptideIds.clear()
       msiPtmSpecIds.clear()
 
       // Clear StringBuilder
