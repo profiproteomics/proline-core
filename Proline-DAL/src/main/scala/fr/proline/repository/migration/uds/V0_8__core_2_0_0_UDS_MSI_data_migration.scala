@@ -71,6 +71,8 @@ class V0_8__core_2_0_0_UDS_MSI_data_migration extends JdbcMigration with LazyLog
     val updateExternalDbState = udsConn.prepareStatement("UPDATE external_db SET serialized_properties=? WHERE type='MSI' and name=?")
     // Create a prepared statement to remove the PSdb from the external_db table
     val deletePsDbRowStmt = udsConn.prepareStatement("DELETE FROM external_db WHERE name='ps_db' AND type='PS'")
+    // Create a prepared statement to remove the PDIdb from the external_db table
+    // val deletePdiDbRowStmt = udsConn.prepareStatement("DELETE FROM external_db WHERE name='pdi_db' AND type='PDI'")
     // Create a prepared statement to update the number field of the quant_label table
     val updateQuantLabelNumberStmt = udsConn.prepareStatement("UPDATE quant_label SET number=? WHERE id=?")
     // Create a prepared statement to update the serialized properties of the master_quant_channel table
@@ -196,6 +198,7 @@ class V0_8__core_2_0_0_UDS_MSI_data_migration extends JdbcMigration with LazyLog
       // Remove PSdb only if the current driver is PostgreSQL
       if (isPgDriver && allMigrationsOK) {
         deletePsDbRowStmt.executeUpdate
+        //deletePdiDbRowStmt.executeUpdate
         udsConn.commit()
       } else
         logger.warn("won't remove PSdb for a database engine different than PostgreSQL")
@@ -321,6 +324,7 @@ class V0_8__core_2_0_0_UDS_MSI_data_migration extends JdbcMigration with LazyLog
       // Close statements
       me._tryToCloseStatement(updateExternalDbState)
       me._tryToCloseStatement(deletePsDbRowStmt)
+      //me._tryToCloseStatement(deletePdiDbRowStmt)
       me._tryToCloseStatement(updateQuantLabelNumberStmt)
       me._tryToCloseStatement(updateQuantPropObjectTreePropsStmt)
       me._tryToCloseStatement(updateExternalDbState)
