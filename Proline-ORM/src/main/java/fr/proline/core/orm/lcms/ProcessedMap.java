@@ -12,11 +12,8 @@ import java.util.List;
 @Entity
 @Table(name = "processed_map")
 @NamedQuery(name = "ProcessedMap.findAll", query = "SELECT p FROM ProcessedMap p")
-public class ProcessedMap implements Serializable {
+public class ProcessedMap extends Map implements Serializable {
 	private static final long serialVersionUID = 1L;
-
-	@Id
-	private Long id;
 
 	@Column(name = "is_aln_reference")
 	private Boolean isAlnReference;
@@ -40,10 +37,12 @@ public class ProcessedMap implements Serializable {
 	@OneToMany(mappedBy = "masterMap")
 	private List<MasterFeatureItem> masterFeatureItems;
 
-	//bi-directional one-to-one association to Map
-	@OneToOne
-	@JoinColumn(name = "id")
-	private Map map;
+	@OneToMany
+	@JoinTable(name = "processed_map_raw_map_mapping",
+			joinColumns = {@JoinColumn(name = "processed_map_id")},
+			inverseJoinColumns = {@JoinColumn(name = "raw_map_id")}
+	)
+	private List<RawMap> rawMaps;
 
 	//bi-directional many-to-one association to MapSet
 	@ManyToOne
@@ -55,14 +54,6 @@ public class ProcessedMap implements Serializable {
 	private List<ProcessedMapFeatureItem> processedMapFeatureItems;
 
 	public ProcessedMap() {
-	}
-
-	public Long getId() {
-		return this.id;
-	}
-
-	public void setId(Long id) {
-		this.id = id;
 	}
 
 	public Boolean getIsAlnReference() {
@@ -135,28 +126,6 @@ public class ProcessedMap implements Serializable {
 		this.masterFeatureItems = masterFeatureItems;
 	}
 
-	public MasterFeatureItem addMasterFeatureItem(MasterFeatureItem masterFeatureItem) {
-		getMasterFeatureItems().add(masterFeatureItem);
-		masterFeatureItem.setMasterMap(this);
-
-		return masterFeatureItem;
-	}
-
-	public MasterFeatureItem removeMasterFeatureItem(MasterFeatureItem masterFeatureItem) {
-		getMasterFeatureItems().remove(masterFeatureItem);
-		masterFeatureItem.setMasterMap(null);
-
-		return masterFeatureItem;
-	}
-
-	public Map getMap() {
-		return this.map;
-	}
-
-	public void setMap(Map map) {
-		this.map = map;
-	}
-
 	public MapSet getMapSet() {
 		return this.mapSet;
 	}
@@ -173,22 +142,21 @@ public class ProcessedMap implements Serializable {
 		this.processedMapFeatureItems = processedMapFeatureItems;
 	}
 
-	public ProcessedMapFeatureItem addProcessedMapFeatureItem(ProcessedMapFeatureItem processedMapFeatureItem) {
-		getProcessedMapFeatureItems().add(processedMapFeatureItem);
-		processedMapFeatureItem.setProcessedMap(this);
-
-		return processedMapFeatureItem;
+	public List<RawMap> getRawMaps() {
+		return rawMaps;
 	}
 
-	public ProcessedMapFeatureItem removeProcessedMapFeatureItem(ProcessedMapFeatureItem processedMapFeatureItem) {
-		getProcessedMapFeatureItems().remove(processedMapFeatureItem);
-		processedMapFeatureItem.setProcessedMap(null);
-
-		return processedMapFeatureItem;
+	public RawMap getRawMap() {
+		if (isMaster) {
+			throw new UnsupportedOperationException("getRawMap is not supported for master maps");
+		} else {
+			return rawMaps.get(0);
+		}
 	}
+
 
 	@Override
 	public String toString() {
-		return new StringBuilder("ProcessedMap ").append(id).toString();
+		return new StringBuilder("ProcessedMap ").append(getId()).toString();
 	}
 }

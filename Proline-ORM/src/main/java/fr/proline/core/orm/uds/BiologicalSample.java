@@ -1,7 +1,9 @@
 package fr.proline.core.orm.uds;
 
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -101,12 +103,30 @@ public class BiologicalSample implements Serializable {
 		this.quantitationChannels = quantitationChannels;
 	}
 
-	public List<BiologicalSplSplAnalysisMap> getBiologicalSplSplAnalysisMap() {
-		return biologicalSplSplAnalysisMap;
+	public BiologicalSplSplAnalysisMap addSampleAnalysis(SampleAnalysis sampleAnalysis) {
+		BiologicalSplSplAnalysisMap item = new BiologicalSplSplAnalysisMap();
+
+		BiologicalSplSplAnalysisMapPK key = new BiologicalSplSplAnalysisMapPK();
+		key.setBiologicalSampleId(this.getId());
+		key.setSampleAnalysisId(sampleAnalysis.getId());
+		item.setId(key);
+		item.setBiologicalSample(this);
+		item.setSampleAnalysis(sampleAnalysis);
+		item.setSampleAnalysisNumber(getBiologicalSplSplAnalysisMap().size()+1);
+
+		sampleAnalysis.addBiologicalSample(item);
+		return (getBiologicalSplSplAnalysisMap().add(item)) ? item : null;
 	}
 
-	public void setBiologicalSplSplAnalysisMap(final List<BiologicalSplSplAnalysisMap> sampleReplicatesMap) {
-		this.biologicalSplSplAnalysisMap = sampleReplicatesMap;
+	public List<SampleAnalysis> getSampleAnalyses() {
+		return getBiologicalSplSplAnalysisMap().stream().map(i -> i.getSampleAnalysis()).collect(Collectors.toList());
+	}
+
+	private List<BiologicalSplSplAnalysisMap> getBiologicalSplSplAnalysisMap() {
+		if (biologicalSplSplAnalysisMap == null) {
+			biologicalSplSplAnalysisMap = new ArrayList<>();
+		}
+		return biologicalSplSplAnalysisMap;
 	}
 
 }

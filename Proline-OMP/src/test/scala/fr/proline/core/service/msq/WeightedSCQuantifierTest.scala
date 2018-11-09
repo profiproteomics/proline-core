@@ -64,32 +64,9 @@ class WeightedSCQuantifierTest extends StrictLogging {
     bioSpl1.setNumber(1)
     bioSpl1.setDataset(qtDS)
 
-    //Create link between SampleAnalysis  & BiologicalSample
-    val replicate2Sample1 = new BiologicalSplSplAnalysisMap()
-    replicate2Sample1.setBiologicalSample(bioSpl1)
-    replicate2Sample1.setSampleAnalysis(splAnalysis1)
-    replicate2Sample1.setSampleAnalysisNumber(1)
-    
-    val replicate2Sample2 = new BiologicalSplSplAnalysisMap()
-    replicate2Sample2.setBiologicalSample(bioSpl1)
-    replicate2Sample2.setSampleAnalysis(splAnalysis2)
-    replicate2Sample2.setSampleAnalysisNumber(2)
-
-    val replicate2Sample3 = new BiologicalSplSplAnalysisMap()
-    replicate2Sample3.setBiologicalSample(bioSpl1)
-    replicate2Sample3.setSampleAnalysis(splAnalysis3)
-    replicate2Sample3.setSampleAnalysisNumber(3)
-    
-    val allSplAnalysis = new ArrayList[BiologicalSplSplAnalysisMap](3)
-    allSplAnalysis.add(replicate2Sample1)
-    allSplAnalysis.add(replicate2Sample2)
-    allSplAnalysis.add(replicate2Sample3)
-    val allBioSplReplicateMap = new HashSet[BiologicalSplSplAnalysisMap](allSplAnalysis)
-    
-    bioSpl1.setBiologicalSplSplAnalysisMap(allSplAnalysis)
-    splAnalysis1.setBiologicalSplSplAnalysisMap(allBioSplReplicateMap)
-    splAnalysis2.setBiologicalSplSplAnalysisMap(allBioSplReplicateMap)
-    splAnalysis3.setBiologicalSplSplAnalysisMap(allBioSplReplicateMap)
+    bioSpl1.addSampleAnalysis(splAnalysis1);
+    bioSpl1.addSampleAnalysis(splAnalysis2);
+    bioSpl1.addSampleAnalysis(splAnalysis3);
 
     //Create QuantitationChannel
     val qCh1 = new QuantitationChannel()

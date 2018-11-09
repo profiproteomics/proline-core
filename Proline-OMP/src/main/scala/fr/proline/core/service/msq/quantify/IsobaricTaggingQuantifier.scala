@@ -3,7 +3,6 @@ package fr.proline.core.service.msq.quantify
 import com.typesafe.scalalogging.LazyLogging
 import fr.profi.util.collection._
 import fr.profi.util.ms._
-import fr.profi.util.serialization.ProfiJson
 import fr.proline.context._
 import fr.proline.core.algo.msq.config._
 import fr.proline.core.algo.msq.summarizing._
@@ -23,7 +22,6 @@ import fr.proline.core.service.lcms.io.ExtractMapSet
 
 import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.LongMap
-import scala.collection.JavaConversions.asScalaSet
 
 class IsobaricTaggingQuantifier(
   val executionContext: IExecutionContext,

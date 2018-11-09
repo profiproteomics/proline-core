@@ -1,19 +1,10 @@
 package fr.proline.core.orm.uds;
 
+import javax.persistence.*;
 import java.io.Serializable;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
-import javax.persistence.JoinColumn;
-import javax.persistence.ManyToOne;
-import javax.persistence.OneToMany;
-import javax.persistence.OrderBy;
-import javax.persistence.Table;
 
 /**
  * The persistent class for the sample_analysis database table.
@@ -38,7 +29,7 @@ public class SampleAnalysis implements Serializable {
 	private List<QuantitationChannel> quantitationChannels;
 
 	// bi-directional many-to-one association to BiologicalSplSplAnalysisMap
-	@OneToMany(mappedBy = "sampleAnalysis")
+	@OneToMany(mappedBy = "sampleAnalysis", cascade = CascadeType.PERSIST)
 	private Set<BiologicalSplSplAnalysisMap> biologicalSplSplAnalysisMap;
 
 	// bi-directional many-to-one association to Dataset
@@ -73,12 +64,15 @@ public class SampleAnalysis implements Serializable {
 		this.quantitationChannels = quantitationChannels;
 	}
 
-	public Set<BiologicalSplSplAnalysisMap> getBiologicalSplSplAnalysisMap() {
-		return biologicalSplSplAnalysisMap;
+	protected void addBiologicalSample(BiologicalSplSplAnalysisMap item) {
+		getBiologicalSplSplAnalysisMap().add(item);
 	}
 
-	public void setBiologicalSplSplAnalysisMap(final Set<BiologicalSplSplAnalysisMap> biologicalSamplesMap) {
-		this.biologicalSplSplAnalysisMap = biologicalSamplesMap;
+	private Set<BiologicalSplSplAnalysisMap> getBiologicalSplSplAnalysisMap() {
+		if (biologicalSplSplAnalysisMap == null) {
+			biologicalSplSplAnalysisMap = new HashSet<>();
+		}
+		return biologicalSplSplAnalysisMap;
 	}
 
 	public Dataset getDataset() {

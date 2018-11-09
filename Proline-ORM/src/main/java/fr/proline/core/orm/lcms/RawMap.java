@@ -12,11 +12,8 @@ import java.util.List;
 @Entity
 @Table(name = "raw_map")
 @NamedQuery(name = "RawMap.findAll", query = "SELECT r FROM RawMap r")
-public class RawMap implements Serializable {
+public class RawMap extends Map implements Serializable {
 	private static final long serialVersionUID = 1L;
-
-	@Id
-	private Long id;
 
 	@Column(name = "peak_picking_software_id")
 	private Long peakPickingSoftwareId;
@@ -28,25 +25,19 @@ public class RawMap implements Serializable {
 	@OneToMany(mappedBy = "rawMap")
 	private List<FeatureMs2Event> featureMs2Events;
 
-	//bi-directional one-to-one association to Map
-	@OneToOne
-	@JoinColumn(name = "id")
-	private Map map;
-
 	//uni-directional many-to-one association to ScanSequence
 	@ManyToOne
 	@JoinColumn(name = "scan_sequence_id")
 	private ScanSequence scanSequence;
 
+	@OneToMany
+	@JoinTable(name = "processed_map_raw_map_mapping",
+			joinColumns = {@JoinColumn(name = "raw_map_id")},
+			inverseJoinColumns = {@JoinColumn(name = "processed_map_id")}
+	)
+	private List<ProcessedMap> processedMaps;
+
 	public RawMap() {
-	}
-
-	public Long getId() {
-		return this.id;
-	}
-
-	public void setId(Long id) {
-		this.id = id;
 	}
 
 	public Long getPeakPickingSoftwareId() {
@@ -73,28 +64,6 @@ public class RawMap implements Serializable {
 		this.featureMs2Events = featureMs2Events;
 	}
 
-	public FeatureMs2Event addFeatureMs2Event(FeatureMs2Event featureMs2Event) {
-		getFeatureMs2Events().add(featureMs2Event);
-		featureMs2Event.setRawMap(this);
-
-		return featureMs2Event;
-	}
-
-	public FeatureMs2Event removeFeatureMs2Event(FeatureMs2Event featureMs2Event) {
-		getFeatureMs2Events().remove(featureMs2Event);
-		featureMs2Event.setRawMap(null);
-
-		return featureMs2Event;
-	}
-
-	public Map getMap() {
-		return this.map;
-	}
-
-	public void setMap(Map map) {
-		this.map = map;
-	}
-
 	public ScanSequence getScanSequence() {
 		return this.scanSequence;
 	}
@@ -103,8 +72,22 @@ public class RawMap implements Serializable {
 		this.scanSequence = scanSequence;
 	}
 
+	public ProcessedMap getProcessedMap() {
+		for (ProcessedMap pm : processedMaps) {
+			if (!pm.getIsMaster()) return pm;
+		}
+		return null;
+	}
+
+	public ProcessedMap getMasterMap() {
+		for (ProcessedMap pm : processedMaps) {
+			if (pm.getIsMaster()) return pm;
+		}
+		return null;
+	}
+
 	@Override
 	public String toString() {
-		return new StringBuilder("RawMap ").append(id).append(" of ").append(scanSequence.toString()).toString();
+		return new StringBuilder("RawMap ").append(getId()).append(" of ").append(scanSequence.toString()).toString();
 	}
 }

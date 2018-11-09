@@ -148,7 +148,7 @@ public class QuantitationChannel implements Serializable {
 		this.biologicalSample = biologicalSample;
 	}
 
-	public QuantitationLabel getLabel() {
+	public QuantitationLabel getQuantitationLabel() {
 		return this.label;
 	}
 

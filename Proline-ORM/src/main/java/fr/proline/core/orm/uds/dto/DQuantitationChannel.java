@@ -1,138 +1,151 @@
 package fr.proline.core.orm.uds.dto;
 
 import fr.proline.core.orm.msi.ResultSet;
-import fr.proline.core.orm.uds.QuantitationChannel;
+import fr.proline.core.orm.uds.*;
 
 /**
- * quantitationChannel  representation, completed with some information 
- * @author MB243701
+ * QuantitationChannel representation, This class enhance the inherited QuantitationChannel with some additional information
  *
+ * @author MB243701
  */
 
 public class DQuantitationChannel extends QuantitationChannel {
 
-	private static final long serialVersionUID = 1L;
+  private static final long serialVersionUID = 1L;
 
-	/**
-	 * MsiSearch.resultFileName corresponding to the resultSummary.resultSet
-	 */
-	private String resultFileName;
+  /**
+   * MsiSearch.resultFileName corresponding to the resultSummary.resultSet
+   */
+  private String resultFileName;
 
-	/**
-	 * raw file Name : peaklist.path
-	 */
-	private String rawFilePath;
+  /**
+   * raw file Name : peaklist.path
+   */
+  private String rawFilePath;
 
-	// link with the raw map id
-	private Long lcmsRawMapId;
+  /**
+   * link with the raw map id
+   */
+  private Long lcmsRawMapId;
 
-	// mzdb file name
-	private String mzdbFileName;
+  /**
+   * mzdb file name
+   */
+  private String mzdbFileName;
 
-	// resultSet from the identification
-	private ResultSet identRs;
-	// identDataset id, if exists
-	private Long identDatasetId;
+  /**
+   * associated resultSet from the identification
+   */
+  private ResultSet identRs;
 
-	private Long biologicalGroupId = null;
-	private String biologicalGroupName = null;
+  /**
+   * associated identDataset id, if exists
+   */
+  private Long identDatasetId;
 
-	public DQuantitationChannel(QuantitationChannel o) {
-		super();
-		setId(o.getId());
-		setContextKey(o.getContextKey());
-		setIdentResultSummaryId(o.getIdentResultSummaryId());
-		setLcmsMapId(o.getLcmsMapId());
-		setNumber(o.getNumber());
-		setRun(o.getRun());
-		setName(o.getName());
-		setSerializedProperties(o.getSerializedProperties());
-		setBiologicalSample(o.getBiologicalSample());
-		setLabel(o.getLabel());
-		setQuantitationDataset(o.getQuantitationDataset());
-		setMasterQuantitationChannel(o.getMasterQuantitationChannel());
-		setSampleReplicate(o.getSampleReplicate());
-	}
+  /**
+   * The Id of the BiologicalGroup this quant channel belongs to
+   */
+  private Long biologicalGroupId = null;
 
-	public String getResultFileName() {
-		return resultFileName;
-	}
+  /**
+   * The name of the BiologicalGroup this quant channel belongs to
+   */
+  private String biologicalGroupName = null;
 
-	public void setResultFileName(String resultFileName) {
-		this.resultFileName = resultFileName;
-	}
+  /**
+   * The fullName of this QuantitationChannel composed of the biologicalGroup name and the quantChannel name
+   */
+  private String fullName;
 
-	public String getRawFilePath() {
-		return rawFilePath;
-	}
+  public DQuantitationChannel(QuantitationChannel o) {
+    super();
+    setId(o.getId());
+    setContextKey(o.getContextKey());
+    setIdentResultSummaryId(o.getIdentResultSummaryId());
+    setLcmsMapId(o.getLcmsMapId());
+    setNumber(o.getNumber());
+    setRun(o.getRun());
+    setName(o.getName());
+    setSerializedProperties(o.getSerializedProperties());
+    setBiologicalSample(o.getBiologicalSample());
+    setLabel(o.getQuantitationLabel());
+    setQuantitationDataset(o.getQuantitationDataset());
+    setMasterQuantitationChannel(o.getMasterQuantitationChannel());
+    setSampleReplicate(o.getSampleReplicate());
+  }
 
-	public void setRawFilePath(String rawFilePath) {
-		this.rawFilePath = rawFilePath;
-	}
+  @Override public String getName() {
+    return super.getName();
+  }
 
-	/**
-	 * returns the rawFileName form the rawFilePath, separated with \
-	 * @return
-	 */
-	public String getRawFileName() {
-		if (this.rawFilePath == null) {
-			return "";
-		} else {
-			int index = this.rawFilePath.lastIndexOf("\\");
-			if (index == -1 || index == this.rawFilePath.length() - 1) {
-				return this.rawFilePath;
-			} else {
-				return this.rawFilePath.substring(index + 1);
-			}
-		}
-	}
+  public String getFullName() {
+    return (fullName != null) ? fullName : getName();
+  }
 
-	public Long getLcmsRawMapId() {
-		return lcmsRawMapId;
-	}
+  public String getResultFileName() {
+    return resultFileName;
+  }
 
-	public void setLcmsRawMapId(Long lcmsRawMapId) {
-		this.lcmsRawMapId = lcmsRawMapId;
-	}
+  public void setResultFileName(String resultFileName) {
+    this.resultFileName = resultFileName;
+  }
 
-	public String getMzdbFileName() {
-		return mzdbFileName;
-	}
+  public String getRawFilePath() {
+    return rawFilePath;
+  }
 
-	public void setMzdbFileName(String mzdbFileName) {
-		this.mzdbFileName = mzdbFileName;
-	}
+  public void setRawFilePath(String rawFilePath) {
+    this.rawFilePath = rawFilePath;
+  }
 
-	public ResultSet getIdentRs() {
-		return identRs;
-	}
+  public Long getLcmsRawMapId() {
+    return lcmsRawMapId;
+  }
 
-	public void setIdentRs(ResultSet identRs) {
-		this.identRs = identRs;
-	}
+  public void setLcmsRawMapId(Long lcmsRawMapId) {
+    this.lcmsRawMapId = lcmsRawMapId;
+  }
 
-	public Long getIdentDatasetId() {
-		return identDatasetId;
-	}
+  public String getMzdbFileName() {
+    return mzdbFileName;
+  }
 
-	public void setIdentDatasetId(Long identDatasetId) {
-		this.identDatasetId = identDatasetId;
-	}
+  public void setMzdbFileName(String mzdbFileName) {
+    this.mzdbFileName = mzdbFileName;
+  }
 
-	public Long getBiologicalGroupId() {
-		return biologicalGroupId;
-	}
+  public ResultSet getIdentRs() {
+    return identRs;
+  }
 
-	public void setBiologicalGroupId(Long biologicalGroupId) {
-		this.biologicalGroupId = biologicalGroupId;
-	}
+  public void setIdentRs(ResultSet identRs) {
+    this.identRs = identRs;
+  }
 
-	public String getBiologicalGroupName() {
-		return biologicalGroupName;
-	}
+  public Long getIdentDatasetId() {
+    return identDatasetId;
+  }
 
-	public void setBiologicalGroupName(String biologicalGroupName) {
-		this.biologicalGroupName = biologicalGroupName;
-	}
+  public void setIdentDatasetId(Long identDatasetId) {
+    this.identDatasetId = identDatasetId;
+  }
+
+  public Long getBiologicalGroupId() {
+    return biologicalGroupId;
+  }
+
+  public void setBiologicalGroupId(Long biologicalGroupId) {
+    this.biologicalGroupId = biologicalGroupId;
+  }
+
+  public String getBiologicalGroupName() {
+    return biologicalGroupName;
+  }
+
+  public void setBiologicalGroupName(String biologicalGroupName) {
+    this.biologicalGroupName = biologicalGroupName;
+    fullName = new StringBuilder(biologicalGroupName).append('.').append(super.getName()).toString();
+  }
 
 }

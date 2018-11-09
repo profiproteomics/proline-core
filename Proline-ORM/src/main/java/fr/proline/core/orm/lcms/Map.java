@@ -11,9 +11,12 @@ import java.util.List;
  * 
  */
 @Entity
+@Inheritance(strategy = InheritanceType.JOINED)
 @NamedQuery(name = "Map.findAll", query = "SELECT m FROM Map m")
 public class Map implements Serializable {
 	private static final long serialVersionUID = 1L;
+
+	public enum Type { RAW_MAP , PROCESSED_MAP }
 
 	@Id
 	private Long id;
@@ -34,7 +37,8 @@ public class Map implements Serializable {
 	@Column(name = "serialized_properties")
 	private String serializedProperties;
 
-	private Integer type;
+	@Enumerated(EnumType.ORDINAL)
+	private Type type;
 
 	//bi-directional many-to-one association to Feature
 	@OneToMany(mappedBy = "map")
@@ -47,14 +51,6 @@ public class Map implements Serializable {
 	//bi-directional many-to-one association to Peakel
 	@OneToMany(mappedBy = "map")
 	private List<Peakel> peakels;
-
-	//bi-directional one-to-one association to ProcessedMap
-	@OneToOne(mappedBy = "map")
-	private ProcessedMap processedMap;
-
-	//bi-directional one-to-one association to RawMap
-	@OneToOne(mappedBy = "map")
-	private RawMap rawMap;
 
 	public Map() {
 	}
@@ -115,11 +111,11 @@ public class Map implements Serializable {
 		this.serializedProperties = serializedProperties;
 	}
 
-	public Integer getType() {
+	public Type getType() {
 		return this.type;
 	}
 
-	public void setType(Integer type) {
+	public void setType(Type type) {
 		this.type = type;
 	}
 
@@ -131,78 +127,12 @@ public class Map implements Serializable {
 		this.features = features;
 	}
 
-	public Feature addFeature(Feature feature) {
-		getFeatures().add(feature);
-		feature.setMap(this);
-
-		return feature;
-	}
-
-	public Feature removeFeature(Feature feature) {
-		getFeatures().remove(feature);
-		feature.setMap(null);
-
-		return feature;
-	}
-
-	public List<FeaturePeakelItem> getFeaturePeakelItems() {
-		return this.featurePeakelItems;
-	}
-
-	public void setFeaturePeakelItems(List<FeaturePeakelItem> featurePeakelItems) {
-		this.featurePeakelItems = featurePeakelItems;
-	}
-
-	public FeaturePeakelItem addFeaturePeakelItem(FeaturePeakelItem featurePeakelItem) {
-		getFeaturePeakelItems().add(featurePeakelItem);
-		featurePeakelItem.setMap(this);
-
-		return featurePeakelItem;
-	}
-
-	public FeaturePeakelItem removeFeaturePeakelItem(FeaturePeakelItem featurePeakelItem) {
-		getFeaturePeakelItems().remove(featurePeakelItem);
-		featurePeakelItem.setMap(null);
-
-		return featurePeakelItem;
-	}
-
 	public List<Peakel> getPeakels() {
 		return this.peakels;
 	}
 
 	public void setPeakels(List<Peakel> peakels) {
 		this.peakels = peakels;
-	}
-
-	public Peakel addPeakel(Peakel peakel) {
-		getPeakels().add(peakel);
-		peakel.setMap(this);
-
-		return peakel;
-	}
-
-	public Peakel removePeakel(Peakel peakel) {
-		getPeakels().remove(peakel);
-		peakel.setMap(null);
-
-		return peakel;
-	}
-
-	public ProcessedMap getProcessedMap() {
-		return this.processedMap;
-	}
-
-	public void setProcessedMap(ProcessedMap processedMap) {
-		this.processedMap = processedMap;
-	}
-
-	public RawMap getRawMap() {
-		return this.rawMap;
-	}
-
-	public void setRawMap(RawMap rawMap) {
-		this.rawMap = rawMap;
 	}
 
 	@Override

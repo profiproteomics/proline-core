@@ -20,9 +20,7 @@ import fr.profi.util.sql.getTimeAsSQLTimestamp
 import javax.persistence.NoResultException
 import scala.collection.JavaConversions._
 import java.util.ArrayList
-import fr.proline.core.orm.uds.BiologicalSplSplAnalysisMap
 import java.util.HashSet
-import fr.proline.core.orm.uds.BiologicalSplSplAnalysisMapPK
 
 class CreateSCQuantitation(
   executionContext: IExecutionContext,
@@ -176,65 +174,20 @@ class CreateSCQuantitation(
 
         if (udsSampleReplicateByKey.contains(contextKey) == false) {
 
-          //val rdbReplicate = udsAnalysisReplicateByKey(contextKey)
-          // Store sample replicate
           val udsReplicate = new UdsSampleAnalysis()
-          val bioSpl = new java.util.ArrayList[UdsBiologicalSample]()
-          bioSpl.add(udsBioSample)
-          
-          val udsReplicateToSample = new BiologicalSplSplAnalysisMap()
-          val udsReplicateToSampleKey = new BiologicalSplSplAnalysisMapPK()
-          udsReplicateToSampleKey.setBiologicalSampleId(udsBioSample.getId())
-          udsReplicateToSampleKey.setSampleAnalysisId(udsReplicate.getId())
-          udsReplicateToSample.setId(udsReplicateToSampleKey)
-          udsReplicateToSample.setSampleAnalysisNumber(replicateNum)
-  		  udsReplicateToSample.setSampleAnalysis(udsReplicate)
-  		  udsReplicateToSample.setBiologicalSample(udsBioSample)
-            
-  		  val allBioSplReplicateList  = new ArrayList[BiologicalSplSplAnalysisMap]()
-  		  allBioSplReplicateList.add(udsReplicateToSample)
-  		  val allBioSplReplicateMap = new HashSet[BiologicalSplSplAnalysisMap](allBioSplReplicateList)
-  		  
-          udsReplicate.setBiologicalSplSplAnalysisMap(allBioSplReplicateMap)
           udsReplicate.setDataset(udsQuantitation)
+          udsBioSample.addSampleAnalysis(udsReplicate)
 
-          val bioSplReplicatList = if( udsBioSample.getBiologicalSplSplAnalysisMap() != null) udsBioSample.getBiologicalSplSplAnalysisMap()  else new ArrayList[BiologicalSplSplAnalysisMap]()
-          bioSplReplicatList.addAll(allBioSplReplicateList)
-          udsBioSample.setBiologicalSplSplAnalysisMap(bioSplReplicatList)
-            
           udsEM.persist(udsReplicate)
-          udsEM.persist(udsReplicateToSample)
           udsEM.merge(udsBioSample)
-         
 
           udsSampleReplicateByKey(contextKey) = udsReplicate
-        }else {
+        } else {
         
           val existingSplReplicate = udsSampleReplicateByKey(contextKey)
-		  val udsReplicateToSample = new BiologicalSplSplAnalysisMap()
-          val udsReplicateToSampleKey = new BiologicalSplSplAnalysisMapPK()
-          udsReplicateToSampleKey.setBiologicalSampleId(udsBioSample.getId())
-          udsReplicateToSampleKey.setSampleAnalysisId(existingSplReplicate.getId())
-          udsReplicateToSample.setId(udsReplicateToSampleKey)          
-          udsReplicateToSample.setSampleAnalysisNumber(replicateNum)
-          udsReplicateToSample.setSampleAnalysis(existingSplReplicate)
-          udsReplicateToSample.setBiologicalSample(udsBioSample)
-          
-          val allBioSplReplicateList  = new ArrayList[BiologicalSplSplAnalysisMap]()
-          allBioSplReplicateList.add(udsReplicateToSample)
-          val allBioSplReplicateMap = new HashSet[BiologicalSplSplAnalysisMap](allBioSplReplicateList)	          
-            
-          val existingSplReplicateList = if( existingSplReplicate.getBiologicalSplSplAnalysisMap() != null) existingSplReplicate.getBiologicalSplSplAnalysisMap()  else new HashSet[BiologicalSplSplAnalysisMap]()
-          existingSplReplicateList.addAll(allBioSplReplicateList)            
-          existingSplReplicate.setBiologicalSplSplAnalysisMap(existingSplReplicateList)
-            
-          val bioSplReplicatList = if( udsBioSample.getBiologicalSplSplAnalysisMap() != null) udsBioSample.getBiologicalSplSplAnalysisMap()  else new ArrayList[BiologicalSplSplAnalysisMap]()
-          bioSplReplicatList.addAll(allBioSplReplicateList)
-          udsBioSample.setBiologicalSplSplAnalysisMap(bioSplReplicatList)
-            
-          
+          udsBioSample.addSampleAnalysis(existingSplReplicate)
+
           udsEM.merge(existingSplReplicate)
-          udsEM.persist(udsReplicateToSample)
           udsEM.merge(udsBioSample)
         }
 
