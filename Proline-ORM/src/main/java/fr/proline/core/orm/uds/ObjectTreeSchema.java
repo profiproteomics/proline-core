@@ -24,7 +24,7 @@ public class ObjectTreeSchema implements Serializable {
 		POST_QUANT_PROCESSING_CONFIG("quantitation.post_quant_processing_config"),
 		RESIDUE_LABELING_QUANT_CONFIG("quantitation.residue_labeling_config"),
 		SPECTRAL_COUNTING_QUANT_CONFIG("quantitation.spectral_counting_config"),
-    AGGREGATION_QUANT_CONFIG("aggregation.label_free_config");
+    AGGREGATION_QUANT_CONFIG("quantitation.aggregation_config");
 
 		private final String name;
 
