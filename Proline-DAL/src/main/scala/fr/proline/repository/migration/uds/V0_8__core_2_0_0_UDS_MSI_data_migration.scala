@@ -388,7 +388,7 @@ object V0_8__core_2_0_0_UDS_MSI_data_migration extends LazyLogging {
     val ptmWithNoUnimodCsvContent = new StringBuilder
 
     val batchSize = 2000
-    val fetchSize = 10000
+    val fetchSize = 50000
     var recordCount: Int = 0
     var isMigrationOK = true
 
@@ -412,17 +412,16 @@ object V0_8__core_2_0_0_UDS_MSI_data_migration extends LazyLogging {
       // Retrieve the list of modified peptide ids
       val modifiedPeptideIdsRs = msiStmt.executeQuery("SELECT peptide_id FROM peptide_readable_ptm_string")
       modifiedPeptideIdsRs.setFetchSize(fetchSize)
-      val redundantPeptideIds = new util.ArrayList[Long]
+      val msiPeptideIdMap = new java.util.HashSet[Long]
       while (modifiedPeptideIdsRs.next) {
         val msiPeptideId = modifiedPeptideIdsRs.getLong("peptide_id")
-        if (msiPeptideId > 0)
-          redundantPeptideIds.add(msiPeptideId)
+        if (msiPeptideId > 0) msiPeptideIdMap.add(msiPeptideId)
       }
       modifiedPeptideIdsRs.close()
-      val msiPeptideIds = redundantPeptideIds.toArray().distinct
-      redundantPeptideIds.clear()
+      val msiPeptideIds = msiPeptideIdMap.toArray
+      msiPeptideIdMap.clear()
 
-      logger.info("Number of peptides having PTMs in MSIdb: {}", msiPeptideIds.size)
+      logger.info("Number of peptides having PTMs in MSIdb: {}", msiPeptideIds.length)
 
       // To perform migration PSdb related tables must be cleaned
       msiStmt.executeUpdate("UPDATE ptm_specificity SET ptm_id=null;" +
@@ -718,10 +717,11 @@ object V0_8__core_2_0_0_UDS_MSI_data_migration extends LazyLogging {
       udsEzDBC.selectAndProcess(selectQuantRsmMqcMappingQuery) { r =>
         val mqcId = r.nextLong
         var identRsmIdOpt = r.nextLongOption
-        val quantRsmId = r.nextLong
+        val quantRsmIdOpt = r.nextLongOption
         val propsAsStr = r.nextString
         
-        mqcIdByQuantRsmId.put(quantRsmId, mqcId)
+        if(quantRsmIdOpt .isDefined)
+          mqcIdByQuantRsmId.put(quantRsmIdOpt.get, mqcId)
 
         // IdentRsm may be null. Have to get info from serialized properties !
         if (identRsmIdOpt.isEmpty) {
@@ -740,11 +740,11 @@ object V0_8__core_2_0_0_UDS_MSI_data_migration extends LazyLogging {
 
         // Determine whether the quant RSM have been cloned from an indent RSM or not
         if (identRsmIdOpt.isEmpty) {
-          if(quantRsmId != null && quantRsmId>0) {
-            logger.debug(s"Updating relations of the quant RSM with ID=$quantRsmId...")
-            createdQuantRsmIdByMqcId.put(mqcId, quantRsmId)
+          if(quantRsmIdOpt.isDefined && quantRsmIdOpt.get>0) {
+            logger.debug(s"Updating relations of the quant RSM with ID=${quantRsmIdOpt.get}...")
+            createdQuantRsmIdByMqcId.put(mqcId, quantRsmIdOpt.get)
           } else {
-            logger.error(s" MasterQuant Channel $mqcId don't reference RSMs !! ")
+            logger.error(s"MasterQuant Channel $mqcId don't reference RSMs !! ")
           }
         }
         else {
@@ -753,8 +753,10 @@ object V0_8__core_2_0_0_UDS_MSI_data_migration extends LazyLogging {
           val childRsmIds = childRsmIdsByParentRsmId.getOrElse(parentRsmId, new ArrayBuffer[Long]())
           
           logger.debug(s"Updating relations of the ident RSM with ID=$parentRsmId...")
-          childRsmIds.foreach { childRsmId =>
-            insertRsmRelation(quantRsmId, childRsmId)
+          if(quantRsmIdOpt.isDefined) {
+            childRsmIds.foreach { childRsmId =>
+                insertRsmRelation(quantRsmIdOpt.get, childRsmId)
+            }
           }
         }
       }
