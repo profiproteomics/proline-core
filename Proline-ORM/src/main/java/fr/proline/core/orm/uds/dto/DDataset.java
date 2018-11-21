@@ -188,7 +188,7 @@ public class DDataset {
 
   public void setObjectTree(ObjectTree ot) {
     if (ot != null) {
-      if (ot.getSchema().getName().equalsIgnoreCase(ObjectTreeSchema.SchemaName.POST_QUANT_PROCESSING_CONFIG.name())) {
+      if (ot.getSchema().getName().equalsIgnoreCase(ObjectTreeSchema.SchemaName.POST_QUANT_PROCESSING_CONFIG.getKeyName())) {
         this.m_postQuantProcessingConfig = ot;
       } else if (ot.getSchema().getName().startsWith("quantitation")) {
         this.m_quantProcessingConfig = ot;
@@ -206,7 +206,7 @@ public class DDataset {
 
   // deserialize because the post quant processing config could have changed
   public Map<String, Object> getPostQuantProcessingConfigAsMap() throws Exception {
-    if ((m_postQuantProcessingConfig != null)) {
+    if ((postQuantProcessingConfigMap == null) && (m_postQuantProcessingConfig != null)) {
       postQuantProcessingConfigMap = JsonSerializer.getMapper().readValue(getPostQuantProcessingConfig().getClobData(), Map.class);
     }
     return postQuantProcessingConfigMap;

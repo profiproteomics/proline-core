@@ -9,7 +9,7 @@ import fr.proline.core.om.model.msq._
 import scala.collection.mutable.ArrayBuffer
 
 class AggregationEntitiesSummarizer(
-  childQuantRSMbyMQCId: Map[Long, QuantResultSummary],
+  childQuantRSMbychildMQCId: Map[Long, QuantResultSummary],
   quantChannelsMapping: Map[Long, QuantChannel],
   intensityComputation: AbundanceComputationMethod.Value = AbundanceComputationMethod.INTENSITY_SUM
 ) extends IMqPepAndProtEntitiesSummarizer with LazyLogging {
@@ -21,18 +21,18 @@ class AggregationEntitiesSummarizer(
   ) extends LazyLogging {
 
     val masterPepInstByPepId = quantMergedRsm.peptideInstances.toLongMapWith(pi => pi.peptide.id -> pi)
-    // Link each masterQuantPeptide to it's MasterQuantChannel
-    val masterQuantPeptidesMQCId = childQuantRSMbyMQCId.map { case (mqcId, quantRSM) => quantRSM.masterQuantPeptides.map((mqcId, _)) }.flatten
+    // Link each child masterQuantPeptide to it's own MasterQuantChannel Id
+    val childMQPeptidesByChildMQCId = childQuantRSMbychildMQCId.map { case (mqcId, quantRSM) => quantRSM.masterQuantPeptides.map((mqcId, _)) }.flatten
     // ... then build a Map peptideIds -> Map[ MasterQuantChannel, MasterQuantPeptide ]
-    val masterQuantPeptidesByPeptideIds = masterQuantPeptidesMQCId.groupBy(_._2.peptideInstance.get.peptideId).map { case (pepId, pairs) => (pepId, pairs.toMap) }
+    val childMQPeptidesByPeptideId = childMQPeptidesByChildMQCId.groupBy(_._2.peptideInstance.get.peptideId).map { case (pepId, pairs) => (pepId, pairs.toMap) }
 
     def computeMasterQuantPeptides(): Array[MasterQuantPeptide] = {
 
-      val newMasterQuantPeptides = new ArrayBuffer[MasterQuantPeptide](masterQuantPeptidesByPeptideIds.size)
+      val newMasterQuantPeptides = new ArrayBuffer[MasterQuantPeptide](childMQPeptidesByPeptideId.size)
 
       for ((peptideId, masterPepInst) <- masterPepInstByPepId) {
 
-        val masterQuantPeptidesOpt = masterQuantPeptidesByPeptideIds.get(peptideId)
+        val masterQuantPeptidesOpt = childMQPeptidesByPeptideId.get(peptideId)
 
         if (masterQuantPeptidesOpt.isDefined) {
           val mqPepIons = new ArrayBuffer[MasterQuantPeptideIon]()
@@ -49,7 +49,8 @@ class AggregationEntitiesSummarizer(
       newMasterQuantPeptides.toArray
     }
 
-    private def _summarize(mqPepIonsByMQC: Iterable[(Long, MasterQuantPeptideIon)],
+    private def _summarize(
+      mqPepIonsByMQC: Iterable[(Long, MasterQuantPeptideIon)],
       quantChannelsMapping: Map[Long, QuantChannel],
       masterPepInst: PeptideInstance): Option[MasterQuantPeptideIon] = {
 
@@ -58,22 +59,41 @@ class AggregationEntitiesSummarizer(
       val quantPepIons = mqPepIonsByMQC.flatMap(_._2.quantPeptideIonMap.values).toList
       val bestMQPepIon = mqPepIonsByMQC.map(_._2).maxBy(_.calcRawAbundanceSum())
 
+      val mqPepIonIdMapBuilder = scala.collection.immutable.HashMap.newBuilder[Long,Array[Long]]
+
       for ((qc, childQCIds) <- childQCIdsByQC) {
         val filteredQPepIons = quantPepIons.filter(qpi => childQCIds.contains(qpi.quantChannelId))
+
         if (!filteredQPepIons.isEmpty) {
           var bestQPepIon = bestMQPepIon.quantPeptideIonMap.values.find(qpi => childQCIds.contains(qpi.quantChannelId))
+          // get all MQPeptideIon having a value for the specified qc
+          var filteredMQPepIons = mqPepIonsByMQC.map(_._2).filter(mqp => !mqp.quantPeptideIonMap.values.filter( qpi => childQCIds.contains(qpi.quantChannelId)).isEmpty)
+
           if (!bestQPepIon.isDefined) {
             logger.warn(s"Cannot find quant peptide ion from $childQCIds, look for the highest abundance instead")
             bestQPepIon = Some(filteredQPepIons.maxBy(_.abundance))
           }
+
           intensityComputation match {
-            case AbundanceComputationMethod.MOST_INTENSE => newQuantPepIons += bestQPepIon.get.copy(quantChannelId = qc.id)
-            case AbundanceComputationMethod.INTENSITY_SUM => newQuantPepIons += bestQPepIon.get.copy(rawAbundance = filteredQPepIons.map(_.rawAbundance).sum, abundance = filteredQPepIons.map(_.abundance).sum, quantChannelId = qc.id)
+            case AbundanceComputationMethod.MOST_INTENSE => {
+              filteredMQPepIons = mqPepIonsByMQC.map(_._2).filter(mqp => !mqp.quantPeptideIonMap.values.filter( qpi => qpi == bestQPepIon.get).isEmpty)
+              newQuantPepIons += bestQPepIon.get.copy(quantChannelId = qc.id)
+            }
+            case AbundanceComputationMethod.INTENSITY_SUM => {
+              newQuantPepIons += bestQPepIon.get.copy(rawAbundance = filteredQPepIons.map(_.rawAbundance).sum, abundance = filteredQPepIons.map(_.abundance).sum, quantChannelId = qc.id)
+            }
           }
+          mqPepIonIdMapBuilder += qc.id -> filteredMQPepIons.map(_.id).toArray
         }
       }
 
-      if (newQuantPepIons.isEmpty) None else Some(_buildMasterQuantPeptideIon(bestMQPepIon, newQuantPepIons, Some(masterPepInst)))
+      if (newQuantPepIons.isEmpty) {
+        None
+      } else  {
+        val newMQPeptideIon = _buildMasterQuantPeptideIon(bestMQPepIon, newQuantPepIons, Some(masterPepInst))
+        newMQPeptideIon.properties.getOrElse(MasterQuantPeptideIonProperties()).aggregatedMasterQuantPeptideIonIdMap = mqPepIonIdMapBuilder.result
+        Some(newMQPeptideIon)
+      }
     }
 
     private def _buildMasterQuantPeptideIon(

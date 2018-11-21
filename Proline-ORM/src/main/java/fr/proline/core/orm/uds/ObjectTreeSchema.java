@@ -24,17 +24,21 @@ public class ObjectTreeSchema implements Serializable {
 		POST_QUANT_PROCESSING_CONFIG("quantitation.post_quant_processing_config"),
 		RESIDUE_LABELING_QUANT_CONFIG("quantitation.residue_labeling_config"),
 		SPECTRAL_COUNTING_QUANT_CONFIG("quantitation.spectral_counting_config"),
-    AGGREGATION_QUANT_CONFIG("quantitation.aggregation_config");
+		AGGREGATION_QUANT_CONFIG("quantitation.aggregation_config");
 
-		private final String name;
+		private final String keyName;
 
-		private SchemaName(final String name) {
-			this.name = name;
+		private SchemaName(final String keyName) {
+			this.keyName = keyName;
+		}
+
+		public String getKeyName() {
+			return keyName;
 		}
 
 		@Override
 		public String toString() {
-			return name;
+			return keyName;
 		}
 	}
 

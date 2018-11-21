@@ -378,7 +378,7 @@ class QuantProfilesComputer(
     udsDbCtx.beginTransaction()
     
     // Save profilizerConfigSchema as an ObjectTree
-    val profilizerConfigSchemaName = ObjectTreeSchema.SchemaName.POST_QUANT_PROCESSING_CONFIG.toString
+    val profilizerConfigSchemaName = ObjectTreeSchema.SchemaName.POST_QUANT_PROCESSING_CONFIG.getKeyName
     val profilizerConfigSchema = ObjectTreeSchemaRepository.loadOrCreateObjectTreeSchema(udsEM,profilizerConfigSchemaName)
     val profilizerConfigObjectTree = new ObjectTree()
     profilizerConfigObjectTree.setSchema(profilizerConfigSchema)

@@ -30,7 +30,12 @@ case class MasterQuantPeptideIonProperties(
   @JsonDeserialize( keyAs = classOf[java.lang.Long], contentAs = classOf[java.lang.Long] )
   @BeanProperty var bestPeptideMatchIdMap: scala.collection.immutable.HashMap[Long,Long] = scala.collection.immutable.HashMap(),
 
-  // As list of used isotopes indexes (starting from zero)
+  // Key = QuantChannel ID ; Value = list of MasterQuantPeptideIon ID
+  @JsonDeserialize( keyAs = classOf[java.lang.Long], contentAs = classOf[Array[Long]] )
+  @BeanProperty var aggregatedMasterQuantPeptideIonIdMap: scala.collection.immutable.HashMap[Long,Array[Long]] = scala.collection.immutable.HashMap(),
+
+
+  // A list of used isotopes indexes (starting from zero)
   @BeanProperty var usedIsotopes: Option[Array[Long]] = None
 ) {
   if( bestPeptideMatchIdMap == null ) bestPeptideMatchIdMap = scala.collection.immutable.HashMap()

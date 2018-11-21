@@ -1,25 +1,14 @@
 package fr.proline.core.service.lcms.io
 
-import java.io.File
-
 import com.typesafe.scalalogging.LazyLogging
-import fr.profi.ms.algo.IsotopePatternInterpolator
-import fr.profi.mzdb._
-import fr.profi.mzdb.algo.feature.extraction.FeatureExtractorConfig
-import fr.profi.mzdb.io.reader.provider.RunSliceDataProvider
 import fr.profi.mzdb.model.{PeakelDataMatrix, PutativeFeature, Feature => MzDbFeature, Peakel => MzDbPeakel}
-import fr.profi.util.collection._
 import fr.proline.context.LcMsDbConnectionContext
 import fr.proline.core.algo.lcms._
-import fr.proline.core.algo.lcms.alignment.AlignmentResult
 import fr.proline.core.algo.msq.config._
 import fr.proline.core.om.model.lcms.{Feature => LcMsFeature, _}
-import fr.proline.core.om.model.msi.Peptide
 import fr.proline.core.om.storer.lcms._
-import fr.proline.core.service.lcms.CreateMapSet
-import org.apache.commons.math3.stat.descriptive.rank.Percentile
 
-import scala.collection.mutable.{ArrayBuffer, HashMap, LongMap}
+import scala.collection.mutable.LongMap
 
 
 abstract class AbstractMapSetDetector (

@@ -77,17 +77,17 @@ class AggregationQuantifier(
     // Build or clone master quant result summary, then store it
     val rsmProvider = new SQLResultSummaryProvider(PeptideCacheExecutionContext(executionContext))
     val rsmDuplicator =  new RsmDuplicator(rsmProvider)
-    val quantRSM = rsmDuplicator.cloneAndStoreRSM(mergedResultSummary, msiQuantRSM, msiQuantResultSet, !masterQc.identResultSummaryId.isDefined, msiEm)
+    val aggregateQuantRSM = rsmDuplicator.cloneAndStoreRSM(mergedResultSummary, msiQuantRSM, msiQuantResultSet, !masterQc.identResultSummaryId.isDefined, msiEm)
 
     val udsDbHelper = new UdsDbHelper(udsDbCtx)
-    val childQuantRSMbyMQCId = new mutable.HashMap[Long, QuantResultSummary]
+    val childQuantRSMbychildMQCId = new mutable.HashMap[Long, QuantResultSummary]
 
     for (udsMasterQuantChannel <- childMasterQuantitationChannels) {
       val quantRsmId = udsMasterQuantChannel.getQuantResultSummaryId
       val qcIds = udsDbHelper.getQuantChannelIds(udsMasterQuantChannel.getId)
       logger.info("Loading the quantitative result summary #" + quantRsmId)
       val quantRsmProvider = new SQLQuantResultSummaryProvider(PeptideCacheExecutionContext(executionContext))
-      childQuantRSMbyMQCId += (udsMasterQuantChannel.getId -> quantRsmProvider.getQuantResultSummary(quantRsmId, qcIds, loadResultSet = true).get)
+      childQuantRSMbychildMQCId += (udsMasterQuantChannel.getId -> quantRsmProvider.getQuantResultSummary(quantRsmId, qcIds, loadResultSet = true).get)
     }
 
     val quantChannelsMapping = new mutable.HashMap[Long, QuantChannel]()
@@ -99,7 +99,7 @@ class AggregationQuantifier(
     }
 
     // Compute and store quant entities (MQ Peptides, MQ ProteinSets)
-    this.computeAndStoreQuantEntities(msiQuantRSM, quantRSM, childQuantRSMbyMQCId.toMap, quantChannelsMapping.toMap, quantConfig.intensityComputationMethodName)
+    this.computeAndStoreQuantEntities(msiQuantRSM, aggregateQuantRSM, childQuantRSMbychildMQCId.toMap, quantChannelsMapping.toMap, quantConfig.intensityComputationMethodName)
 
     // Flush the entity manager to perform the update on the master quant peptides
     msiEm.flush()
@@ -109,15 +109,15 @@ class AggregationQuantifier(
 
 
   protected def computeAndStoreQuantEntities(msiQuantRSM: MsiResultSummary,
-                                             quantRSM: ResultSummary,
-                                             childQuantRSMbyMQCId: Map[Long, QuantResultSummary],
+                                             aggregateQuantRSM: ResultSummary,
+                                             childQuantRSMbychildMQCId: Map[Long, QuantResultSummary],
                                              quantChannelsMapping: Map[Long, QuantChannel],
                                              intensityComputation: AbundanceComputationMethod.Value) {
 
-    val entitiesSummarizer = new AggregationEntitiesSummarizer(childQuantRSMbyMQCId, quantChannelsMapping, intensityComputation)
+    val entitiesSummarizer = new AggregationEntitiesSummarizer(childQuantRSMbychildMQCId, quantChannelsMapping, intensityComputation)
     val (mqPeptides,mqProtSets) = entitiesSummarizer.computeMasterQuantPeptidesAndProteinSets(
       masterQc,
-      quantRSM,
+      aggregateQuantRSM,
       Array.empty[ResultSummary]
     )
 
