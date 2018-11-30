@@ -1,5 +1,6 @@
 package fr.proline.core.om.provider.msi.impl
 
+import com.typesafe.scalalogging.LazyLogging
 import fr.profi.util.primitives._
 import fr.proline.context.MsiDbConnectionContext
 import fr.proline.core.dal.DoJDBCReturningWork
@@ -19,7 +20,7 @@ import fr.proline.repository.ProlineDatabaseType
 class SQLPeptideMatchProvider(
   val msiDbCtx: MsiDbConnectionContext,
   val peptideProvider: IPeptideProvider
-) extends IPeptideMatchProvider {
+) extends IPeptideMatchProvider  with LazyLogging{
 
   val PepMatchCols: MsiDbPeptideMatchColumns.type = MsiDbPeptideMatchColumns
   val msQProvider = new SQLMsQueryProvider(msiDbCtx)
@@ -61,7 +62,23 @@ class SQLPeptideMatchProvider(
 
     pepMatchIds.map { pepMatchById.get(_) } toArray
   }
-  
+
+  def getPeptideMatchesByMsQueryIds(msQueriesIds: Seq[Long]): Array[PeptideMatch] = {
+    if( msQueriesIds.isEmpty ) return Array()
+
+    DoJDBCReturningWork.withEzDBC(msiDbCtx) { msiEzDBC =>
+
+      val sqlQuery = new SelectQueryBuilder1(MsiDbPeptideMatchTable).mkSelectQuery( (t,c) =>
+        List(t.*) -> "WHERE "~ t.MS_QUERY_ID ~" IN("~ msQueriesIds.mkString(",") ~")"
+      )
+      val pmRecords = msiEzDBC.selectAllRecords(sqlQuery)
+
+      val msQueries = this._loadMsQueries(pmRecords)
+
+      PeptideMatchBuilder.buildPeptideMatches(pmRecords,msQueries,scoreTypeById,peptideProvider)
+    }
+  }
+
   def getPeptideMatchesByPeptideIds(peptideIds: Seq[Long]): Array[PeptideMatch] = {
     if( peptideIds.isEmpty ) return Array()
     
