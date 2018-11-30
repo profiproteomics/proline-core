@@ -10,8 +10,11 @@ import fr.proline.core.dal.tables.uds.UdsDbProteinMatchDecoyRuleTable
 import fr.proline.core.dal.tables.uds.UdsDbMasterQuantChannelTable
 import fr.proline.core.dal.tables.uds.UdsDbQuantChannelTable
 import fr.proline.core.orm.uds.Dataset.DatasetType
+
 import scala.collection.mutable.HashMap
 import fr.profi.util.primitives._
+
+import scala.collection.mutable
 
 class UdsDbHelper(udsDbCtx: DatabaseConnectionContext) {
 
@@ -76,6 +79,29 @@ class UdsDbHelper(udsDbCtx: DatabaseConnectionContext) {
 
     if (isRoot) childrenIds
     else dsIds ++ childrenIds
+  }
+
+  def getDatasetsLeaveIds(dsId: Long): Array[Long] = {
+    val leaveDSIds = Array.newBuilder[Long]
+    val childIds = getDatasetsFirstChildrenIds(Array(dsId))
+    if(! childIds.isEmpty)
+      getDatasetsLeaveIds(childIds, leaveDSIds)
+    Array(dsId)
+  }
+
+  private def  getDatasetsLeaveIds(dsIds: Array[Long], leaveIds: mutable.ArrayBuilder[Long]) {
+    val nonLeafDSIdsBuilder = Array.newBuilder[Long]
+    dsIds.foreach(dsId=> {
+      val childIds = getDatasetsFirstChildrenIds(Array(dsId))
+      if(! childIds.isEmpty)
+        nonLeafDSIdsBuilder ++= childIds
+      else
+        leaveIds += dsId
+    })
+
+    val nonLeafDSIds = nonLeafDSIdsBuilder.result()
+    if(!nonLeafDSIds.isEmpty)
+      getDatasetsLeaveIds(nonLeafDSIds, leaveIds)
   }
 
   def fillDatasetHierarchyIdMap(dsIds: Seq[Long], hierachyMap: HashMap[Long, Long]) {
