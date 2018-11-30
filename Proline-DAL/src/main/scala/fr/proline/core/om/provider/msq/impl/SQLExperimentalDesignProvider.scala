@@ -91,6 +91,8 @@ class SQLExperimentalDesignProvider(val udsDbCtx: UdsDbConnectionContext) extend
           id = mqcId,
           number = r.getInt(MQChannelCols.NUMBER),
           name = r.getStringOption(MQChannelCols.NAME),
+          identDatasetId = r.getLongOption(MQChannelCols.IDENT_DATA_SET_ID),
+          identResultSummaryId = r.getLongOption(MQChannelCols.IDENT_RESULT_SUMMARY_ID),
           quantResultSummaryId = r.getLongOption(MQChannelCols.QUANT_RESULT_SUMMARY_ID),
           lcmsMapSetId = r.getLongOption(MQChannelCols.LCMS_MAP_SET_ID),
           quantChannels = quantChannelsByMqcId(mqcId).toArray
