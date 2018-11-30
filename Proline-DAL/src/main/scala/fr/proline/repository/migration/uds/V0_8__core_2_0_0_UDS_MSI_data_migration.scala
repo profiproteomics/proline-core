@@ -65,11 +65,14 @@ class V0_8__core_2_0_0_UDS_MSI_data_migration extends JdbcMigration with LazyLog
 
     // Create a statement that will be used for SELECT operations on the UDSdb
     val udsStmt = udsConn.createStatement
+    val udsStmt2 = udsConn.createStatement //for nested queries
 
     // Create a prepared statement to update the serialized properties of the external_db table
     val updateExternalDbState = udsConn.prepareStatement("UPDATE external_db SET serialized_properties=? WHERE type='MSI' and name=?")
     // Create a prepared statement to remove the PSdb from the external_db table
     val deletePsDbRowStmt = udsConn.prepareStatement("DELETE FROM external_db WHERE name='ps_db' AND type='PS'")
+    // Create a prepared statement to remove the PDIdb from the external_db table
+    // val deletePdiDbRowStmt = udsConn.prepareStatement("DELETE FROM external_db WHERE name='pdi_db' AND type='PDI'")
     // Create a prepared statement to update the number field of the quant_label table
     val updateQuantLabelNumberStmt = udsConn.prepareStatement("UPDATE quant_label SET number=? WHERE id=?")
     // Create a prepared statement to update the serialized properties of the master_quant_channel table
@@ -105,7 +108,7 @@ class V0_8__core_2_0_0_UDS_MSI_data_migration extends JdbcMigration with LazyLog
           extDbJsonProps = jsonParser.parse(serialProperties).getAsJsonObject
         } catch {
           case e: Exception => {
-             logger.warn("***   Error while trying to access to External_db properties. May be null., assume empty.",e)
+            logger.warn("***   Error while trying to access to External_db properties. May be null., assume empty.",e)
             // We use a fallback to an empty JSON object to avoid error if processing an externalDb that has no serialized properties.
             extDbJsonProps = jsonParser.parse("{}").getAsJsonObject
           }
@@ -145,8 +148,8 @@ class V0_8__core_2_0_0_UDS_MSI_data_migration extends JdbcMigration with LazyLog
               sbUrlPs.append("jdbc:postgresql://").append(userHost).append("/").append("ps_db")
 
               val isMigrationOK = me._transferPsDbDataToMsiDb(dataBaseName, extDbJsonProps, sbUrlPs.toString, connProps, msiConn)
-              if(isMigrationOK) // update MSIData only if transfer is OK			  
-				me._upgradeMsiDbData(extDbId, msiConn, udsConn, DriverType.POSTGRESQL)
+              if(isMigrationOK) // update MSIData only if transfer is OK
+                me._upgradeMsiDbData(extDbId, msiConn, udsConn, DriverType.POSTGRESQL)
 
               // Close MSIdb connections
               try {
@@ -195,6 +198,7 @@ class V0_8__core_2_0_0_UDS_MSI_data_migration extends JdbcMigration with LazyLog
       // Remove PSdb only if the current driver is PostgreSQL
       if (isPgDriver && allMigrationsOK) {
         deletePsDbRowStmt.executeUpdate
+        //deletePdiDbRowStmt.executeUpdate
         udsConn.commit()
       } else
         logger.warn("won't remove PSdb for a database engine different than PostgreSQL")
@@ -239,7 +243,7 @@ class V0_8__core_2_0_0_UDS_MSI_data_migration extends JdbcMigration with LazyLog
         updateQuantPropObjectTreePropsStmt.setLong(2,objectTreed)
         updateQuantPropObjectTreePropsStmt.executeUpdate()
       }
-	  quantConfigPropsRs.close()
+      quantConfigPropsRs.close()
 
       // *** Put MasterQuantChannelProperties IDs in the master_quant_channel table
       // SpectralCountProperties => weightsRefRSMIds should be weightsRefRsmIds to have the correct serialization key
@@ -247,6 +251,7 @@ class V0_8__core_2_0_0_UDS_MSI_data_migration extends JdbcMigration with LazyLog
       val mqcPropsRs = udsStmt.executeQuery("SELECT id, serialized_properties FROM master_quant_channel WHERE serialized_properties IS NOT NULL")
       var mqcId: Long = 0L
       var propsAsStr: String = null
+
       while (mqcPropsRs.next) {
 
         // Properties example:
@@ -269,8 +274,16 @@ class V0_8__core_2_0_0_UDS_MSI_data_migration extends JdbcMigration with LazyLog
 
         // Copy ident_dataset_id property to table
         if (propsAsJson.has("ident_dataset_id")) {
-          updateMqcPropsStmt.setLong(1, propsAsJson.get("ident_dataset_id").getAsLong)
-          propsAsJson.remove("ident_dataset_id")
+          //Test if exist in UDS !
+          val dsId =  propsAsJson.get("ident_dataset_id").getAsLong
+          val resDsId = udsStmt2.executeQuery(s"SELECT count(id) FROM data_set WHERE id = $dsId")
+          resDsId.next()
+          val count = resDsId.getInt(1)
+          if(count>0) {
+            updateMqcPropsStmt.setLong(1,dsId)
+            propsAsJson.remove("ident_dataset_id")
+          }
+          resDsId.close()
         } else
           updateMqcPropsStmt.setNull(1, java.sql.Types.BIGINT)
 
@@ -302,6 +315,7 @@ class V0_8__core_2_0_0_UDS_MSI_data_migration extends JdbcMigration with LazyLog
 
       } // ends while (mqcPropsRs.next())
       mqcPropsRs.close()
+      udsStmt2.close()
 
     } finally {
       sbUrlMsi.setLength(0)
@@ -310,11 +324,12 @@ class V0_8__core_2_0_0_UDS_MSI_data_migration extends JdbcMigration with LazyLog
       // Close statements
       me._tryToCloseStatement(updateExternalDbState)
       me._tryToCloseStatement(deletePsDbRowStmt)
+      //me._tryToCloseStatement(deletePdiDbRowStmt)
       me._tryToCloseStatement(updateQuantLabelNumberStmt)
-	  me._tryToCloseStatement(updateQuantPropObjectTreePropsStmt)
+      me._tryToCloseStatement(updateQuantPropObjectTreePropsStmt)
       me._tryToCloseStatement(updateExternalDbState)
       udsStmt.close()
-
+      udsStmt2.close()
     }
   }
 
@@ -367,7 +382,6 @@ object V0_8__core_2_0_0_UDS_MSI_data_migration extends LazyLogging {
     val cpManagerPs = psConn.asInstanceOf[PGConnection].getCopyAPI
 
     // Declare some HashMaps
-    val msiPeptideIds = new util.ArrayList[Long] // this list should be unique
     val msiPtmSpecIds = new util.HashSet[Long]
 
     val ptmCsvContent = new StringBuilder
@@ -396,14 +410,17 @@ object V0_8__core_2_0_0_UDS_MSI_data_migration extends LazyLogging {
       msiPtmSpecificityRs.close()
 
       // Retrieve the list of modified peptide ids
-      val modifiedPeptideIdsRs = msiStmt.executeQuery("SELECT DISTINCT peptide_id FROM peptide_readable_ptm_string")
+      val modifiedPeptideIdsRs = msiStmt.executeQuery("SELECT peptide_id FROM peptide_readable_ptm_string")
       modifiedPeptideIdsRs.setFetchSize(fetchSize)
+      val redundantPeptideIds = new util.ArrayList[Long]
       while (modifiedPeptideIdsRs.next) {
         val msiPeptideId = modifiedPeptideIdsRs.getLong("peptide_id")
         if (msiPeptideId > 0)
-          msiPeptideIds.add(msiPeptideId)
+          redundantPeptideIds.add(msiPeptideId)
       }
       modifiedPeptideIdsRs.close()
+      val msiPeptideIds = redundantPeptideIds.toArray().distinct
+      redundantPeptideIds.clear()
 
       logger.info("Number of peptides having PTMs in MSIdb: {}", msiPeptideIds.size)
 
@@ -542,15 +559,8 @@ object V0_8__core_2_0_0_UDS_MSI_data_migration extends LazyLogging {
 
       // Create temporary table tmp_msi_modified_peptide containing all MSIdb peptides having a PTM
       psStmt.executeUpdate("CREATE TEMP TABLE tmp_msi_modified_peptide (peptide_id bigint) ON COMMIT DELETE ROWS")
-      logger.debug("CREATE TEMP TABLE LENGHT ...")
-      val psTempCountRs = psStmt.executeQuery("SELECT count(*) FROM tmp_msi_modified_peptide ")
-      if (psTempCountRs.next())
-        logger.debug("** NBR records == " + psTempCountRs.getInt(1))
-      else
-        logger.debug("** UNKNOWN NBR records ")
 
       recordCount = 0
-      import scala.collection.JavaConversions._
       for (msiPeptideId <- msiPeptideIds) {
         recordCount += 1
         ptmCsvContent.append(msiPeptideId).append("\n")
@@ -566,33 +576,25 @@ object V0_8__core_2_0_0_UDS_MSI_data_migration extends LazyLogging {
 
       // Fill peptide_ptm table in the MSIdb
       logger.info("Inserting records in the 'peptide_ptm' table of the MSIdb...")
-      val psCountPeptidePtmRs = psStmt.executeQuery("SELECT count(*) FROM peptide_ptm " + "RIGHT JOIN tmp_msi_modified_peptide ON peptide_ptm.peptide_id = tmp_msi_modified_peptide.peptide_id")
-      if (psCountPeptidePtmRs.next())
-        logger.debug("** NBR records == " + psCountPeptidePtmRs.getInt(1))
-      else
-        logger.debug("** UNKNOWN NBR records ")
 
-      val psPeptidePtmRs = psStmt.executeQuery("SELECT * FROM peptide_ptm " + "RIGHT JOIN tmp_msi_modified_peptide ON peptide_ptm.peptide_id = tmp_msi_modified_peptide.peptide_id")
+      val psPeptidePtmRs = psStmt.executeQuery("SELECT id, seq_position, mono_mass, average_mass, peptide_ptm.peptide_id, ptm_specificity_id FROM peptide_ptm " + "RIGHT JOIN tmp_msi_modified_peptide ON peptide_ptm.peptide_id = tmp_msi_modified_peptide.peptide_id")
       psPeptidePtmRs.setFetchSize(fetchSize)
       var totalNbr = 0
       while (psPeptidePtmRs.next) {
-        val peptidePtmId = psPeptidePtmRs.getLong("id")
-        val peptidePtmSeqPos = psPeptidePtmRs.getInt("seq_position")
-        val peptidePtmMonoMass = psPeptidePtmRs.getDouble("mono_mass")
-        val peptidePtmAverageMass = psPeptidePtmRs.getDouble("average_mass")
-        val peptidePtmPeptideIdFK = psPeptidePtmRs.getLong("peptide_id")
-        val peptidePtmSpecificityIdFK = psPeptidePtmRs.getLong("ptm_specificity_id")
+        val peptidePtmId = psPeptidePtmRs.getLong(1)
+        val peptidePtmSeqPos = psPeptidePtmRs.getInt(2)
+        val peptidePtmMonoMass = psPeptidePtmRs.getDouble(3)
+        val peptidePtmAverageMass = psPeptidePtmRs.getDouble(4)
+        val peptidePtmPeptideIdFK = psPeptidePtmRs.getLong(5)
+        val peptidePtmSpecificityIdFK = psPeptidePtmRs.getLong(6)
 
-        if (msiPeptideIds.contains(peptidePtmPeptideIdFK)) {
-          recordCount += 1
-          totalNbr += 1
-          ptmCsvContent.append(peptidePtmId).append("|").append(peptidePtmSeqPos).append("|").append(peptidePtmMonoMass).append("|").append(peptidePtmAverageMass).append("|").append(peptidePtmPeptideIdFK).append("|").append(peptidePtmSpecificityIdFK).append("\n")
-          if (recordCount % batchSize == 0) {
-            logger.info(s"Processed $recordCount rows in current batch...")
-            this._copyPeptidePtmTableContent(cpManagerMsi, ptmCsvContent)
-            ptmCsvContent.setLength(0)
-            recordCount = 0
-          }
+        recordCount += 1
+        totalNbr += 1
+        ptmCsvContent.append(peptidePtmId).append("|").append(peptidePtmSeqPos).append("|").append(peptidePtmMonoMass).append("|").append(peptidePtmAverageMass).append("|").append(peptidePtmPeptideIdFK).append("|").append(peptidePtmSpecificityIdFK).append("\n")
+        if (recordCount % batchSize == 0) {
+          this._copyPeptidePtmTableContent(cpManagerMsi, ptmCsvContent)
+          ptmCsvContent.setLength(0)
+          recordCount = 0
         }
       }
 
@@ -622,12 +624,11 @@ object V0_8__core_2_0_0_UDS_MSI_data_migration extends LazyLogging {
       }
     } finally {
       // Clear buffers
-      msiPeptideIds.clear()
       msiPtmSpecIds.clear()
 
       // Clear StringBuilder
       ptmCsvContent.setLength(0)
-	  ptmWithNoUnimodCsvContent.setLength(0)
+      ptmWithNoUnimodCsvContent.setLength(0)
 
       // Close prepared statements
       _tryToCloseStatement(msiUpdatePtmSpecificityStmt)
@@ -719,9 +720,9 @@ object V0_8__core_2_0_0_UDS_MSI_data_migration extends LazyLogging {
         var identRsmIdOpt = r.nextLongOption
         val quantRsmId = r.nextLong
         val propsAsStr = r.nextString
-		
+
         mqcIdByQuantRsmId.put(quantRsmId, mqcId)
-        
+
         // IdentRsm may be null. Have to get info from serialized properties !
         if (identRsmIdOpt.isEmpty) {
           //test if not in serialized props
@@ -736,7 +737,7 @@ object V0_8__core_2_0_0_UDS_MSI_data_migration extends LazyLogging {
             identRsmIdOpt = Some(propsAsJson.get.get("ident_result_summary_id").getAsLong)
           }
         }
-	
+
         // Determine whether the quant RSM have been cloned from an indent RSM or not
         if (identRsmIdOpt.isEmpty) {
           if(quantRsmId != null && quantRsmId>0) {
@@ -785,13 +786,13 @@ object V0_8__core_2_0_0_UDS_MSI_data_migration extends LazyLogging {
       val quantRsmIds = msiEzDBC.selectLongs("SELECT id FROM result_summary WHERE is_quantified = 't'")
       
       for (quantRsmId <- quantRsmIds) {
-		val sortedQcIds : Array[Long] = if(mqcIdByQuantRsmId.contains(quantRsmId)) { //may have no Dataset/MQCh in UDS if was cleared from trash
-		  val mqcId = mqcIdByQuantRsmId(quantRsmId)
+        val sortedQcIds : Array[Long] = if(mqcIdByQuantRsmId.contains(quantRsmId)) { //may have no Dataset/MQCh in UDS if was cleared from trash
+          val mqcId = mqcIdByQuantRsmId(quantRsmId)
           sortedQcIdsByMqcId(mqcId).toArray
         } else {
           Array.empty[Long]
         }
-		
+
         this._updateMqProtSets(msiDbCtx, quantRsmId, sortedQcIds, mqPeptideProvider, mqProtSetProvider)
       }
 
@@ -826,7 +827,7 @@ object V0_8__core_2_0_0_UDS_MSI_data_migration extends LazyLogging {
     } else
       sortedQcIds
     val qcIdCount = finalSortedQcIds.length
-	
+
     this.logger.info(s"Updating MasterQuantProtSets of quant RSM with id=$quantRsmId...")
 
     DoJDBCWork.tryTransactionWithEzDBC(msiDbCtx) { ezDBC =>
