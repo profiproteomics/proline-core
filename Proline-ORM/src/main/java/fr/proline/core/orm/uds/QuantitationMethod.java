@@ -14,8 +14,12 @@ import javax.persistence.*;
 	@NamedQuery(
 		name = "findQuantMethodForTypeAndUnit",
 		query = "select qm from fr.proline.core.orm.uds.QuantitationMethod qm"
-			+ " where (upper(qm.type) = :searchType) and (upper(qm.abundanceUnit) = :searchAbundanceUnit)"
-	)
+			+ " where (upper(qm.type) = upper(:searchType)) and (upper(qm.abundanceUnit) = upper(:searchAbundanceUnit))"
+	),
+		@NamedQuery(
+				name = "findQuantMethodForType",
+				query = "select qm from fr.proline.core.orm.uds.QuantitationMethod qm where (upper(qm.type) = upper(:searchType))"
+		)
 })
 @Table(name = "quant_method")
 public class QuantitationMethod implements Serializable {
@@ -24,7 +28,7 @@ public class QuantitationMethod implements Serializable {
 
 	public enum Type {
 		ATOM_LABELING("atom_labeling"),
-		ISOBARIC_TAGGING("isobaric_tagging"),
+		ISOBARIC_TAG("isobaric_tag"),
 		LABEL_FREE("label_free"),
 		RESIDUE_LABELING("residue_labeling");
 
@@ -110,4 +114,7 @@ public class QuantitationMethod implements Serializable {
 		this.labels = labels;
 	}
 
+	@Override public String toString() {
+		return this.name;
+	}
 }

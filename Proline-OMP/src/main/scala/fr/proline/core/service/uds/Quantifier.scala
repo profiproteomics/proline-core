@@ -128,7 +128,9 @@ class Quantifier(
             }
           }
         }
-        case RESIDUE_LABELING => {}
+        case RESIDUE_LABELING => {
+          quantifyResidueLabelingMasterQC(udsMasterQuantChannels, udsQuantMethod, deserialize[ResidueLabelingQuantConfig](quantConfigAsStr))
+        }
       }
  
 
@@ -148,6 +150,7 @@ class Quantifier(
       IsobaricTag(
         id = udsQuantLabel.getId,
         name = udsQuantLabel.getName,
+        number = udsQuantLabel.getNumber,
         properties =  deserialize[IsobaricTagProperties](udsQuantLabel.getSerializedProperties)
       )
     }
@@ -175,8 +178,36 @@ class Quantifier(
 
     }
   }
-  
-  
+
+  protected def quantifyResidueLabelingMasterQC(
+    udsMasterQuantChannels: List[UdsMasterQuantChannel],
+    udsQuantMethod: UdsQuantMethod,
+    residueLabelingQuantConfig: ResidueLabelingQuantConfig
+  ) {
+
+    val tags = udsQuantMethod.getLabels.toList.map { udsQuantLabel =>
+      ResidueTag(
+        id = udsQuantLabel.getId,
+        name = udsQuantLabel.getName,
+        number = udsQuantLabel.getNumber,
+        properties = if (udsQuantLabel.getSerializedProperties == null) null else deserialize[ResidueTagProperties](udsQuantLabel.getSerializedProperties)
+      )
+    }
+
+    val quantMethod = ResidueLabelingQuantMethod( tags.sortBy(_.number) )
+
+    for (udsMasterQuantChannel <- udsMasterQuantChannels) {
+
+      BuildMasterQuantChannelQuantifier(
+        executionContext,
+        udsMasterQuantChannel,
+        experimentalDesign,
+        quantMethod,
+        residueLabelingQuantConfig
+      ).quantify()
+
+    }
+  }
   protected def quantifySpectralCountMasterQC(
     udsMasterQuantChannels: List[UdsMasterQuantChannel],
     scQuantConfig: SpectralCountConfig
@@ -219,7 +250,7 @@ class Quantifier(
   protected def getQuantConfigSchemaName(methodType: QuantMethodType.Value, abundanceUnit: AbundanceUnit.Value): UdsSchemaName = {
     methodType match {
       case ATOM_LABELING => UdsSchemaName.ATOM_LABELING_QUANT_CONFIG
-      // TODO: rename into ISOBARIC_TAGGING
+      // TODO: rename into ISOBARIC_TAG
       case ISOBARIC_TAG => UdsSchemaName.ISOBARIC_TAGGING_QUANT_CONFIG
       case LABEL_FREE => {
         abundanceUnit match {

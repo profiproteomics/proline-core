@@ -42,6 +42,15 @@ object BuildMasterQuantChannelQuantifier {
           quantConfig = scConfig
         )
       }
+      case residueLabelingQuantConfig: ResidueLabelingQuantConfig => {
+        new ResidueLabelingQuantifier(
+          executionContext = executionContext,
+          udsMasterQuantChannel = udsMasterQuantChannel,
+          experimentalDesign = experimentalDesign,
+          quantMethod = quantMethod.asInstanceOf[ResidueLabelingQuantMethod],
+          quantConfig = residueLabelingQuantConfig
+        )
+      }
       case _ => throw new Exception("The needed quantifier is not yet implemented")
     }
 

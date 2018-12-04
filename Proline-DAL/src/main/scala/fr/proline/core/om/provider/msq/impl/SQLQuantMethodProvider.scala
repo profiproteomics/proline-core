@@ -50,6 +50,10 @@ class SQLQuantMethodProvider(val udsDbCtx: UdsDbConnectionContext) extends IQuan
             val quantLabels = this._getQuantLabels[IsobaricTag](quantMethodId, udsEzDBC)
             IsobaricTaggingQuantMethod(quantLabels)
           }
+          case RESIDUE_LABELING => {
+            val quantLabels = this._getQuantLabels[ResidueTag](quantMethodId, udsEzDBC)
+            ResidueLabelingQuantMethod(quantLabels)
+          }
           case _ => throw new Exception("can't load this quant method")
         }
       }
@@ -88,6 +92,7 @@ class SQLQuantMethodProvider(val udsDbCtx: UdsDbConnectionContext) extends IQuan
     udsEzDBC.select(quantTableSqlQuery) { r =>
       val quantLabelId = r.getLong(QuantLabelCols.ID)
       val quantLabelName = r.getString(QuantLabelCols.NAME)
+      val quantLabelNumber = r.getInt(QuantLabelCols.NUMBER)
       val quantLabelTypeAsStr = r.getString(QuantLabelCols.TYPE)
       val serializedProperties = r.getString(QuantLabelCols.SERIALIZED_PROPERTIES)
       
@@ -97,8 +102,16 @@ class SQLQuantMethodProvider(val udsDbCtx: UdsDbConnectionContext) extends IQuan
         case Some(ISOBARIC_TAG) => IsobaricTag(
           id = quantLabelId,
           name = quantLabelName,
+          number = quantLabelNumber,
           properties = ProfiJson.deserialize[IsobaricTagProperties](serializedProperties)
         ).asInstanceOf[T]
+        case Some(RESIDUE_LABEL) => ResidueTag(
+          id = quantLabelId,
+          name = quantLabelName,
+          number = quantLabelNumber,
+          properties = null
+        ).asInstanceOf[T]
+
         case _ => throw new Exception(s"the label $quantLabelTypeAsStr is not supported yet")
       }
       

@@ -7,6 +7,7 @@ public class DFeature extends Feature {
 	private static final long serialVersionUID = 1L;
 	private double predictedElutionTime;
 	private boolean isBestChild;
+	private Long quantChannelId;
 
 	public DFeature(Feature f) {
 		super();
@@ -53,4 +54,11 @@ public class DFeature extends Feature {
 		this.isBestChild = isBestChild;
 	}
 
+	public Long getQuantChannelId() {
+		return quantChannelId;
+	}
+
+	public void setquantChannelId(Long quantChannelId) {
+		this.quantChannelId = quantChannelId;
+	}
 }

@@ -32,7 +32,7 @@ case class ExperimentalDesignSetup(
   val groupSetupNumber: Int = 1,
   val masterQCNumber: Int
 ) {
-  
+
   val groupSetup = expDesign.groupSetups(groupSetupNumber-1)
   val sampleNumbersByGroupNumber = expDesign.getSampleNumbersByGroupNumber(groupSetupNumber)
   
@@ -48,13 +48,11 @@ case class ExperimentalDesignSetup(
   val qcIdxById = qcIds.zip( qcIds.indices ).toMap
   val quantChannelsBySampleNumber = quantChannels.groupBy( _.sampleNumber )
   val qcSampleNumbers = quantChannels.map(_.sampleNumber)
-  lazy val qcGroupNumbers = {
-    val sampleByNum = expDesign.biologicalSamples.map( s => s.number -> s ).toMap
-    
-    val gNumBySNum = (for( (gNum,sNums) <- sampleNumbersByGroupNumber; sNum <- sNums) yield sNum -> gNum).toMap
-
-    qcSampleNumbers.map(gNumBySNum(_))
-  } toArray
+  lazy val runGroupNumbers = {
+    val groupNumBySampleNum = (for((gNum,sNums) <- sampleNumbersByGroupNumber; sNum <- sNums) yield sNum -> gNum)
+    val groupRunPairs = quantChannels.sortBy(_.number).map(qc => (groupNumBySampleNum(qc.sampleNumber), qc.runId.get)).distinct
+    groupRunPairs .map(_._1)
+  }
   
   val sampleCount = expDesign.biologicalSamples.length
   val samplesQcCount = expDesign.biologicalSamples.map( s => quantChannelsBySampleNumber(s.number).length )
@@ -95,7 +93,7 @@ case class ExperimentalDesign(
     }
     
   }
-  
+
   def getMasterQuantChannelExpDesign(masterQcNumber: Int, groupSetupNumber: Int): ExperimentalDesignSetup = {
     ExperimentalDesignSetup(
       expDesign = this,

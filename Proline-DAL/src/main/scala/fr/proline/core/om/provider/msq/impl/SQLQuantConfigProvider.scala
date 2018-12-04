@@ -51,6 +51,7 @@ class SQLQuantConfigProvider(val udsDbCtx: UdsDbConnectionContext) extends IQuan
       val schemaName = quantMethod match {
         case LabelFreeQuantMethod => LABEL_FREE_QUANT_CONFIG
         case iqMethod: IsobaricTaggingQuantMethod => ISOBARIC_TAGGING_QUANT_CONFIG
+        case rlMethod: ResidueLabelingQuantMethod => RESIDUE_LABELING_QUANT_CONFIG
         case _ => throw new Exception("this quant method is not supported yet")
       }
 

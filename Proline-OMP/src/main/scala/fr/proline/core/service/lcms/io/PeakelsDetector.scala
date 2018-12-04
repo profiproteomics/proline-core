@@ -100,8 +100,6 @@ class PeakelsDetector(
     algorithm = "ExtractMapSet"
   )
 
-  var extractedMapSet: MapSet = null
-
   class LcMsMapDetectorEntityCache(
     val lcMsRuns: Seq[LcMsRun],
     val mzDbFileByLcMsRunId: LongMap[File],
@@ -172,8 +170,8 @@ class PeakelsDetector(
     mapSetId: Long
   ): (MapSet, AlignmentResult) = {
     
-    assert(sortedLcMsRuns.length == this.masterQcExpDesign.qcGroupNumbers.length)
-    val lcMsRunBioGroupNumPairs = this.sortedLcMsRuns.zip(this.masterQcExpDesign.qcGroupNumbers)
+    assert(sortedLcMsRuns.length == this.masterQcExpDesign.runGroupNumbers.length)
+    val lcMsRunBioGroupNumPairs = this.sortedLcMsRuns.zip(this.masterQcExpDesign.runGroupNumbers)
     
     val bioGroupNumAndLcMsRunsTuples = lcMsRunBioGroupNumPairs.groupByLong(_._2).toSeq.map { case (groupNum, lcmsRunsBioGroupTuples) =>
       val bioGroupLcMsRuns = lcmsRunsBioGroupTuples.map(_._1)

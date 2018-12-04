@@ -38,4 +38,11 @@ case class IsobaricTaggingQuantMethod( quantLabels: List[IsobaricTag] ) extends 
   lazy val tagById = quantLabels.mapByLong(_.id)
 }
 
+case class ResidueLabelingQuantMethod( quantLabels: List[ResidueTag] ) extends ILabelingQuantMethod {
+  val methodType = QuantMethodType.RESIDUE_LABELING
+  val abundanceUnit = AbundanceUnit.FEATURE_INTENSITY
+
+  lazy val tagById = quantLabels.mapByLong(_.id)
+}
+
 

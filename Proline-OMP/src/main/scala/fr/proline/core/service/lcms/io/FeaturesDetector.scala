@@ -44,8 +44,6 @@ class FeaturesDetector (
     algorithm = "ExtractMapSet"
   )
 
-  var extractedMapSet: MapSet = null
-  
   def extractMapSet(
     mzDbFileByLcMsRunId: LongMap[File],
     mapSetId: Long

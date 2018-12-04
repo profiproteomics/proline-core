@@ -1,17 +1,9 @@
 package fr.proline.core.service.msq.quantify
 
-import fr.profi.util.serialization.ProfiJson
 import fr.proline.context.IExecutionContext
-import fr.proline.context.MsiDbConnectionContext
 import fr.proline.core.algo.msq.config.LabelFreeQuantConfig
 import fr.proline.core.om.model.lcms.MapSet
-import fr.proline.core.om.model.msi.ResultSummary
 import fr.proline.core.om.model.msq.ExperimentalDesign
-import fr.proline.core.om.model.msq.MasterQuantChannelProperties
-import fr.proline.core.om.provider.PeptideCacheExecutionContext
-import fr.proline.core.om.provider.msi.impl.SQLResultSummaryProvider
-import fr.proline.core.orm.msi.{ResultSet => MsiResultSet}
-import fr.proline.core.orm.msi.{ResultSummary => MsiResultSummary}
 import fr.proline.core.orm.uds.MasterQuantitationChannel
 import fr.proline.core.service.lcms.io.ExtractMapSet
 
