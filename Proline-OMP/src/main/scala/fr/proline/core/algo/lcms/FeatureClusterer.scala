@@ -412,7 +412,7 @@ class FeatureClusterer(
       val tmpOtherFts = new ArrayBuffer[Feature]
       for (ft <- sortedFts) {
         if (ft.id != refFtId) {
-          if (math.abs(ft.moz - refFtMoz) < mozTol) { tmpFtGroup += ft }
+          if (math.abs(ft.moz - refFtMoz) < mozTolInDalton) { tmpFtGroup += ft }
           else { tmpOtherFts += ft }
         }
       }
