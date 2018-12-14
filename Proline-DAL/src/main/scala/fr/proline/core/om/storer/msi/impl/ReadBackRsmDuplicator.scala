@@ -11,6 +11,7 @@ import fr.proline.core.om.provider.msi.IResultSummaryProvider
 import fr.proline.core.om.storer.msi.IRsmDuplicator
 import fr.proline.core.orm.msi.Peptide
 import fr.proline.core.orm.msi.MsQuery
+import fr.proline.core.orm.msi.MsiSearch
 import fr.proline.core.orm.msi.{PeptideInstance => MsiPeptideInstance}
 import fr.proline.core.orm.msi.{PeptideInstancePeptideMatchMap => MsiPepInstPepMatchMap}
 import fr.proline.core.orm.msi.{PeptideInstancePeptideMatchMapPK => MsiPepInstPepMatchMapPK}
@@ -50,13 +51,15 @@ class RsmDuplicator(rsmProvider: IResultSummaryProvider) extends IRsmDuplicator 
   def cloneAndStoreRSMWithSubset(sourceRSM: ResultSummary, emptyRSM: MsiResultSummary, emptyRS: MsiResultSet, eraseSourceIds: Boolean, msiEm: EntityManager): ResultSummary = {
     var start = System.currentTimeMillis()
 
+    val sourceRS = sourceRSM.resultSet.get
+
     // Retrieve result summary and result set ids
     val quantRsmId = emptyRSM.getId
     val quantRsId = emptyRS.getId
 
     // Retrieve peptide instances of the merged result summary
     val sourcePepInstances: Array[PeptideInstance] = sourceRSM.peptideInstances
-    val sourcePepMatchById: Map[Long, PeptideMatch] = sourceRSM.resultSet.get.getPeptideMatchById()
+    val sourcePepMatchById: Map[Long, PeptideMatch] = sourceRS.getPeptideMatchById()
 
     // Get Default Scoring : Mascot Standard
     //VDS FIXME which default ?!
@@ -457,6 +460,15 @@ class RsmDuplicator(rsmProvider: IResultSummaryProvider) extends IRsmDuplicator 
 
     end  = System.currentTimeMillis()
     this.logger.info("END storing  peptide sets relations ... steps duration "+(end-start))
+    start=end
+
+    //Save RS specific values : msisearch if defined. TODO should we clone also serializes_properties and merges_rsm ?
+    if(sourceRS.getMSISearchId >0 ){
+      val msiMsiSearch = msiEm.find(classOf[MsiSearch], sourceRS.getMSISearchId)
+      emptyRS.setMsiSearch(msiMsiSearch)
+      msiEm.merge(emptyRS)
+    }
+
     msiEm.flush()
     //VDS CHANGE MERGE RSM !!!!
     // Update sourceRSM id
