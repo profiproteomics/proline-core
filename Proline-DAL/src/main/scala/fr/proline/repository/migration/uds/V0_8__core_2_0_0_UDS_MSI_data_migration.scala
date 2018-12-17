@@ -795,7 +795,8 @@ object V0_8__core_2_0_0_UDS_MSI_data_migration extends LazyLogging {
           Array.empty[Long]
         }
 
-        this._updateMqProtSets(msiDbCtx, quantRsmId, sortedQcIds, mqPeptideProvider, mqProtSetProvider)
+        if(!sortedQcIds.isEmpty)
+          this._updateMqProtSets(msiDbCtx, quantRsmId, sortedQcIds, mqPeptideProvider, mqProtSetProvider)
       }
 
     } finally {
