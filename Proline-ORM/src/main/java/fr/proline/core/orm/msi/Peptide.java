@@ -148,7 +148,7 @@ public class Peptide implements Serializable, Comparable<Peptide> {
 
 		private ArrayList<DProteinSet> proteinSetArray = null;
 
-		private HashMap<Integer, PeptidePtm> peptidePtmMap = null;  //JPM.TODO : remove it, no longer used by Proline Studio
+//		private HashMap<Integer, PeptidePtm> peptidePtmMap = null;  //JPM.TODO : remove it, no longer used by Proline Studio
 		private HashMap<Integer, DPeptidePTM> dpeptidePtmMap = null;
 
 		private PeptideReadablePtmString peptideReadablePtmString = null;
@@ -165,14 +165,6 @@ public class Peptide implements Serializable, Comparable<Peptide> {
 			dpeptidePtmMap = peptidePtmMap;
 		}
 
-		//JPM.TODO : no longer used by Proline Studio
-		public HashMap<Integer, PeptidePtm> getPeptidePtmMap() {
-			return peptidePtmMap;
-		}
-
-		public void setPeptidePtmMap(HashMap<Integer, PeptidePtm> peptidePtmMap) {
-			this.peptidePtmMap = peptidePtmMap;
-		}
 
 		public PeptideReadablePtmString getPeptideReadablePtmString() {
 			return peptideReadablePtmString;

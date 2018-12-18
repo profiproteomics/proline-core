@@ -1,5 +1,7 @@
 package fr.proline.core.orm.msi.dto;
 
+import fr.proline.core.orm.msi.PtmSpecificity;
+
 import java.util.HashMap;
 
 public class DInfoPTM {
@@ -36,7 +38,7 @@ public class DInfoPTM {
 		return m_locationSpecificity;
 	}
 
-	public Character getRresidueAASpecificity() {
+	public Character getResidueAASpecificity() {
 		return m_residueAASpecificity;
 	}
 
@@ -64,6 +66,43 @@ public class DInfoPTM {
 			m_infoPTMMap = new HashMap<>();
 		}
 		m_infoPTMMap.put(infoPTM.getIdPtmSpecificity(), infoPTM);
+	}
+
+	public String toReadablePtmString(int position) {
+		StringBuilder builder = new StringBuilder(getPtmShortName());
+		builder.append(" (");
+		if (getLocationSpecificity().equals("Anywhere")) {
+			builder.append(getResidueAASpecificity()).append(position).append(')');
+		} else {
+			builder.append(getLocationSpecificity()).append(')');
+		}
+		return builder.toString();
+	}
+
+	// VDS Workaround test for issue #16643   
+	public String toOtherReadablePtmString(int position) {
+		StringBuilder builder = new StringBuilder(getPtmShortName());
+		builder.append(" (");
+		PtmSpecificity.PtmLocation ptmLoc = PtmSpecificity.PtmLocation.withName(getLocationSpecificity());
+		if (ptmLoc.equals(PtmSpecificity.PtmLocation.ANYWHERE)) {
+			builder.append(getResidueAASpecificity()).append(position).append(')');
+		} else {
+			switch (ptmLoc) {
+			case ANY_C_TERM:
+				builder.append(PtmSpecificity.PtmLocation.PROT_C_TERM.toString()).append(')');
+				break;
+			case PROT_C_TERM:
+				builder.append(PtmSpecificity.PtmLocation.ANY_C_TERM.toString()).append(')');
+				break;
+			case ANY_N_TERM:
+				builder.append(PtmSpecificity.PtmLocation.PROT_N_TERM.toString()).append(')');
+				break;
+			case PROT_N_TERM:
+				builder.append(PtmSpecificity.PtmLocation.ANY_N_TERM.toString()).append(')');
+				break;
+			}
+		}
+		return builder.toString();
 	}
 
 }
