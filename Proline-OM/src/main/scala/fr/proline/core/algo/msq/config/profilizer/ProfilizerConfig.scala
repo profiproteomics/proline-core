@@ -1,6 +1,7 @@
 package fr.proline.core.algo.msq.config.profilizer
 
 import fr.profi.util.lang.EnhancedEnum
+import fr.proline.core.om.model.msi.PtmDefinition
 
 object MissingAbundancesInferenceMethod extends EnhancedEnum {
   val GAUSSIAN_MODEL = Value // SmartMissingAbundancesInferer
@@ -27,6 +28,12 @@ case class MqPeptidesClustererConfig(
 object OxidizedPeptideFilteringMethod extends EnhancedEnum {
   val DISCARD_ALL_FORMS = Value
   val DISCARD_OXIDIZED_FORMS = Value
+  val KEEP_MOST_ABUNDANT_FORM = Value
+}
+
+object ModifiedPeptideFilteringMethod extends EnhancedEnum {
+  val DISCARD_ALL_FORMS = Value
+  val DISCARD_MODIFIED_FORMS = Value
   val KEEP_MOST_ABUNDANT_FORM = Value
 }
 
@@ -75,6 +82,138 @@ case class ProfilizerStatConfig(
   if(missValInferenceMethod == null) missValInferenceMethod = MissingAbundancesInferenceMethod.GAUSSIAN_MODEL
   if(missValInferenceConfig.isEmpty) missValInferenceConfig = Some(MissingAbundancesInferenceConfig())
 }
+//
+//object  ProfilizerConfigCoverter{
+//
+//  def convertFromV1(map: Map[String, Any]): Map[String, Any] = {
+//    val discardMissCleavedPeptides = map.get("discard_missed_cleaved_peptides").get.asInstanceOf[Boolean]
+//    val missCleavedPeptideFilteringMethod = map.get("miss_cleaved_peptide_filtering_method")
+//    val discardModifiedPeptides = map.get("discard_oxidized_peptides")
+//    val modifiedPeptidesFilteringMethod = map.get("oxidized_peptide_filtering_method")
+//    val useOnlySpecificPeptides = map.get("use_only_specific_peptides").get.asInstanceOf[Boolean]
+//    val discardPeptidesSharingPeakels = map.get("discard_peptides_sharing_peakels").get.asInstanceOf[Boolean]
+//    val applyProfileClustering = map.get("apply_profile_clustering").get.asInstanceOf[Boolean]
+//    val profileClusteringMethod = map.get("profile_clustering_method")
+//    val profileClusteringConfig = map.get("profile_clustering_config").asInstanceOf[Map[String, Any]]
+//    val abundanceSummarizingMethod = map.get("abundance_summarizer_method").asInstanceOf[String]
+//    val peptideStatConfig  = map.get("peptide_stat_config").asInstanceOf[Map[String, Any]]
+//    val proteinStatConfig  = map.get("protein_stat_config").asInstanceOf[Map[String, Any]]
+//    val summarizingBasedOn = map.get("summarizingBasedOn")
+//
+//    var modificationsToDiscard : Array[PtmDefinition] = Array.empty[PtmDefinition]
+//
+//  }
+//}
+
+//TODO Remove once PostProcessingConfig is tested and OK
+case class GenericProfilizerConfig(
+     discardMissedCleavedPeptides: Boolean = true,
+     var missCleavedPeptideFilteringMethod: Option[String] = None,
+
+     discardOxidizedPeptides: Boolean = true,
+     var oxidizedPeptideFilteringMethod: Option[String] = None,
+
+     discardModifiedPeptides: Boolean = true,
+     var modifiedPeptideFilteringMethod: Option[String] = None,
+     var ptmDefinitionIdsToDiscard : Array[Long] = Array.empty[Long],
+
+
+     //discardLowIdentPeptides: Boolean = false,
+     useOnlySpecificPeptides: Boolean = true,
+     discardPeptidesSharingPeakels: Boolean = true,
+
+     applyProfileClustering: Boolean = true,
+     var profileClusteringMethod: Option[String] = None,
+     profileClusteringConfig: Option[MqPeptidesClustererConfig] = None,
+
+     var abundanceSummarizerMethod: String = null,
+
+     peptideStatConfig: ProfilizerStatConfig = new ProfilizerStatConfig(),
+     proteinStatConfig: ProfilizerStatConfig = new ProfilizerStatConfig(),
+
+     var summarizingBasedOn: Option[String] = None,
+     var isV1Config : Boolean = true
+
+) {
+  // Workaround for jackson support of default values
+  if( oxidizedPeptideFilteringMethod.isEmpty ) {
+    oxidizedPeptideFilteringMethod = Some(OxidizedPeptideFilteringMethod.DISCARD_ALL_FORMS)
+  }
+  // Workaround for jackson support of default values
+  if( missCleavedPeptideFilteringMethod.isEmpty ) {
+    missCleavedPeptideFilteringMethod = Some(MissCleavedPeptideFilteringMethod.DISCARD_ALL_FORMS)
+  }
+  if(modifiedPeptideFilteringMethod.isEmpty){
+    modifiedPeptideFilteringMethod  = Some(ModifiedPeptideFilteringMethod.DISCARD_ALL_FORMS)
+  }
+  if(profileClusteringMethod.isEmpty) {
+    profileClusteringMethod = Some(MqPeptidesClusteringMethod.QUANT_PROFILE)
+  }
+  if( abundanceSummarizerMethod == null) {
+    abundanceSummarizerMethod = AbundanceSummarizerMethod.MEAN
+  }
+  // force QUANT_PEPTIDE_IONS if Summarizer is LFQ
+  if (abundanceSummarizerMethod == AbundanceSummarizerMethod.LFQ.toString) {
+    summarizingBasedOn = Some(QuantComponentItem.QUANT_PEPTIDE_IONS)
+  }
+
+  if (summarizingBasedOn.isEmpty) {
+    summarizingBasedOn = Some(QuantComponentItem.QUANT_PEPTIDES)
+  }
+}
+
+case class PostProcessingConfig(
+   discardMissCleavedPeptides: Boolean = true,
+   var missCleavedPeptideFilteringMethod: Option[String] = None,
+
+   discardModifiedPeptides: Boolean = true,
+   var modifiedPeptideFilteringMethod: Option[String] = None,
+   var ptmDefinitionIdsToDiscard : Array[Long] = Array.empty[Long],
+
+   useOnlySpecificPeptides: Boolean = true,
+   discardPeptidesSharingPeakels: Boolean = true,
+
+   applyProfileClustering: Boolean = true,
+   var profileClusteringMethod: Option[String] = None,
+   profileClusteringConfig: Option[MqPeptidesClustererConfig] = None,
+
+   var abundanceSummarizingMethod: String = null,
+
+   peptideStatConfig: ProfilizerStatConfig = new ProfilizerStatConfig(),
+   proteinStatConfig: ProfilizerStatConfig = new ProfilizerStatConfig(),
+
+   var summarizingBasedOn: Option[String] = None
+
+) {
+  // Workaround for jackson support of default values
+  if( modifiedPeptideFilteringMethod.isEmpty ) {
+    modifiedPeptideFilteringMethod = Some(OxidizedPeptideFilteringMethod.DISCARD_ALL_FORMS)
+  }
+  // Workaround for jackson support of default values
+  if( missCleavedPeptideFilteringMethod.isEmpty ) {
+    missCleavedPeptideFilteringMethod = Some(MissCleavedPeptideFilteringMethod.DISCARD_ALL_FORMS)
+  }
+  if(profileClusteringMethod.isEmpty) {
+    profileClusteringMethod = Some(MqPeptidesClusteringMethod.QUANT_PROFILE)
+  }
+  if( abundanceSummarizingMethod == null) {
+    abundanceSummarizingMethod = AbundanceSummarizerMethod.MEAN
+  }
+  // force QUANT_PEPTIDE_IONS if Summarizer is LFQ
+  if (abundanceSummarizingMethod == AbundanceSummarizerMethod.LFQ.toString) {
+    summarizingBasedOn = Some(QuantComponentItem.QUANT_PEPTIDE_IONS)
+  }
+
+  if (summarizingBasedOn.isEmpty) {
+    summarizingBasedOn = Some(QuantComponentItem.QUANT_PEPTIDES)
+  }
+
+  def getGenericProfilizerConfig: GenericProfilizerConfig = {
+    GenericProfilizerConfig(discardMissCleavedPeptides, missCleavedPeptideFilteringMethod, discardOxidizedPeptides = false, None, discardModifiedPeptides = discardModifiedPeptides, modifiedPeptideFilteringMethod, ptmDefinitionIdsToDiscard,
+      useOnlySpecificPeptides = useOnlySpecificPeptides, discardPeptidesSharingPeakels = discardPeptidesSharingPeakels, applyProfileClustering = applyProfileClustering, profileClusteringMethod, profileClusteringConfig, abundanceSummarizingMethod, peptideStatConfig, proteinStatConfig, summarizingBasedOn, isV1Config = false)
+  }
+}
+
 
 case class ProfilizerConfig(
   discardMissedCleavedPeptides: Boolean = true, // TODO: rename me in discardMissCleavedPeptides
@@ -121,5 +260,11 @@ case class ProfilizerConfig(
   
   if (summarizingBasedOn.isEmpty) {
     summarizingBasedOn = Some(QuantComponentItem.QUANT_PEPTIDES)
+  }
+
+  def getGenericProfilizerConfig: GenericProfilizerConfig = {
+    GenericProfilizerConfig(discardMissedCleavedPeptides, missCleavedPeptideFilteringMethod, discardOxidizedPeptides, oxidizedPeptideFilteringMethod, discardModifiedPeptides = false, None, Array.empty,
+      useOnlySpecificPeptides = useOnlySpecificPeptides, discardPeptidesSharingPeakels = discardPeptidesSharingPeakels, applyProfileClustering = applyProfileClustering, profileClusteringMethod, profileClusteringConfig, abundanceSummarizerMethod,
+      peptideStatConfig, proteinStatConfig, summarizingBasedOn, isV1Config = true)
   }
 }
