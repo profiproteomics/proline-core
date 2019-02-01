@@ -1,18 +1,16 @@
 package fr.proline.core.algo.msq.profilizer
 
-import scala.collection.mutable.ArrayBuffer
-import scala.math.{exp,log}
-
-import org.apache.commons.math3.distribution.{CauchyDistribution,NormalDistribution}
-import org.apache.commons.math3.stat.descriptive.rank.Percentile
-import org.apache.commons.math3.stat.descriptive.moment.GeometricMean
-import org.apache.commons.math3.stat.descriptive.StatisticalSummary
-import org.apache.commons.math3.stat.descriptive.StatisticalSummaryValues
-import org.apache.commons.math3.stat.inference.TTest
-import org.apache.commons.math3.special.Erf
-
 import fr.profi.util.math.linearInterpolation
-import fr.profi.util.stat.{Bin,EntityHistogramComputer}
+import fr.profi.util.stat.Bin
+import fr.profi.util.stat.EntityHistogramComputer
+import org.apache.commons.math3.distribution.CauchyDistribution
+import org.apache.commons.math3.stat.descriptive.StatisticalSummary
+import org.apache.commons.math3.stat.descriptive.rank.Percentile
+import org.apache.commons.math3.stat.inference.TTest
+
+import scala.collection.mutable.ArrayBuffer
+import scala.math.exp
+import scala.math.log
 
 
 trait IErrorModel {

@@ -10,6 +10,7 @@ import fr.profi.util.lang.EnhancedEnum
 import fr.profi.util.math.median
 import fr.profi.ms.algo.IsotopePatternEstimator
 import fr.proline.core.algo.lcms.summarizing._
+import fr.proline.core.algo.msq.config.profilizer.AbundanceSummarizerMethod
 import fr.proline.core.algo.msq.profilizer.AbundanceSummarizer
 import fr.proline.core.algo.msq.profilizer.CommonsStatHelper
 import fr.proline.core.om.model.lcms.Feature
@@ -235,7 +236,7 @@ class FeatureSummarizer(
     } toArray
     
     // Summarize the matrix to a single median isotope pattern
-    val medianIP = AbundanceSummarizer.summarizeAbundanceMatrix(fixedLengthIntensityMatrix, AbundanceSummarizer.Method.MEDIAN_PROFILE)
+    val medianIP = AbundanceSummarizer.summarizeAbundanceMatrix(fixedLengthIntensityMatrix, AbundanceSummarizerMethod.MEDIAN_PROFILE)
     //println("medianIP",medianIP.toList)
     val maxIdx = medianIP.zipWithIndex.maxBy(_._1)._2
     

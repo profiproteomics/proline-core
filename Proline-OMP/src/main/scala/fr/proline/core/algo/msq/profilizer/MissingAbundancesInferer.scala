@@ -1,23 +1,22 @@
 package fr.proline.core.algo.msq.profilizer
 
-import scala.collection.mutable.ArrayBuffer
 import com.typesafe.scalalogging.StrictLogging
-import org.apache.commons.math3.stat.StatUtils
-import org.apache.commons.math3.stat.descriptive.rank.Percentile
-import fr.profi.util.lang.EnhancedEnum
 import fr.profi.util.primitives.isZeroOrNaN
 import fr.profi.util.random.randomGaussian
+import fr.proline.core.algo.msq.config.profilizer.MissingAbundancesInferenceConfig
+import org.apache.commons.math3.stat.descriptive.rank.Percentile
 
-object MissingAbundancesInferenceMethod extends EnhancedEnum {
-  val GAUSSIAN_MODEL = Value // SmartMissingAbundancesInferer
-  val PERCENTILE = Value // FixedNoiseMissingAbundancesReplacer
-}
-
-case class MissingAbundancesInferenceConfig(
-  noisePercentile: Option[Int] = None // should be only defined for PERCENTILE method
-) {
-  def getNoisePercentile(): Int = noisePercentile.getOrElse(1)
-}
+//
+//object MissingAbundancesInferenceMethod extends EnhancedEnum {
+//  val GAUSSIAN_MODEL = Value // SmartMissingAbundancesInferer
+//  val PERCENTILE = Value // FixedNoiseMissingAbundancesReplacer
+//}
+//
+//case class MissingAbundancesInferenceConfig(
+//  noisePercentile: Option[Int] = None // should be only defined for PERCENTILE method
+//) {
+//  def getNoisePercentile(): Int = noisePercentile.getOrElse(1)
+//}
 
 object MissingAbundancesInferer {
   

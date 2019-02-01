@@ -1,5 +1,7 @@
 package fr.proline.core.algo.msq.profilizer
 
+import fr.proline.core.algo.msq.config.profilizer.MqPeptidesClustererConfig
+
 import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.HashMap
 import scala.collection.mutable.LongMap
@@ -8,6 +10,7 @@ import org.junit.Test
 import org.scalatest.Assertions._
 import fr.proline.core.om.model.msi._
 import fr.proline.core.om.model.msq._
+
 import scala.collection.breakOut
 
 @Test

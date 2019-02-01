@@ -1,26 +1,27 @@
 package fr.proline.core.algo.msq.profilizer
 
-import scala.collection.mutable.ArrayBuffer
 import com.typesafe.scalalogging.LazyLogging
-import fr.profi.util.lang.EnhancedEnum
 import fr.profi.util.math.median
 import fr.profi.util.primitives.isZeroOrNaN
+import fr.proline.core.algo.msq.config.profilizer.AbundanceSummarizerMethod
+
+import scala.collection.mutable.ArrayBuffer
 
 object AbundanceSummarizer extends LazyLogging {
   
-  object Method extends EnhancedEnum {
-    val BEST_SCORE = Value // has no implementation here, should be called before
-    val MAX_ABUNDANCE_SUM = Value // return one single row
-    val MEAN = Value
-    val MEAN_OF_TOP3 = Value
-    val MEDIAN = Value
-    val MEDIAN_BIOLOGICAL_PROFILE = Value // has no implementation here, should be called before
-    val MEDIAN_PROFILE = Value
-    val SUM = Value
-    val LFQ = Value
-  }
+//  object Method extends EnhancedEnum {
+//    val BEST_SCORE = Value // has no implementation here, should be called before
+//    val MAX_ABUNDANCE_SUM = Value // return one single row
+//    val MEAN = Value
+//    val MEAN_OF_TOP3 = Value
+//    val MEDIAN = Value
+//    val MEDIAN_BIOLOGICAL_PROFILE = Value // has no implementation here, should be called before
+//    val MEDIAN_PROFILE = Value
+//    val SUM = Value
+//    val LFQ = Value
+//  }
   
-  val advancedMethods = List(Method.MEDIAN_BIOLOGICAL_PROFILE)
+  val advancedMethods = List(AbundanceSummarizerMethod.MEDIAN_BIOLOGICAL_PROFILE)
   
   val EMPTY_MATRIX_MESSAGE = "abundanceMatrix is empty"
   
@@ -28,7 +29,7 @@ object AbundanceSummarizer extends LazyLogging {
     s"No implementation corresponding to the $methodName method."
   )
   
-  def summarizeAbundanceMatrix( abundanceMatrix: Array[Array[Float]], method: Method.Value ): Array[Float] = {
+  def summarizeAbundanceMatrix( abundanceMatrix: Array[Array[Float]], method: AbundanceSummarizerMethod.Value ): Array[Float] = {
     
     val matrixLength = abundanceMatrix.length
     require( matrixLength > 0, EMPTY_MATRIX_MESSAGE )
@@ -36,20 +37,20 @@ object AbundanceSummarizer extends LazyLogging {
     if( matrixLength == 1 ) return abundanceMatrix.head
     
     method match {
-      case Method.BEST_SCORE =>  {
+      case AbundanceSummarizerMethod.BEST_SCORE =>  {
         // Note: a BEST_SCORE approach could be implemented here, but this will lead to a more complicated the API
-        throw createNoImplemError(Method.BEST_SCORE)
+        throw createNoImplemError(AbundanceSummarizerMethod.BEST_SCORE)
       }
-      case Method.MAX_ABUNDANCE_SUM => summarizeUsingMaxAbundanceSum(abundanceMatrix)
-      case Method.MEAN => summarizeUsingMean(abundanceMatrix)
-      case Method.MEAN_OF_TOP3 => summarizeUsingMeanOfTop3(abundanceMatrix)
-      case Method.MEDIAN => summarizeUsingMedian(abundanceMatrix)
-      case Method.MEDIAN_PROFILE => summarizeUsingMedianProfile(abundanceMatrix)
-      case Method.MEDIAN_BIOLOGICAL_PROFILE =>  {
-        throw createNoImplemError(Method.MEDIAN_BIOLOGICAL_PROFILE)
+      case AbundanceSummarizerMethod.MAX_ABUNDANCE_SUM => summarizeUsingMaxAbundanceSum(abundanceMatrix)
+      case AbundanceSummarizerMethod.MEAN => summarizeUsingMean(abundanceMatrix)
+      case AbundanceSummarizerMethod.MEAN_OF_TOP3 => summarizeUsingMeanOfTop3(abundanceMatrix)
+      case AbundanceSummarizerMethod.MEDIAN => summarizeUsingMedian(abundanceMatrix)
+      case AbundanceSummarizerMethod.MEDIAN_PROFILE => summarizeUsingMedianProfile(abundanceMatrix)
+      case AbundanceSummarizerMethod.MEDIAN_BIOLOGICAL_PROFILE =>  {
+        throw createNoImplemError(AbundanceSummarizerMethod.MEDIAN_BIOLOGICAL_PROFILE)
       }
-      case Method.SUM => summarizeUsingSum(abundanceMatrix)
-      case Method.LFQ => LFQSummarizer.summarize(abundanceMatrix)
+      case AbundanceSummarizerMethod.SUM => summarizeUsingSum(abundanceMatrix)
+      case AbundanceSummarizerMethod.LFQ => LFQSummarizer.summarize(abundanceMatrix)
     }
     
   }

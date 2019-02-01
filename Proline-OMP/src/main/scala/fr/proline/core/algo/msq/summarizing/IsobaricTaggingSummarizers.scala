@@ -1,18 +1,15 @@
 package fr.proline.core.algo.msq.summarizing
 
-import scala.collection.mutable.ArrayBuffer
-import scala.collection.mutable.LongMap
-import scala.collection.mutable.HashMap
-
 import com.typesafe.scalalogging.LazyLogging
-
 import fr.profi.util.collection._
-import fr.profi.util.ms._
+import fr.proline.core.algo.msq.config.profilizer.AbundanceSummarizerMethod
 import fr.proline.core.algo.msq.profilizer.AbundanceSummarizer
 import fr.proline.core.om.model.lcms.MapSet
 import fr.proline.core.om.model.msi._
 import fr.proline.core.om.model.msq._
-import fr.proline.core.orm.uds.MasterQuantitationChannel
+
+import scala.collection.mutable.ArrayBuffer
+import scala.collection.mutable.LongMap
 
 /**
  * @author David Bouyssie
@@ -91,7 +88,7 @@ class IsobaricTaggingEntitiesSummarizer(
           // Summarize abundance matrix
           val summarizedRawAbundanceMatrix = AbundanceSummarizer.summarizeAbundanceMatrix(
             mqReporterIonRawAbundanceMatrix,
-            AbundanceSummarizer.Method.MEDIAN_PROFILE
+            AbundanceSummarizerMethod.MEDIAN_PROFILE
           )
           
           // Retrieve the best peptide match

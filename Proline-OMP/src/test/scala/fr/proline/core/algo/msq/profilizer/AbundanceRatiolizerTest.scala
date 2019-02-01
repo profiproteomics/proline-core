@@ -1,11 +1,11 @@
 package fr.proline.core.algo.msq.profilizer
 
+import fr.proline.core.algo.msq.config.profilizer.ProfilizerStatConfig
+import org.junit.Assert.assertEquals
+import org.junit.Test
+
 import scala.Array.canBuildFrom
 import scala.io.Source
-import org.junit.Assert.assertEquals
-import org.junit.Ignore
-import org.junit.Test
-import fr.proline.core.algo.msq.ProfilizerStatConfig
 
 @Test
 class AbundanceRatiolizerTest {

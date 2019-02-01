@@ -4,13 +4,14 @@ import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.HashMap
 import com.typesafe.scalalogging.StrictLogging
 import fr.profi.util.lang.EnhancedEnum
+import fr.proline.core.algo.msq.config.profilizer.MissCleavedPeptideFilteringMethod
 import fr.proline.core.om.model.msq.MasterQuantPeptide
 
-object MissCleavedPeptideFilteringMethod extends EnhancedEnum {
-  val DISCARD_ALL_FORMS = Value
-  val DISCARD_MISS_CLEAVED_FORMS = Value
-  val KEEP_MOST_ABUNDANT_FORM = Value
-}
+//object MissCleavedPeptideFilteringMethod extends EnhancedEnum {
+//  val DISCARD_ALL_FORMS = Value
+//  val DISCARD_MISS_CLEAVED_FORMS = Value
+//  val KEEP_MOST_ABUNDANT_FORM = Value
+//}
 
 object MissCleavedPeptideDiscardingReason extends EnhancedEnum {
   val INCLUDED_IN_MC_SEQUENCE = Value("Sequence included in a miss-cleaved one")

@@ -1,102 +1,104 @@
 package fr.proline.core.algo.msq
 
-import scala.collection.mutable.ArrayBuffer
-import scala.collection.mutable.HashMap
-import org.apache.commons.math3.stat.StatUtils
 import com.typesafe.scalalogging.LazyLogging
 import fr.profi.util.collection._
-import fr.profi.util.lang.EnhancedEnum
 import fr.profi.util.math.median
 import fr.profi.util.primitives.isZeroOrNaN
-import fr.profi.util.random.randomGaussian
+import fr.proline.core.algo.msq.config.profilizer.AbundanceSummarizerMethod
+import fr.proline.core.algo.msq.config.profilizer.GenericProfilizerConfig
+import fr.proline.core.algo.msq.config.profilizer.MissingAbundancesInferenceMethod
+import fr.proline.core.algo.msq.config.profilizer.MqPeptidesClusteringMethod
+import fr.proline.core.algo.msq.config.profilizer.ProfilizerStatConfig
+import fr.proline.core.algo.msq.config.profilizer.QuantComponentItem
 import fr.proline.core.algo.msq.profilizer._
 import fr.proline.core.algo.msq.profilizer.filtering._
 import fr.proline.core.algo.msq.summarizing.BuildMasterQuantPeptide
-import fr.proline.core.om.model.msq._
-import fr.proline.core.om.model.msq.MasterQuantComponent
-import fr.proline.core.om.model.msq.MasterQuantComponent
-import fr.proline.core.om.model.msq.MasterQuantComponent
 import fr.proline.core.om.model.SelectionLevel
+import fr.proline.core.om.model.msq.MasterQuantComponent
+import fr.proline.core.om.model.msq._
+import org.apache.commons.math3.stat.StatUtils
 
 import scala.collection.mutable
+import scala.collection.mutable.ArrayBuffer
+import scala.collection.mutable.HashMap
 
 // TODO: recompute raw abundances from peakels
 // (smoothing methods, area VS apex intensity, first isotope vs max one vs isotope pattern fitting)
 
-object QuantComponentItem extends EnhancedEnum {
-  val QUANT_PEPTIDES = Value 
-  val QUANT_PEPTIDE_IONS = Value 
-}
-
-case class ProfilizerStatConfig(
-  // Note: maxCv is experimental => DO NOT PUT IN GUI
-  var maxCv: Option[Float] = None, // TODO: do not discard peptides => apply this filter during the summarization step ?
-  statTestsAlpha: Float = 0.01f,
-  minZScore: Float = 0.4f, // ZScore equals ln(ratio) followed by standardisation
-  minPsmCountPerRatio: Int = 0, // TODO: remove me ???
-  applyNormalization: Boolean = true,
-  
-  applyMissValInference: Boolean = true, // TODO: remove me when IHMs haven been updated
-  // TODO: replace Some(MissingAbundancesInferenceConfig) by None when IHMs haven been updated
-  var missValInferenceMethod: String = null,
-  var missValInferenceConfig: Option[MissingAbundancesInferenceConfig] = None,
-  
-  applyVarianceCorrection: Boolean = true,
-  applyTTest: Boolean = true,
-  applyZTest: Boolean = true
-) {
-  // Workaround for jackson support of default values
-  if(missValInferenceMethod == null) missValInferenceMethod = MissingAbundancesInferenceMethod.GAUSSIAN_MODEL
-  if(missValInferenceConfig.isEmpty) missValInferenceConfig = Some(MissingAbundancesInferenceConfig())
-}
-
-case class ProfilizerConfig(
-  discardMissedCleavedPeptides: Boolean = true, // TODO: rename me in discardMissCleavedPeptides
-  var missCleavedPeptideFilteringMethod: Option[String] = None,
-  
-  discardOxidizedPeptides: Boolean = true,
-  var oxidizedPeptideFilteringMethod: Option[String] = None,
-  
-  //discardLowIdentPeptides: Boolean = false,
-  useOnlySpecificPeptides: Boolean = true,
-  discardPeptidesSharingPeakels: Boolean = true,
-  
-  applyProfileClustering: Boolean = true,
-  var profileClusteringMethod: Option[String] = None,
-  profileClusteringConfig: Option[MqPeptidesClustererConfig] = None,
-  
-  // TODO: rename into abundanceSummarizingMethod ???
-  var abundanceSummarizerMethod: String = null,
-  
-  peptideStatConfig: ProfilizerStatConfig = new ProfilizerStatConfig(),
-  proteinStatConfig: ProfilizerStatConfig = new ProfilizerStatConfig(),
-  
-  var summarizingBasedOn : Option[String] = None
-  
-) {
-  // Workaround for jackson support of default values
-  if( oxidizedPeptideFilteringMethod.isEmpty ) {
-    oxidizedPeptideFilteringMethod = Some(OxidizedPeptideFilteringMethod.DISCARD_ALL_FORMS)
-  }
-  // Workaround for jackson support of default values
-  if( missCleavedPeptideFilteringMethod.isEmpty ) {
-    missCleavedPeptideFilteringMethod = Some(MissCleavedPeptideFilteringMethod.DISCARD_ALL_FORMS)
-  }
-  if(profileClusteringMethod.isEmpty) {
-    profileClusteringMethod = Some(MqPeptidesClusteringMethod.QUANT_PROFILE)
-  }
-  if( abundanceSummarizerMethod == null) {
-    abundanceSummarizerMethod = AbundanceSummarizer.Method.MEAN
-  }
-  // force QUANT_PEPTIDE_IONS if Summarizer is LFQ
-  if (abundanceSummarizerMethod == AbundanceSummarizer.Method.LFQ.toString) {
-    summarizingBasedOn = Some(QuantComponentItem.QUANT_PEPTIDE_IONS)
-  }
-  
-  if (summarizingBasedOn.isEmpty) {
-    summarizingBasedOn = Some(QuantComponentItem.QUANT_PEPTIDES)
-  }
-}
+// TODO REMOVE : Use OM Config !
+//object QuantComponentItem extends EnhancedEnum {
+//  val QUANT_PEPTIDES = Value
+//  val QUANT_PEPTIDE_IONS = Value
+//}
+//
+//case class ProfilizerStatConfig(
+//  // Note: maxCv is experimental => DO NOT PUT IN GUI
+//  var maxCv: Option[Float] = None, // TODO: do not discard peptides => apply this filter during the summarization step ?
+//  statTestsAlpha: Float = 0.01f,
+//  minZScore: Float = 0.4f, // ZScore equals ln(ratio) followed by standardisation
+//  minPsmCountPerRatio: Int = 0, // TODO: remove me ???
+//  applyNormalization: Boolean = true,
+//
+//  applyMissValInference: Boolean = true, // TODO: remove me when IHMs haven been updated
+//  // TODO: replace Some(MissingAbundancesInferenceConfig) by None when IHMs haven been updated
+//  var missValInferenceMethod: String = null,
+//  var missValInferenceConfig: Option[MissingAbundancesInferenceConfig] = None,
+//
+//  applyVarianceCorrection: Boolean = true,
+//  applyTTest: Boolean = true,
+//  applyZTest: Boolean = true
+//) {
+//  // Workaround for jackson support of default values
+//  if(missValInferenceMethod == null) missValInferenceMethod = MissingAbundancesInferenceMethod.GAUSSIAN_MODEL
+//  if(missValInferenceConfig.isEmpty) missValInferenceConfig = Some(MissingAbundancesInferenceConfig())
+//}
+//case class ProfilizerConfig(
+//  discardMissedCleavedPeptides: Boolean = true, // TODO: rename me in discardMissCleavedPeptides
+//  var missCleavedPeptideFilteringMethod: Option[String] = None,
+//
+//  discardOxidizedPeptides: Boolean = true,
+//  var oxidizedPeptideFilteringMethod: Option[String] = None,
+//
+//  //discardLowIdentPeptides: Boolean = false,
+//  useOnlySpecificPeptides: Boolean = true,
+//  discardPeptidesSharingPeakels: Boolean = true,
+//
+//  applyProfileClustering: Boolean = true,
+//  var profileClusteringMethod: Option[String] = None,
+//  profileClusteringConfig: Option[MqPeptidesClustererConfig] = None,
+//
+//  // TODO: rename into abundanceSummarizingMethod ???
+//  var abundanceSummarizerMethod: String = null,
+//
+//  peptideStatConfig: ProfilizerStatConfig = new ProfilizerStatConfig(),
+//  proteinStatConfig: ProfilizerStatConfig = new ProfilizerStatConfig(),
+//
+//  var summarizingBasedOn : Option[String] = None
+//
+//) {
+//  // Workaround for jackson support of default values
+//  if( oxidizedPeptideFilteringMethod.isEmpty ) {
+//    oxidizedPeptideFilteringMethod = Some(OxidizedPeptideFilteringMethod.DISCARD_ALL_FORMS)
+//  }
+//  // Workaround for jackson support of default values
+//  if( missCleavedPeptideFilteringMethod.isEmpty ) {
+//    missCleavedPeptideFilteringMethod = Some(MissCleavedPeptideFilteringMethod.DISCARD_ALL_FORMS)
+//  }
+//  if(profileClusteringMethod.isEmpty) {
+//    profileClusteringMethod = Some(MqPeptidesClusteringMethod.QUANT_PROFILE)
+//  }
+//  if( abundanceSummarizerMethod == null) {
+//    abundanceSummarizerMethod = AbundanceSummarizer.Method.MEAN
+//  }
+//  // force QUANT_PEPTIDE_IONS if Summarizer is LFQ
+//  if (abundanceSummarizerMethod == AbundanceSummarizer.Method.LFQ.toString) {
+//    summarizingBasedOn = Some(QuantComponentItem.QUANT_PEPTIDE_IONS)
+//  }
+//
+//  if (summarizingBasedOn.isEmpty) {
+//    summarizingBasedOn = Some(QuantComponentItem.QUANT_PEPTIDES)
+//  }
+//}
 
 /**
  * Analyze profiles of Master Quant Peptides and Master Quant Protein sets
@@ -111,7 +113,7 @@ class Profilizer( expDesign: ExperimentalDesign, groupSetupNumber: Int = 1, mast
   /**
    * Computes MasterQuantPeptide profiles.
    */
-  def computeMasterQuantPeptideProfiles( masterQuantPeptides: Seq[MasterQuantPeptide], config: ProfilizerConfig ) {    
+  def computeMasterQuantPeptideProfiles( masterQuantPeptides: Seq[MasterQuantPeptide], config: GenericProfilizerConfig ) {
     require( masterQuantPeptides.length >= 10, "at least 10 peptides are required for profile analysis")
     
     logger.info("computing master quant peptide profiles...")
@@ -142,9 +144,14 @@ class Profilizer( expDesign: ExperimentalDesign, groupSetupNumber: Int = 1, mast
     }
     
     // --- Apply Oxidation filter if requested ---
-    if( config.discardOxidizedPeptides ) {
+    if( config.isV1Config && config.discardOxidizedPeptides ) {
       require( config.oxidizedPeptideFilteringMethod.isDefined, "config.oxidizedPeptideFilteringMethod is empty")
       OxidizedPeptideFilterer.discardPeptides(masterQuantPeptides, config.oxidizedPeptideFilteringMethod.get)
+    } else if(config.discardModifiedPeptides) {
+      require( config.modifiedPeptideFilteringMethod.isDefined , "config.modifiedPeptideFilteringMethod is empty")
+      require( !config.ptmDefinitionIdsToDiscard.isEmpty , "No modifications specified for discard Modified peptide")
+
+      ModifiedPeptideFilter.discardPeptides(masterQuantPeptides, config.modifiedPeptideFilteringMethod.get, config.ptmDefinitionIdsToDiscard)
     }
 
     // Keep master quant peptides passing all filters (i.e. have a selection level higher than 1)
@@ -322,7 +329,7 @@ class Profilizer( expDesign: ExperimentalDesign, groupSetupNumber: Int = 1, mast
     ()
   }
   
-  def computeMasterQuantProtSetProfiles( masterQuantProtSets: Seq[MasterQuantProteinSet], config: ProfilizerConfig ) {
+  def computeMasterQuantProtSetProfiles( masterQuantProtSets: Seq[MasterQuantProteinSet], config: GenericProfilizerConfig) {
     require( masterQuantProtSets.length >= 10, "at least 10 protein sets are required for profile analysis")
     
     logger.info("computing master quant protein set profiles...")
@@ -387,7 +394,7 @@ class Profilizer( expDesign: ExperimentalDesign, groupSetupNumber: Int = 1, mast
     val psmCountMatrixBuffer = new ArrayBuffer[Array[Int]](mqPepsClusters.length)
     val mqPepsRatiosCvs = new ArrayBuffer[ArrayBuffer[Float]](mqPepsClusters.length)
     
-    val abSumMethod = AbundanceSummarizer.Method.withName(config.abundanceSummarizerMethod)
+    val abSumMethod = AbundanceSummarizerMethod.withName(config.abundanceSummarizerMethod)
     
     for( mqPepsCluster <- mqPepsClusters ) {
 
@@ -405,7 +412,7 @@ class Profilizer( expDesign: ExperimentalDesign, groupSetupNumber: Int = 1, mast
       // Summarize raw abundances of the current profile cluster
       val mqPepRawAbundanceMatrix = clusteredMqPeps.map( _.getRawAbundancesForQuantChannels(expDesignSetup.qcIds) ).toArray
       
-      val summarizedRawAbundances = this.summarizeMatrix(mqPepRawAbundanceMatrix, AbundanceSummarizer.Method.SUM)
+      val summarizedRawAbundances = this.summarizeMatrix(mqPepRawAbundanceMatrix, AbundanceSummarizerMethod.SUM)
       //println("summarizedRawAbundances: " + summarizedRawAbundances.mkString("\t"))
 
       rawAbundanceMatrixBuffer += summarizedRawAbundances
@@ -581,11 +588,11 @@ class Profilizer( expDesign: ExperimentalDesign, groupSetupNumber: Int = 1, mast
     ()
   }
   
-  private def summarizeMatrix(abundanceMatrix: Array[Array[Float]], abSumMethod: AbundanceSummarizer.Method.Value): Array[Float] = {
+  private def summarizeMatrix(abundanceMatrix: Array[Array[Float]], abSumMethod: AbundanceSummarizerMethod.Value): Array[Float] = {
     if(abundanceMatrix.isEmpty) return Array()
-    if(abundanceMatrix.length == 1) abundanceMatrix.head 
-    
-    import AbundanceSummarizer.Method._
+    if(abundanceMatrix.length == 1) abundanceMatrix.head
+
+    import AbundanceSummarizerMethod._
     
     // Summarize raw abundances of the current profile cluster
     val finalAbSumMethod = abSumMethod

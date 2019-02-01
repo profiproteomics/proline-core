@@ -3,8 +3,8 @@ package fr.proline.core.algo.msq.profilizer
 import org.junit.Assert._
 import org.junit.Test
 import org.scalatest.Assertions._
-
 import AbundanceSummarizer._
+import fr.proline.core.algo.msq.config.profilizer.AbundanceSummarizerMethod
 
 @Test
 class AbundanceSummarizerTest {
@@ -23,43 +23,43 @@ class AbundanceSummarizerTest {
   @Test
   def testSummarizeUsingBestScore {
     intercept[IllegalArgumentException] {
-      summarizeAbundanceMatrix(matrixWithMissingValues, Method.BEST_SCORE)
+      summarizeAbundanceMatrix(matrixWithMissingValues, AbundanceSummarizerMethod.BEST_SCORE)
     }
   }
 
   @Test
   def testSummarizeUsingMaxAbundanceSum {
-    val singleRow = summarizeAbundanceMatrix(matrixWithMissingValues, Method.MAX_ABUNDANCE_SUM)
+    val singleRow = summarizeAbundanceMatrix(matrixWithMissingValues, AbundanceSummarizerMethod.MAX_ABUNDANCE_SUM)
     assertArrayEquals(Array(3.99E+08f, Float.NaN, Float.NaN, 3.90E+08f), singleRow, 3.99E+08f * 0.01f)
   }
 
   @Test
   def testSummarizeUsingMean {
-    val singleRow = summarizeAbundanceMatrix(matrixWithMissingValues, Method.MEAN)
+    val singleRow = summarizeAbundanceMatrix(matrixWithMissingValues, AbundanceSummarizerMethod.MEAN)
     assertArrayEquals(Array(2.24E+08f, Float.NaN, 1.74E+08f, 1.96E+08f), singleRow, 2.24E+08f * 0.01f)
   }
 
   @Test
   def summarizeUsingMeanOfTop3 {
-    val singleRow = summarizeAbundanceMatrix(matrixWithMissingValues, Method.MEAN_OF_TOP3)
+    val singleRow = summarizeAbundanceMatrix(matrixWithMissingValues, AbundanceSummarizerMethod.MEAN_OF_TOP3)
     assertArrayEquals(Array(2.82E+08f, Float.NaN, 2.35E+08f, 2.68E+08f), singleRow, 2.82E+08f * 0.01f)
   }
 
   @Test
   def summarizeUsingMedian {
-    val singleRow = summarizeAbundanceMatrix(matrixWithMissingValues, Method.MEDIAN)
+    val singleRow = summarizeAbundanceMatrix(matrixWithMissingValues, AbundanceSummarizerMethod.MEDIAN)
     assertArrayEquals(Array(2.24E+08f, Float.NaN, 1.45E+08f, 1.46E+08f), singleRow, 2.24E+08f * 0.01f)
   }
 
   @Test
   def summarizeUsingMedianProfile {
-    val singleRow = summarizeAbundanceMatrix(matrixWithMissingValues, Method.MEDIAN_PROFILE)
+    val singleRow = summarizeAbundanceMatrix(matrixWithMissingValues, AbundanceSummarizerMethod.MEDIAN_PROFILE)
     assertArrayEquals(Array(2.82E+08f, Float.NaN, 2.94E+08f, 2.99E+08f), singleRow, 2.82E+08f * 0.01f)
   }
 
   @Test
   def summarizeUsingSum {
-    val singleRow = summarizeAbundanceMatrix(matrixWithMissingValues, Method.SUM)
+    val singleRow = summarizeAbundanceMatrix(matrixWithMissingValues, AbundanceSummarizerMethod.SUM)
     assertArrayEquals(Array(8.98E+08f, Float.NaN, 5.21E+08f, 5.88E+08f), singleRow, 8.98E+08f * 0.01f)
   }
 
@@ -81,7 +81,7 @@ class AbundanceSummarizerTest {
     )
 
     val minima = Array(89960.0f, 262950, 123000, 55282, 122390, 133610, 100230, 134400, 143320, 39389, 122290, 99359, 86382, 80750, 136560, 76271, 88697, 57473, 57670, 92502, 126580, 68421, 69176, 55047, 112040, 83939, 120880, 89696, 146100, 71153)
-    val singleRow = summarizeAbundanceMatrix(matrix, Method.LFQ)
+    val singleRow = summarizeAbundanceMatrix(matrix, AbundanceSummarizerMethod.LFQ)
     //println(singleRow.mkString(","))
 
     val abundances = LFQSummarizer.summarize(matrix, minima)
@@ -120,7 +120,7 @@ class AbundanceSummarizerTest {
 
     val minima = Array(65103.14f, 44433.3f, 41141.32f, 34050.16f, 41769.55f, 41895.92f, 45705.4f, 34983.64f, 46035.12f, 12798.28f, 59004.55f, 44714.9f, 45638.9f, 40969.52f, 50311.71f, 20606.43f, 44591.68f, 46987.13f, 57538.86f, 36557.04f, 50714.55f, 37531.32f, 42057.8f, 32675.03f, 49524.7f, 27701.68f, 31676.29f, 36779.82f, 47594.77f, 42314.23f, 41511.98f, 39256.61f, 52328.61f, 42462.69f, 33200.38f, 44446.32f, 92678.65f, 45918.39f, 61418.64f, 46060.56f)
 
-    val singleRow = summarizeAbundanceMatrix(matrix, Method.LFQ)
+    val singleRow = summarizeAbundanceMatrix(matrix, AbundanceSummarizerMethod.LFQ)
     println(singleRow.mkString(","))
 
     val abundances = LFQSummarizer.summarize(matrix, minima)

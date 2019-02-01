@@ -3,20 +3,22 @@ package fr.proline.core.algo.msq.profilizer
 import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.HashMap
 import fr.profi.util.lang.EnhancedEnum
+import fr.proline.core.algo.msq.config.profilizer.MqPeptidesClustererConfig
+import fr.proline.core.algo.msq.config.profilizer.MqPeptidesClusteringMethod
 import fr.proline.core.om.model.msi._
 import fr.proline.core.om.model.msq.MasterQuantPeptide
 import fr.proline.core.om.model.msq.MasterQuantProteinSet
 
-object MqPeptidesClusteringMethod extends EnhancedEnum {
-  val PEPTIDE_SEQUENCE = Value // Cluster name = SEQUENCE
-  val PEPTIDE_SET = Value // Cluster name = PROTEIN ACCESSION
-  val PTM_PATTERN = Value // Cluster name = MODIFIED/UNMODIFIED LOCATED PTM IN PROTEIN SEQUENCE AND ACCESSION FOR OTHERS
-  val QUANT_PROFILE = Value // Cluster name = RATIO STATES
-}
-
-case class MqPeptidesClustererConfig(
-  ptmPatternPtmDefIds: Seq[Long] = Seq() // only for PTM_PATTERN method
-)
+//object MqPeptidesClusteringMethod extends EnhancedEnum {
+//  val PEPTIDE_SEQUENCE = Value // Cluster name = SEQUENCE
+//  val PEPTIDE_SET = Value // Cluster name = PROTEIN ACCESSION
+//  val PTM_PATTERN = Value // Cluster name = MODIFIED/UNMODIFIED LOCATED PTM IN PROTEIN SEQUENCE AND ACCESSION FOR OTHERS
+//  val QUANT_PROFILE = Value // Cluster name = RATIO STATES
+//}
+//
+//case class MqPeptidesClustererConfig(
+//  ptmPatternPtmDefIds: Seq[Long] = Seq() // only for PTM_PATTERN method
+//)
 
 case class MasterQuantPeptidesCluster(
   name: String,  // depends on the clustering method used. ex :  ptm pettern = modified@loc ou unmodified  

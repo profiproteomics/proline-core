@@ -4,15 +4,16 @@ import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.HashMap
 import com.typesafe.scalalogging.StrictLogging
 import fr.profi.util.lang.EnhancedEnum
+import fr.proline.core.algo.msq.config.profilizer.OxidizedPeptideFilteringMethod
 import fr.proline.core.om.model.msq.MasterQuantPeptide
 import fr.proline.core.om.model.msi.Peptide
-
-object OxidizedPeptideFilteringMethod extends EnhancedEnum {
-  val DISCARD_ALL_FORMS = Value
-  val DISCARD_OXIDIZED_FORMS = Value
-  val KEEP_MOST_ABUNDANT_FORM = Value
-}
-
+//
+//object OxidizedPeptideFilteringMethod extends EnhancedEnum {
+//  val DISCARD_ALL_FORMS = Value
+//  val DISCARD_OXIDIZED_FORMS = Value
+//  val KEEP_MOST_ABUNDANT_FORM = Value
+//}
+//
 object OxidizedPeptideDiscardingReason extends EnhancedEnum {
   val OXIDIZED_PEPTIDE = Value("Oxidized peptide")
   val OXIDIZED_PEPTIDE_COUNTERPART = Value("Oxidized peptide counterpart")
@@ -21,7 +22,7 @@ object OxidizedPeptideDiscardingReason extends EnhancedEnum {
 
 object OxidizedPeptideFilterer {
   
-  import OxidizedPeptideFilteringMethod._
+  import fr.proline.core.algo.msq.config.profilizer.OxidizedPeptideFilteringMethod._
   
   def discardPeptides( masterQuantPeptides: Seq[MasterQuantPeptide], methodName: String ): Unit = {
     val filteringMethod = OxidizedPeptideFilteringMethod.withName(methodName)
@@ -72,7 +73,7 @@ object OxidizedAndCounterpartFormsFilterer extends IOxidizedPeptideFilter {
     
     // Convert the detectedOxSeqs buffer into a Set
     val detectedOxSeqSet = detectedOxSeqs.toSet
-    
+
     // Filter kept master quant peptides again to remove the counterpart of the oxidized ones
     this.discardPeptideSequences(
       masterQuantPeptides,

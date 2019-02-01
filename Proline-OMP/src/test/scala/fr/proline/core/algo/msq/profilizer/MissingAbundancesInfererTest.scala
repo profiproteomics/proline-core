@@ -1,5 +1,6 @@
 package fr.proline.core.algo.msq.profilizer
 
+import fr.proline.core.algo.msq.config.profilizer.MissingAbundancesInferenceConfig
 import org.apache.commons.math3.stat.StatUtils
 import org.junit.Test
 import org.scalatest.Assertions._

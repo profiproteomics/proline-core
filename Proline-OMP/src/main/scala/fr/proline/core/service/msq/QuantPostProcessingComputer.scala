@@ -10,7 +10,7 @@ import fr.proline.core.algo.lcms.FeatureSummarizer
 import fr.proline.core.algo.lcms.FeatureSummarizingMethod
 import fr.proline.core.algo.lcms.summarizing._
 import fr.proline.core.algo.msq.Profilizer
-import fr.proline.core.algo.msq.config.profilizer.ProfilizerConfig
+import fr.proline.core.algo.msq.config.profilizer.PostProcessingConfig
 import fr.proline.core.algo.msq.summarizing.BuildMasterQuantPeptide
 import fr.proline.core.dal.BuildLazyExecutionContext
 import fr.proline.core.dal.DoJDBCWork
@@ -30,37 +30,37 @@ import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.LongMap
 
 // Factory for Proline-Cortex
-object QuantProfilesComputer {
-  
+object QuantPostProcessingComputer {
+
   def apply(
-    executionContext: IExecutionContext,
-    masterQuantChannelId: Long,
-    config: ProfilizerConfig
-  ): QuantProfilesComputer = {
-    
+       executionContext: IExecutionContext,
+       masterQuantChannelId: Long,
+       config: PostProcessingConfig
+   ): QuantPostProcessingComputer = {
+
     val udsDbCtx = executionContext.getUDSDbConnectionContext
-    
+
     val udsDbHelper = new UdsDbHelper( udsDbCtx )
     val quantiId = udsDbHelper.getQuantitationId( masterQuantChannelId ).get
-    
+
     val expDesignProvider = new SQLExperimentalDesignProvider(executionContext.getUDSDbConnectionContext)
     val expDesign = expDesignProvider.getExperimentalDesign(quantiId).get
-    
-    new QuantProfilesComputer(
+
+    new QuantPostProcessingComputer(
       executionContext = executionContext,
       experimentalDesign = expDesign,
       masterQuantChannelId = masterQuantChannelId,
       config = config
     )
   }
-  
+
 }
 
-class QuantProfilesComputer(
+class QuantPostProcessingComputer(
   executionContext: IExecutionContext,
   experimentalDesign: ExperimentalDesign,
   masterQuantChannelId: Long,
-  config: ProfilizerConfig
+  config: PostProcessingConfig
 ) extends IService with LazyLogging {
   
   require( executionContext.isJPA,"invalid type of executionContext, JPA type is required")
@@ -73,7 +73,7 @@ class QuantProfilesComputer(
     projectId: Long,
     experimentalDesign: ExperimentalDesign,
     masterQuantChannelId: Long,
-    config: ProfilizerConfig
+    config: PostProcessingConfig
   ) {
     this(
       BuildLazyExecutionContext(dsFactory, projectId, useJPA = true), // Force JPA context
