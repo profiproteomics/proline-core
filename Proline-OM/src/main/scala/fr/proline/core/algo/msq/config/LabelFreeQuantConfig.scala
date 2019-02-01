@@ -93,7 +93,7 @@ object LabelFreeQuantConfigConverter {
 
     if (useLastPeakelDetection.isDefined) mapV2 += ("use_last_peakel_detection" -> useLastPeakelDetection.get)
     var detectionParams = Map.empty[String, Any]
-    if ((DetectionMethod.equals(DetectionMethod.EXTRACT_IONS)) && startFromValidatedPeptides.isDefined)  detectionParams += ("start_from_validated_peptides" -> startFromValidatedPeptides)
+    if ((detectionMethod.equals(DetectionMethod.EXTRACT_IONS)) && startFromValidatedPeptides.isDefined)  detectionParams += ("start_from_validated_peptides" -> startFromValidatedPeptides)
     if (detectionMethod.equals(DetectionMethod.DETECT_PEAKELS)) {
       detectionParams += ("psm_matching_params" -> extractionParams)
       detectionParams += ("isotope_matching_params" -> extractionParams)
