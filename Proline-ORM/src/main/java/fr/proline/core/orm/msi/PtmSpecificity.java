@@ -209,5 +209,15 @@ public class PtmSpecificity implements Serializable {
 		}
 
 	}
-
+	@Override
+	public String toString() {
+		StringBuilder sb = new StringBuilder(ptm.getShortName());
+		if(!PtmLocation.withName(location).equals(PtmLocation.ANYWHERE)) {
+			sb.append(" (").append(location).append(")");
+		}
+		if( residue != null && residue != '\0' ) {
+			sb.append(" (").append(residue).append(")");
+		}
+		return sb.toString();
+	}
 }
