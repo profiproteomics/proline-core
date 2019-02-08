@@ -187,7 +187,7 @@ case class PostProcessingConfig(
 ) {
   // Workaround for jackson support of default values
   if( modifiedPeptideFilteringMethod.isEmpty ) {
-    modifiedPeptideFilteringMethod = Some(OxidizedPeptideFilteringMethod.DISCARD_ALL_FORMS)
+    modifiedPeptideFilteringMethod = Some(ModifiedPeptideFilteringMethod.DISCARD_ALL_FORMS)
   }
   // Workaround for jackson support of default values
   if( missCleavedPeptideFilteringMethod.isEmpty ) {
