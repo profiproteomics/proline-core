@@ -3,12 +3,12 @@
   <modelVersion>4.0.0</modelVersion>
 
   <parent>
-    <artifactId>Proline-Core</artifactId>
+    <artifactId>proline-core</artifactId>
     <groupId>fr.proline</groupId>
     <version>2.1.0-SNAPSHOT</version>
   </parent>
 
-  <artifactId>Proline-OMP</artifactId>
+  <artifactId>proline-omp</artifactId>
 
   <name>${project.artifactId}</name>
 
@@ -38,40 +38,40 @@
     <!-- "Proline" modules -->
     <dependency>
       <groupId>fr.proline</groupId>
-      <artifactId>Proline-OM</artifactId>
+      <artifactId>proline-om</artifactId>
       <!-- Version inherited from parent POM -->
     </dependency>
     <dependency>
       <groupId>fr.proline</groupId>
-      <artifactId>Proline-DAL</artifactId>
+      <artifactId>proline-dal</artifactId>
       <!-- Version inherited from parent POM -->
     </dependency>
     <dependency>
       <groupId>fr.proline</groupId>
-      <artifactId>Proline-ORM</artifactId>
+      <artifactId>proline-orm</artifactId>
       <!-- Version inherited from parent POM -->
     </dependency>
     <dependency>
       <groupId>fr.proline</groupId>
-      <artifactId>Proline-Databases</artifactId>
+      <artifactId>proline-databases</artifactId>
       <!-- Version inherited from parent POM -->
     </dependency>
     <dependency>
       <groupId>fr.profi</groupId>
-      <artifactId>ProFI-Proteomics</artifactId>
+      <artifactId>profi-proteomics</artifactId>
       <!-- Version inherited from parent POM -->
     </dependency>
     <!-- mzdb-access -->
     <dependency>
       <groupId>fr.profi</groupId>
-      <artifactId>mzdb-access</artifactId>
+      <artifactId>mzdb-access_${scala.version}</artifactId>
       <!-- Version inherited from ProFI-Pom -->
     </dependency>
 
     <!-- mzdb-processing -->
     <dependency>
       <groupId>fr.profi</groupId>
-      <artifactId>mzdb-processing</artifactId>
+      <artifactId>mzdb-processing_${scala.version}</artifactId>
       <!-- Version inherited from ProFI-Pom -->
     </dependency>
     
@@ -95,7 +95,7 @@
     <!-- Scala common utilities -->
 	<dependency>
       <groupId>fr.proline.util</groupId>
-      <artifactId>ProFI-Commons-Scala</artifactId>
+      <artifactId>profi-commons-scala</artifactId>
       <!-- Version inherited from parent POM -->
     </dependency>
 
@@ -139,21 +139,21 @@
 
     <dependency>
       <groupId>fr.proline</groupId>
-      <artifactId>Proline-Databases</artifactId>
+      <artifactId>proline-databases</artifactId>
       <!-- Version inherited from parent POM --> 
       <type>test-jar</type>
       <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>fr.proline</groupId>
-      <artifactId>Proline-OM</artifactId>
+      <artifactId>proline-om</artifactId>
       <!-- Version inherited from parent POM -->
       <type>test-jar</type>
       <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>fr.proline</groupId>
-      <artifactId>Proline-DAL</artifactId>
+      <artifactId>proline-dal</artifactId>
       <!-- Version inherited from parent POM -->
       <type>test-jar</type>
       <scope>test</scope>

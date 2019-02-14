@@ -2,7 +2,7 @@ package fr.proline.core.service.msi
 
 import com.typesafe.scalalogging.LazyLogging
 
-import fr.proline.api.service.IService
+import fr.profi.api.service.IService
 import fr.proline.context.IExecutionContext
 import fr.proline.core.algo.msi.TypicalProteinChooser
 import fr.proline.core.algo.msi.TypicalProteinChooserRule

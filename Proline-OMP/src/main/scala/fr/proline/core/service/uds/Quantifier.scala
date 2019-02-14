@@ -5,7 +5,7 @@ import scala.collection.JavaConversions.asScalaBuffer
 import com.typesafe.scalalogging.LazyLogging
 import fr.profi.util.serialization.ProfiJson.deserialize
 import fr.profi.util.serialization.ProfiJson.serialize
-import fr.proline.api.service.IService
+import fr.profi.api.service.IService
 import fr.proline.context.IExecutionContext
 import fr.proline.core.algo.msq.config._
 import fr.proline.core.dal.BuildLazyExecutionContext

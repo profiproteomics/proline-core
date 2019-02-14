@@ -4,7 +4,7 @@ import java.io.File
 
 import scala.io.Source._
 
-import fr.proline.api.service.IService
+import fr.profi.api.service.IService
 import fr.proline.context.LcMsDbConnectionContext
 import fr.proline.core.om.model.lcms.LcMsRun
 import fr.proline.core.om.model.lcms.LcMsScan

@@ -3,7 +3,7 @@ package fr.proline.core.service.msi
 import com.typesafe.scalalogging.LazyLogging
 import fr.profi.util.primitives._
 import fr.profi.util.serialization.ProfiJson
-import fr.proline.api.service.IService
+import fr.profi.api.service.IService
 import fr.proline.context.IExecutionContext
 import fr.proline.core.algo.msi.PtmSitesIdentifier
 import fr.proline.core.dal._

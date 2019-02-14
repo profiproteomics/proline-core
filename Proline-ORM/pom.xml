@@ -2,12 +2,12 @@
   <modelVersion>4.0.0</modelVersion>
 
   <parent>
-    <artifactId>Proline-Core</artifactId>
+    <artifactId>proline-core</artifactId>
     <groupId>fr.proline</groupId>
     <version>2.1.0-SNAPSHOT</version>
   </parent>
 
-  <artifactId>Proline-ORM</artifactId>
+  <artifactId>proline-orm</artifactId>
 
   <name>${project.artifactId}</name>
 
@@ -16,7 +16,7 @@
     <!-- "Proline" modules -->
     <dependency>
       <groupId>fr.proline</groupId>
-      <artifactId>Proline-Databases</artifactId>
+      <artifactId>proline-databases</artifactId>
       <!-- Version inherited from parent POM -->
     </dependency>
 
@@ -87,7 +87,7 @@
     <!-- Tests -->
     <dependency>
       <groupId>fr.proline</groupId>
-      <artifactId>Proline-Databases</artifactId>
+      <artifactId>proline-databases</artifactId>
       <!-- Version inherited from parent POM -->
       <type>test-jar</type>
       <scope>test</scope>

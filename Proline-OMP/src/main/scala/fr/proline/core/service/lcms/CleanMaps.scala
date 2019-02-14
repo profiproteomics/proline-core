@@ -1,7 +1,7 @@
 package fr.proline.core.service.lcms
 
 import fr.profi.jdbc.easy._
-import fr.proline.api.service.IService
+import fr.profi.api.service.IService
 import fr.proline.context.LcMsDbConnectionContext
 import fr.proline.core.om.model.lcms._
 import fr.proline.core.algo.lcms.ClusteringParams

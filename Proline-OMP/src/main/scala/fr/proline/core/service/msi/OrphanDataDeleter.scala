@@ -7,7 +7,7 @@ import java.sql.Connection
 
 import scala.collection.mutable.ArrayBuffer
 
-import fr.proline.api.service.IService
+import fr.profi.api.service.IService
 import fr.proline.context.IExecutionContext
 import fr.proline.repository.util.JDBCWork
 

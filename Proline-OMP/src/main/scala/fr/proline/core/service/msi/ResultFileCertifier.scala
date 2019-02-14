@@ -7,7 +7,7 @@ import scala.collection.mutable.ArrayBuffer
 import com.typesafe.scalalogging.LazyLogging
 
 import fr.profi.chemistry.model.Enzyme
-import fr.proline.api.service.IService
+import fr.profi.api.service.IService
 import fr.proline.context.IExecutionContext
 import fr.proline.core.dal.context.dbCtxToTxDbCtx
 import fr.proline.core.om.model.msi.PtmDefinition

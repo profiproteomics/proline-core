@@ -2,7 +2,7 @@ package fr.proline.core.service.msi
 
 import scala.annotation.migration
 import com.typesafe.scalalogging.LazyLogging
-import fr.proline.api.service.IService
+import fr.profi.api.service.IService
 import fr.proline.context.IExecutionContext
 import fr.proline.context.MsiDbConnectionContext
 import fr.proline.core.dal.DoJDBCReturningWork

@@ -9,7 +9,7 @@ import scala.collection.mutable.HashMap
 import com.typesafe.scalalogging.LazyLogging
 import fr.profi.util.collection._
 import fr.profi.util.primitives._
-import fr.proline.api.service.IService
+import fr.profi.api.service.IService
 import fr.proline.context.{DatabaseConnectionContext, IExecutionContext}
 import fr.proline.core.algo.msi._
 import fr.proline.core.algo.msi.filtering._

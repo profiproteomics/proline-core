@@ -3,12 +3,12 @@
   <modelVersion>4.0.0</modelVersion>
 
   <parent>
-    <artifactId>ProFI-Pom</artifactId>
+    <artifactId>profi-pom</artifactId>
     <groupId>fr.proline</groupId>
-    <version>0.4.0</version>  <!-- Snapshot Trunk version -->
+    <version>0.5.0-SNAPSHOT</version>  <!-- Snapshot Trunk version -->
   </parent>
 
-  <artifactId>Proline-Core</artifactId>
+  <artifactId>proline-core</artifactId>
   <version>2.1.0-SNAPSHOT</version>
   <packaging>pom</packaging>
 
@@ -17,11 +17,11 @@
 
   <!-- "Proline" sub-modules -->
   <modules>
-    <module>Proline-Databases</module>
-    <module>Proline-OM</module>
-    <module>Proline-ORM</module>
-    <module>Proline-DAL</module>
-    <module>Proline-OMP</module>
+    <module>proline-databases</module>
+    <module>proline-om</module>
+    <module>proline-orm</module>
+    <module>proline-dal</module>
+    <module>proline-omp</module>
   </modules>
 
   <properties>
@@ -39,63 +39,55 @@
       <!-- ProFi Commons -->
       <dependency>
         <groupId>fr.proline.util</groupId>
-        <artifactId>ProFI-Commons-Scala</artifactId>
+        <artifactId>profi-commons-scala</artifactId>
         <version>0.8.0-SNAPSHOT</version> <!-- Snapshot Trunk version -->
       </dependency>
       <dependency>
         <groupId>fr.profi</groupId>
-        <artifactId>ProFI-Proteomics</artifactId>
+        <artifactId>profi-proteomics</artifactId>
         <version>0.4.0-SNAPSHOT</version>
       </dependency>
       
       <!-- MzDB access and processing -->
       <dependency>
         <groupId>fr.profi</groupId>
-        <artifactId>mzdb-access</artifactId>
+        <artifactId>mzdb-access_${scala.version}</artifactId>
         <version>${mzdb.version}</version>
       </dependency>
       <dependency>
         <groupId>fr.profi</groupId>
-        <artifactId>mzdb-processing</artifactId>
+        <artifactId>mzdb-processing_${scala.version}</artifactId>
         <version>${mzdb.version}</version>
       </dependency>
 
       <!-- "Proline" modules -->
       <dependency>
         <groupId>fr.proline</groupId>
-        <artifactId>Proline-OM</artifactId>
+        <artifactId>proline-om</artifactId>
         <version>${core.version}</version>
       </dependency>
 
       <dependency>
         <groupId>fr.proline</groupId>
-        <artifactId>Proline-Databases</artifactId>
+        <artifactId>proline-databases</artifactId>
         <version>${core.version}</version>
       </dependency>
 
       <dependency>
         <groupId>fr.proline</groupId>
-        <artifactId>Proline-ORM</artifactId>
+        <artifactId>proline-orm</artifactId>
         <version>${core.version}</version>
       </dependency>
 
       <dependency>
         <groupId>fr.proline</groupId>
-        <artifactId>Proline-DAL</artifactId>
+        <artifactId>proline-dal</artifactId>
         <version>${core.version}</version>
       </dependency>
 
       <dependency>
         <groupId>fr.proline</groupId>
-        <artifactId>Proline-OM</artifactId>
-        <version>${core.version}</version>
-        <type>test-jar</type>
-        <scope>test</scope>
-      </dependency>
-
-      <dependency>
-        <groupId>fr.proline</groupId>
-        <artifactId>Proline-Databases</artifactId>
+        <artifactId>proline-om</artifactId>
         <version>${core.version}</version>
         <type>test-jar</type>
         <scope>test</scope>
@@ -103,7 +95,15 @@
 
       <dependency>
         <groupId>fr.proline</groupId>
-        <artifactId>Proline-DAL</artifactId>
+        <artifactId>proline-databases</artifactId>
+        <version>${core.version}</version>
+        <type>test-jar</type>
+        <scope>test</scope>
+      </dependency>
+
+      <dependency>
+        <groupId>fr.proline</groupId>
+        <artifactId>proline-dal</artifactId>
         <version>${core.version}</version>
         <type>test-jar</type>
         <scope>test</scope>
@@ -117,7 +117,7 @@
     <!-- ProFi Commons -->
     <dependency>
       <groupId>fr.proline.util</groupId>
-      <artifactId>ProFI-Commons-Java</artifactId>
+      <artifactId>profi-commons-java</artifactId>
       <version>0.7.0-SNAPSHOT</version> <!-- Snapshot Trunk version -->
     </dependency>
 

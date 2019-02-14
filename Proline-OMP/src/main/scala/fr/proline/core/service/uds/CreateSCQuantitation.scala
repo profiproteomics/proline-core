@@ -1,7 +1,7 @@
 package fr.proline.core.service.uds
 
 import scala.collection.mutable.HashMap
-import fr.proline.api.service.IService
+import fr.profi.api.service.IService
 import fr.proline.context.IExecutionContext
 import fr.proline.core.om.model.msq.ExperimentalDesign
 import fr.proline.core.orm.uds.{

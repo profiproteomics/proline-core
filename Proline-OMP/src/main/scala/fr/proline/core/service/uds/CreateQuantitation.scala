@@ -4,7 +4,7 @@ import java.util.HashSet
 import scala.collection.JavaConversions.collectionAsScalaIterable
 import java.util.HashMap
 import com.typesafe.scalalogging.LazyLogging
-import fr.proline.api.service.IService
+import fr.profi.api.service.IService
 import fr.proline.context.IExecutionContext
 import fr.proline.core.dal.BuildLazyExecutionContext
 import fr.proline.core.dal.context._

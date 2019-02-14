@@ -3,7 +3,7 @@ package fr.proline.core.service.uds
 import java.util.HashSet
 import scala.collection.JavaConversions.collectionAsScalaIterable
 import scala.collection.mutable.HashMap
-import fr.proline.api.service.IService
+import fr.profi.api.service.IService
 import fr.proline.core.om.model.msq._
 import fr.proline.core.orm.uds.{
   BiologicalGroup => UdsBiologicalGroup,
