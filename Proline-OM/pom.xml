@@ -51,7 +51,7 @@
 
     <!-- ProFi Commons -->
     <dependency>
-      <groupId>fr.proline.util</groupId>
+      <groupId>fr.profi.util</groupId>
       <artifactId>profi-commons-scala</artifactId>
       <!-- Version inherited from parent POM -->
     </dependency>
