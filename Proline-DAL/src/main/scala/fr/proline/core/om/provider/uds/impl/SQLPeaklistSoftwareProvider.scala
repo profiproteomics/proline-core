@@ -45,7 +45,7 @@ class SQLPeaklistSoftwareProvider(val udsDbCtx: UdsDbConnectionContext) extends 
     if (softVersion == null) {
       DoJDBCReturningWork.withEzDBC(udsDbCtx) { udsEzDBC =>
         udsEzDBC.selectHeadOption(
-          "SELECT * FROM peaklist_software WHERE name= ? and version is null ", softName) { r =>
+          "SELECT * FROM peaklist_software WHERE name= ? and (version is null or version ='') ", softName) { r =>
           _buildNewPeaklistSoftware( r, specRuleById )
         }
       }
