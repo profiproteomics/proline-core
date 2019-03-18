@@ -459,6 +459,7 @@ class RsmDuplicator(rsmProvider: IResultSummaryProvider) extends IRsmDuplicator 
     this.logger.info("END storing  peptide sets relations ... steps duration "+(end-start) + " ms")
     start = end
     msiEm.flush()
+    end  = System.currentTimeMillis()
     this.logger.info("ENtity manager flushed. duration "+(end-start) + " ms")
     //VDS CHANGE MERGE RSM !!!!
     // Update sourceRSM id
