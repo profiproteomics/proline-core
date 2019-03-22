@@ -21,7 +21,7 @@ The Maven Proline-Core parent project is composed of 5 subproject :
 
 # License
 
-This project is licensed under the CeCILL License - see the Licence_CeCILL_V2.1-en.txt file for details
+This project is licensed under the [CeCILL License V2.1](http://www.cecill.info/licences/Licence_CeCILL_V2.1-en.html)
 
 # Proline Web Site
 
