@@ -19,3 +19,7 @@ The Maven Proline-Core parent project is composed of 5 subproject :
   * Proline-ORM : Object Relational Mapping. Java objects for JPA persistance
   * Proline-OM: Object Model for Proline algorithm and servcies
   * Proline-OMP: Proline processing defining computational services implementation
+
+# License
+
+This project is licensed under the CeCILL License - see the Licence_CeCILL_V2.1-en.txt file for details
