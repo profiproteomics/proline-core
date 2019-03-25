@@ -2,13 +2,14 @@ package fr.proline.repository;
 
 import static fr.profi.util.StringUtils.LINE_SEPARATOR;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileReader;
+import java.io.IOException;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
@@ -23,6 +24,7 @@ import fr.profi.util.StringUtils;
 
 public abstract class AbstractDatabaseConnector implements IDatabaseConnector, IConnectionListener {
 
+	private static final String HIBERNATE_PROP_FILES_SUFFIXE="_hibernate.properties";
 	/* Constants */
 	public static final String JDBC_APPNAME_KEY = "ApplicationName";
 	
@@ -108,6 +110,28 @@ public abstract class AbstractDatabaseConnector implements IDatabaseConnector, I
 		if (prolineDbType == null) {
 			throw new IllegalArgumentException("ProlineDbType is null");
 		}
+
+		// ----------- FOR DEV ONLY !!! read properties from config/<dbType>_hibernate.properties file
+		Properties p = new Properties();
+		try {
+			File  f= new File("config/"+prolineDbType.name()+HIBERNATE_PROP_FILES_SUFFIXE);
+			LOG.info(" ------ Read properties file  : "+(prolineDbType.name()+HIBERNATE_PROP_FILES_SUFFIXE) +" ==> "+f.getAbsolutePath());
+			FileReader fr = new FileReader("config/"+prolineDbType.name()+HIBERNATE_PROP_FILES_SUFFIXE);
+			p.load(fr);
+		} catch (IOException e) {
+			LOG.info(" ------ Properties file not found : "+(prolineDbType.name()+HIBERNATE_PROP_FILES_SUFFIXE));
+		}
+
+		Iterator<String> keys = p.stringPropertyNames().iterator();
+		HashMap<Object, Object> ap = new HashMap<>();
+		while (keys.hasNext()){
+			String k = keys.next();
+			String res = p.getProperty(k);
+			LOG.info(" ------ add m_additionalProperties IS "+k+" : "+res);
+			ap.put(k, res);
+		}
+		setAdditionalProperties(ap);
+
 
 		m_prolineDbType = prolineDbType;
 
@@ -381,7 +405,7 @@ public abstract class AbstractDatabaseConnector implements IDatabaseConnector, I
 	/**
 	 * This method is called holding <code>m_connectorLock</code> intrinsic object <strong>lock</strong> by <code>getDataSource</code>.
 	 * 
-	 * @param database
+	 * @param ident
 	 * @param properties
 	 * @return
 	 */
@@ -390,7 +414,7 @@ public abstract class AbstractDatabaseConnector implements IDatabaseConnector, I
 	/**
 	 * This method is called holding <code>m_connectorLock</code> intrinsic object <strong>lock</strong> by <code>getEntityManagerFactory</code>.
 	 * 
-	 * @param database
+	 * @param prolineDbType
 	 * @param properties
 	 * @param ormOptimizations
 	 * @return
