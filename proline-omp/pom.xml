@@ -8,7 +8,7 @@
     <version>2.1.0-SNAPSHOT</version>
   </parent>
 
-  <artifactId>proline-omp</artifactId>
+  <artifactId>proline-omp_${scala.version}</artifactId>
 
   <name>${project.artifactId}</name>
 
@@ -38,12 +38,12 @@
     <!-- "Proline" modules -->
     <dependency>
       <groupId>fr.proline</groupId>
-      <artifactId>proline-om</artifactId>
+      <artifactId>proline-om_${scala.version}</artifactId>
       <!-- Version inherited from parent POM -->
     </dependency>
     <dependency>
       <groupId>fr.proline</groupId>
-      <artifactId>proline-dal</artifactId>
+      <artifactId>proline-dal_${scala.version}</artifactId>
       <!-- Version inherited from parent POM -->
     </dependency>
     <dependency>
@@ -58,7 +58,7 @@
     </dependency>
     <dependency>
       <groupId>fr.profi</groupId>
-      <artifactId>profi-proteomics</artifactId>
+      <artifactId>profi-proteomics_${scala.version}</artifactId>
       <!-- Version inherited from parent POM -->
     </dependency>
     <!-- mzdb-access -->
@@ -95,7 +95,7 @@
     <!-- Scala common utilities -->
 	<dependency>
       <groupId>fr.profi.util</groupId>
-      <artifactId>profi-commons-scala</artifactId>
+      <artifactId>profi-commons-scala_${scala.version}</artifactId>
       <!-- Version inherited from parent POM -->
     </dependency>
 
@@ -146,14 +146,14 @@
     </dependency>
     <dependency>
       <groupId>fr.proline</groupId>
-      <artifactId>proline-om</artifactId>
+      <artifactId>proline-om_${scala.version}</artifactId>
       <!-- Version inherited from parent POM -->
       <type>test-jar</type>
       <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>fr.proline</groupId>
-      <artifactId>proline-dal</artifactId>
+      <artifactId>proline-dal_${scala.version}</artifactId>
       <!-- Version inherited from parent POM -->
       <type>test-jar</type>
       <scope>test</scope>
