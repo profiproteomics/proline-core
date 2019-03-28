@@ -1,4 +1,4 @@
-/* Last Update V0_6__core_0_4_0_UDS_data_migration (java) */
+/* Last Update V0_8__core_2_0_0_UDS_MSI_data_migration (java) */
 CREATE SEQUENCE public.aggregation_id_seq;
 
 CREATE TABLE public.aggregation (
@@ -306,13 +306,6 @@ CREATE UNIQUE INDEX instrument_config_name_idx
  ON public.instrument_config
  ( name );
 
-CREATE TABLE public.instrument_config_fragmentation_rule_map (
-                instrument_config_id BIGINT NOT NULL,
-                fragmentation_rule_id BIGINT NOT NULL,
-                CONSTRAINT instrument_config_fragmentation_rule_map_pk PRIMARY KEY (instrument_config_id, fragmentation_rule_id)
-);
-COMMENT ON TABLE public.instrument_config_fragmentation_rule_map IS 'The set of fragmentation rules associated with this instrument configuration.';
-
 
 CREATE SEQUENCE public.user_account_id_seq;
 
@@ -578,6 +571,8 @@ CREATE TABLE public.master_quant_channel (
                 lcms_map_set_id BIGINT,
                 quant_result_summary_id BIGINT,
                 quantitation_id BIGINT NOT NULL,
+                ident_data_set_id BIGINT,
+                ident_result_summary_id BIGINT,
                 CONSTRAINT master_quant_channel_pk PRIMARY KEY (id)
 );
 COMMENT ON TABLE public.master_quant_channel IS 'A master quant channel is a consensus over multiple quant channels (merged results). In the context of LC-MS analysis it may correspond to the master map of a given map set.';
@@ -601,6 +596,7 @@ CREATE TABLE public.quant_label (
                 id BIGINT NOT NULL DEFAULT nextval('public.quant_label_id_seq'),
                 type VARCHAR(16) NOT NULL,
                 name VARCHAR(10) NOT NULL,
+                number INTEGER,
                 serialized_properties TEXT,
                 quant_method_id BIGINT NOT NULL,
                 CONSTRAINT quant_label_pk PRIMARY KEY (id)
@@ -618,6 +614,14 @@ COMMENT ON COLUMN public.quant_label.quant_method_id IS 'The quantitative method
 
 
 ALTER SEQUENCE public.quant_label_id_seq OWNED BY public.quant_label.id;
+
+CREATE UNIQUE INDEX quant_label_number_idx
+ ON public.quant_label
+ ( quant_method_id, number );
+
+CREATE UNIQUE INDEX quant_label_unique_name_idx
+ ON public.quant_label
+ ( quant_method_id, name );
 
 CREATE SEQUENCE public.biological_sample_id_seq;
 
@@ -747,8 +751,6 @@ CREATE TABLE public.external_db (
                 id BIGINT NOT NULL DEFAULT nextval('public.external_db_id_seq'),
                 name VARCHAR(500) NOT NULL,
                 connection_mode VARCHAR(50) NOT NULL,
-                username VARCHAR(50),
-                password VARCHAR(50),
                 host VARCHAR(100),
                 port INTEGER,
                 type VARCHAR(100) NOT NULL,
@@ -770,7 +772,7 @@ COMMENT ON COLUMN public.external_db.port IS 'The port number of the DBMS server
 COMMENT ON COLUMN public.external_db.type IS 'Type of database schema.
 Valid values for this field are:
 MSI, LCMS, PDI, PS.';
-COMMENT ON COLUMN public.external_db.version IS 'Indicates the schema version of the referenced db. For instance, it could correspond to admin_infos.model_version of an MSIdb.';
+COMMENT ON COLUMN public.external_db.version IS 'Indicates the schema version of the referenced db. For instance, it could correspond to schema_version of an MSIdb.';
 COMMENT ON COLUMN public.external_db.is_busy IS 'Informs about the busy status of the corresponding external DB. If set to true then it tells that the external DB is busy and should not be used at the moment. Could be useful if the external DB is implemented using an embedded technology like SQLite.';
 COMMENT ON COLUMN public.external_db.serialized_properties IS 'A JSON string which stores optional properties (see corresponding JSON schema for more details).
 Note: it could store the driver name and other connection properties needed by the driver.';
@@ -870,7 +872,7 @@ CREATE SEQUENCE public.quant_channel_id_seq;
 CREATE TABLE public.quant_channel (
                 id BIGINT NOT NULL DEFAULT nextval('public.quant_channel_id_seq'),
                 number INTEGER NOT NULL,
-                name VARCHAR(100),
+                name VARCHAR(100) NOT NULL,
                 context_key VARCHAR(100) NOT NULL,
                 serialized_properties TEXT,
                 lcms_map_id BIGINT,
@@ -900,6 +902,10 @@ COMMENT ON COLUMN public.quant_channel.quantitation_id IS 'The quantitation this
 
 
 ALTER SEQUENCE public.quant_channel_id_seq OWNED BY public.quant_channel.id;
+
+CREATE UNIQUE INDEX quant_channel_unique_name_idx
+ ON public.quant_channel
+ ( master_quant_channel_id, name );
 
 CREATE UNIQUE INDEX quant_channel_context_idx
  ON public.quant_channel
@@ -1112,7 +1118,15 @@ ON DELETE RESTRICT
 ON UPDATE NO ACTION
 NOT DEFERRABLE;
 
-ALTER TABLE public.master_quant_channel ADD CONSTRAINT data_set_master_quant_channel_fk
+ALTER TABLE public.master_quant_channel ADD CONSTRAINT ident_data_set_master_quant_channel_fk
+FOREIGN KEY (ident_data_set_id)
+REFERENCES public.data_set (id)
+ON DELETE NO ACTION
+ON UPDATE NO ACTION
+NOT DEFERRABLE;
+
+
+ALTER TABLE public.master_quant_channel ADD CONSTRAINT quant_data_set_master_quant_channel_fk
 FOREIGN KEY (quantitation_id)
 REFERENCES public.data_set (id)
 ON DELETE CASCADE

@@ -1,4 +1,4 @@
-/* Last Update V0_6__core_0_4_0_UDS_data_migration (java) */
+/* Last Update V0_8__core_2_0_0_UDS_MSI_data_migration (java) */
 CREATE TABLE public.aggregation (
                 id IDENTITY NOT NULL,
                 child_nature VARCHAR NOT NULL,
@@ -425,7 +425,7 @@ CREATE TABLE public.data_set (
                 keywords VARCHAR,
                 creation_timestamp TIMESTAMP NOT NULL,
                 modification_log LONGVARCHAR,
-                children_count INTEGER DEFAULT 0 NOT NULL,
+                child_count INTEGER DEFAULT 0 NOT NULL,
                 serialized_properties LONGVARCHAR,
                 result_set_id BIGINT,
                 result_summary_id BIGINT,
@@ -489,6 +489,8 @@ CREATE TABLE public.master_quant_channel (
                 lcms_map_set_id BIGINT,
                 quant_result_summary_id BIGINT,
                 quantitation_id BIGINT NOT NULL,
+                ident_data_set_id BIGINT,
+                ident_result_summary_id BIGINT,
                 CONSTRAINT master_quant_channel_pk PRIMARY KEY (id)
 );
 COMMENT ON TABLE public.master_quant_channel IS 'A master quant channel is a consensus over multiple quant channels (merged results). In the context of LC-MS analysis it may correspond to the master map of a given map set.';
@@ -508,6 +510,7 @@ CREATE TABLE public.quant_label (
                 id IDENTITY NOT NULL,
                 type VARCHAR(16) NOT NULL,
                 name VARCHAR(10) NOT NULL,
+                number INTEGER NOT NULL,
                 serialized_properties LONGVARCHAR,
                 quant_method_id BIGINT NOT NULL,
                 CONSTRAINT quant_label_pk PRIMARY KEY (id)
@@ -523,6 +526,13 @@ For instance
 COMMENT ON COLUMN public.quant_label.serialized_properties IS 'A JSON string which stores optional properties (see corresponding JSON schema for more details).';
 COMMENT ON COLUMN public.quant_label.quant_method_id IS 'The quantitative method this label refers to.';
 
+CREATE UNIQUE INDEX quant_label_number_idx
+ ON quant_label
+ ( quant_method_id, number );
+
+CREATE UNIQUE INDEX quant_label_unique_name_idx
+ ON quant_label
+ ( quant_method_id, name );
 
 CREATE TABLE public.biological_sample (
                 id IDENTITY NOT NULL,
@@ -634,8 +644,6 @@ CREATE TABLE public.external_db (
                 id IDENTITY NOT NULL,
                 name VARCHAR(500) NOT NULL,
                 connection_mode VARCHAR(50) NOT NULL,
-                username VARCHAR(50),
-                password VARCHAR(50),
                 host VARCHAR(100),
                 port INTEGER,
                 type VARCHAR(100) NOT NULL,
@@ -657,7 +665,7 @@ COMMENT ON COLUMN public.external_db.port IS 'The port number of the DBMS server
 COMMENT ON COLUMN public.external_db.type IS 'Type of database schema.
 Valid values for this field are:
 MSI, LCMS, PDI, PS.';
-COMMENT ON COLUMN public.external_db.version IS 'Indicates the schema version of the referenced db. For instance, it could correspond to admin_infos.model_version of an MSIdb.';
+COMMENT ON COLUMN public.external_db.version IS 'Indicates the schema version of the referenced db. For instance, it could correspond to schema_version of an MSIdb.';
 COMMENT ON COLUMN public.external_db.is_busy IS 'Informs about the busy status of the corresponding external DB. If set to true then it tells that the external DB is busy and should not be used at the moment. Could be useful if the external DB is implemented using an embedded technology like SQLite.';
 COMMENT ON COLUMN public.external_db.serialized_properties IS 'A JSON string which stores optional properties (see corresponding JSON schema for more details).
 Note: it could store the driver name and other connection properties needed by the driver.';
@@ -745,7 +753,7 @@ COMMENT ON COLUMN public.document.schema_name IS 'The name of the schema describ
 CREATE TABLE public.quant_channel (
                 id IDENTITY NOT NULL,
                 number INTEGER NOT NULL,
-                name VARCHAR(100),
+                name VARCHAR(100) NOT NULL,
                 context_key VARCHAR(100) NOT NULL,
                 serialized_properties LONGVARCHAR,
                 lcms_map_id BIGINT,
@@ -782,6 +790,9 @@ CREATE UNIQUE INDEX public.quant_channel_number_idx
  ON public.quant_channel
  ( master_quant_channel_id, number );
 
+CREATE UNIQUE INDEX quant_channel_unique_name_idx
+ ON quant_channel
+ ( master_quant_channel_id, name );
 
 /*
 Warning: H2 Database does not support this relationship's delete action (RESTRICT).
@@ -986,10 +997,16 @@ FOREIGN KEY (quant_method_id)
 REFERENCES public.quant_method (id)
 ON UPDATE NO ACTION;
 
-ALTER TABLE public.master_quant_channel ADD CONSTRAINT data_set_master_quant_channel_fk
+ALTER TABLE master_quant_channel ADD CONSTRAINT quant_data_set_master_quant_channel_fk
 FOREIGN KEY (quantitation_id)
-REFERENCES public.data_set (id)
+REFERENCES data_set (id)
 ON DELETE CASCADE
+ON UPDATE NO ACTION;
+
+ALTER TABLE master_quant_channel ADD CONSTRAINT ident_data_set_master_quant_channel_fk
+FOREIGN KEY (ident_data_set_id)
+REFERENCES data_set (id)
+ON DELETE NO ACTION
 ON UPDATE NO ACTION;
 
 ALTER TABLE public.group_setup ADD CONSTRAINT data_set_group_setup_fk

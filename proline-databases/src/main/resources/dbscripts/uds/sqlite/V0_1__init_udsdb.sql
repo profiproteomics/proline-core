@@ -115,8 +115,6 @@ CREATE TABLE external_db (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 name TEXT(500) NOT NULL,
                 connection_mode TEXT(50) NOT NULL,
-                username TEXT(50),
-                password TEXT(50),
                 host TEXT(100),
                 port INTEGER,
                 type TEXT(100) NOT NULL,
@@ -205,6 +203,8 @@ CREATE TABLE master_quant_channel (
                 lcms_map_set_id INTEGER,
                 quant_result_summary_id INTEGER,
                 quantitation_id INTEGER NOT NULL,
+                ident_data_set_id INTEGER,
+                ident_result_summary_id INTEGER,
                 FOREIGN KEY (quantitation_id) REFERENCES data_set (id)
 );
 
@@ -273,7 +273,7 @@ CREATE TABLE protein_match_decoy_rule (
 CREATE TABLE quant_channel (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 number INTEGER NOT NULL,
-                name TEXT(100),
+                name TEXT(100) NOT NULL,
                 context_key TEXT(100) NOT NULL,
                 serialized_properties TEXT,
                 lcms_map_id INTEGER,
@@ -296,6 +296,7 @@ CREATE TABLE quant_label (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 type TEXT(16) NOT NULL,
                 name TEXT(10) NOT NULL,
+                number INTEGER NOT NULL,
                 serialized_properties TEXT,
                 quant_method_id INTEGER NOT NULL,
                 FOREIGN KEY (quant_method_id) REFERENCES quant_method (id)
@@ -405,6 +406,12 @@ CREATE TABLE virtual_folder (
 CREATE UNIQUE INDEX quant_channel_context_idx ON quant_channel (master_quant_channel_id,context_key,quant_label_id);
 
 CREATE UNIQUE INDEX quant_channel_number_idx ON quant_channel (master_quant_channel_id,number);
+
+CREATE UNIQUE INDEX quant_channel_unique_name_idx ON quant_channel (master_quant_channel_id,name);
+
+CREATE UNIQUE INDEX quant_label_number_idx ON quant_label ( quant_method_id, number );
+
+CREATE UNIQUE INDEX quant_label_unique_name_idx ON quant_label ( quant_method_id, name );
 
 CREATE INDEX object_tree_schema_name_idx ON object_tree (schema_name);
 
