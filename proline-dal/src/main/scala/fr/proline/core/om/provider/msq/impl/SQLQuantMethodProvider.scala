@@ -46,7 +46,7 @@ class SQLQuantMethodProvider(val udsDbCtx: UdsDbConnectionContext) extends IQuan
               case _ => throw new Exception("can't load this quant method")
             }
           }
-          case ISOBARIC_TAG => {
+          case ISOBARIC_TAGGING => {
             val quantLabels = this._getQuantLabels[IsobaricTag](quantMethodId, udsEzDBC)
             IsobaricTaggingQuantMethod(quantLabels)
           }

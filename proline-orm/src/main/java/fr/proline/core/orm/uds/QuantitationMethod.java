@@ -28,7 +28,7 @@ public class QuantitationMethod implements Serializable {
 
 	public enum Type {
 		ATOM_LABELING("atom_labeling"),
-		ISOBARIC_TAG("isobaric_tag"),
+		ISOBARIC_TAGGING("isobaric_tagging"),
 		LABEL_FREE("label_free"),
 		RESIDUE_LABELING("residue_labeling");
 
