@@ -29,7 +29,7 @@ public class BiologicalSplSplAnalysisMap implements Serializable {
 	@MapsId("biologicalSampleId")
 	private BiologicalSample biologicalSample;
 
-	// bi-directional many-to-one association to UserAccount
+	// bi-directional many-to-one association to Sample Analysis
 	@ManyToOne
 	@JoinColumn(name = "sample_analysis_id")
 	@MapsId("sampleAnalysisId")

@@ -115,7 +115,7 @@ class PgFeatureWriter(lcmsDbCtx: LcMsDbConnectionContext) extends IFeatureWriter
         val feature = flattenedFeatures(featureIdx)
         val idMzPair = sortedIdMzPairs(featureIdx)
         assert(
-          feature.moz == idMzPair._2,
+          MathUtils.nearlyEquals(feature.moz, idMzPair._2,MathUtils.EPSILON_LOW_PRECISION),
           s"error while trying to update feature id, m/z values are different: was ${feature.moz} and is now ${idMzPair._2}"
         )
         

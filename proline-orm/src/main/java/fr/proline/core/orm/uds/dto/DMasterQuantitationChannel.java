@@ -1,7 +1,11 @@
 package fr.proline.core.orm.uds.dto;
 
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import fr.proline.core.orm.uds.Dataset;
 import fr.proline.core.orm.util.JsonSerializer;
@@ -32,6 +36,8 @@ public class DMasterQuantitationChannel {
 
 	private Long identResultSummaryId;
 
+	private Map<Integer, List<DQuantitationChannel>> groups;
+
 	public DMasterQuantitationChannel() {
 
 	}
@@ -40,14 +46,14 @@ public class DMasterQuantitationChannel {
 		long m_id,
 		String m_name,
 		Long quantResultSummaryId,
-		List<DQuantitationChannel> quantitationChannels,
+		List<DQuantitationChannel> qChannels,
 		Dataset dataset,
 		String serializedProperties) {
 		super();
 		this.id = m_id;
 		this.name = m_name;
 		this.quantResultSummaryId = quantResultSummaryId;
-		this.quantitationChannels = quantitationChannels;
+		this.quantitationChannels = qChannels;
 		this.dataset = dataset;
 		this.serializedProperties = serializedProperties;
 	}
@@ -80,9 +86,21 @@ public class DMasterQuantitationChannel {
 		return quantitationChannels;
 	}
 
-	public void setQuantitationChannels(
-		List<DQuantitationChannel> quantitationChannels) {
+	public void setQuantitationChannels(List<DQuantitationChannel> quantitationChannels) {
 		this.quantitationChannels = quantitationChannels;
+		groups = new HashMap<>();
+		for (DQuantitationChannel channel : this.quantitationChannels) {
+
+			Integer groupNumber = Integer.valueOf(channel.getContextKey().split("\\.")[0]);
+			if (!groups.containsKey(groupNumber)) {
+				groups.put(groupNumber, new ArrayList<>());
+			}
+			groups.get(groupNumber).add(channel);
+		}
+	}
+
+	public int getGroupsCount() {
+		return groups == null ? 0 : groups.size();
 	}
 
 	public Dataset getDataset() {
@@ -124,6 +142,10 @@ public class DMasterQuantitationChannel {
 
 	public void setIdentResultSummaryId(Long identRsmId) {
 		this.identResultSummaryId = identRsmId;
+	}
+
+	public List<DQuantitationChannel> getQuantitationChannels(Integer groupNumber) {
+		return groups.get(groupNumber);
 	}
 
 	@SuppressWarnings("unchecked")
