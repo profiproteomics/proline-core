@@ -43,7 +43,7 @@ class AggregationQuantifier(
 
     // Store the master quant result set
     // Child RS are RS associated with aggregated dataset if identResultSummary is not provided
-    // at this stage createMergedResultSummary has been called, then identRsms has been set
+    mergedResultSummary.id // Called to init using createMergedResultSummary
     val childrenRsIds = {
       if (masterQc.identResultSummaryId.isEmpty) {
         identRsms.map(_.getResultSetId)

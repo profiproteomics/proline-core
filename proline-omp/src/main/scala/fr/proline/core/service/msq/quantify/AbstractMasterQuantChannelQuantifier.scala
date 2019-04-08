@@ -94,7 +94,7 @@ abstract class AbstractMasterQuantChannelQuantifier extends LazyLogging {
   
   protected def storeMsiQuantResultSet(): MsiResultSet = {
 
-    val msiIdentResultSets = if (!masterQc.identResultSummaryId.isDefined) {
+    val msiIdentResultSets = if (masterQc.identResultSummaryId.isEmpty) {
       entityCache.quantChannelMsiResultSets
     }  else {
       val identRSM = msiEm.find(classOf[MsiResultSummary], masterQc.identResultSummaryId.get)
