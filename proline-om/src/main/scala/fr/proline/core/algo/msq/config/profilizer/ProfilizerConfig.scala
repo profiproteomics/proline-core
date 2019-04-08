@@ -82,28 +82,6 @@ case class ProfilizerStatConfig(
   if(missValInferenceMethod == null) missValInferenceMethod = MissingAbundancesInferenceMethod.GAUSSIAN_MODEL
   if(missValInferenceConfig.isEmpty) missValInferenceConfig = Some(MissingAbundancesInferenceConfig())
 }
-//
-//object  ProfilizerConfigCoverter{
-//
-//  def convertFromV1(map: Map[String, Any]): Map[String, Any] = {
-//    val discardMissCleavedPeptides = map.get("discard_missed_cleaved_peptides").get.asInstanceOf[Boolean]
-//    val missCleavedPeptideFilteringMethod = map.get("miss_cleaved_peptide_filtering_method")
-//    val discardModifiedPeptides = map.get("discard_oxidized_peptides")
-//    val modifiedPeptidesFilteringMethod = map.get("oxidized_peptide_filtering_method")
-//    val useOnlySpecificPeptides = map.get("use_only_specific_peptides").get.asInstanceOf[Boolean]
-//    val discardPeptidesSharingPeakels = map.get("discard_peptides_sharing_peakels").get.asInstanceOf[Boolean]
-//    val applyProfileClustering = map.get("apply_profile_clustering").get.asInstanceOf[Boolean]
-//    val profileClusteringMethod = map.get("profile_clustering_method")
-//    val profileClusteringConfig = map.get("profile_clustering_config").asInstanceOf[Map[String, Any]]
-//    val abundanceSummarizingMethod = map.get("abundance_summarizer_method").asInstanceOf[String]
-//    val peptideStatConfig  = map.get("peptide_stat_config").asInstanceOf[Map[String, Any]]
-//    val proteinStatConfig  = map.get("protein_stat_config").asInstanceOf[Map[String, Any]]
-//    val summarizingBasedOn = map.get("summarizingBasedOn")
-//
-//    var modificationsToDiscard : Array[PtmDefinition] = Array.empty[PtmDefinition]
-//
-//  }
-//}
 
 //TODO Remove once PostProcessingConfig is tested and OK
 case class GenericProfilizerConfig(
@@ -116,7 +94,6 @@ case class GenericProfilizerConfig(
      discardModifiedPeptides: Boolean = true,
      var modifiedPeptideFilteringMethod: Option[String] = None,
      var ptmDefinitionIdsToDiscard : Array[Long] = Array.empty[Long],
-
 
      //discardLowIdentPeptides: Boolean = false,
      useOnlySpecificPeptides: Boolean = true,
@@ -163,6 +140,7 @@ case class GenericProfilizerConfig(
 }
 
 case class PostProcessingConfig(
+   val configVersion: String = "2.0",
    discardMissCleavedPeptides: Boolean = true,
    var missCleavedPeptideFilteringMethod: Option[String] = None,
 
