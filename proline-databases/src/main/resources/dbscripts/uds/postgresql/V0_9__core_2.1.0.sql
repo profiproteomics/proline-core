@@ -31,3 +31,6 @@ INSERT INTO quant_label (type, name, number, quant_method_id)
 SELECT type, name, number, (SELECT id FROM quant_method WHERE name = 'SILAC 3plex')
 FROM tags;
 
+-- Rename quant_label.type value 'isobaric_tagging' to 'isobaric_tag' --
+UPDATE quant_label SET type = 'isobaric_tag' WHERE type = 'isobaric_tagging';
+
