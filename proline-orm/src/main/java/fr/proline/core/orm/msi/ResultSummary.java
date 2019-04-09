@@ -82,7 +82,7 @@ public class ResultSummary implements Serializable {
 	@Transient
 	private Map<String, Object> serializedPropertiesMap;
 	@Transient
-	MergeMode mergeMode;
+	private MergeMode mergeMode;
 
 	public ResultSummary() {
 	}

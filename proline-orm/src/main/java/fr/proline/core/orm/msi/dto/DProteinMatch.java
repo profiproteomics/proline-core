@@ -16,8 +16,7 @@ public class DProteinMatch {
 	private int m_peptideCount;
 	private long m_resultSetId;
 	private String m_description;
-	private DBioSequence m_bioSequence;
-	private boolean m_bioSequenceSet = false;
+	private DBioSequence m_bioSequence = null;
 	private Integer m_observablePeptidesCount = null;
 
 	private HashMap<Long, DPeptideSet> peptideSetMap = null;
@@ -117,7 +116,6 @@ public class DProteinMatch {
 
 	public void setDBioSequence(DBioSequence bioSequence) {
 		m_bioSequence = bioSequence;
-		m_bioSequenceSet = true;
 	}
 
 	public DBioSequence getDBioSequence() {
@@ -125,7 +123,7 @@ public class DProteinMatch {
 	}
 
 	public boolean isDBiosequenceSet() {
-		return m_bioSequenceSet;
+		return m_bioSequence != null;
 	}
 
 	public DPeptideMatch[] getPeptideMatches() {
