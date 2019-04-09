@@ -190,8 +190,11 @@ public class DDataset {
     if (ot != null) {
       if (ot.getSchema().getName().equalsIgnoreCase(ObjectTreeSchema.SchemaName.POST_QUANT_PROCESSING_CONFIG.getKeyName())) {
         this.m_postQuantProcessingConfig = ot;
+        this.postQuantProcessingConfigMap = null;//should reinit map with new object tree
       } else if (ot.getSchema().getName().startsWith("quantitation")) {
         this.m_quantProcessingConfig = ot;
+        this.quantProcessingConfigMap = null;//should reinit map with new object tree
+
       }
     }
   }
