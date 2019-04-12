@@ -77,7 +77,9 @@ case class AlignmentConfig(
   @(JsonScalaEnumeration @field)(classOf[FeatureMappingMethodRef])
   ftMappingMethodName: FeatureMappingMethod.Value,
   ftMappingMethodParams: FeatureMappingParams,
+    @JsonDeserialize(contentAs = classOf[java.lang.Boolean])
   removeOutliers: Option[Boolean] = None, // getOrElse(false)
+    @JsonDeserialize(contentAs = classOf[java.lang.Boolean])
   ignoreErrors: Option[Boolean] = None    // getOrElse(false)
   )
 
