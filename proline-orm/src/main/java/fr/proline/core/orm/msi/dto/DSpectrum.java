@@ -1,6 +1,14 @@
 package fr.proline.core.orm.msi.dto;
 
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
+import java.nio.DoubleBuffer;
+import java.nio.FloatBuffer;
+
 public class DSpectrum {
+
+	public static final int MASSES_INDEX = 0;
+	public static final int INTENSITIES_INDEX = 1;
 
 	private long m_id;
 
@@ -12,6 +20,7 @@ public class DSpectrum {
 
 	private byte[] m_intensityList = null;
 	private byte[] m_mozList = null;
+	private double[][] m_massIntensitiesValues = null;
 
 	private Integer m_precursorCharge;
 	private Float m_precursorIntensity;
@@ -49,6 +58,45 @@ public class DSpectrum {
 
 		m_title = title;
 	}
+
+	public double[] getMasses() {
+		return getMassIntensityValues()[MASSES_INDEX];
+	}
+
+	public double[] getIntensities() {
+		return getMassIntensityValues()[INTENSITIES_INDEX];
+	}
+
+	public double[][] getMassIntensityValues() {
+		if (m_massIntensitiesValues == null) {
+			if ((m_intensityList == null) || (m_mozList == null)) {
+				return null;
+			}
+
+			ByteBuffer intensityByteBuffer = ByteBuffer.wrap(m_intensityList).order(ByteOrder.LITTLE_ENDIAN);
+			FloatBuffer intensityFloatBuffer = intensityByteBuffer.asFloatBuffer();
+			double[] intensityDoubleArray = new double[intensityFloatBuffer.remaining()];
+			for (int i = 0; i < intensityDoubleArray.length; i++) {
+				intensityDoubleArray[i] = (double) intensityFloatBuffer.get();
+			}
+
+			ByteBuffer massByteBuffer = ByteBuffer.wrap(m_mozList).order(ByteOrder.LITTLE_ENDIAN);
+			DoubleBuffer massDoubleBuffer = massByteBuffer.asDoubleBuffer();
+			double[] massDoubleArray = new double[massDoubleBuffer.remaining()];
+			for (int i = 0; i < massDoubleArray.length; i++) {
+				massDoubleArray[i] = massDoubleBuffer.get();
+			}
+
+			int size = intensityDoubleArray.length;
+			m_massIntensitiesValues = new double[2][size];
+			for (int i = 0; i < size; i++) {
+				m_massIntensitiesValues[MASSES_INDEX][i] = massDoubleArray[i];
+				m_massIntensitiesValues[INTENSITIES_INDEX][i] = intensityDoubleArray[i];
+			}
+		}
+		return m_massIntensitiesValues;
+	}
+
 
 	public long getId() {
 		return m_id;
