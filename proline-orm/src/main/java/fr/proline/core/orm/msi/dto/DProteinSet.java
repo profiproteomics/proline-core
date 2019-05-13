@@ -52,6 +52,19 @@ public class DProteinSet {
 		m_subSetCount = null;
 	}
 
+	@Override
+	public boolean equals(Object o) {
+		if (this == o) return true;
+		if (o == null || getClass() != o.getClass()) return false;
+		DProteinSet that = (DProteinSet) o;
+		return m_id == that.m_id;
+	}
+
+	@Override
+	public int hashCode() {
+		return String.valueOf(m_id).hashCode();
+	}
+
 	public long getId() {
 		return m_id;
 	}
@@ -132,4 +145,6 @@ public class DProteinSet {
 		m_serializedPropertiesMap = serializedPropertiesMap;
 		m_serializedProperties = JsonSerializer.getMapper().writeValueAsString(serializedPropertiesMap);
 	}
+
+
 }
