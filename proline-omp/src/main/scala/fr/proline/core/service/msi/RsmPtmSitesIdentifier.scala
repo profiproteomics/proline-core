@@ -13,15 +13,18 @@ import fr.proline.core.dal.tables.msi.MsiDbObjectTreeTable
 import fr.proline.core.dal.tables.msi.MsiDbPeptideMatchTable
 import fr.proline.core.dal.tables.msi.MsiDbResultSummaryObjectTreeMapTable
 import fr.proline.core.dal.tables.msi.MsiDbResultSummaryRelationTable
-import fr.proline.core.om.model.msi.PtmSite
-import fr.proline.core.om.model.msi.ResultSummary
+import fr.proline.core.om.model.msi.{PtmCluster, PtmDataSet, PtmSite, PtmSite2, ResultSummary}
 import fr.proline.core.om.provider.PeptideCacheExecutionContext
-import fr.proline.core.om.provider.msi.impl.SQLProteinMatchProvider
-import fr.proline.core.om.provider.msi.impl.SQLResultSummaryProvider
+import fr.proline.core.om.provider.msi.impl.{SQLPTMProvider, SQLProteinMatchProvider, SQLResultSummaryProvider}
 import fr.proline.core.om.storer.msi.RsmStorer
 import fr.proline.core.orm.msi.ObjectTreeSchema.SchemaName
 
 import scala.collection.mutable.ArrayBuffer
+
+case class PtmResult (
+    val leafResultSummaryIds: Array[Long],
+    val sites: Iterable[PtmSite]
+)
 
 object RsmPtmSitesIdentifier extends LazyLogging {
 
@@ -35,22 +38,18 @@ object RsmPtmSitesIdentifier extends LazyLogging {
     rsm.get
   }
 
-  def getOrIdentifyPtmSites(resultSummary: ResultSummary, execContext: IExecutionContext): Iterable[PtmSite] = {
-
-    null
-  }
-
 }
 
 class RsmPtmSitesIdentifier(
-  execContext: IExecutionContext,
+  val execContext: IExecutionContext,
   resultSummaryId: Long,
   force: Boolean) extends IService with LazyLogging {
 
-  private val msiDbContext = execContext.getMSIDbConnectionContext
-  private val rsmStorer = RsmStorer(msiDbContext)
-  private val proteinMatchProvider = new SQLProteinMatchProvider(msiDbContext)
-  private val ptmSitesIdentifier = new PtmSitesIdentifier()
+  val msiDbContext = execContext.getMSIDbConnectionContext
+  val rsmStorer = RsmStorer(msiDbContext)
+  val proteinMatchProvider = new SQLProteinMatchProvider(msiDbContext)
+  val ptmSitesIdentifier = new PtmSitesIdentifier()
+  val schemaName = SchemaName.PTM_SITES
 
   def runService(): Boolean = {
 
@@ -77,7 +76,7 @@ class RsmPtmSitesIdentifier(
       logger.info("Start identifying Ptm sites for ResultSummary #"+resultSummaryId)
 
       val rsm = RsmPtmSitesIdentifier.loadResultSummary(resultSummaryId, execContext)
-      _getOrIdentifyPtmSites(rsm)
+      _getOrIdentifyPtmSites(rsm, onIdentifyPtmSites)
 
       // Commit transaction if it was initiated locally
       if (!wasInTransaction) msiDbContext.commitTransaction()
@@ -88,14 +87,18 @@ class RsmPtmSitesIdentifier(
     }
   }
 
-  private def _getOrIdentifyPtmSites(resultSummary: ResultSummary): Iterable[PtmSite] = {
+  def onIdentifyPtmSites(resultSummaryId: Long, result: PtmResult): Unit = {
+    rsmStorer.storePtmSites(resultSummaryId, result.sites, execContext)
+  }
+
+  private def _getOrIdentifyPtmSites(resultSummary: ResultSummary, onPtmSites: (Long, PtmResult) => Unit): PtmResult = {
 
     val existingObjectTreeId = _getPtmSitesObjectTreeID(resultSummary.id)
     var ptmSites = Array.empty[PtmSite].toIterable
     
     if (existingObjectTreeId.isDefined && !force) {
       logger.info(s"Read already defined PtmSites for ResultSummary #${resultSummary.id} ")
-      _getPtmSites(existingObjectTreeId.get)
+      PtmResult(Array(resultSummary.id), _getPtmSites(existingObjectTreeId.get))
     } else {
       if (existingObjectTreeId.isDefined) {
         logger.info(s"already defined Ptm sites for ResultSummary #${resultSummary.id} will be deleted")
@@ -104,14 +107,17 @@ class RsmPtmSitesIdentifier(
 
       // this resultSummary is a merged RSM
       val sites = new ArrayBuffer[Iterable[PtmSite]]
-      
+      val leafResultSummaryIds = new ArrayBuffer[Long]
+
       val childRSMIds = _getChildResultSummaryIds(resultSummary.id)
       
       if (!childRSMIds.isEmpty) {
         logger.debug(s"get or identify PtmSite for children of ResultSummary #${resultSummary.id}")
         for (childRSMId <- childRSMIds) {
           val rsm = RsmPtmSitesIdentifier.loadResultSummary(childRSMId, execContext)
-          sites += _getOrIdentifyPtmSites(rsm)
+          val result = _getOrIdentifyPtmSites(rsm, onPtmSites)
+          sites += result.sites
+          leafResultSummaryIds ++= result.leafResultSummaryIds
         }
         
         val proteinMatches = proteinMatchProvider.getResultSummariesProteinMatches(childRSMIds)
@@ -122,11 +128,12 @@ class RsmPtmSitesIdentifier(
         // this ResultSummary is a leaf RSM 
         logger.info(s"Identifying Ptm sites for ResultSummary #${resultSummary.id}")
         ptmSites = ptmSitesIdentifier.identifyPtmSites(resultSummary, proteinMatchProvider.getResultSummariesProteinMatches(List(resultSummary.id)))
+        leafResultSummaryIds += resultSummary.id
       }
-      
-      rsmStorer.storePtmSites(resultSummary.id, ptmSites, execContext)
-      ptmSites
-      
+
+      val result = PtmResult(leafResultSummaryIds.toArray, ptmSites)
+      onPtmSites(resultSummary.id, result)
+      result
     }
   }
 
@@ -142,7 +149,7 @@ class RsmPtmSitesIdentifier(
   private def _getPtmSitesObjectTreeID(rsmId: Long): Option[Long] = {
     DoJDBCReturningWork.withEzDBC(execContext.getMSIDbConnectionContext) { msiEzDBC =>
       val ptmSiteQuery = new SelectQueryBuilder1(MsiDbResultSummaryObjectTreeMapTable).mkSelectQuery((t, c) =>
-        List(t.*) -> "WHERE " ~ t.RESULT_SUMMARY_ID ~ s" = '${rsmId}'" ~ " AND " ~ t.SCHEMA_NAME ~ s" = '${SchemaName.PTM_SITES.toString}'"
+        List(t.*) -> "WHERE " ~ t.RESULT_SUMMARY_ID ~ s" = '${rsmId}'" ~ " AND " ~ t.SCHEMA_NAME ~ s" = '${schemaName.toString}'"
       )
       msiEzDBC.select(ptmSiteQuery) { r =>
         toLong(r.getAny(MsiDbResultSummaryObjectTreeMapTable.columns.OBJECT_TREE_ID))
@@ -150,7 +157,7 @@ class RsmPtmSitesIdentifier(
     }.headOption
   }
 
-  private def _getPtmSites(objectTreeId: Long): Iterable[PtmSite] = {
+  def _getPtmSites(objectTreeId: Long): Iterable[PtmSite] = {
     DoJDBCReturningWork.withEzDBC(execContext.getMSIDbConnectionContext) { msiEzDBC =>
 
       val ptmSiteQuery = new SelectQueryBuilder1(MsiDbObjectTreeTable).mkSelectQuery((t, c) =>
@@ -184,5 +191,85 @@ class RsmPtmSitesIdentifier(
       msiEzDBC.execute(s"DELETE FROM ${MsiDbResultSummaryObjectTreeMapTable.name} WHERE ${MsiDbResultSummaryObjectTreeMapTable.columns.OBJECT_TREE_ID} = ${objectTreeID}")
       msiEzDBC.execute(s"DELETE FROM ${MsiDbObjectTreeTable.name} WHERE ${MsiDbObjectTreeTable.columns.ID} = ${objectTreeID}")
     }
+  }
+}
+
+class RsmPtmSitesIdentifierV2(
+    execContext: IExecutionContext,
+    resultSummaryId: Long,
+    ptmIds: Array[Long],
+    clusteringConfigAsMap: Map[String, Any],
+    force: Boolean) extends RsmPtmSitesIdentifier(execContext, resultSummaryId, force) {
+
+  override val schemaName = SchemaName.PTM_DATASET
+  val ptmDefinitionById = new SQLPTMProvider(msiDbContext).ptmDefinitionById
+
+  override def onIdentifyPtmSites(resultSummaryId: Long, result: PtmResult): Unit = {
+
+    val ptmSitesAsArray = toPtmSites2(result.sites)
+    val ptmDataSet = new PtmDataSet(
+                            ptmIds = ptmIds,
+                            leafResultSummaryIds = result.leafResultSummaryIds,
+                            ptmSites = ptmSitesAsArray,
+                            ptmClusters = _clusterize(ptmSitesAsArray))
+
+    DoJDBCWork.withEzDBC(execContext.getMSIDbConnectionContext) { msiEzDBC =>
+      rsmStorer.storeObjectTree(msiEzDBC, resultSummaryId, ptmDataSet, SchemaName.PTM_DATASET.toString)
+      logger.info("ptmDataSet has been stored")
+    }
+
+  }
+
+
+  override def _getPtmSites(objectTreeId: Long): Iterable[PtmSite] = {
+    DoJDBCReturningWork.withEzDBC(execContext.getMSIDbConnectionContext) { msiEzDBC =>
+
+      val ptmSiteQuery = new SelectQueryBuilder1(MsiDbObjectTreeTable).mkSelectQuery((t, c) =>
+        List(t.*) -> "WHERE " ~ t.ID ~ s" = '${objectTreeId}'"
+      )
+
+      // TODO the following transformation from PtmSite V1 to V2 is made for compatibility only, it must be removed
+      msiEzDBC.select(ptmSiteQuery) { r =>
+        val clob = r.getString(MsiDbObjectTreeTable.columns.CLOB_DATA)
+        val ptmDataset = ProfiJson.deserialize[PtmDataSet](clob)
+        ptmDataset
+      }.head.ptmSites.map( s =>
+        new PtmSite(
+          proteinMatchId = s.proteinMatchId,
+          ptmDefinitionId = s.ptmDefinitionId,
+          seqPosition = s.seqPosition,
+          bestPeptideMatchId = s.bestPeptideMatchId,
+          localizationConfidence = s.localizationConfidence,
+          peptideIdsByPtmPosition = s.peptideIdsByPtmPosition,
+          peptideInstanceIds = Array.empty[Long],
+          isomericPeptideInstanceIds = s.isomericPeptideIds
+        )
+      )
+    }
+  }
+
+  def toPtmSites2(ptmSites: Iterable[PtmSite]) : Array[PtmSite2] = {
+  //TODO : need to convert isomericPeptideInstanceIds to isomericPeptideIds
+    ptmSites.zipWithIndex.map{ case(site, index) =>
+      new PtmSite2(
+        id = index,
+        proteinMatchId = site.proteinMatchId,
+        ptmDefinitionId = site.ptmDefinitionId,
+        seqPosition = site.seqPosition,
+        bestPeptideMatchId = site.bestPeptideMatchId,
+        localizationConfidence = site.localizationConfidence,
+        peptideIdsByPtmPosition = site.peptideIdsByPtmPosition,
+        isomericPeptideIds = site.isomericPeptideInstanceIds) }.toArray
+  }
+
+  def _clusterize(sites: Array[PtmSite2]): Array[PtmCluster] = {
+    // TODO : dummy implementation for test only: 1 ptmsite = 1 cluster
+    sites.filter{ s => ptmIds.contains(ptmDefinitionById(s.ptmDefinitionId).ptmId) }.map{ s =>
+      new PtmCluster(
+        ptmSiteLocations = Array(s.id),
+        bestPeptideMatchId = s.bestPeptideMatchId,
+        localizationConfidence = s.localizationConfidence,
+        peptideIds = s.peptideIdsByPtmPosition.flatMap(_._2).toArray.distinct,
+        isomericPeptideIds = Array.empty[Long]) }
   }
 }

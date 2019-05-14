@@ -30,6 +30,7 @@ public class ObjectTreeSchema implements Serializable {
 		PEPTIDE_VALIDATION_ROC_CURVE("result_summary.peptide_validation_roc_curve"),
 		PROTEIN_VALIDATION_ROC_CURVE("result_summary.protein_validation_roc_curve"),
 		PTM_SITES("result_summary.ptm_sites"),
+		PTM_DATASET("result_summary.ptm_dataset"),
 		ION_SERIES("peptide_match.ion_series"),
 		RESIDUE_LABELING_QUANT_PEPTIDES("object_tree.residue_labeling_quant_peptides"),
 		RESIDUE_LABELING_QUANT_PEPTIDE_IONS("object_tree.residue_labeling_quant_peptide_ions");

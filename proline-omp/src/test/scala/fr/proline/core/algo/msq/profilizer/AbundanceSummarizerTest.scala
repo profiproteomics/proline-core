@@ -6,6 +6,8 @@ import org.scalatest.Assertions._
 import AbundanceSummarizer._
 import fr.proline.core.algo.msq.config.profilizer.AbundanceSummarizerMethod
 
+import scala.collection.mutable.ArrayBuffer
+
 @Test
 class AbundanceSummarizerTest {
 
@@ -130,4 +132,43 @@ class AbundanceSummarizerTest {
     //  assertArrayEquals(expectedResult, abundances, 0.01f)
   }
 
+
+  @Test
+  def summarizeFromFile: Unit = {
+    val bufferedSource = io.Source.fromFile("C:\\Local\\bruley\\Dev\\WSIntelliJ_Proline\\Refactoring_2019\\Proline-Core\\proline-omp\\src\\test\\resources\\ions_for_mrf.tsv")
+
+    val minima = Array(22190.92f, 10670.78f, 6057.45f, 8857.2f, 10721.79f, 15014.91f, 15594.41f, 12219.42f)
+
+    val lines = bufferedSource.getLines
+    var accession = ""
+    lines.next()
+    val buffer = new ArrayBuffer[Array[Float]]()
+    for (line <- lines) {
+      var values = new Array[Float](8)
+      val cols = line.split("\t")
+
+      if (!accession.isEmpty && !cols(0).equals(accession)) {
+        val matrix = buffer.toArray
+        val abundances = LFQSummarizer.summarize(matrix, minima)
+        println(accession + ", " + abundances.mkString(","))
+        buffer.clear()
+        accession = cols(0)
+      } else {
+        accession = cols(0)
+      }
+
+      for (k <- 1 until 9) {
+        values(k - 1) = {
+          if ((k >= cols.length) || cols(k) == null || cols(k).isEmpty) {
+            Float.NaN;
+          } else {
+            cols(k).replace(',', '.').toFloat
+          }
+        }
+      }
+      buffer += values
+    }
+
+    bufferedSource.close
+  }
 }

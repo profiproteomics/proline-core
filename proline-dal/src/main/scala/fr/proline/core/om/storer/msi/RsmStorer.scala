@@ -79,11 +79,11 @@ class RsmStorer( private val _writer: IRsmStorer ) extends LazyLogging {
       // Store ROC curves if they are defined
       if (storeRocCurves) {
         for (peptideValidationRocCurve <- rsm.peptideValidationRocCurve) {
-          _storeObjectTree(msiEzDBC, rsm.id, peptideValidationRocCurve, SchemaName.PEPTIDE_VALIDATION_ROC_CURVE.toString)
+          storeObjectTree(msiEzDBC, rsm.id, peptideValidationRocCurve, SchemaName.PEPTIDE_VALIDATION_ROC_CURVE.toString)
           logger.info("peptideValidationRocCurve have been stored")
         }
         for (proteinValidationRocCurve <- rsm.proteinValidationRocCurve) {
-          _storeObjectTree(msiEzDBC, rsm.id, proteinValidationRocCurve, SchemaName.PROTEIN_VALIDATION_ROC_CURVE.toString)
+          storeObjectTree(msiEzDBC, rsm.id, proteinValidationRocCurve, SchemaName.PROTEIN_VALIDATION_ROC_CURVE.toString)
           logger.info("proteinValidationRocCurve have been stored")
         }
       }
@@ -93,12 +93,12 @@ class RsmStorer( private val _writer: IRsmStorer ) extends LazyLogging {
   
   def storePtmSites(rsmId: Long, ptmSites: Iterable[PtmSite], execCtx: IExecutionContext ): Unit = {
     DoJDBCWork.withEzDBC(execCtx.getMSIDbConnectionContext) { msiEzDBC =>      
-          _storeObjectTree(msiEzDBC, rsmId, ptmSites, SchemaName.PTM_SITES.toString)
+          storeObjectTree(msiEzDBC, rsmId, ptmSites, SchemaName.PTM_SITES.toString)
           logger.info("ptmSites have been stored")
     }
   }
 
-  private def _storeObjectTree(msiEzDBC: EasyDBC, rsmId: Long, objectTree: Any, schemaName: String ) {
+  def storeObjectTree(msiEzDBC: EasyDBC, rsmId: Long, objectTree: Any, schemaName: String ) {
         val objectTreeId = msiEzDBC.executePrepared(RsmStorer.objectTreeInsertQuery, true) { stmt =>
           stmt.executeWith(
             ProfiJson.serialize(objectTree),

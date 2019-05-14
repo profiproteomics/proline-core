@@ -399,7 +399,52 @@ case class LocatedPtm(
 
 }
 
+case class PtmDataSet(
+  // array of of the PTMs of interest
+  val ptmIds: Array[Long],
+  // array of Leaf RSM
+  val leafResultSummaryIds: Array[Long],
+  // array of PtmSites identified
+  val ptmSites: Array[PtmSite2],
+  // array of Ptm Clusters
+  val ptmClusters: Array[PtmCluster]
+)
+
+case class PtmCluster(
+    // Array of PTM site locations Ids
+    val ptmSiteLocations: Array[Long],
+    // Best (highest PTM probability) peptide match for this PtmSiteTuple
+    val bestPeptideMatchId: Long,
+    // The localization probability (percentage between 0 and 100)
+    val localizationConfidence: Float,
+    // Array of clusterized peptides
+    val peptideIds: Array[Long],
+    // array of peptide having the same sequence and modification of a matching peptide, but with their ptm located at another position
+    // those peptide did not match the ptm site, but they can confuse the quantification process
+    val isomericPeptideIds: Array[Long]
+)
+
+case class PtmSite2(
+    val id: Long,
+    // the protein match this ptm belongs to
+    val proteinMatchId: Long,
+    // ptm definition
+    val ptmDefinitionId: Long,
+    // position of the ptm site on the protein sequence
+    val seqPosition: Int,
+    // best (higher ptm probability) peptide match for this site
+    val bestPeptideMatchId: Long,
+    // The localization probability (percentage between 0 and 100)
+    val localizationConfidence: Float,
+    // map of peptide Ids matching that site, organized by position of the modification on the peptide sequence
+    val peptideIdsByPtmPosition: Map[Int, Array[Long]],
+    // array of peptide having the same sequence and modification of a matching peptide, but with their ptm located at another position
+    // those peptide did not match the ptm site, but they can confuse the quantification process
+    val isomericPeptideIds: Array[Long]
+)
+
 case class PtmSite(
+  // the protein match this ptm belongs to
   val proteinMatchId: Long, 
   // ptm definition 
   val ptmDefinitionId: Long,
@@ -416,6 +461,4 @@ case class PtmSite(
   // array of peptide instances having the same sequence and modification of a matching peptide, but with their ptm located at another position
   // those peptide instance did not match the ptm site, but they can confuse the quantification process
   val isomericPeptideInstanceIds: Array[Long]
-) {
-  
-}
+)
