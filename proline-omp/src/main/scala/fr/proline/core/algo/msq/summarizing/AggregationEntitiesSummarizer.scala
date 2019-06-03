@@ -77,10 +77,14 @@ class AggregationEntitiesSummarizer(
           intensityComputation match {
             case AbundanceComputationMethod.MOST_INTENSE => {
               filteredMQPepIons = mqPepIonsByMQC.map(_._2).filter(mqp => !mqp.quantPeptideIonMap.values.filter( qpi => qpi == bestQPepIon.get).isEmpty)
-              newQuantPepIons += bestQPepIon.get.copy(quantChannelId = qc.id)
+              newQuantPepIons += bestQPepIon.get.copy(quantChannelId = qc.id, peptideMatchesCount = filteredQPepIons.map(_.peptideMatchesCount).sum)
             }
             case AbundanceComputationMethod.INTENSITY_SUM => {
-              newQuantPepIons += bestQPepIon.get.copy(rawAbundance = filteredQPepIons.map(_.rawAbundance).sum, abundance = filteredQPepIons.map(_.abundance).sum, quantChannelId = qc.id)
+              newQuantPepIons += bestQPepIon.get.copy(
+                rawAbundance = filteredQPepIons.map(_.rawAbundance).sum,
+                abundance = filteredQPepIons.map(_.abundance).sum,
+                peptideMatchesCount = filteredQPepIons.map(_.peptideMatchesCount).sum,
+                quantChannelId = qc.id)
             }
           }
           mqPepIonIdMapBuilder += qc.id -> filteredMQPepIons.map(_.id).toArray
@@ -114,7 +118,8 @@ class AggregationEntitiesSummarizer(
         masterQuantPeptideId = 0,
         resultSummaryId = quantMergedRsm.id,
         peptideInstanceId = masterPepInstAsOpt.map(_.id),
-        quantPeptideIonMap = qPepIonByQcId
+        quantPeptideIonMap = qPepIonByQcId,
+        peptideMatchesCount = qPepIons.map(_.peptideMatchesCount).sum
       )
     }
 
