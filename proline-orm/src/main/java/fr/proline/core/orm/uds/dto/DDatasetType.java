@@ -82,7 +82,7 @@ public class DDatasetType {
       return true;
     } else if (m_dataset != null) {
       ObjectTree quantProcessingConfig = m_dataset.getQuantProcessingConfig();
-      return ((isQuantitation() && quantProcessingConfig.getSchema().getName().equals(ObjectTreeSchema.SchemaName.AGGREGATION_QUANT_CONFIG.getKeyName())));
+      return ((isQuantitation() && (quantProcessingConfig != null) && quantProcessingConfig.getSchema().getName().equals(ObjectTreeSchema.SchemaName.AGGREGATION_QUANT_CONFIG.getKeyName())));
     }
     return false;
   }
