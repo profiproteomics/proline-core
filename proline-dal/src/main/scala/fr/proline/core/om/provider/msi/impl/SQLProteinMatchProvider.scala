@@ -61,7 +61,7 @@ class SQLProteinMatchProvider(val msiDbCtx: MsiDbConnectionContext) { //extends 
 
   private def _getProteinMatches(msiEzDBC: EasyDBC, rsIds: Seq[Long], rsmIds: Option[Seq[Long]] = None ): Array[ProteinMatch] = {
     
-    // --- Build SQL queries to load protein match and equence match records ---
+    // --- Build SQL queries to load protein match and sequence match records ---
     val( protMatchSelector, seqMatchSelector ) = if( rsmIds.isEmpty ) {
       SQLProteinMatchProvider.selectResultSetProteinMatchRecords(msiEzDBC, rsIds) ->
       SQLProteinMatchProvider.selectResultSetSequenceMatchRecords(msiEzDBC, rsIds)

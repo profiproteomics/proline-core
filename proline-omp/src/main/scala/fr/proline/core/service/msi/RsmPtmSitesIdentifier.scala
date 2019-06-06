@@ -5,23 +5,23 @@ import fr.profi.util.primitives._
 import fr.profi.util.serialization.ProfiJson
 import fr.profi.api.service.IService
 import fr.proline.context.IExecutionContext
-import fr.proline.core.algo.msi.PtmSitesIdentifier
+import fr.proline.core.algo.msi.{PtmSiteClusterer, PtmSitesIdentifier}
 import fr.proline.core.dal._
 import fr.proline.core.dal.tables.SelectQueryBuilder._
 import fr.proline.core.dal.tables.SelectQueryBuilder1
 import fr.proline.core.dal.tables.msi.MsiDbObjectTreeTable
-import fr.proline.core.dal.tables.msi.MsiDbPeptideMatchTable
 import fr.proline.core.dal.tables.msi.MsiDbResultSummaryObjectTreeMapTable
 import fr.proline.core.dal.tables.msi.MsiDbResultSummaryRelationTable
-import fr.proline.core.om.model.msi.{PtmCluster, PtmDataSet, PtmSite, PtmSite2, ResultSummary}
+import fr.proline.core.om.model.msi.{PeptideMatch, PtmCluster, PtmDataSet, PtmSite, PtmSite2, ResultSummary}
 import fr.proline.core.om.provider.PeptideCacheExecutionContext
-import fr.proline.core.om.provider.msi.impl.{SQLPTMProvider, SQLProteinMatchProvider, SQLResultSummaryProvider}
+import fr.proline.core.om.provider.msi.impl.{SQLPTMProvider, SQLPeptideInstanceProvider, SQLPeptideMatchProvider, SQLPeptideProvider, SQLProteinMatchProvider, SQLResultSummaryProvider}
 import fr.proline.core.om.storer.msi.RsmStorer
 import fr.proline.core.orm.msi.ObjectTreeSchema.SchemaName
 
 import scala.collection.mutable.ArrayBuffer
 
 case class PtmResult (
+    val resultSummary: ResultSummary,
     val leafResultSummaryIds: Array[Long],
     val sites: Iterable[PtmSite]
 )
@@ -48,7 +48,10 @@ class RsmPtmSitesIdentifier(
   val msiDbContext = execContext.getMSIDbConnectionContext
   val rsmStorer = RsmStorer(msiDbContext)
   val proteinMatchProvider = new SQLProteinMatchProvider(msiDbContext)
-  val ptmSitesIdentifier = new PtmSitesIdentifier()
+  val peptideProvider = new SQLPeptideProvider(PeptideCacheExecutionContext(execContext))
+  val peptideInstanceProvider = new SQLPeptideInstanceProvider(msiDbContext, peptideProvider)
+  val peptideMatchProvider = new SQLPeptideMatchProvider(msiDbContext, peptideProvider)
+
   val schemaName = SchemaName.PTM_SITES
 
   def runService(): Boolean = {
@@ -87,18 +90,18 @@ class RsmPtmSitesIdentifier(
     }
   }
 
-  def onIdentifyPtmSites(resultSummaryId: Long, result: PtmResult): Unit = {
-    rsmStorer.storePtmSites(resultSummaryId, result.sites, execContext)
+  def onIdentifyPtmSites(identifier: PtmSitesIdentifier, result: PtmResult): Unit = {
+    rsmStorer.storePtmSites(identifier.resultSummary.id, result.sites, execContext)
   }
 
-  private def _getOrIdentifyPtmSites(resultSummary: ResultSummary, onPtmSites: (Long, PtmResult) => Unit): PtmResult = {
+  private def _getOrIdentifyPtmSites(resultSummary: ResultSummary, onPtmSites: (PtmSitesIdentifier, PtmResult) => Unit): PtmResult = {
 
     val existingObjectTreeId = _getPtmSitesObjectTreeID(resultSummary.id)
     var ptmSites = Array.empty[PtmSite].toIterable
     
     if (existingObjectTreeId.isDefined && !force) {
       logger.info(s"Read already defined PtmSites for ResultSummary #${resultSummary.id} ")
-      PtmResult(Array(resultSummary.id), _getPtmSites(existingObjectTreeId.get))
+      PtmResult(resultSummary, Array(resultSummary.id), _getPtmSites(existingObjectTreeId.get))
     } else {
       if (existingObjectTreeId.isDefined) {
         logger.info(s"already defined Ptm sites for ResultSummary #${resultSummary.id} will be deleted")
@@ -110,7 +113,10 @@ class RsmPtmSitesIdentifier(
       val leafResultSummaryIds = new ArrayBuffer[Long]
 
       val childRSMIds = _getChildResultSummaryIds(resultSummary.id)
-      
+
+      //TODO: proteinMatchProvider.getResultSummariesProteinMatches(List(resultSummary.id)) must be replaced to filter validated proteinMatches from RSM
+      val ptmSitesIdentifier = new PtmSitesIdentifier(resultSummary, proteinMatchProvider.getResultSummariesProteinMatches(List(resultSummary.id)));
+
       if (!childRSMIds.isEmpty) {
         logger.debug(s"get or identify PtmSite for children of ResultSummary #${resultSummary.id}")
         for (childRSMId <- childRSMIds) {
@@ -119,20 +125,21 @@ class RsmPtmSitesIdentifier(
           sites += result.sites
           leafResultSummaryIds ++= result.leafResultSummaryIds
         }
-        
+
+        //TODO: proteinMatchProvider.getResultSummariesProteinMatches(List(resultSummary.id)) must be replaced to filter validated proteinMatches from child RSM
         val proteinMatches = proteinMatchProvider.getResultSummariesProteinMatches(childRSMIds)
         // then aggregate those sites
         logger.debug(s"Aggregation of PtmSite ResultSummary #${resultSummary.id}")
-        ptmSites = ptmSitesIdentifier.aggregatePtmSites(sites.toArray, proteinMatches, proteinMatchProvider.getResultSummariesProteinMatches(List(resultSummary.id)), _getPeptideMatchScores)
+        ptmSites = ptmSitesIdentifier.aggregatePtmSites(sites.toArray, proteinMatches, _getPeptideMatches)
       } else {
         // this ResultSummary is a leaf RSM 
         logger.info(s"Identifying Ptm sites for ResultSummary #${resultSummary.id}")
-        ptmSites = ptmSitesIdentifier.identifyPtmSites(resultSummary, proteinMatchProvider.getResultSummariesProteinMatches(List(resultSummary.id)))
+        ptmSites = ptmSitesIdentifier.identifyPtmSites()
         leafResultSummaryIds += resultSummary.id
       }
 
-      val result = PtmResult(leafResultSummaryIds.toArray, ptmSites)
-      onPtmSites(resultSummary.id, result)
+      val result = PtmResult(resultSummary, leafResultSummaryIds.toArray, ptmSites)
+      onPtmSites(ptmSitesIdentifier, result)
       result
     }
   }
@@ -172,18 +179,9 @@ class RsmPtmSitesIdentifier(
     }
   }
   
-    private def _getPeptideMatchScores(peptideMatchIds: Array[Long]): Map[Long, Double] = {
-    DoJDBCReturningWork.withEzDBC(execContext.getMSIDbConnectionContext) { msiEzDBC =>
-
-      val peptideMatchesQuery = new SelectQueryBuilder1(MsiDbPeptideMatchTable).mkSelectQuery((t, c) =>
-        List(t.ID, t.SCORE) -> "WHERE " ~ t.ID ~ " IN(" ~ peptideMatchIds.mkString(",") ~ ")"
-      )
-
-      msiEzDBC.select(peptideMatchesQuery) { r =>
-        (r.getLong(MsiDbPeptideMatchTable.columns.ID) -> r.getDouble(MsiDbPeptideMatchTable.columns.SCORE))
-      }.toMap
-      
-    }
+    private def _getPeptideMatches(peptideMatchIds: Array[Long]): Map[Long, PeptideMatch] = {
+    //TODO: allow PeptideMatch pre-loading
+      peptideMatchProvider.getPeptideMatches(peptideMatchIds).map( pm => (pm.id -> pm)).toMap
   }
 
   private def _deletePtmSites(objectTreeID: Long) {
@@ -192,6 +190,24 @@ class RsmPtmSitesIdentifier(
       msiEzDBC.execute(s"DELETE FROM ${MsiDbObjectTreeTable.name} WHERE ${MsiDbObjectTreeTable.columns.ID} = ${objectTreeID}")
     }
   }
+}
+
+object RsmPtmSitesIdentifierV2 {
+
+  def toPtmSites2(ptmSites: Iterable[PtmSite]) : Array[PtmSite2] = {
+    //TODO : need to convert isomericPeptideInstanceIds to isomericPeptideIds
+    ptmSites.zipWithIndex.map{ case(site, index) =>
+      new PtmSite2(
+        id = index,
+        proteinMatchId = site.proteinMatchId,
+        ptmDefinitionId = site.ptmDefinitionId,
+        seqPosition = site.seqPosition,
+        bestPeptideMatchId = site.bestPeptideMatchId,
+        localizationConfidence = site.localizationConfidence,
+        peptideIdsByPtmPosition = site.peptideIdsByPtmPosition,
+        isomericPeptideIds = site.isomericPeptideInstanceIds) }.toArray
+  }
+
 }
 
 class RsmPtmSitesIdentifierV2(
@@ -204,22 +220,21 @@ class RsmPtmSitesIdentifierV2(
   override val schemaName = SchemaName.PTM_DATASET
   val ptmDefinitionById = new SQLPTMProvider(msiDbContext).ptmDefinitionById
 
-  override def onIdentifyPtmSites(resultSummaryId: Long, result: PtmResult): Unit = {
+  override def onIdentifyPtmSites(identifier: PtmSitesIdentifier, result: PtmResult): Unit = {
 
-    val ptmSitesAsArray = toPtmSites2(result.sites)
+    val ptmSitesAsArray = RsmPtmSitesIdentifierV2.toPtmSites2(result.sites)
     val ptmDataSet = new PtmDataSet(
                             ptmIds = ptmIds,
                             leafResultSummaryIds = result.leafResultSummaryIds,
                             ptmSites = ptmSitesAsArray,
-                            ptmClusters = _clusterize(ptmSitesAsArray))
+                            ptmClusters = _clusterize(ptmSitesAsArray, result))
 
     DoJDBCWork.withEzDBC(execContext.getMSIDbConnectionContext) { msiEzDBC =>
-      rsmStorer.storeObjectTree(msiEzDBC, resultSummaryId, ptmDataSet, SchemaName.PTM_DATASET.toString)
+      rsmStorer.storeObjectTree(msiEzDBC, identifier.resultSummary.id, ptmDataSet, SchemaName.PTM_DATASET.toString)
       logger.info("ptmDataSet has been stored")
     }
 
   }
-
 
   override def _getPtmSites(objectTreeId: Long): Iterable[PtmSite] = {
     DoJDBCReturningWork.withEzDBC(execContext.getMSIDbConnectionContext) { msiEzDBC =>
@@ -248,28 +263,25 @@ class RsmPtmSitesIdentifierV2(
     }
   }
 
-  def toPtmSites2(ptmSites: Iterable[PtmSite]) : Array[PtmSite2] = {
-  //TODO : need to convert isomericPeptideInstanceIds to isomericPeptideIds
-    ptmSites.zipWithIndex.map{ case(site, index) =>
-      new PtmSite2(
-        id = index,
-        proteinMatchId = site.proteinMatchId,
-        ptmDefinitionId = site.ptmDefinitionId,
-        seqPosition = site.seqPosition,
-        bestPeptideMatchId = site.bestPeptideMatchId,
-        localizationConfidence = site.localizationConfidence,
-        peptideIdsByPtmPosition = site.peptideIdsByPtmPosition,
-        isomericPeptideIds = site.isomericPeptideInstanceIds) }.toArray
-  }
 
-  def _clusterize(sites: Array[PtmSite2]): Array[PtmCluster] = {
-    // TODO : dummy implementation for test only: 1 ptmsite = 1 cluster
-    sites.filter{ s => ptmIds.contains(ptmDefinitionById(s.ptmDefinitionId).ptmId) }.map{ s =>
-      new PtmCluster(
-        ptmSiteLocations = Array(s.id),
-        bestPeptideMatchId = s.bestPeptideMatchId,
-        localizationConfidence = s.localizationConfidence,
-        peptideIds = s.peptideIdsByPtmPosition.flatMap(_._2).toArray.distinct,
-        isomericPeptideIds = Array.empty[Long]) }
+  def _clusterize(sites: Array[PtmSite2], result: PtmResult): Array[PtmCluster] = {
+
+    val pepInstances = peptideInstanceProvider.getResultSummariesPeptideInstances(result.leafResultSummaryIds)
+    val peptideMatchIds = pepInstances.flatMap(pi => pi.peptideMatchIds)
+    val peptideMatches = peptideMatchProvider.getPeptideMatches(peptideMatchIds)
+
+    val peptideMatchesByPeptideIds = peptideMatches.groupBy(_.peptideId)
+
+    def _getPeptideMatchesByPeptideIds(peptideIds: Array[Long]): Map[Long, PeptideMatch] = {
+      val matches = peptideIds.map(peptideMatchesByPeptideIds(_)).flatten.map(pm => (pm.id -> pm)).toMap
+      matches
+    }
+
+    val proteinMatches = proteinMatchProvider.getResultSummariesProteinMatches(List(result.resultSummary.id))
+    val clusterizer = new PtmSiteClusterer(result.resultSummary, proteinMatches)
+    val sitesByProteinMatchIds = sites.filter { s => ptmIds.contains(ptmDefinitionById(s.ptmDefinitionId).ptmId) }.groupBy(_.proteinMatchId)
+
+    val clusters = sitesByProteinMatchIds.flatMap{ case (protMatchId, sites) => clusterizer.clusterize(protMatchId, sites, _getPeptideMatchesByPeptideIds) }
+    clusters.toArray
   }
 }
