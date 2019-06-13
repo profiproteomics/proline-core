@@ -598,9 +598,12 @@ class RsmDuplicator(rsmProvider: IResultSummaryProvider) extends IRsmDuplicator 
         //Get masterBestPepMatchID. Check in validated peptideMatch and if not define get associated PeptideInstance's best Peptidematch
         val masterPepMatchId =  if (masterQuantPepMatchIdByMergedPepMatchId.contains(bestPepMatchId)) masterQuantPepMatchIdByMergedPepMatchId(bestPepMatchId) else {
           val correspondingPepInst = msiMasterPepInstByPepInstId.values.filter(_.getPeptide.getId.equals(sourceSeqMatch.getPeptideId()))
-          if(correspondingPepInst.nonEmpty)
+          if(correspondingPepInst.nonEmpty) {
             correspondingPepInst.head.getBestPeptideMatchId
-          else -1l
+          } else {
+            logger.error(s"Duplicator error: cannot find best peptide match from peptide instance for peptideId = ${sourceSeqMatch.getPeptideId()}")
+            -1l
+          }
         }
 
         if (masterPepMatchId > 0) {
@@ -611,9 +614,6 @@ class RsmDuplicator(rsmProvider: IResultSummaryProvider) extends IRsmDuplicator 
           //ONLY FOR RESET ID
           if (eraseSourceIds)
             sourceSeqMatch.bestPeptideMatchId = masterPepMatchId
-
-          if (!mappedMasterPepMatchesIdSet.contains(masterPepMatchId)) {
-            mappedMasterPepMatchesIdSet.add(masterPepMatchId)
 
             val msiMasterSeqMatchPK = new SequenceMatchPK()
             msiMasterSeqMatchPK.setProteinMatchId(msiMasterProtMatchId)
@@ -630,7 +630,6 @@ class RsmDuplicator(rsmProvider: IResultSummaryProvider) extends IRsmDuplicator 
             msiMasterSeqMatch.setResultSetId(quantRsId)
             msiEm.persist(msiMasterSeqMatch)
 
-          }
         }
       }
     }
