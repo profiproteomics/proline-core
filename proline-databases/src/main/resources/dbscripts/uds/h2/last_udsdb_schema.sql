@@ -1,4 +1,4 @@
-/* Last Update V0_8__core_2_0_0_UDS_MSI_data_migration (java) */
+/*Last Update V0_9__core_2_1.0 (sql) */
 CREATE TABLE public.aggregation (
                 id IDENTITY NOT NULL,
                 child_nature VARCHAR NOT NULL,

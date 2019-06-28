@@ -1,4 +1,4 @@
-/* Last Update V0_8__core_2_0_0_UDS_MSI_data_migration (java) */
+/* Last Update V0_9__core_2_1.0 (sql) */
 CREATE SEQUENCE public.aggregation_id_seq;
 
 CREATE TABLE public.aggregation (
