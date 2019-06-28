@@ -1,4 +1,4 @@
-/* Last Update V0_6__core_0_4_0_UDS_data_migration (java) */
+/* Last Update V0_9__core_2_1.0 (sql) */
 CREATE TABLE activation (
                 type TEXT(100) NOT NULL,
                 PRIMARY KEY (type)

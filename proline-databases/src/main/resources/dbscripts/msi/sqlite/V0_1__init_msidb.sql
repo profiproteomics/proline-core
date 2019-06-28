@@ -1,10 +1,4 @@
-/* LAST Update : V0_9__core_0.6.0.sql */
-CREATE TABLE admin_infos (
-                model_version TEXT(1000) NOT NULL,
-                db_creation_date TEXT,
-                model_update_date TEXT,
-                PRIMARY KEY (model_version)
-);
+/* LAST Update : V0_9__core_2.0.0.sql */
 
 CREATE TABLE atom_label (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -25,18 +19,6 @@ CREATE TABLE bio_sequence (
                 crc64 TEXT(32) NOT NULL,
                 serialized_properties TEXT,
                 PRIMARY KEY (id)
-);
-
-CREATE TABLE cache (
-                scope TEXT(250) NOT NULL,
-                id INTEGER NOT NULL,
-                format TEXT(50) NOT NULL,
-                byte_order INTEGER NOT NULL,
-                data BLOB NOT NULL,
-                compression TEXT(20) NOT NULL,
-                timestamp TEXT NOT NULL,
-                serialized_properties TEXT,
-                PRIMARY KEY (scope, id, format, byte_order)
 );
 
 CREATE TABLE consensus_spectrum (
@@ -371,11 +353,10 @@ CREATE TABLE peptide_set_relation (
 
 CREATE TABLE protein_match (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
-                accession TEXT(100) NOT NULL,
+                accession TEXT(10000) NOT NULL,
                 description TEXT(10000),
                 gene_name TEXT(100),
                 score REAL NOT NULL,
-                coverage REAL NOT NULL,
                 peptide_count INTEGER NOT NULL,
                 peptide_match_count INTEGER NOT NULL,
                 is_decoy TEXT NOT NULL,
@@ -475,7 +456,7 @@ CREATE TABLE result_set (
                 description TEXT(10000),
                 type TEXT(50) NOT NULL,
                 creation_log TEXT,
-                modification_timestamp TEXT NOT NULL,
+                creation_timestamp TEXT NOT NULL,
                 serialized_properties TEXT,
                 decoy_result_set_id INTEGER,
                 merged_rsm_id INTEGER,
@@ -615,9 +596,10 @@ CREATE TABLE used_enzyme (
 CREATE TABLE used_ptm (
                 search_settings_id INTEGER NOT NULL,
                 ptm_specificity_id INTEGER NOT NULL,
+                search_round INTEGER DEFAULT 1 NOT NULL,
                 short_name TEXT(100) NOT NULL,
                 is_fixed TEXT NOT NULL,
-                PRIMARY KEY (search_settings_id, ptm_specificity_id)
+                PRIMARY KEY (search_settings_id, ptm_specificity_id, search_round)
 );
 
 CREATE UNIQUE INDEX enzyme_name_idx ON enzyme (name);
@@ -676,7 +658,6 @@ CREATE INDEX peptide_set_relation_rsm_idx ON peptide_set_relation (result_summar
 
 CREATE UNIQUE INDEX peaklist_software_idx ON peaklist_software (name,version);
 
-CREATE INDEX cache_scope_idx ON cache (scope);
 
 CREATE INDEX peptide_instance_rsm_idx ON peptide_instance (result_summary_id ASC);
 
