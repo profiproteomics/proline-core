@@ -7,8 +7,10 @@ import fr.profi.api.service.IService
 import fr.proline.context._
 import fr.proline.core.algo.msi.AdditionMode
 import fr.proline.core.algo.msi.ResultSummaryAdder
+import fr.proline.core.algo.msi.filtering.PepMatchFilterParams
 import fr.proline.core.algo.msi.scoring.PepSetScoring
 import fr.proline.core.algo.msi.scoring.PeptideSetScoreUpdater
+import fr.proline.core.algo.msi.validation.{BuildTDAnalyzer, TargetDecoyComputer, TargetDecoyModes}
 import fr.proline.core.dal._
 import fr.proline.core.dal.context._
 import fr.proline.core.dal.helper.MsiDbHelper
@@ -241,20 +243,33 @@ class ResultSummaryMerger(
       
       Some(decoyRsm)
     }
-    
-    // Update merged RSM validation properties
-    if (childRsmPropsOpt.isDefined && childRsmPropsOpt.get.validationProperties.isDefined) {
-      
-      val childRsmValProps = childRsmPropsOpt.get.validationProperties.get
-      //val leavesPsmCount = mergedTargetRsm.peptideInstances.foldLeft(0) { case (0,p) => 0 + p.totalLeavesMatchCount }
-      val peptidesCount = mergedTargetRsm.resultSet.get.peptideMatches.length
-      val protSetsCount = mergedTargetRsm.proteinSets.length
-      val decoyPeptidesCountOpt = mergedDecoyRsmOpt.map(_.resultSet.get.peptideMatches.length)
-      val decoyProtSetsCountOpt = mergedDecoyRsmOpt.map(_.proteinSets.length)
 
-      // Compute merged RSM properties
-      val valProps = RsmValidationProperties(
-        params = childRsmValProps.params,
+    // Update merged RSM validation properties
+    val childRsmValPropsOpt : Option[RsmValidationProperties] = if (childRsmPropsOpt.isDefined && childRsmPropsOpt.get.validationProperties.isDefined) childRsmPropsOpt.get.validationProperties else None
+
+    //val leavesPsmCount = mergedTargetRsm.peptideInstances.foldLeft(0) { case (0,p) => 0 + p.totalLeavesMatchCount }
+    val peptidesCount = mergedTargetRsm.resultSet.get.peptideMatches.length
+    val protSetsCount = mergedTargetRsm.proteinSets.length
+    val decoyPeptidesCountOpt = mergedDecoyRsmOpt.map(_.resultSet.get.peptideMatches.length)
+    val decoyProtSetsCountOpt = mergedDecoyRsmOpt.map(_.proteinSets.length)
+
+    //Define FDR strategie and calculate FDR
+    //TODO Use TDAnalyser !!!
+    val rankFilterAsStr = PepMatchFilterParams.PRETTY_RANK.toString
+    val rankFilter =  if(childRsmValPropsOpt.isDefined) childRsmValPropsOpt.get.params.peptideFilters.map(_.filter(_.parameter.contains(rankFilterAsStr))) else None
+    val decoyMode = if(mergedTargetRsm.resultSet.get.properties.isDefined && mergedTargetRsm.resultSet.get.properties.get.targetDecoyMode.isDefined)  mergedTargetRsm.resultSet.get.properties.get.targetDecoyMode.get else TargetDecoyModes.MIXED.toString
+    val useCDMode = TargetDecoyModes.CONCATENATED.toString.equals(decoyMode) ||  rankFilter.isDefined
+    var calculatedFDR : Option[Float] = None
+    if (decoyProtSetsCountOpt.isDefined) {
+      if(useCDMode)
+        calculatedFDR = Some(TargetDecoyComputer.calcCdFDR(protSetsCount, decoyProtSetsCountOpt.get))
+      else
+        calculatedFDR = Some(TargetDecoyComputer.calcSdFDR(protSetsCount, decoyProtSetsCountOpt.get))
+    }
+    logger.debug("calculated FDR for merged RSM : "+calculatedFDR)
+    // Compute merged RSM properties
+    val valProps = RsmValidationProperties(
+        params = if(childRsmValPropsOpt.isDefined) childRsmValPropsOpt.get.params else RsmValidationParamsProperties(),
         results = RsmValidationResultsProperties(
           peptideResults = Some(
             RsmValidationResultProperties(
@@ -266,17 +281,17 @@ class ResultSummaryMerger(
             RsmValidationResultProperties(
               targetMatchesCount = protSetsCount,
               decoyMatchesCount = decoyProtSetsCountOpt,
-              fdr = decoyProtSetsCountOpt.map(_.toFloat/protSetsCount)
+              fdr = calculatedFDR
             )
           )
         )
       )
       
       // Update merged RSM properties
-      val rsmProps = mergedTargetRsm.properties.getOrElse(ResultSummaryProperties())
-      rsmProps.validationProperties = Some(valProps)
-      mergedTargetRsm.properties = Some(rsmProps)
-    }
+    val rsmProps = mergedTargetRsm.properties.getOrElse(ResultSummaryProperties())
+    rsmProps.validationProperties = Some(valProps)
+    mergedTargetRsm.properties = Some(rsmProps)
+
 
     logger.debug("Storing TARGET ResultSummary ...")
     _storeResultSummary(storerContext, mergedTargetRsm, targetRsmIds, childTargetRsIds)
