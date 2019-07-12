@@ -41,33 +41,22 @@ class AggregationQuantifier(
     require(udsDbCtx.isInTransaction, "UdsDb connection context must be inside a transaction")
     require(msiDbCtx.isInTransaction, "MsiDb connection context must be inside a transaction")
 
-    // Store the master quant result set
+    // Store the master quant result set and create corresponding master quant result summary
     // Child RS are RS associated with aggregated dataset if identResultSummary is not provided
+    // Child RSM are RSM associated with aggregated dataset if identResultSummary is not provided
     mergedResultSummary.id // Called to init using createMergedResultSummary
-    val childrenRsIds = {
+    val (childrenRsIds,childrenRsmIds)  = {
       if (masterQc.identResultSummaryId.isEmpty) {
-        identRsms.map(_.getResultSetId)
+        (identRsms.map(_.getResultSetId), identRsms.map(_.id))
       } else {
         val identRSM = msiEm.find(classOf[MsiResultSummary], masterQc.identResultSummaryId.get)
-        identRSM.getChildren().map(_.getResultSet.getId).toArray
+        (identRSM.getResultSet.getChildren().map(_.getId).toArray, identRSM.getChildren().map(_.getId).toArray)
       }
     }
 
     val msiQuantResultSet = this.storeMsiQuantResultSet(childrenRsIds.toList)
-
-    // Create corresponding master quant result summary
-    // Child RSM are RSM associated with aggregated dataset if identResultSummary is not provided
-    val childrenRsmIds = {
-      if (masterQc.identResultSummaryId.isEmpty) {
-        identRsms.map(_.id)
-      } else {
-        val identRSM = msiEm.find(classOf[MsiResultSummary], masterQc.identResultSummaryId.get)
-        identRSM.getChildren().map(_.getId).toArray
-      }
-    }
-
-
     val msiQuantRSM = this.storeMsiQuantResultSummary(msiQuantResultSet, childrenRsmIds)
+
     val quantRsmId = msiQuantRSM.getId
 
     // Update quant result summary id of the master quant channel
