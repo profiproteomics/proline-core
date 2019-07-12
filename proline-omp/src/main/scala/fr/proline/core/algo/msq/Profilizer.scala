@@ -206,7 +206,11 @@ class Profilizer( expDesign: ExperimentalDesign, groupSetupNumber: Int = 1, mast
     )
     
     minAbundanceByQcIds = filledMatrix.transpose.map { abundanceCol =>
-        abundanceCol.filter( !isZeroOrNaN(_)).reduceLeft(_ min _)
+       val abundanceForAQch =  abundanceCol.filter( !isZeroOrNaN(_))
+       if(abundanceForAQch.isEmpty)
+         Float.NaN
+       else
+         abundanceForAQch.reduceLeft(_ min _)
     }
      
     // Update master quant component abundances after normalization and missing values inference
