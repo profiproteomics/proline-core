@@ -234,10 +234,35 @@ object PtmStatus extends Enumeration {
   val Isomorphic, PartiallyIsomorphic, Compatible, Conflicting = Value
 }
 
-class PtmSiteClusterer(
+trait IPtmSiteClusterer {
+
+  def clusterize(proteinMatchId: Long, sites: Array[PtmSite2], peptideMatchProvider: (Array[Long]) => Map[Long, PeptideMatch]): Array[PtmCluster]
+
+}
+
+object ClusteringMethodParam extends Enumeration {
+  type Param = Value
+  val EXACT_POSITION_MATCHING = Value("EXACT_POSITION_MATCHING")
+  val TOLERANT_POSITION_MATCHING = Value("TOLERANT_POSITION_MATCHING")
+}
+
+object PtmSiteClusterer {
+  def apply(clusteringMethodName: String, resultSummary: ResultSummary, proteinMatches: Array[ProteinMatch]): IPtmSiteClusterer = {
+    this.apply(ClusteringMethodParam.withName(clusteringMethodName), resultSummary, proteinMatches)
+  }
+
+  def apply(methodParam: ClusteringMethodParam.Value, resultSummary: ResultSummary, proteinMatches: Array[ProteinMatch]): IPtmSiteClusterer = {
+    methodParam match {
+      case ClusteringMethodParam.EXACT_POSITION_MATCHING => new PtmSiteExactClusterer(resultSummary, proteinMatches)
+      case ClusteringMethodParam.TOLERANT_POSITION_MATCHING => new PtmSiteExactClusterer(resultSummary, proteinMatches)
+    }
+  }
+}
+
+class PtmSiteExactClusterer(
     val resultSummary: ResultSummary,
     val proteinMatches: Array[ProteinMatch]
-) extends LazyLogging {
+) extends IPtmSiteClusterer with LazyLogging {
 
   private val proteinMatchesById = proteinMatches.map { pm => pm.id -> pm }.toMap
   private var peptideById = resultSummary.peptideInstances.map { pi => pi.peptide.id -> pi.peptide }.toMap
@@ -254,7 +279,7 @@ class PtmSiteClusterer(
       case (site, ids) =>
         ids.foreach { id =>
           // partition sites by sequence matches
-          val sequenceMatch = sequenceMatchesByPeptideId(id).filter(sm => (site.seqPosition >= (sm.start - 1) && (site.seqPosition <= sm.end)))
+          val sequenceMatch = sequenceMatchesByPeptideId(id).filter(sm => (site.seqPosition >= sm.start) && (site.seqPosition <= sm.end) )
           if (!sequenceMatch.isEmpty) {
             sitesBySequenceMatch.getOrElseUpdate(sequenceMatch.head, new ArrayBuffer[PtmSite2]) += site
           } else {
@@ -316,7 +341,7 @@ class PtmSiteClusterer(
       return PtmStatus.Isomorphic
     } else if (diffCR.size == 0) {
 
-      val sitesInCandidateBounds = diffRC.filter(s => s.seqPosition >= (candidate.start-1) && (s.seqPosition <= candidate.end))
+      val sitesInCandidateBounds = diffRC.filter(s => (s.seqPosition >= candidate.start) && (s.seqPosition <= candidate.end))
       if (sitesInCandidateBounds.length == 0)
         return PtmStatus.PartiallyIsomorphic
       else

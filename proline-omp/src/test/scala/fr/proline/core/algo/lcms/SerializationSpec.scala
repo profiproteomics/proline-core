@@ -2,6 +2,7 @@ package fr.proline.core.algo.lcms
 
 import fr.profi.util.ms.MassTolUnit
 import fr.profi.util.serialization.ProfiJson
+import fr.profi.util.serialization.ProfiJson.deserialize
 import fr.proline.core.algo.lcms.filtering.{Filter, FilterOperator}
 import fr.proline.core.algo.msq.config.{ExtractionParams, LabelFreeQuantConfig, LabelFreeQuantConfigConverter, MzToleranceParams}
 import fr.proline.core.om.msi.{AbstractSerializationSpec, SerializationSpecif}
@@ -101,5 +102,21 @@ class SerializationSpec extends AbstractSerializationSpec {
 
     val v2Params = ProfiJson.deserialize[LabelFreeQuantConfig](v2ParamsStr)
     logger.info("OUTPUT v2Params OBJECT :\n"+ v2Params)
+
+
+  val v2QuantConfigAsStr = """{"cross_assignment_config":{"ft_mapping_params":{"moz_tol_unit":"PPM","time_tol":"60.0","moz_tol":"5.0"},"""+
+                     """"method_name":"BETWEEN_ALL_RUNS","ft_filter":{"name":"INTENSITY","value":0.0,"operator":"GT"},"restrain_to_reliable_features":true},"""+
+                     """"clustering_params":{"moz_tol_unit":"PPM","intensity_computation":"MOST_INTENSE","time_computation":"MOST_INTENSE","time_tol":15.0,"moz_tol":"5.0"},"""+
+                     """"detection_params":{"psm_matching_params":{"moz_tol_unit":"PPM","moz_tol":"5.0"},"isotope_matching_params":{"moz_tol_unit":"PPM","moz_tol":"5.0"}},"""+
+                     """"extraction_params":{"moz_tol_unit":"PPM","moz_tol":"5.0"},"detection_method_name":"DETECT_PEAKELS","""+
+                     """"alignment_config":{"ft_mapping_method_name":"PEPTIDE_IDENTITY","ignore_errors":"false","method_name":"EXHAUSTIVE","smoothing_method_name":"LOESS","""+
+                     """"ft_mapping_method_params":{"time_tol":"120.0"}},"config_version":"2.0"}"""
+
+  val deserializedQuantConfig = deserialize[LabelFreeQuantConfig](v2QuantConfigAsStr)
+  val alnConfig = deserializedQuantConfig.alignmentConfig.get
+  logger.info("method Name = {}", alnConfig.methodName)
+
+  val ignoreErrors = alnConfig.ignoreErrors.getOrElse(false)
+  logger.info("ignoreErrors : {}", ignoreErrors)
 
 }

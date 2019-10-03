@@ -349,6 +349,7 @@ abstract class AbstractTargetDecoyAnalyzer extends ITargetDecoyAnalyzer with Laz
         val secondRocPoint = rocPointsWindow(1)
         
         if( firstRocPoint.decoyMatchesCount == secondRocPoint.decoyMatchesCount ) {
+          // secondRocPoint was a target
           previousPmWasTarget = true
         } else {
           

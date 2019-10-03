@@ -41,23 +41,21 @@ class TDPepMatchValidatorWithFDROptimization(
       val rocPointsLowerThanExpectedFdr = rocPointsWithDefinedFdr.filter( _.fdr.get < expectedFdrValue )
       val rocPointsNearExpectedFdr = rocPointsLowerThanExpectedFdr.filter( _.fdr.get >= fdrThreshold )
       
-      // If we have defined ROC points lower than expected FDR and higher than 0.95 of this value
+      // If we have defined ROC points lower than expected FDR and higher or equal than 0.95*expectedFDR
       val expectedRocPoint = if (!rocPointsNearExpectedFdr.isEmpty) {
         // Select the ROC point with maximum number of target matches
         rocPointsNearExpectedFdr.maxBy( _.targetMatchesCount )
-      }
-      else {
-        val filteredRocPoints = if (rocPointsLowerThanExpectedFdr.isEmpty) rocPointsWithDefinedFdr
-        else rocPointsLowerThanExpectedFdr
-        logger.debug(" Choose fdr in all defined fdr : "+rocPointsLowerThanExpectedFdr.isEmpty)
-        
+      } else {
+        val filteredRocPoints = if (rocPointsLowerThanExpectedFdr.isEmpty) rocPointsWithDefinedFdr else rocPointsLowerThanExpectedFdr
+
+        logger.debug(" Do we choose fdr from ALL roc points with defined fdr: "+rocPointsLowerThanExpectedFdr.isEmpty)
+
         // If filteredRocPoints is empty => NO Valid FDR
         if (filteredRocPoints.isEmpty) null
         else {
-          // Else if no FDR lower than expected one => retrieve the nearest FDR compared to the expected value
+          // Retrieve the nearest FDR compared to the expected value from (ALL) or (Lower than expected) depending if (lower than expect) is empty
           //VDS get the one maximizing the nbr of target if search in rocPointsLowerThanExpectedFdr
           val reducesRP: ValidationResult = filteredRocPoints.reduce { (a, b) => if ((a.fdr.get - expectedFdrValue).abs < (b.fdr.get - expectedFdrValue).abs) a else b }
-
           logger.debug("  search nearest FDR "+reducesRP)
           reducesRP
         }

@@ -5,7 +5,7 @@ import fr.profi.util.primitives._
 import fr.profi.util.serialization.ProfiJson
 import fr.profi.api.service.IService
 import fr.proline.context.IExecutionContext
-import fr.proline.core.algo.msi.{PtmSiteClusterer, PtmSitesIdentifier}
+import fr.proline.core.algo.msi.{PtmSiteClusterer, PtmSiteExactClusterer, PtmSitesIdentifier}
 import fr.proline.core.dal._
 import fr.proline.core.dal.tables.SelectQueryBuilder._
 import fr.proline.core.dal.tables.SelectQueryBuilder1
@@ -278,7 +278,7 @@ class RsmPtmSitesIdentifierV2(
     }
 
     val proteinMatches = proteinMatchProvider.getResultSummariesProteinMatches(List(result.resultSummary.id))
-    val clusterizer = new PtmSiteClusterer(result.resultSummary, proteinMatches)
+    val clusterizer = PtmSiteClusterer(clusteringConfigAsMap("method_name").toString,result.resultSummary, proteinMatches)
     val sitesByProteinMatchIds = sites.filter { s => ptmIds.contains(ptmDefinitionById(s.ptmDefinitionId).ptmId) }.groupBy(_.proteinMatchId)
 
     val clusters = sitesByProteinMatchIds.flatMap{ case (protMatchId, sites) => clusterizer.clusterize(protMatchId, sites, _getPeptideMatchesByPeptideIds) }
