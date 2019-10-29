@@ -1,7 +1,10 @@
 package fr.proline.core.algo.msq.config.profilizer
 
+import com.fasterxml.jackson.module.scala.JsonScalaEnumeration
 import fr.profi.util.lang.EnhancedEnum
-import fr.proline.core.om.model.msi.PtmDefinition
+import fr.proline.core.algo.lcms.{IonAbundanceSummarizerMethod, IonAbundanceSummarizerMethodRef}
+
+import scala.annotation.meta.field
 
 object MissingAbundancesInferenceMethod extends EnhancedEnum {
   val GAUSSIAN_MODEL = Value // SmartMissingAbundancesInferer
@@ -109,6 +112,8 @@ case class GenericProfilizerConfig(
      proteinStatConfig: ProfilizerStatConfig = new ProfilizerStatConfig(),
 
      var summarizingBasedOn: Option[String] = None,
+     var ionPeptideAggreagationMethod : IonAbundanceSummarizerMethod.Value = IonAbundanceSummarizerMethod.BEST_ION,
+
      var isV1Config : Boolean = true
 
 ) {
@@ -160,7 +165,9 @@ case class PostProcessingConfig(
    peptideStatConfig: ProfilizerStatConfig = new ProfilizerStatConfig(),
    proteinStatConfig: ProfilizerStatConfig = new ProfilizerStatConfig(),
 
-   var summarizingBasedOn: Option[String] = None
+   var summarizingBasedOn: Option[String] = None,
+   @(JsonScalaEnumeration @field)(classOf[IonAbundanceSummarizerMethodRef])
+   var ionPeptideAggreagationMethod : IonAbundanceSummarizerMethod.Value = IonAbundanceSummarizerMethod.BEST_ION
 
 ) {
   // Workaround for jackson support of default values
@@ -188,7 +195,7 @@ case class PostProcessingConfig(
 
   def getGenericProfilizerConfig: GenericProfilizerConfig = {
     GenericProfilizerConfig(discardMissCleavedPeptides, missCleavedPeptideFilteringMethod, discardOxidizedPeptides = false, None, discardModifiedPeptides = discardModifiedPeptides, modifiedPeptideFilteringMethod, ptmDefinitionIdsToDiscard,
-      useOnlySpecificPeptides = useOnlySpecificPeptides, discardPeptidesSharingPeakels = discardPeptidesSharingPeakels, applyProfileClustering = applyProfileClustering, profileClusteringMethod, profileClusteringConfig, abundanceSummarizingMethod, peptideStatConfig, proteinStatConfig, summarizingBasedOn, isV1Config = false)
+      useOnlySpecificPeptides = useOnlySpecificPeptides, discardPeptidesSharingPeakels = discardPeptidesSharingPeakels, applyProfileClustering = applyProfileClustering, profileClusteringMethod, profileClusteringConfig, abundanceSummarizingMethod, peptideStatConfig, proteinStatConfig, summarizingBasedOn, ionPeptideAggreagationMethod ,isV1Config = false)
   }
 }
 
@@ -243,6 +250,6 @@ case class ProfilizerConfig(
   def getGenericProfilizerConfig: GenericProfilizerConfig = {
     GenericProfilizerConfig(discardMissedCleavedPeptides, missCleavedPeptideFilteringMethod, discardOxidizedPeptides, oxidizedPeptideFilteringMethod, discardModifiedPeptides = false, None, Array.empty,
       useOnlySpecificPeptides = useOnlySpecificPeptides, discardPeptidesSharingPeakels = discardPeptidesSharingPeakels, applyProfileClustering = applyProfileClustering, profileClusteringMethod, profileClusteringConfig, abundanceSummarizerMethod,
-      peptideStatConfig, proteinStatConfig, summarizingBasedOn, isV1Config = true)
+      peptideStatConfig, proteinStatConfig, summarizingBasedOn, IonAbundanceSummarizerMethod.BEST_ION, isV1Config = true)
   }
 }

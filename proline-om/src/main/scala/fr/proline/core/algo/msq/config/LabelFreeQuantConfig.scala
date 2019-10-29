@@ -14,6 +14,7 @@ trait ILcMsQuantConfig extends IMsQuantConfig {
   val detectionMethodName: DetectionMethod.Value
   val detectionParams: Option[DetectionParams]
   val useLastPeakelDetection: Boolean
+  val ionPeptideAggreagationMethod: Option[IonAbundanceSummarizerMethod.Value]
 }
 
 trait ILabelFreeQuantConfig extends ILcMsQuantConfig
@@ -118,5 +119,7 @@ case class LabelFreeQuantConfig(
   @(JsonScalaEnumeration @field)(classOf[DetectionMethodRef])
   detectionMethodName: DetectionMethod.Value,
   detectionParams: Option[DetectionParams] = None,
-  useLastPeakelDetection: Boolean = false
+  useLastPeakelDetection: Boolean = false,
+  @(JsonScalaEnumeration @field)(classOf[IonAbundanceSummarizerMethodRef])
+  ionPeptideAggreagationMethod: Option[IonAbundanceSummarizerMethod.Value] = None
  ) extends ILabelFreeQuantConfig
