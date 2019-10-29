@@ -15,7 +15,7 @@ import fr.proline.core.algo.msq.summarizing.BuildMasterQuantPeptide
 import fr.proline.core.dal.BuildLazyExecutionContext
 import fr.proline.core.dal.DoJDBCWork
 import fr.proline.core.dal.helper.UdsDbHelper
-import fr.proline.core.om.model.msq.ExperimentalDesign
+import fr.proline.core.om.model.msq.{ExperimentalDesign, MasterQuantPeptideProperties}
 import fr.proline.core.om.provider.PeptideCacheExecutionContext
 import fr.proline.core.om.provider.lcms.impl.SQLMapSetProvider
 import fr.proline.core.om.provider.msq.impl.SQLExperimentalDesignProvider
@@ -193,6 +193,9 @@ class QuantProfilesComputer(
         // Re-build the master quant peptides
         val newMqPep = BuildMasterQuantPeptide(mqPepIons, mqPep.peptideInstance, mqPep.resultSummaryId)      
         mqPep.selectionLevel = newMqPep.selectionLevel
+        //Get properties back
+        mqPep.properties.getOrElse(new MasterQuantPeptideProperties()).ionAbundanceSummarizerConfig = newMqPep.properties.getOrElse(new MasterQuantPeptideProperties()).ionAbundanceSummarizerConfig
+
         // the next step is mandatory since BuildMasterQuantPeptide updates mqPepIons.masterQuantPeptideId to the new MasterQuantPeptide
         mqPepIons.foreach { mqPepIon =>
             mqPepIon.masterQuantPeptideId = mqPep.id
@@ -254,6 +257,9 @@ class QuantProfilesComputer(
         // Re-build the master quant peptides
         val newMqPep = BuildMasterQuantPeptide(mqPepIons, mqPep.peptideInstance, mqPep.resultSummaryId)
         mqPep.selectionLevel = newMqPep.selectionLevel
+        //Get properties back
+        mqPep.properties.getOrElse(new MasterQuantPeptideProperties()).ionAbundanceSummarizerConfig = newMqPep.properties.getOrElse(new MasterQuantPeptideProperties()).ionAbundanceSummarizerConfig
+
         // the next step is mandatory since BuildMasterQuantPeptide updates mqPepIons.masterQuantPeptideId to the new MasterQuantPeptide
         mqPepIons.foreach { mqPepIon =>
           mqPepIon.masterQuantPeptideId = mqPep.id

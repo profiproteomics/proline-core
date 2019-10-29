@@ -3,11 +3,10 @@ package fr.proline.core.algo.msq.summarizing
 import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.HashMap
 import scala.collection.mutable.LongMap
-
 import com.typesafe.scalalogging.LazyLogging
-
 import fr.profi.util.collection._
-import fr.proline.core.om.model.lcms.{MapSet,Feature}
+import fr.proline.core.algo.lcms.IonAbundanceSummarizerMethod
+import fr.proline.core.om.model.lcms.{Feature, MapSet}
 import fr.proline.core.om.model.msi._
 import fr.proline.core.om.model.msq._
 
@@ -18,8 +17,15 @@ import fr.proline.core.om.model.msq._
 class LabelFreeEntitiesSummarizer(
   lcmsMapSet: MapSet,
   spectrumIdByRsIdAndScanNumber: LongMap[LongMap[Long]],
-  ms2ScanNumbersByFtId: LongMap[Array[Int]]
+  ms2ScanNumbersByFtId: LongMap[Array[Int]],
+  abundanceSummarizerMethod: IonAbundanceSummarizerMethod.Value
 ) extends IMqPepAndProtEntitiesSummarizer with LazyLogging {
+
+  def this(lcmsMapSet: MapSet,
+           spectrumIdByRsIdAndScanNumber: LongMap[LongMap[Long]],
+           ms2ScanNumbersByFtId: LongMap[Array[Int]]){
+    this(lcmsMapSet, spectrumIdByRsIdAndScanNumber,ms2ScanNumbersByFtId, IonAbundanceSummarizerMethod.BEST_ION)
+  }
   
   private class MQPepsComputer(
     masterQuantChannel: MasterQuantChannel,
@@ -98,14 +104,14 @@ class LabelFreeEntitiesSummarizer(
       this.logger.info( mqPepIonsByMasterPepInst.size + " identified master features found")
       
       for( (masterPepInst,mqPepIons) <- mqPepIonsByMasterPepInst ) {
-        masterQuantPeptides += BuildMasterQuantPeptide(mqPepIons, Some(masterPepInst), quantMergedRsmId)
+        masterQuantPeptides += BuildMasterQuantPeptide(mqPepIons, Some(masterPepInst), quantMergedRsmId, abundanceSummarizerMethod)
       }
       
       // --- Convert unidentified master quant peptide ions into master quant peptides ---
       this.logger.info( unidentifiedMQPepIonByMft.size + " unidentified master features found")
       
       for( (masterFt,mqPepIon) <- unidentifiedMQPepIonByMft ) {
-        masterQuantPeptides += BuildMasterQuantPeptide( Array(mqPepIon), None, quantMergedRsmId )
+        masterQuantPeptides += BuildMasterQuantPeptide( Array(mqPepIon), None, quantMergedRsmId, abundanceSummarizerMethod )
       }
       
       masterQuantPeptides.toArray

@@ -48,7 +48,7 @@ trait IMQProteinSetSummarizer {
     val mqProtSets = new ArrayBuffer[MasterQuantProteinSet](quantMergedRSM.proteinSets.length)
     for( mergedProtSet <- quantMergedRSM.proteinSets ) {
       
-      val mergedPepInsts = mergedProtSet.peptideSet.getPeptideInstances 
+      val mergedPepInsts = mergedProtSet.peptideSet.getPeptideInstances()
       
       val mergedPepInstsCount = mergedPepInsts.length
       val selectedMQPepIds = HashMap[Long, Int]()
@@ -74,12 +74,12 @@ trait IMQProteinSetSummarizer {
             
             for( (qcId,quantPep) <- mqPep.quantPeptideMap ) {
               
-              if( quantPep.rawAbundance.isNaN == false ) {
+              if( !quantPep.rawAbundance.isNaN ) {
                 rawAbundanceSumByQcId.getOrElseUpdate(qcId,0)
                 rawAbundanceSumByQcId(qcId) += quantPep.rawAbundance
               }
               
-              if( quantPep.abundance.isNaN == false ) {
+              if( !quantPep.abundance.isNaN ) {
                 abundanceSumByQcId.getOrElseUpdate(qcId,0)
                 abundanceSumByQcId(qcId) += quantPep.abundance
               }

@@ -1,7 +1,7 @@
 package fr.proline.core.service.msq.quantify
 
 import fr.proline.context.IExecutionContext
-import fr.proline.core.algo.msq.config.LabelFreeQuantConfig
+import fr.proline.core.algo.msq.config.{ILabelFreeQuantConfig, LabelFreeQuantConfig}
 import fr.proline.core.om.model.lcms.MapSet
 import fr.proline.core.om.model.msq.ExperimentalDesign
 import fr.proline.core.orm.uds.MasterQuantitationChannel
@@ -11,11 +11,11 @@ import scala.collection.JavaConversions.collectionAsScalaIterable
 
 
 class Ms2DrivenLabelFreeFeatureQuantifier(
-  val executionContext: IExecutionContext,
-  val udsMasterQuantChannel: MasterQuantitationChannel,
-  val experimentalDesign: ExperimentalDesign,
-  val quantConfig: LabelFreeQuantConfig
-) extends AbstractLabelFreeFeatureQuantifier {
+   val executionContext: IExecutionContext,
+   val udsMasterQuantChannel: MasterQuantitationChannel,
+   val experimentalDesign: ExperimentalDesign,
+   override val quantConfig: ILabelFreeQuantConfig
+) extends AbstractLabelFreeFeatureQuantifier(quantConfig) {
   
   private val groupSetupNumber = 1
   private val masterQcExpDesign = experimentalDesign.getMasterQuantChannelExpDesign(udsMasterQuantChannel.getNumber, groupSetupNumber)

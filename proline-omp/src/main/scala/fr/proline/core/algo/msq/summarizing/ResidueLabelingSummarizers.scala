@@ -2,7 +2,7 @@ package fr.proline.core.algo.msq.summarizing
 
 import com.typesafe.scalalogging.LazyLogging
 import fr.profi.util.collection._
-import fr.proline.core.algo.msq.profilizer.AbundanceSummarizer
+import fr.proline.core.algo.lcms.IonAbundanceSummarizerMethod
 import fr.proline.core.om.model.lcms.MapSet
 import fr.proline.core.om.model.msi._
 import fr.proline.core.om.model.msq._
@@ -20,8 +20,17 @@ class ResidueLabelingEntitiesSummarizer(
   tagByPtmId: LongMap[Long],
   lcmsMapSet: MapSet,
   spectrumIdByRsIdAndScanNumber: LongMap[LongMap[Long]],
-  ms2ScanNumbersByFtId: LongMap[Array[Int]]
+  ms2ScanNumbersByFtId: LongMap[Array[Int]],
+  abundanceSummarizerMethod: IonAbundanceSummarizerMethod.Value
 ) extends IMqPepAndProtEntitiesSummarizer with LazyLogging {
+
+  def this(qcByRSMIdAndTagId: Map[(Long, Long), QuantChannel],
+            tagByPtmId: LongMap[Long],
+            lcmsMapSet: MapSet,
+            spectrumIdByRsIdAndScanNumber: LongMap[LongMap[Long]],
+            ms2ScanNumbersByFtId: LongMap[Array[Int]] ){
+      this(qcByRSMIdAndTagId, tagByPtmId, lcmsMapSet, spectrumIdByRsIdAndScanNumber, ms2ScanNumbersByFtId,  IonAbundanceSummarizerMethod.BEST_ION)
+  }
   
   //type CombinedQIons = (QuantPeptideIon,MasterQuantPeptideIon,Long)
   private val childMapsCount = lcmsMapSet.childMaps.length
@@ -75,8 +84,8 @@ class ResidueLabelingEntitiesSummarizer(
     val lfMqPeptides = new LabelFreeEntitiesSummarizer(
       lcmsMapSet = lcmsMapSet,
       spectrumIdByRsIdAndScanNumber = spectrumIdByRsIdAndScanNumber,
-      ms2ScanNumbersByFtId = ms2ScanNumbersByFtId
-    ).computeMasterQuantPeptides(
+      ms2ScanNumbersByFtId = ms2ScanNumbersByFtId,
+      abundanceSummarizerMethod).computeMasterQuantPeptides(
       labelFreeMasterQuantChannelFake,
       quantMergedRSM,
       resultSummaries
@@ -149,7 +158,8 @@ class ResidueLabelingEntitiesSummarizer(
       masterQuantPeptides += BuildMasterQuantPeptide(
         combinedMqPepIons,
         lfMqPep.peptideInstance,
-        quantMergedRsmId
+        quantMergedRsmId,
+        abundanceSummarizerMethod
       )
 
     }

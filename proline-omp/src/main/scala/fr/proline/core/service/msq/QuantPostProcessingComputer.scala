@@ -1,33 +1,27 @@
 package fr.proline.core.service.msq
 
 import com.typesafe.scalalogging.LazyLogging
+import fr.profi.api.service.IService
 import fr.profi.jdbc.easy._
 import fr.profi.util.collection._
 import fr.profi.util.serialization.ProfiJson
-import fr.profi.api.service.IService
 import fr.proline.context.IExecutionContext
-import fr.proline.core.algo.lcms.FeatureSummarizer
-import fr.proline.core.algo.lcms.FeatureSummarizingMethod
 import fr.proline.core.algo.lcms.summarizing._
+import fr.proline.core.algo.lcms.{FeatureSummarizer, FeatureSummarizingMethod}
 import fr.proline.core.algo.msq.Profilizer
 import fr.proline.core.algo.msq.config.profilizer.PostProcessingConfig
 import fr.proline.core.algo.msq.summarizing.BuildMasterQuantPeptide
-import fr.proline.core.dal.BuildLazyExecutionContext
-import fr.proline.core.dal.DoJDBCWork
+import fr.proline.core.dal.{BuildLazyExecutionContext, DoJDBCWork}
 import fr.proline.core.dal.helper.UdsDbHelper
-import fr.proline.core.om.model.msq.ExperimentalDesign
+import fr.proline.core.om.model.msq.{ExperimentalDesign, MasterQuantPeptideProperties}
 import fr.proline.core.om.provider.PeptideCacheExecutionContext
 import fr.proline.core.om.provider.lcms.impl.SQLMapSetProvider
-import fr.proline.core.om.provider.msq.impl.SQLExperimentalDesignProvider
-import fr.proline.core.om.provider.msq.impl.SQLQuantResultSummaryProvider
-import fr.proline.core.orm.uds.MasterQuantitationChannel
-import fr.proline.core.orm.uds.ObjectTree
-import fr.proline.core.orm.uds.ObjectTreeSchema
+import fr.proline.core.om.provider.msq.impl.{SQLExperimentalDesignProvider, SQLQuantResultSummaryProvider}
+import fr.proline.core.orm.uds.{MasterQuantitationChannel, ObjectTree, ObjectTreeSchema}
 import fr.proline.core.orm.uds.repository.ObjectTreeSchemaRepository
 import fr.proline.repository.IDataStoreConnectorFactory
 
-import scala.collection.mutable.ArrayBuffer
-import scala.collection.mutable.LongMap
+import scala.collection.mutable.{ArrayBuffer, LongMap}
 
 // Factory for Proline-Cortex
 object QuantPostProcessingComputer {
@@ -98,7 +92,7 @@ class QuantPostProcessingComputer(
     require( udsMasterQuantChannel != null, "undefined master quant channel with id=" + udsMasterQuantChannel )
     
     // FIXME: check the quantitation method first
-    
+
     val quantRsmId = udsMasterQuantChannel.getQuantResultSummaryId
     val qcIds = udsDbHelper.getQuantChannelIds(masterQuantChannelId)
     
@@ -191,12 +185,14 @@ class QuantPostProcessingComputer(
         }
         
         // Re-build the master quant peptides
-        val newMqPep = BuildMasterQuantPeptide(mqPepIons, mqPep.peptideInstance, mqPep.resultSummaryId)      
+        val newMqPep = BuildMasterQuantPeptide(mqPepIons, mqPep.peptideInstance, mqPep.resultSummaryId,config.ionPeptideAggreagationMethod)
         mqPep.selectionLevel = newMqPep.selectionLevel
         // the next step is mandatory since BuildMasterQuantPeptide updates mqPepIons.masterQuantPeptideId to the new MasterQuantPeptide
         mqPepIons.foreach { mqPepIon =>
             mqPepIon.masterQuantPeptideId = mqPep.id
         }
+        //Get properties back
+        mqPep.properties.getOrElse(new MasterQuantPeptideProperties()).ionAbundanceSummarizerConfig = newMqPep.properties.getOrElse(new MasterQuantPeptideProperties()).ionAbundanceSummarizerConfig
         mqPep.quantPeptideMap = newMqPep.quantPeptideMap
       }
       
@@ -213,6 +209,7 @@ class QuantPostProcessingComputer(
     //
     // Change mqPeptide selection level sharing peakels of mqPep sharing features
     //
+    logger.info("Run first step : discardPeptidesSharingPeakels or just recompute MQPep Abundance . discardPeptidesSharingPeakels : "+config.discardPeptidesSharingPeakels)
     if (config.discardPeptidesSharingPeakels) {
       
       val qcByLcMsMapId = experimentalDesign.masterQuantChannels.head.quantChannels.map { qc => qc.lcmsMapId.get -> qc } toMap
@@ -252,8 +249,11 @@ class QuantPostProcessingComputer(
         }
 
         // Re-build the master quant peptides
-        val newMqPep = BuildMasterQuantPeptide(mqPepIons, mqPep.peptideInstance, mqPep.resultSummaryId)
+        val newMqPep = BuildMasterQuantPeptide(mqPepIons, mqPep.peptideInstance, mqPep.resultSummaryId, config.ionPeptideAggreagationMethod)
         mqPep.selectionLevel = newMqPep.selectionLevel
+        //Get properties back
+        mqPep.properties.getOrElse(new MasterQuantPeptideProperties()).ionAbundanceSummarizerConfig = newMqPep.properties.getOrElse(new MasterQuantPeptideProperties()).ionAbundanceSummarizerConfig
+
         // the next step is mandatory since BuildMasterQuantPeptide updates mqPepIons.masterQuantPeptideId to the new MasterQuantPeptide
         mqPepIons.foreach { mqPepIon =>
           mqPepIon.masterQuantPeptideId = mqPep.id
@@ -262,7 +262,26 @@ class QuantPostProcessingComputer(
       }
 
       logger.info("After Feature summarizer mqPep with selection level < 2 : " + quantRSM.masterQuantPeptides.withFilter(_.selectionLevel < 2).map(_.id).length)
+    } else {
+      //If discardPeptidesSharingPeakels : mqPeptide abundance has been recalculated, otherwise force recomputing of abundance
+      //To do ?? Check MqPeptide previous method => in quant config (label free config) or in first/all MQPep (if post processing already run)
+      for (mqPep <- quantRSM.masterQuantPeptides) {
+        val mqPepIons = mqPep.masterQuantPeptideIons
+        // Re-build the master quant peptides
+        val newMqPep = BuildMasterQuantPeptide(mqPep.masterQuantPeptideIons, mqPep.peptideInstance, mqPep.resultSummaryId, config.ionPeptideAggreagationMethod)
+        mqPep.selectionLevel = newMqPep.selectionLevel
+        //Get properties back
+        mqPep.properties.getOrElse(new MasterQuantPeptideProperties()).ionAbundanceSummarizerConfig = newMqPep.properties.getOrElse(new MasterQuantPeptideProperties()).ionAbundanceSummarizerConfig
+
+        // the next step is mandatory since BuildMasterQuantPeptide updates mqPepIons.masterQuantPeptideId to the new MasterQuantPeptide
+        mqPepIons.foreach { mqPepIon =>
+          mqPepIon.masterQuantPeptideId = mqPep.id
+        }
+        mqPep.quantPeptideMap = newMqPep.quantPeptideMap
+      }
+      logger.info("After mqPeptide abundance has been recalculated")
     }
+
     // --- 2. Instantiate the profilizer --- //
     val profilizer = new Profilizer(
       expDesign = experimentalDesign,

@@ -8,6 +8,7 @@ import com.typesafe.scalalogging.LazyLogging
 import fr.proline.core.om.model.msi._
 import fr.proline.core.om.model.msq._
 
+//VDS : not used..
 object Ms2CountEntitiesSummarizer extends IMqPepAndProtEntitiesSummarizer with LazyLogging {
 
   def computeMasterQuantPeptides(

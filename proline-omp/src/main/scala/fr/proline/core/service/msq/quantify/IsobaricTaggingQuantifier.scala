@@ -4,6 +4,7 @@ import com.typesafe.scalalogging.LazyLogging
 import fr.profi.util.collection._
 import fr.profi.util.ms._
 import fr.proline.context._
+import fr.proline.core.algo.lcms.IonAbundanceSummarizerMethod
 import fr.proline.core.algo.msq.config._
 import fr.proline.core.algo.msq.summarizing._
 import fr.proline.core.om.model.msi.Ms2Query
@@ -136,14 +137,23 @@ class IsobaricTaggingQuantifier(
       val lcMsScans = entityCache.getLcMsScans(rawMapIds)
       val spectrumIdByRsIdAndScanNumber = entityCache.spectrumIdByRsIdAndScanNumber
       val ms2ScanNumbersByFtId = entityCache.getMs2ScanNumbersByFtId(lcMsScans, rawMapIds)
-      
-      new IsobaricTaggingWithLabelFreeEntitiesSummarizer(
-        mqReporterIonsByIdentRsmId,
-        lcmsMapSet,
-        spectrumIdByRsIdAndScanNumber,
-        ms2ScanNumbersByFtId
-      )
-      
+
+      if(lfqConfig.ionPeptideAggreagationMethod.isDefined) {
+        new IsobaricTaggingWithLabelFreeEntitiesSummarizer(
+          mqReporterIonsByIdentRsmId,
+          lcmsMapSet,
+          spectrumIdByRsIdAndScanNumber,
+          ms2ScanNumbersByFtId,
+          lfqConfig.ionPeptideAggreagationMethod.get
+        )
+      } else {
+        new IsobaricTaggingWithLabelFreeEntitiesSummarizer(
+          mqReporterIonsByIdentRsmId,
+          lcmsMapSet,
+          spectrumIdByRsIdAndScanNumber,
+          ms2ScanNumbersByFtId
+        )
+      }
     }
     
     logger.info("summarizing quant entities...")

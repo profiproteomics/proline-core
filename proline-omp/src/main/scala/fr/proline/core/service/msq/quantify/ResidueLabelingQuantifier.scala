@@ -12,7 +12,7 @@ import fr.proline.core.om.provider.msi.impl.SQLResultSummaryProvider
 import fr.proline.core.om.storer.msi.impl.RsmDuplicator
 import fr.proline.core.orm.msi.ObjectTreeSchema.SchemaName
 import fr.proline.core.orm.msi.repository.ObjectTreeSchemaRepository
-import fr.proline.core.orm.msi.{ResultSummary => MsiResultSummary}
+import fr.proline.core.orm.msi.{ObjectTreeSchema, ResultSummary => MsiResultSummary}
 import fr.proline.core.orm.uds.MasterQuantitationChannel
 import fr.proline.core.service.lcms.io.ExtractMapSet
 
@@ -118,13 +118,22 @@ class ResidueLabelingQuantifier(
     val ms2ScanNumbersByFtId = entityCache.getMs2ScanNumbersByFtId(lcMsScans, rawMapIds)
 
 
-    val entitiesSummarizer = new ResidueLabelingEntitiesSummarizer(
-                                            this.qcByRSMIdAndTagId,
-                                            this.tagByPtmId,
-                                            lcmsMapSet,
-                                            spectrumIdByRsIdAndScanNumber,
-                                            ms2ScanNumbersByFtId
-                                )
+    val entitiesSummarizer = if(lfqConfig.ionPeptideAggreagationMethod.isDefined) {
+      new ResidueLabelingEntitiesSummarizer(
+        this.qcByRSMIdAndTagId,
+        this.tagByPtmId,
+        lcmsMapSet,
+        spectrumIdByRsIdAndScanNumber,
+        ms2ScanNumbersByFtId,
+        lfqConfig.ionPeptideAggreagationMethod.get)
+    } else {
+      new ResidueLabelingEntitiesSummarizer(
+        this.qcByRSMIdAndTagId,
+        this.tagByPtmId,
+        lcmsMapSet,
+        spectrumIdByRsIdAndScanNumber,
+        ms2ScanNumbersByFtId)
+    }
 
     logger.info("summarizing quant entities...")
 
@@ -153,11 +162,11 @@ class ResidueLabelingQuantifier(
     this.storeMasterQuantPeptidesAndProteinSets(msiQuantRsm,mqPeptides,mqProtSets)
   }
   
-  protected lazy val quantPeptidesObjectTreeSchema = {
+  protected lazy val quantPeptidesObjectTreeSchema: ObjectTreeSchema = {
     ObjectTreeSchemaRepository.loadOrCreateObjectTreeSchema(msiEm, SchemaName.RESIDUE_LABELING_QUANT_PEPTIDES.toString)
   }
 
-  protected lazy val quantPeptideIonsObjectTreeSchema = {
+  protected lazy val quantPeptideIonsObjectTreeSchema: ObjectTreeSchema = {
     ObjectTreeSchemaRepository.loadOrCreateObjectTreeSchema(msiEm, SchemaName.RESIDUE_LABELING_QUANT_PEPTIDE_IONS.toString)
   }
   

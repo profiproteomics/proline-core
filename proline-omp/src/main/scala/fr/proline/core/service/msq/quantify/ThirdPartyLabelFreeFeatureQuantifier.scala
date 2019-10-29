@@ -1,6 +1,7 @@
 package fr.proline.core.service.msq.quantify
 
 import fr.proline.context.IExecutionContext
+import fr.proline.core.algo.msq.config.ILabelFreeQuantConfig
 import fr.proline.core.om.model.lcms.MapSet
 import fr.proline.core.om.model.msq.ExperimentalDesign
 import fr.proline.core.orm.uds.MasterQuantitationChannel
@@ -13,7 +14,7 @@ class ThirdPartyLabelFreeFeatureQuantifier(
   val udsMasterQuantChannel: MasterQuantitationChannel,
   val experimentalDesign: ExperimentalDesign,
   val mapSetBuilder: IMapSetBuilder
-) extends AbstractLabelFreeFeatureQuantifier {
+) extends AbstractLabelFreeFeatureQuantifier(null ) {
   
 
   val lcmsMapSet: MapSet = mapSetBuilder.buildMapSet(executionContext.getLCMSDbConnectionContext, udsMasterQuantChannel.getName, masterQc.quantChannels.map(qc => qc.name -> qc.runId.get).toMap)

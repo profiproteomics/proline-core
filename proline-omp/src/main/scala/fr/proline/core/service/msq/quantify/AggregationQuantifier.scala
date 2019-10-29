@@ -1,7 +1,7 @@
 package fr.proline.core.service.msq.quantify
 
 import fr.proline.context.{DatabaseConnectionContext, IExecutionContext}
-import fr.proline.core.algo.msq.config.{AbundanceComputationMethod, AbundanceComputationMethodRef, AggregationQuantConfig, QuantChannelMapping}
+import fr.proline.core.algo.msq.config.{AbundanceComputationMethod, AggregationQuantConfig}
 import fr.proline.core.algo.msq.summarizing.AggregationEntitiesSummarizer
 import fr.proline.core.dal.helper.UdsDbHelper
 import fr.proline.core.om.model.msi.ResultSummary

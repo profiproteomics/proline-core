@@ -2,14 +2,14 @@ package fr.proline.core.algo.msq.summarizing
 
 import com.typesafe.scalalogging.LazyLogging
 import fr.profi.util.collection._
+import fr.proline.core.algo.lcms.IonAbundanceSummarizerMethod
 import fr.proline.core.algo.msq.config.profilizer.AbundanceSummarizerMethod
 import fr.proline.core.algo.msq.profilizer.AbundanceSummarizer
 import fr.proline.core.om.model.lcms.MapSet
 import fr.proline.core.om.model.msi._
 import fr.proline.core.om.model.msq._
 
-import scala.collection.mutable.ArrayBuffer
-import scala.collection.mutable.LongMap
+import scala.collection.mutable.{ArrayBuffer, LongMap}
 
 /**
  * @author David Bouyssie
@@ -179,9 +179,18 @@ class IsobaricTaggingWithLabelFreeEntitiesSummarizer(
   mqReporterIonsByIdentRsmId: LongMap[Array[MasterQuantReporterIon]],
   lcmsMapSet: MapSet,
   spectrumIdByRsIdAndScanNumber: LongMap[LongMap[Long]],
-  ms2ScanNumbersByFtId: LongMap[Array[Int]]
+  ms2ScanNumbersByFtId: LongMap[Array[Int]],
+  abundanceSummarizerMethod: IonAbundanceSummarizerMethod.Value
 ) extends IMqPepAndProtEntitiesSummarizer with LazyLogging {
-  
+
+  def this( mqReporterIonsByIdentRsmId: LongMap[Array[MasterQuantReporterIon]],
+            lcmsMapSet: MapSet,
+            spectrumIdByRsIdAndScanNumber: LongMap[LongMap[Long]],
+            ms2ScanNumbersByFtId: LongMap[Array[Int]]){
+    this(mqReporterIonsByIdentRsmId, lcmsMapSet,spectrumIdByRsIdAndScanNumber, ms2ScanNumbersByFtId, IonAbundanceSummarizerMethod.BEST_ION)
+  }
+
+
   //type CombinedQIons = (QuantPeptideIon,MasterQuantPeptideIon,Long)
   private val childMapsCount = lcmsMapSet.childMaps.length
   
@@ -238,7 +247,8 @@ class IsobaricTaggingWithLabelFreeEntitiesSummarizer(
     val lfMqPeptides = new LabelFreeEntitiesSummarizer(
       lcmsMapSet = lcmsMapSet,
       spectrumIdByRsIdAndScanNumber = spectrumIdByRsIdAndScanNumber,
-      ms2ScanNumbersByFtId = ms2ScanNumbersByFtId
+      ms2ScanNumbersByFtId = ms2ScanNumbersByFtId,
+      abundanceSummarizerMethod
     ).computeMasterQuantPeptides(
       labelFreeMasterQuantChannelFake,
       quantMergedRSM,
@@ -361,7 +371,8 @@ class IsobaricTaggingWithLabelFreeEntitiesSummarizer(
       masterQuantPeptides += BuildMasterQuantPeptide(
         combinedMqPepIons.toSeq,
         lfMqPep.peptideInstance,
-        quantMergedRsmId
+        quantMergedRsmId,
+        abundanceSummarizerMethod
       )
       
     }
