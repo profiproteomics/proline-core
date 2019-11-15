@@ -41,6 +41,8 @@ object PeakelsDetector {
     Some( math.max( 1, (nbProcessors / 2).toInt ) )
   }
 
+  val BACK_PRESSURE_BUFFER_SIZE = 15000
+
   private var mzdbMaxParallelism = 2 // Defines how many mzDB files we want to process in parallel
 
   // Synchronized method used to change the mzDB maximum parallelism value
@@ -996,7 +998,7 @@ class PeakelsDetector(
               // Open TMP SQLite file using a lazy val to perform its instantiation in the appropriate thread
               lazy val peakelFileConnection = PeakelDbWriter.initPeakelStore(peakelFile)
               
-              observableRunSlicePeakels.observeOn(rxIOScheduler).subscribe({ case (rsId,peakels) =>
+              observableRunSlicePeakels.observeOn(rxIOScheduler).onBackpressureBuffer(PeakelsDetector.BACK_PRESSURE_BUFFER_SIZE).subscribe({ case (rsId,peakels) =>
                 
                 logger.trace(s"Storing ${peakels.length} peakels for run slice #$rsId and run #${lcMsRun.id}...")
                 
@@ -1051,7 +1053,7 @@ class PeakelsDetector(
       val peakelRecordingFuture = futurePeakelDetectionResult.flatMap { case (peakelFile, peakelFlow, ms2SpecHeadersByCycle) =>
         
         //val rxCompScheduler = schedulers.ComputationScheduler() // TODO: remove me => we use now our own thread pool
-        val publishedPeakelFlow = peakelFlow.observeOn(rxCompScheduler).onBackpressureBuffer(1000).publish
+        val publishedPeakelFlow = peakelFlow.observeOn(rxCompScheduler).onBackpressureBuffer(PeakelsDetector.BACK_PRESSURE_BUFFER_SIZE).publish
         
         val rTreePromise = Promise[RTree[java.lang.Integer,geometry.Point]]
         //val entriesBuffer = new ArrayBuffer[Entry[java.lang.Integer,geometry.Point]]
@@ -1064,7 +1066,7 @@ class PeakelsDetector(
         
         publishedPeakelFlow.doOnSubscribe(
           this.logger.info("Building peakel in-memory R*Tree to provide quick searches...")
-        ).subscribe( { peakels =>
+        ).onBackpressureBuffer(PeakelsDetector.BACK_PRESSURE_BUFFER_SIZE).subscribe( { peakels =>
           
           val entriesBuffer = new ArrayBuffer[Entry[java.lang.Integer,geometry.Point]]
           for (peakel <- peakels) {
@@ -1113,7 +1115,7 @@ class PeakelsDetector(
           } catch {
             case t: Throwable => {
               throw new Exception(
-                s"The spectrum number (${specNum.toInt}) is too high for the conisdered mzDB file (lastSpecNumber is $lastSpecNumber). " + 
+                s"The spectrum number (${specNum.toInt}) is too high for the considered mzDB file (lastSpecNumber is $lastSpecNumber). " +
                 "Please check that the provided mzDB file is matching the MS/MS search result one.",
                 t
               )
