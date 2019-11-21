@@ -4,7 +4,6 @@ import com.typesafe.scalalogging.LazyLogging
 import fr.profi.util.collection._
 import fr.profi.util.ms._
 import fr.proline.context._
-import fr.proline.core.algo.lcms.IonAbundanceSummarizerMethod
 import fr.proline.core.algo.msq.config._
 import fr.proline.core.algo.msq.summarizing._
 import fr.proline.core.om.model.msi.Ms2Query
@@ -138,13 +137,13 @@ class IsobaricTaggingQuantifier(
       val spectrumIdByRsIdAndScanNumber = entityCache.spectrumIdByRsIdAndScanNumber
       val ms2ScanNumbersByFtId = entityCache.getMs2ScanNumbersByFtId(lcMsScans, rawMapIds)
 
-      if(lfqConfig.ionPeptideAggreagationMethod.isDefined) {
+      if(lfqConfig.pepIonSummarizingMethdd.isDefined) {
         new IsobaricTaggingWithLabelFreeEntitiesSummarizer(
           mqReporterIonsByIdentRsmId,
           lcmsMapSet,
           spectrumIdByRsIdAndScanNumber,
           ms2ScanNumbersByFtId,
-          lfqConfig.ionPeptideAggreagationMethod.get
+          lfqConfig.pepIonSummarizingMethdd.get
         )
       } else {
         new IsobaricTaggingWithLabelFreeEntitiesSummarizer(

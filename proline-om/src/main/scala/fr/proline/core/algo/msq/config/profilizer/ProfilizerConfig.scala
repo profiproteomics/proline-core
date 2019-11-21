@@ -2,7 +2,7 @@ package fr.proline.core.algo.msq.config.profilizer
 
 import com.fasterxml.jackson.module.scala.JsonScalaEnumeration
 import fr.profi.util.lang.EnhancedEnum
-import fr.proline.core.algo.lcms.{IonAbundanceSummarizerMethod, IonAbundanceSummarizerMethodRef}
+import fr.proline.core.algo.lcms.{PepIonAbundanceSummarizingMethod, PepIonAbundanceSummarizingMethodRef}
 
 import scala.annotation.meta.field
 
@@ -88,33 +88,33 @@ case class ProfilizerStatConfig(
 
 //TODO Remove once PostProcessingConfig is tested and OK
 case class GenericProfilizerConfig(
-     discardMissedCleavedPeptides: Boolean = true,
-     var missCleavedPeptideFilteringMethod: Option[String] = None,
+    discardMissedCleavedPeptides: Boolean = true,
+    var missCleavedPeptideFilteringMethod: Option[String] = None,
 
-     discardOxidizedPeptides: Boolean = true,
-     var oxidizedPeptideFilteringMethod: Option[String] = None,
+    discardOxidizedPeptides: Boolean = true,
+    var oxidizedPeptideFilteringMethod: Option[String] = None,
 
-     discardModifiedPeptides: Boolean = true,
-     var modifiedPeptideFilteringMethod: Option[String] = None,
-     var ptmDefinitionIdsToDiscard : Array[Long] = Array.empty[Long],
+    discardModifiedPeptides: Boolean = true,
+    var modifiedPeptideFilteringMethod: Option[String] = None,
+    var ptmDefinitionIdsToDiscard : Array[Long] = Array.empty[Long],
 
-     //discardLowIdentPeptides: Boolean = false,
-     useOnlySpecificPeptides: Boolean = true,
-     discardPeptidesSharingPeakels: Boolean = true,
+    //discardLowIdentPeptides: Boolean = false,
+    useOnlySpecificPeptides: Boolean = true,
+    discardPeptidesSharingPeakels: Boolean = true,
 
-     applyProfileClustering: Boolean = true,
-     var profileClusteringMethod: Option[String] = None,
-     profileClusteringConfig: Option[MqPeptidesClustererConfig] = None,
+    applyProfileClustering: Boolean = true,
+    var profileClusteringMethod: Option[String] = None,
+    profileClusteringConfig: Option[MqPeptidesClustererConfig] = None,
 
-     var abundanceSummarizerMethod: String = null,
+    var abundanceSummarizerMethod: String = null,
 
-     peptideStatConfig: ProfilizerStatConfig = new ProfilizerStatConfig(),
-     proteinStatConfig: ProfilizerStatConfig = new ProfilizerStatConfig(),
+    peptideStatConfig: ProfilizerStatConfig = new ProfilizerStatConfig(),
+    proteinStatConfig: ProfilizerStatConfig = new ProfilizerStatConfig(),
 
-     var summarizingBasedOn: Option[String] = None,
-     var ionPeptideAggreagationMethod : IonAbundanceSummarizerMethod.Value = IonAbundanceSummarizerMethod.BEST_ION,
+    var summarizingBasedOn: Option[String] = None,
+    var pepIonAbundanceSummarizingMethod : PepIonAbundanceSummarizingMethod.Value = PepIonAbundanceSummarizingMethod.BEST_ION,
 
-     var isV1Config : Boolean = true
+    var isV1Config : Boolean = true
 
 ) {
   // Workaround for jackson support of default values
@@ -166,8 +166,8 @@ case class PostProcessingConfig(
    proteinStatConfig: ProfilizerStatConfig = new ProfilizerStatConfig(),
 
    var summarizingBasedOn: Option[String] = None,
-   @(JsonScalaEnumeration @field)(classOf[IonAbundanceSummarizerMethodRef])
-   var ionPeptideAggreagationMethod : IonAbundanceSummarizerMethod.Value = IonAbundanceSummarizerMethod.BEST_ION
+   @(JsonScalaEnumeration @field)(classOf[PepIonAbundanceSummarizingMethodRef])
+   var pepIonAbundanceSummarizingMethod : PepIonAbundanceSummarizingMethod.Value = PepIonAbundanceSummarizingMethod.BEST_ION
 
 ) {
   // Workaround for jackson support of default values
@@ -195,7 +195,7 @@ case class PostProcessingConfig(
 
   def getGenericProfilizerConfig: GenericProfilizerConfig = {
     GenericProfilizerConfig(discardMissCleavedPeptides, missCleavedPeptideFilteringMethod, discardOxidizedPeptides = false, None, discardModifiedPeptides = discardModifiedPeptides, modifiedPeptideFilteringMethod, ptmDefinitionIdsToDiscard,
-      useOnlySpecificPeptides = useOnlySpecificPeptides, discardPeptidesSharingPeakels = discardPeptidesSharingPeakels, applyProfileClustering = applyProfileClustering, profileClusteringMethod, profileClusteringConfig, abundanceSummarizingMethod, peptideStatConfig, proteinStatConfig, summarizingBasedOn, ionPeptideAggreagationMethod ,isV1Config = false)
+      useOnlySpecificPeptides = useOnlySpecificPeptides, discardPeptidesSharingPeakels = discardPeptidesSharingPeakels, applyProfileClustering = applyProfileClustering, profileClusteringMethod, profileClusteringConfig, abundanceSummarizingMethod, peptideStatConfig, proteinStatConfig, summarizingBasedOn, pepIonAbundanceSummarizingMethod ,isV1Config = false)
   }
 }
 
@@ -250,6 +250,6 @@ case class ProfilizerConfig(
   def getGenericProfilizerConfig: GenericProfilizerConfig = {
     GenericProfilizerConfig(discardMissedCleavedPeptides, missCleavedPeptideFilteringMethod, discardOxidizedPeptides, oxidizedPeptideFilteringMethod, discardModifiedPeptides = false, None, Array.empty,
       useOnlySpecificPeptides = useOnlySpecificPeptides, discardPeptidesSharingPeakels = discardPeptidesSharingPeakels, applyProfileClustering = applyProfileClustering, profileClusteringMethod, profileClusteringConfig, abundanceSummarizerMethod,
-      peptideStatConfig, proteinStatConfig, summarizingBasedOn, IonAbundanceSummarizerMethod.BEST_ION, isV1Config = true)
+      peptideStatConfig, proteinStatConfig, summarizingBasedOn, PepIonAbundanceSummarizingMethod.BEST_ION, isV1Config = true)
   }
 }

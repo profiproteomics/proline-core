@@ -2,7 +2,7 @@ package fr.proline.core.algo.msq.summarizing
 
 import com.typesafe.scalalogging.LazyLogging
 import fr.profi.util.collection._
-import fr.proline.core.algo.lcms.IonAbundanceSummarizerMethod
+import fr.proline.core.algo.lcms.PepIonAbundanceSummarizingMethod
 import fr.proline.core.algo.msq.config.profilizer.AbundanceSummarizerMethod
 import fr.proline.core.algo.msq.profilizer.AbundanceSummarizer
 import fr.proline.core.om.model.lcms.MapSet
@@ -180,14 +180,14 @@ class IsobaricTaggingWithLabelFreeEntitiesSummarizer(
   lcmsMapSet: MapSet,
   spectrumIdByRsIdAndScanNumber: LongMap[LongMap[Long]],
   ms2ScanNumbersByFtId: LongMap[Array[Int]],
-  abundanceSummarizerMethod: IonAbundanceSummarizerMethod.Value
+  abundanceSummarizerMethod: PepIonAbundanceSummarizingMethod.Value
 ) extends IMqPepAndProtEntitiesSummarizer with LazyLogging {
 
   def this( mqReporterIonsByIdentRsmId: LongMap[Array[MasterQuantReporterIon]],
             lcmsMapSet: MapSet,
             spectrumIdByRsIdAndScanNumber: LongMap[LongMap[Long]],
             ms2ScanNumbersByFtId: LongMap[Array[Int]]){
-    this(mqReporterIonsByIdentRsmId, lcmsMapSet,spectrumIdByRsIdAndScanNumber, ms2ScanNumbersByFtId, IonAbundanceSummarizerMethod.BEST_ION)
+    this(mqReporterIonsByIdentRsmId, lcmsMapSet,spectrumIdByRsIdAndScanNumber, ms2ScanNumbersByFtId, PepIonAbundanceSummarizingMethod.BEST_ION)
   }
 
 

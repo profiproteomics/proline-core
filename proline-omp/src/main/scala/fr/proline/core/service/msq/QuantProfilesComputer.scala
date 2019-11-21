@@ -194,7 +194,7 @@ class QuantProfilesComputer(
         val newMqPep = BuildMasterQuantPeptide(mqPepIons, mqPep.peptideInstance, mqPep.resultSummaryId)      
         mqPep.selectionLevel = newMqPep.selectionLevel
         //Get properties back
-        mqPep.properties.getOrElse(new MasterQuantPeptideProperties()).ionAbundanceSummarizerConfig = newMqPep.properties.getOrElse(new MasterQuantPeptideProperties()).ionAbundanceSummarizerConfig
+        mqPep.properties.getOrElse(new MasterQuantPeptideProperties()).mqPepIonAbundanceSummarizingConfig = newMqPep.properties.getOrElse(new MasterQuantPeptideProperties()).mqPepIonAbundanceSummarizingConfig
 
         // the next step is mandatory since BuildMasterQuantPeptide updates mqPepIons.masterQuantPeptideId to the new MasterQuantPeptide
         mqPepIons.foreach { mqPepIon =>
@@ -258,7 +258,7 @@ class QuantProfilesComputer(
         val newMqPep = BuildMasterQuantPeptide(mqPepIons, mqPep.peptideInstance, mqPep.resultSummaryId)
         mqPep.selectionLevel = newMqPep.selectionLevel
         //Get properties back
-        mqPep.properties.getOrElse(new MasterQuantPeptideProperties()).ionAbundanceSummarizerConfig = newMqPep.properties.getOrElse(new MasterQuantPeptideProperties()).ionAbundanceSummarizerConfig
+        mqPep.properties.getOrElse(new MasterQuantPeptideProperties()).mqPepIonAbundanceSummarizingConfig = newMqPep.properties.getOrElse(new MasterQuantPeptideProperties()).mqPepIonAbundanceSummarizingConfig
 
         // the next step is mandatory since BuildMasterQuantPeptide updates mqPepIons.masterQuantPeptideId to the new MasterQuantPeptide
         mqPepIons.foreach { mqPepIon =>

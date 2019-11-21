@@ -185,14 +185,14 @@ class QuantPostProcessingComputer(
         }
         
         // Re-build the master quant peptides
-        val newMqPep = BuildMasterQuantPeptide(mqPepIons, mqPep.peptideInstance, mqPep.resultSummaryId,config.ionPeptideAggreagationMethod)
+        val newMqPep = BuildMasterQuantPeptide(mqPepIons, mqPep.peptideInstance, mqPep.resultSummaryId,config.pepIonAbundanceSummarizingMethod)
         mqPep.selectionLevel = newMqPep.selectionLevel
         // the next step is mandatory since BuildMasterQuantPeptide updates mqPepIons.masterQuantPeptideId to the new MasterQuantPeptide
         mqPepIons.foreach { mqPepIon =>
             mqPepIon.masterQuantPeptideId = mqPep.id
         }
         //Get properties back
-        mqPep.properties.getOrElse(new MasterQuantPeptideProperties()).ionAbundanceSummarizerConfig = newMqPep.properties.getOrElse(new MasterQuantPeptideProperties()).ionAbundanceSummarizerConfig
+        mqPep.properties.getOrElse(new MasterQuantPeptideProperties()).mqPepIonAbundanceSummarizingConfig= newMqPep.properties.getOrElse(new MasterQuantPeptideProperties()).mqPepIonAbundanceSummarizingConfig
         mqPep.quantPeptideMap = newMqPep.quantPeptideMap
       }
       
@@ -249,10 +249,10 @@ class QuantPostProcessingComputer(
         }
 
         // Re-build the master quant peptides
-        val newMqPep = BuildMasterQuantPeptide(mqPepIons, mqPep.peptideInstance, mqPep.resultSummaryId, config.ionPeptideAggreagationMethod)
+        val newMqPep = BuildMasterQuantPeptide(mqPepIons, mqPep.peptideInstance, mqPep.resultSummaryId, config.pepIonAbundanceSummarizingMethod)
         mqPep.selectionLevel = newMqPep.selectionLevel
         //Get properties back
-        mqPep.properties.getOrElse(new MasterQuantPeptideProperties()).ionAbundanceSummarizerConfig = newMqPep.properties.getOrElse(new MasterQuantPeptideProperties()).ionAbundanceSummarizerConfig
+        mqPep.properties.getOrElse(new MasterQuantPeptideProperties()).mqPepIonAbundanceSummarizingConfig = newMqPep.properties.getOrElse(new MasterQuantPeptideProperties()).mqPepIonAbundanceSummarizingConfig
 
         // the next step is mandatory since BuildMasterQuantPeptide updates mqPepIons.masterQuantPeptideId to the new MasterQuantPeptide
         mqPepIons.foreach { mqPepIon =>
@@ -268,10 +268,10 @@ class QuantPostProcessingComputer(
       for (mqPep <- quantRSM.masterQuantPeptides) {
         val mqPepIons = mqPep.masterQuantPeptideIons
         // Re-build the master quant peptides
-        val newMqPep = BuildMasterQuantPeptide(mqPep.masterQuantPeptideIons, mqPep.peptideInstance, mqPep.resultSummaryId, config.ionPeptideAggreagationMethod)
+        val newMqPep = BuildMasterQuantPeptide(mqPep.masterQuantPeptideIons, mqPep.peptideInstance, mqPep.resultSummaryId, config.pepIonAbundanceSummarizingMethod)
         mqPep.selectionLevel = newMqPep.selectionLevel
         //Get properties back
-        mqPep.properties.getOrElse(new MasterQuantPeptideProperties()).ionAbundanceSummarizerConfig = newMqPep.properties.getOrElse(new MasterQuantPeptideProperties()).ionAbundanceSummarizerConfig
+        mqPep.properties.getOrElse(new MasterQuantPeptideProperties()).mqPepIonAbundanceSummarizingConfig = newMqPep.properties.getOrElse(new MasterQuantPeptideProperties()).mqPepIonAbundanceSummarizingConfig
 
         // the next step is mandatory since BuildMasterQuantPeptide updates mqPepIons.masterQuantPeptideId to the new MasterQuantPeptide
         mqPepIons.foreach { mqPepIon =>

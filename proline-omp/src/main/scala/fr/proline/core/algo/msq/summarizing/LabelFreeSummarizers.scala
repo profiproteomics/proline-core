@@ -5,7 +5,7 @@ import scala.collection.mutable.HashMap
 import scala.collection.mutable.LongMap
 import com.typesafe.scalalogging.LazyLogging
 import fr.profi.util.collection._
-import fr.proline.core.algo.lcms.IonAbundanceSummarizerMethod
+import fr.proline.core.algo.lcms.PepIonAbundanceSummarizingMethod
 import fr.proline.core.om.model.lcms.{Feature, MapSet}
 import fr.proline.core.om.model.msi._
 import fr.proline.core.om.model.msq._
@@ -18,13 +18,13 @@ class LabelFreeEntitiesSummarizer(
   lcmsMapSet: MapSet,
   spectrumIdByRsIdAndScanNumber: LongMap[LongMap[Long]],
   ms2ScanNumbersByFtId: LongMap[Array[Int]],
-  abundanceSummarizerMethod: IonAbundanceSummarizerMethod.Value
+  abundanceSummarizerMethod: PepIonAbundanceSummarizingMethod.Value
 ) extends IMqPepAndProtEntitiesSummarizer with LazyLogging {
 
   def this(lcmsMapSet: MapSet,
            spectrumIdByRsIdAndScanNumber: LongMap[LongMap[Long]],
            ms2ScanNumbersByFtId: LongMap[Array[Int]]){
-    this(lcmsMapSet, spectrumIdByRsIdAndScanNumber,ms2ScanNumbersByFtId, IonAbundanceSummarizerMethod.BEST_ION)
+    this(lcmsMapSet, spectrumIdByRsIdAndScanNumber,ms2ScanNumbersByFtId, PepIonAbundanceSummarizingMethod.BEST_ION)
   }
   
   private class MQPepsComputer(

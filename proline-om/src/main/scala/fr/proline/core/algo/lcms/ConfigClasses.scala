@@ -22,9 +22,9 @@ object AlnMethod extends Enumeration {
   val ITERATIVE = Value("ITERATIVE")
 }
 
-class IonAbundanceSummarizerMethodRef extends TypeReference[IonAbundanceSummarizerMethod.type]
+class PepIonAbundanceSummarizingMethodRef extends TypeReference[PepIonAbundanceSummarizingMethod.type]
 
-object IonAbundanceSummarizerMethod extends Enumeration {
+object PepIonAbundanceSummarizingMethod extends Enumeration {
   val BEST_ION = Value
   val SUM = Value
 }

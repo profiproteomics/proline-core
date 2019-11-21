@@ -128,7 +128,7 @@ class Profilizer( expDesign: ExperimentalDesign, groupSetupNumber: Int = 1, mast
         // Reset quant profiles for this masterQuantPeptide
         val mqPepProps = mqPepPropsOpt.get
         mqPepProps.setMqPepProfileByGroupSetupNumber(None)
-        mqPepProps.setIonAbundanceSummarizerConfig(None)
+        mqPepProps.setMqPepIonAbundanceSummarizingConfig(None)
       }
     }
     
@@ -227,11 +227,11 @@ class Profilizer( expDesign: ExperimentalDesign, groupSetupNumber: Int = 1, mast
       for (mqPep <- masterQuantPeptides) {
         val mqPepIons = mqPep.masterQuantPeptideIons
         // Re-build the master quant peptides
-        val newMqPep = BuildMasterQuantPeptide(mqPepIons, mqPep.peptideInstance, mqPep.resultSummaryId, config.ionPeptideAggreagationMethod)
+        val newMqPep = BuildMasterQuantPeptide(mqPepIons, mqPep.peptideInstance, mqPep.resultSummaryId, config.pepIonAbundanceSummarizingMethod)
         val abundances = newMqPep.getAbundancesForQuantChannels(expDesignSetup.qcIds)
         mqPep.setAbundancesForQuantChannels(abundances, expDesignSetup.qcIds)
         //Get properties back
-        mqPep.properties.getOrElse(new MasterQuantPeptideProperties()).ionAbundanceSummarizerConfig = newMqPep.properties.getOrElse(new MasterQuantPeptideProperties()).ionAbundanceSummarizerConfig
+        mqPep.properties.getOrElse(new MasterQuantPeptideProperties()).mqPepIonAbundanceSummarizingConfig= newMqPep.properties.getOrElse(new MasterQuantPeptideProperties()).mqPepIonAbundanceSummarizingConfig
         // the next step is mandatory since BuildMasterQuantPeptide updates mqPepIons.masterQuantPeptideId to the new MasterQuantPeptide
         mqPepIons.foreach { mqPepIon =>
           mqPepIon.masterQuantPeptideId = mqPep.id

@@ -73,22 +73,22 @@ case class MasterQuantPeptideProperties(
   @JsonDeserialize( keyAs = classOf[java.lang.Integer], contentAs = classOf[MasterQuantPeptideProfile] )
   private var mqPepProfileByGroupSetupNumber: HashMap[Int,MasterQuantPeptideProfile] = null,
 
-  @JsonDeserialize(contentAs = classOf[IonAbundanceSummarizerConfig])
-  @BeanProperty var ionAbundanceSummarizerConfig: Option[IonAbundanceSummarizerConfig] = None
+  @JsonDeserialize(contentAs = classOf[PepIonAbundanceSummarizingConfig])
+  @BeanProperty var mqPepIonAbundanceSummarizingConfig: Option[PepIonAbundanceSummarizingConfig] = None
  ) {
 
   if( mqPepProfileByGroupSetupNumber == null ) mqPepProfileByGroupSetupNumber = HashMap()
-  
+
   def getMqPepProfileByGroupSetupNumber(): Option[HashMap[Int,MasterQuantPeptideProfile]] = {
     Option(mqPepProfileByGroupSetupNumber)
   }
-  
+
   def setMqPepProfileByGroupSetupNumber( mqPepProfileMap: Option[HashMap[Int,MasterQuantPeptideProfile]] ) = {
     mqPepProfileByGroupSetupNumber = mqPepProfileMap.orNull
   }
 }
 
-case class IonAbundanceSummarizerConfig (
+case class PepIonAbundanceSummarizingConfig(
    @BeanProperty var methodName: String,
    @JsonDeserialize( keyAs = classOf[String], contentAs = classOf[String] )
    @BeanProperty var methodParams: HashMap[String,String] = new HashMap()

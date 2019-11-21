@@ -41,7 +41,7 @@ object PeakelsDetector {
     Some( math.max( 1, (nbProcessors / 2).toInt ) )
   }
 
-  val BACK_PRESSURE_BUFFER_SIZE = 15000
+  val BACK_PRESSURE_BUFFER_SIZE = 50000
 
   private var mzdbMaxParallelism = 2 // Defines how many mzDB files we want to process in parallel
 

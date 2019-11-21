@@ -57,12 +57,12 @@ abstract class AbstractLabelFreeFeatureQuantifier(val quantConfig: ILabelFreeQua
       entityCache.getMs2ScanNumbersByFtId(lcMsScans, rawMapIds)
     }
     
-    val entitiesSummarizer = if (quantConfig!=null && quantConfig.ionPeptideAggreagationMethod.isDefined) {
+    val entitiesSummarizer = if (quantConfig!=null && quantConfig.pepIonSummarizingMethdd.isDefined) {
       new LabelFreeEntitiesSummarizer(
         lcmsMapSet = lcmsMapSet,
         spectrumIdByRsIdAndScanNumber = entityCache.spectrumIdByRsIdAndScanNumber,
         ms2ScanNumbersByFtId = ms2ScanNumbersByFtId,
-        quantConfig.ionPeptideAggreagationMethod.get)
+        quantConfig.pepIonSummarizingMethdd.get)
     } else {
       new LabelFreeEntitiesSummarizer(
         lcmsMapSet = lcmsMapSet,
