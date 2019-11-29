@@ -12,7 +12,7 @@ object TargetDecoyComputer {
   
   val TARGET_KEY = "TARGET"
   val DECOY_KEY = "DECOY"
-  
+
   def buildPeptideMatchJointTable( peptideMatches: Seq[PeptideMatch] ): Array[Pair[PeptideMatch,PeptideMatch]] = {
     
     // Filter peptide matches to have only first rank ones
@@ -149,36 +149,36 @@ object TargetDecoyComputer {
     Pair(competitionCounts(TARGET_KEY), competitionCounts(DECOY_KEY))
   }
   
-  /**
-   *  Create a ValidationResult for specified joined Map containing counts and FDR values.
-   *  
-   *  This method will compute TD Competition using specified filtered Map 
-   *  and with IPeptideMatchSorter ordering. 
-   *  
-   *  No filtering is done !   
-   */
-  def createCompetitionBasedValidationResult(
-    pmJointMap: Map[Long, Seq[PeptideMatch]],
-    pepMatchSorter: IPeptideMatchSorter
-  ): ValidationResult = {
-    
-    // Compute target/decoy competition
-    val competitionCount = this.computeTdCompetition(pmJointMap, pepMatchSorter)
-    
-    // Retrieve competition counts
-    val (targetCount, decoyCount) = (competitionCount._1, competitionCount._2)
-    val (tB, tO, dB, dO) = (targetCount.better, targetCount.only, decoyCount.better, decoyCount.only)
-    
-    // Compute FDR (note that FDR may be greater than 100%) for current filterThreshold
-    val fdr = TargetDecoyComputer.calcCompetitionFDR(tB, tO, dB, dO)
-    
-    // Add ROC point to the list
-    ValidationResult(
-      targetMatchesCount = tB + tO + dB,
-      decoyMatchesCount = Some(dB + dO + tB),
-      fdr = Some(fdr)
-    )
-  }
+//  /**
+//   *  Create a ValidationResult for specified joined Map containing counts and FDR values.
+//   *
+//   *  This method will compute TD Competition using specified filtered Map
+//   *  and with IPeptideMatchSorter ordering.
+//   *
+//   *  No filtering is done !
+//   */
+//  def createCompetitionBasedValidationResult(
+//    pmJointMap: Map[Long, Seq[PeptideMatch]],
+//    pepMatchSorter: IPeptideMatchSorter
+//  ): ValidationResult = {
+//
+//    // Compute target/decoy competition
+//    val competitionCount = this.computeTdCompetition(pmJointMap, pepMatchSorter)
+//
+//    // Retrieve competition counts
+//    val (targetCount, decoyCount) = (competitionCount._1, competitionCount._2)
+//    val (tB, tO, dB, dO) = (targetCount.better, targetCount.only, decoyCount.better, decoyCount.only)
+//
+//    // Compute FDR (note that FDR may be greater than 100%) for current filterThreshold
+//    val fdr = TargetDecoyComputer.calcCompetitionFDR(tB, tO, dB, dO)
+//
+//    // Add ROC point to the list
+//    ValidationResult(
+//      targetMatchesCount = tB + tO + dB,
+//      decoyMatchesCount = Some(dB + dO + tB),
+//      fdr = Some(fdr)
+//    )
+//  }
 
   /** Classic method for FPR calculation. */
   def calcFPR( tp: Int, fp: Int ): Float = { 
@@ -205,13 +205,13 @@ object TargetDecoyComputer {
     (100 * 2 * dp).toFloat / (tp + dp )
   }
 
-  /** Calculates FDR using the refined method described by Navarro et al. (JPR, 2009)
-  * tB = target better ; tO = target only ; dB = decoy better ; dO = decoy only
-  */
-  def calcCompetitionFDR( tB: Int, tO: Int, dB: Int, dO: Int ): Float = { 
-    require( tB + tO + dB > 0 )
-    
-    (100 * (2 * dB + dO)).toFloat / (tB + tO + dB)
-  }
+//  /** Calculates FDR using the refined method described by Navarro et al. (JPR, 2009)
+//  * tB = target better ; tO = target only ; dB = decoy better ; dO = decoy only
+//  */
+//  def calcCompetitionFDR( tB: Int, tO: Int, dB: Int, dO: Int ): Float = {
+//    require( tB + tO + dB > 0 )
+//
+//    (100 * (2 * dB + dO)).toFloat / (tB + tO + dB)
+//  }
 
 }

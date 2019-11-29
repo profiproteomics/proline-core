@@ -147,6 +147,11 @@ public class Scoring implements Serializable {
 			"xtandem",
 			"hyperscore",
 			"The hyperscore provided by X!Tandem for a peptide match."
+		),
+		PROLINE_FISHERSCORE(
+						"proline",
+						"fisher score",
+						"The score calculated by Proline for a protein."
 		);
 
 		private final String m_searchEngine;

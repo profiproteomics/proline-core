@@ -3,6 +3,7 @@ package fr.proline.core.algo.msi
 import com.typesafe.scalalogging.StrictLogging
 import fr.proline.core.algo.msi.inference.ParsimoniousProteinSetInferer
 import fr.proline.core.algo.msi.scoring._
+import fr.proline.core.algo.msi.validation.pepinstance.BasicPepInstanceBuilder
 import fr.proline.core.dal.AbstractDatastoreTestCase
 import fr.proline.core.dbunit.{DbUnitResultFileLocation, STR_F122817_Mascot_v2_3}
 import fr.proline.core.om.model.msi.ResultSet
@@ -20,7 +21,7 @@ object RsmAdderFromResultFileTest extends AbstractDatastoreTestCase {
 
   val targetRSId = 1L
 
-  lazy val proteinSetInferer = new ParsimoniousProteinSetInferer()
+  lazy val proteinSetInferer = new ParsimoniousProteinSetInferer(new BasicPepInstanceBuilder())
   var rsm: ResultSummary = null
 
   @BeforeClass

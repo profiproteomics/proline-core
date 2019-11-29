@@ -1,23 +1,40 @@
 package fr.proline.core.algo.msi.validation
 
-import scala.collection.mutable.ArrayBuffer
-import scala.collection.mutable.HashMap
 import com.fasterxml.jackson.annotation.JsonInclude
 import com.fasterxml.jackson.annotation.JsonInclude.Include
+import fr.proline.core.algo.msi.filtering._
+import fr.proline.core.algo.msi.filtering.pepinstance.BHPepInstanceFilter
 import fr.proline.core.algo.msi.filtering.pepmatch._
 import fr.proline.core.algo.msi.filtering.proteinset._
-import fr.proline.core.algo.msi.filtering._
+import fr.proline.core.algo.msi.validation.pepinstance.BasicPepInstanceBuilder
 import fr.proline.core.algo.msi.validation.pepmatch._
 import fr.proline.core.algo.msi.validation.proteinset._
-import fr.proline.core.om.model.msi.{ResultSummary, ResultSet, ProteinSet, PeptideMatch}
-import fr.proline.core.om.model.msi.FilterDescriptor
-import fr.proline.core.om.model.msi.MsiRocCurve
+import fr.proline.core.om.model.msi._
+
+import scala.collection.mutable.{ArrayBuffer, HashMap}
 
 object TargetDecoyModes extends Enumeration {
   type Mode = Value
   val CONCATENATED = Value("CONCATENATED")
   val SEPARATED = Value("SEPARATED")
   val MIXED = Value("MIXED") // for merged result sets having children in CONCATENATED and SEPARATED modes
+}
+
+object TargetDecoyComputers extends Enumeration {
+  type Computer = Value
+  val KALL_STOREY_COMPUTER = Value("KALL_STOREY")
+  val GIGY_COMPUTER = Value("GIGY")
+}
+
+object TargetDecoyAnalyzers extends Enumeration {
+  type Analyzer = Value
+  val BASIC = Value("BASIC")
+  val GORSHKOV = Value("GORSHKOV")
+}
+
+object PeptideInstanceBuilders extends Enumeration {
+  type Builder = Value
+  val STANDARD = Value("STANDARD")
 }
 
 object ProtSetValidationMethods extends Enumeration {
@@ -104,6 +121,7 @@ object BuildPeptideMatchFilter {
       case PepMatchFilterParams.SINGLE_PSM_PER_QUERY => new SinglePSMPerQueryFilter()
       case PepMatchFilterParams.SINGLE_PSM_PER_RANK=> new SinglePSMPerPrettyRankFilter()
       case PepMatchFilterParams.ISOTOPE_OFFSET => new IsotopeOffsetPSMFilter()
+      case PepMatchFilterParams.BH_AJUSTED_PVALUE => new BHPSMFilter()
     }
   }
 } 
@@ -137,21 +155,52 @@ object BuildPeptideMatchValidator {
   
   def apply(
     validationFilter: IPeptideMatchFilter,
-    expectedFdrOpt: Option[Float] = None,
-    tdAnalyzerOpt: Option[ITargetDecoyAnalyzer] = None
+    expectedFdrOpt: Option[Float] = None
   ): IPeptideMatchValidator = {
     
     if (expectedFdrOpt.isDefined) {
       require( validationFilter.isInstanceOf[IOptimizablePeptideMatchFilter], "an optimizable filter must be provided" )
-      
       val valFilter = validationFilter.asInstanceOf[IOptimizablePeptideMatchFilter]
-      
-      new TDPepMatchValidatorWithFDROptimization( valFilter, expectedFdrOpt, tdAnalyzerOpt )
-    }
-    else {
-      new BasicPepMatchValidator( validationFilter, tdAnalyzerOpt )
+      new TDPepMatchValidatorWithFDROptimization( valFilter, expectedFdrOpt)
+    } else {
+      new BasicPepMatchValidator( validationFilter)
     }
   }
+
+}
+
+object BuildPeptideInstanceBuilder {
+
+  def apply(builderParamsStr: String): IPeptideInstanceBuilder = {
+    this.apply(PeptideInstanceBuilders.withName(builderParamsStr))
+  }
+
+  def apply(builderParam: PeptideInstanceBuilders.Builder): IPeptideInstanceBuilder = {
+    builderParam match {
+      case PeptideInstanceBuilders.STANDARD => new BasicPepInstanceBuilder()
+    }
+  }
+
+}
+
+object BuildPeptideInstanceFilter {
+
+  def apply(filterParamStr: String): IPeptideInstanceFilter = {
+    this.apply( PepInstanceFilterParams.withName(filterParamStr) )
+  }
+
+  def apply(filterParamStr: String, thresholdValue: AnyVal): IPeptideInstanceFilter = {
+    val filter = this.apply( filterParamStr )
+    filter.setThresholdValue(thresholdValue)
+    filter
+  }
+
+  def apply(filterParam: PepInstanceFilterParams.Param): IPeptideInstanceFilter = {
+    filterParam match {
+      case PepInstanceFilterParams.BH_ADJUSTED_PVALUE => new BHPepInstanceFilter()
+    }
+  }
+
 }
 
 object BuildProteinSetFilter  {
@@ -172,6 +221,7 @@ object BuildProteinSetFilter  {
       case ProtSetFilterParams.PEP_COUNT => new PeptidesCountPSFilter()
       case ProtSetFilterParams.PEP_SEQ_COUNT => new PepSequencesCountPSFilter()
       case ProtSetFilterParams.SCORE => new ScoreProtSetFilter()
+      case ProtSetFilterParams.BH_ADJUSTED_PVALUE => new BHProtSetFilter()
     }
   }
 }
@@ -259,28 +309,30 @@ object BuildProteinSetValidator {
   }
 }
 
+trait IPeptideInstanceBuilder {
+  def buildPeptideInstance(pepMatchGroup: Array[PeptideMatch], resultSummaryId: Long): PeptideInstance
+}
+
 trait IPeptideMatchValidator {
   
   val validationFilter: IPeptideMatchFilter
   val expectedFdr: Option[Float]
-  var tdAnalyzer: Option[ITargetDecoyAnalyzer]  
-  
+
   /**
    * Validates peptide matches.
    * @param pepMatches The list of peptide matches to validate
    * @param decoyPepMatches An optional list of decoy peptide matches to validate
    * @return An instance of the ValidationResults case class
    */
-  def validatePeptideMatches( pepMatches: Seq[PeptideMatch], decoyPepMatches: Option[Seq[PeptideMatch]] = None ): ValidationResults
+  def validatePeptideMatches( pepMatches: Seq[PeptideMatch], decoyPepMatches: Option[Seq[PeptideMatch]] = None, tdAnalyzer: Option[ITargetDecoyAnalyzer]): ValidationResults
   
-  def validatePeptideMatches( targetRs: ResultSet ): ValidationResults = {
+  def validatePeptideMatches( targetRs: ResultSet, tdAnalyzer: Option[ITargetDecoyAnalyzer]): ValidationResults = {
     
     val targetPepMatches: Seq[PeptideMatch] = targetRs.peptideMatches
-    
     val decoyRs = if( targetRs.decoyResultSet == null ) None else targetRs.decoyResultSet
     val decoyPepMatches: Option[Seq[PeptideMatch]] = decoyRs.map(_.peptideMatches)
     
-    this.validatePeptideMatches( targetPepMatches, decoyPepMatches )
+    this.validatePeptideMatches( targetPepMatches, decoyPepMatches, tdAnalyzer )
   }
  
 }

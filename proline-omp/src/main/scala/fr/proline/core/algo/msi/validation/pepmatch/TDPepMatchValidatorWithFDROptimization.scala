@@ -5,16 +5,19 @@ import fr.proline.core.algo.msi.validation._
 import fr.proline.core.om.model.msi.PeptideMatch
 import fr.proline.core.algo.msi.filtering._
 
-/** Implementation of IPeptideMatchValidator performing a target/decoy analysis with a FDR optimization procedure. */
+/**
+  * Implementation of IPeptideMatchValidator performing a target/decoy analysis with a FDR optimization procedure.
+  *
+  **/
 class TDPepMatchValidatorWithFDROptimization(  
   val validationFilter: IOptimizablePeptideMatchFilter,
-  val expectedFdr: Option[Float],
-  var tdAnalyzer: Option[ITargetDecoyAnalyzer]  
+  val expectedFdr: Option[Float]
 ) extends IPeptideMatchValidator with LazyLogging {
   
-  require( tdAnalyzer.isDefined, "a target/decoy analyzer must be provided")
-  
-  def validatePeptideMatches( pepMatches: Seq[PeptideMatch], decoyPepMatches: Option[Seq[PeptideMatch]] = None ): ValidationResults = {
+
+  def validatePeptideMatches( pepMatches: Seq[PeptideMatch], decoyPepMatches: Option[Seq[PeptideMatch]] = None, tdAnalyzer: Option[ITargetDecoyAnalyzer] = None): ValidationResults = {
+
+    require( tdAnalyzer.isDefined, "a target/decoy analyzer must be provided")
     require(decoyPepMatches.isDefined, "decoy peptide matches must be provided")
 
     val expectedFdrValue = expectedFdr.get

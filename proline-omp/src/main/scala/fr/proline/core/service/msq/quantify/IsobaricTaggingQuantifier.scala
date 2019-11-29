@@ -103,8 +103,7 @@ class IsobaricTaggingQuantifier(
       val mqReporterIons = _quantifyIdentRsm(entityCache.quantChannelResultSummaries.head).toArray
       
       new IsobaricTaggingEntitiesSummarizer(mqReporterIons)
-    }
-    else {
+    }  else {
       
       // Retrieve label-free config
       val lfqConfig = lfqConfigOpt.get

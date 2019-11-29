@@ -1,6 +1,7 @@
 package fr.proline.core.orm.msi;
 
 import java.io.Serializable;
+import java.util.Map;
 import java.util.Set;
 
 import javax.persistence.Column;
@@ -17,6 +18,7 @@ import javax.persistence.Table;
 import javax.persistence.Transient;
 
 import fr.proline.core.orm.msi.dto.*;
+import fr.proline.core.orm.util.JsonSerializer;
 
 /**
  * The persistent class for the peptide_instance database table.
@@ -87,21 +89,12 @@ public class PeptideInstance implements Serializable {
 	@OneToMany(mappedBy = "peptideInstance")
 	private Set<PeptideInstancePeptideMatchMap> peptideInstancePeptideMatchMaps;
 
-	/*
-	 * @OneToMany
-	 * 
-	 * @JoinTable( name="peptide_instance_peptide_match_map" , joinColumns={
-	 * 
-	 * @JoinColumn(name="peptide_match_id") } , inverseJoinColumns={
-	 * 
-	 * @JoinColumn(name="peptide_instance_id") } ) private Set<PeptideMatch> peptidesMatches;
-	 * 
-	 * public PeptideInstance() { }
-	 */
-
 	// Transient Variables not saved in database
 	@Transient
 	private TransientData transientData = null;
+
+	@Transient
+	private Map<String, Object> properties;
 
 	public long getId() {
 		return id;
@@ -199,6 +192,18 @@ public class PeptideInstance implements Serializable {
 		this.serializedProperties = serializedProperties;
 	}
 
+	public Map<String, Object> getProperties() throws Exception {
+		if ((properties == null) && (serializedProperties != null)) {
+			properties = JsonSerializer.getMapper().readValue(getSerializedProperties(), Map.class);
+		}
+		return properties;
+	}
+
+	public void setProperties(Map<String, Object> serializedPropertiesMap) throws Exception {
+		this.properties = serializedPropertiesMap;
+		this.serializedProperties = JsonSerializer.getMapper().writeValueAsString(serializedPropertiesMap);
+	}
+
 	public Long getUnmodifiedPeptideId() {
 		return unmodifiedPeptideId;
 	}
@@ -247,11 +252,8 @@ public class PeptideInstance implements Serializable {
 	 */
 	public static class TransientData implements Serializable {
 		private static final long serialVersionUID = 1L;
-
 		private DPeptideMatch bestPeptideMatch = null;
-
 		private DProteinSet[] proteinSetArray = null;
-
 		private long[] peptideMatchesId;
 		private DPeptideMatch[] peptideMatches;
 

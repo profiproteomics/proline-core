@@ -7,6 +7,7 @@ object PepSetScoring extends Enumeration {
   val MASCOT_STANDARD_SCORE = Value("mascot:standard score")
   val MASCOT_MUDPIT_SCORE = Value("mascot:mudpit score")
   val MASCOT_MODIFIED_MUDPIT_SCORE = Value("mascot:modified mudpit score")
+  val FISHER_SCORE = Value("proline:fisher score")
 }
 
 trait IPeptideSetScoreUpdater {
@@ -22,6 +23,7 @@ object PeptideSetScoreUpdater {
       case PepSetScoring.MASCOT_MODIFIED_MUDPIT_SCORE => new MascotModifiedMudpitScoreUpdater()
       case PepSetScoring.MASCOT_STANDARD_SCORE => new MascotStandardScoreUpdater()
       case PepSetScoring.MASCOT_MUDPIT_SCORE => new MascotMudpitScoreUpdater()
+      case PepSetScoring.FISHER_SCORE => new FisherScoreUpdater()
     }
   }
 

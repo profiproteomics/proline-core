@@ -3,13 +3,13 @@ package fr.proline.core.algo.msi
 import com.typesafe.scalalogging.StrictLogging
 import fr.proline.context.IExecutionContext
 import fr.proline.core.algo.msi.filtering.pepmatch.ScorePSMFilter
-import fr.proline.core.algo.msi.validation.{BasicTDAnalyzer, TargetDecoyModes}
+import fr.proline.core.algo.msi.validation._
 import fr.proline.core.dal.AbstractDatastoreTestCase
 import fr.proline.core.dbunit.{DbUnitResultFileLocation, STR_F122817_Mascot_v2_3}
 import fr.proline.core.om.model.msi.ResultSet
 import fr.proline.core.om.provider.PeptideCacheExecutionContext
 import fr.proline.core.om.provider.msi.impl.SQLResultSummaryProvider
-import fr.proline.core.service.msi.ResultSetValidator
+import fr.proline.core.service.msi.{ResultSetValidator, ValidationConfig}
 import fr.proline.repository.DriverType
 import org.junit.Assert._
 import org.junit.Test
@@ -80,13 +80,16 @@ class RsAdderFromResultFileTest extends StrictLogging with RsAdderFromResultFile
 
     storeBuiltResultSet(builtRS)
 
+    val tdAnalyzerBuilder = new TDAnalyzerBuilder(TargetDecoyAnalyzers.BASIC, estimator = Some(TargetDecoyComputers.GIGY_COMPUTER))
+
     val rsValidation = new ResultSetValidator(
       execContext = executionContext,
       targetRs = builtRS,
-      tdAnalyzer = Some(new BasicTDAnalyzer(TargetDecoyModes.CONCATENATED, useTdCompetition = true)),
-      pepMatchPreFilters = Some(Seq(new ScorePSMFilter(scoreThreshold = 22.0f))),
-      pepMatchValidator = None,
-      protSetFilters = None,
+      validationConfig = ValidationConfig(
+        tdAnalyzerBuilder = Some(tdAnalyzerBuilder),
+        pepMatchPreFilters = Some(Seq(new ScorePSMFilter(scoreThreshold = 22.0f))),
+        pepMatchValidator = None,
+        protSetFilters = None),
       storeResultSummary = true
     )
 

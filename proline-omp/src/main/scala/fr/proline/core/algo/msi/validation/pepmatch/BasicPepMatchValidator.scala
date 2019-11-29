@@ -6,13 +6,12 @@ import fr.proline.core.algo.msi.filtering.IPeptideMatchFilter
 
 /** Implementation of IPeptideMatchValidator performing a simple target/decoy analysis. */
 class BasicPepMatchValidator(
-  val validationFilter: IPeptideMatchFilter,
-  var tdAnalyzer: Option[ITargetDecoyAnalyzer] = None
+  val validationFilter: IPeptideMatchFilter
 ) extends IPeptideMatchValidator {
   
   val expectedFdr: Option[Float] = None
 
-  def validatePeptideMatches( pepMatches: Seq[PeptideMatch], decoyPepMatches: Option[Seq[PeptideMatch]] = None ): ValidationResults = {
+  def validatePeptideMatches( pepMatches: Seq[PeptideMatch], decoyPepMatches: Option[Seq[PeptideMatch]] = None, tdAnalyzer: Option[ITargetDecoyAnalyzer] = None): ValidationResults = {
         
     // Apply validation filter
     validationFilter.filterPeptideMatches(pepMatches ++ decoyPepMatches.getOrElse(Seq.empty[PeptideMatch]), true, true)
