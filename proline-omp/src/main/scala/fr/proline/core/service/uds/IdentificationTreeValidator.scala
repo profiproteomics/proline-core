@@ -19,7 +19,6 @@ import fr.proline.core.dal.context._
 import fr.proline.core.dal.helper.{MsiDbHelper, UdsDbHelper}
 import fr.proline.core.om.model.msi._
 import fr.proline.core.om.provider.PeptideCacheExecutionContext
-import fr.proline.core.om.provider.msi.cache.PeptideCacheRegistry
 import fr.proline.core.om.provider.msi.impl.SQLResultSetProvider
 import fr.proline.core.orm.uds.{Dataset => UdsDataset}
 import fr.proline.core.service.msi.{ResultSetMerger, ResultSetValidator, ResultSummaryMerger, ValidationConfig}
@@ -195,12 +194,10 @@ class IdentificationTreeValidator(
 
   private def _validateResultSet(rs: ResultSet): ResultSummary = {
 
-    val tdAnalyzer = if (pepMatchValidator.isDefined && pepMatchValidator.get.validationFilter.isInstanceOf[IPeptideMatchSorter]) {
-      BuildTDAnalyzer(useTdCompetition, rs, Some(pepMatchValidator.get.validationFilter.asInstanceOf[IPeptideMatchSorter]))
-    } else {
-      BuildTDAnalyzer(useTdCompetition, rs, None)
-    }
-    
+    val tdAnalyzerBuilder = new TDAnalyzerBuilder(TargetDecoyAnalyzers.BASIC)
+    tdAnalyzerBuilder.targetRs = Some(rs)
+    tdAnalyzerBuilder.estimator = if (useTdCompetition) { Some(TargetDecoyComputers.GIGY_COMPUTER) } else { Some(TargetDecoyComputers.KALL_STOREY_COMPUTER) }
+
     val linkTargetRsToFilter = (filter: IPeptideMatchFilter) => _linkTargetRsToFilter(filter, rs)
 
     // Test if there are some IFilterNeedingResultSet in Flilters.
@@ -209,17 +206,21 @@ class IdentificationTreeValidator(
     }
     
     if(pepMatchValidator.isDefined) linkTargetRsToFilter(pepMatchValidator.get.validationFilter)
-    
-    // Instantiate a result set validator
-    val rsValidator = new ResultSetValidator(
-      execContext = execContext,
-      targetRs = rs,
-      tdAnalyzer = tdAnalyzer,
+
+    val configuration = ValidationConfig(
+      tdAnalyzerBuilder = Some(tdAnalyzerBuilder),
       pepMatchPreFilters = pepMatchFilters,
       pepMatchValidator = pepMatchValidator,
       protSetFilters = protSetFilters,
       protSetValidator = protSetValidator,
-      peptideSetScoring = peptideSetScoring
+      pepSetScoring = peptideSetScoring
+    )
+
+    // Instantiate a result set validator
+    val rsValidator = new ResultSetValidator(
+      execContext = execContext,
+      targetRs = rs,
+      validationConfig = configuration
     )
 
     rsValidator.run()
@@ -298,12 +299,10 @@ class IdentificationTreeValidator(
       }
 
       // Build Target/Decoy analyzer
-      val tdAnalyzer = if (pepMatchValidator.isDefined && pepMatchValidator.get.validationFilter.isInstanceOf[IPeptideMatchSorter]) {
-        BuildTDAnalyzer(useTdCompetition, mergedTargetRs, Some(pepMatchValidator.get.validationFilter.asInstanceOf[IPeptideMatchSorter]))
-      } else {
-        BuildTDAnalyzer(useTdCompetition, mergedTargetRs, None)
-      }
-      
+      val tdAnalyzerBuilder = new TDAnalyzerBuilder(TargetDecoyAnalyzers.BASIC)
+      tdAnalyzerBuilder.targetRs = Some(mergedTargetRs)
+      tdAnalyzerBuilder.estimator = if (useTdCompetition) { Some(TargetDecoyComputers.GIGY_COMPUTER) } else { Some(TargetDecoyComputers.KALL_STOREY_COMPUTER) }
+
       val linkTargetRsToFilter = (filter: IPeptideMatchFilter) => _linkTargetRsToFilter(filter, mergedTargetRs)
 
       // Test if there are some IFilterNeedingResultSet in Filters
@@ -313,17 +312,20 @@ class IdentificationTreeValidator(
       if (pepMatchValidator.isDefined) {
         linkTargetRsToFilter(pepMatchValidator.get.validationFilter)
       }
-      
+
+      val configuration = ValidationConfig(
+        tdAnalyzerBuilder = Some(tdAnalyzerBuilder),
+        pepMatchPreFilters = pepMatchFilters,
+        pepMatchValidator = pepMatchValidator,
+        pepSetScoring = peptideSetScoring,
+        protSetFilters = protSetFilters,
+        protSetValidator = protSetValidator
+      )
       // Instantiate a result set validator
       val rsValidator = new ResultSetValidator(
         execContext = execContext,
         targetRs = mergedTargetRs,
-        tdAnalyzer = tdAnalyzer,
-        pepMatchPreFilters = pepMatchFilters,
-        pepMatchValidator = pepMatchValidator,
-        protSetFilters = protSetFilters,
-        protSetValidator = protSetValidator,
-        peptideSetScoring = peptideSetScoring,
+        validationConfig = configuration,
         storeResultSummary = true
       )
 

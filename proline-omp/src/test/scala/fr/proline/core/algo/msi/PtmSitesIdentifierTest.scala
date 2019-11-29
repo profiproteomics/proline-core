@@ -6,6 +6,7 @@ import com.typesafe.scalalogging.StrictLogging
 import fr.profi.util.misc.InMemoryIdGen
 import fr.profi.util.serialization.ProfiJson
 import fr.proline.core.algo.msi.inference.ParsimoniousProteinSetInferer
+import fr.proline.core.algo.msi.validation.pepinstance.BasicPepInstanceBuilder
 import fr.proline.core.dal._
 import fr.proline.core.dbunit.{DbUnitResultFileLocation, STR_F122817_Mascot_v2_3}
 import fr.proline.core.om.model.msi.{PeptideMatch, PtmDataSet, ResultSummary}
@@ -24,7 +25,7 @@ object PtmSitesIdentifierTest extends AbstractDatastoreTestCase {
 
   val targetRSId = 1L
 
-  lazy val proteinSetInferer = new ParsimoniousProteinSetInferer()
+  lazy val proteinSetInferer = new ParsimoniousProteinSetInferer(new BasicPepInstanceBuilder())
   var rsm: ResultSummary = null
 
   @BeforeClass

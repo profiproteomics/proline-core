@@ -22,7 +22,7 @@ public class V0_6__RS_Hierarchy_Update implements JdbcMigration {
 	 * - set value of result_set.merged_rsm_id when necessary (result set created from merged RSM)
 	 * - set value of result_set_relation even on result_summary merge  		
 	 * 
-	 * Go through RSM hierarchie ans duplicate it on RS side: If RSM hierarchy exist then RS should not exist !
+	 * Go through RSM hierarchy ans duplicate it on RS side: If RSM hierarchy exist then RS should not exist !
 	 * 
 	 * RS referenced by merged RSM should not already be in RS hierarchy: OK in current Proline  
 	 *  

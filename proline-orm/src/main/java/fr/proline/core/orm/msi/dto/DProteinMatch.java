@@ -74,6 +74,36 @@ public class DProteinMatch {
 		setPeptideSet(peptideSet.getResultSummaryId(), peptideSet);
 	}
 
+
+	public DProteinMatch(
+					long id,
+					String accession,
+					Float score,
+					int peptideCount,
+					long resultSetId,
+					String description,
+					String serializedProperties,
+					long peptideSetId,
+					Float peptideSetScore,
+					int sequenceCount,
+					int peptideSetPeptideCount,
+					int peptideMatchCount,
+					long resultSummaryId,
+					String pepSetProperties) throws IOException {
+
+		m_id = id;
+		m_accession = accession;
+		m_score = score;
+		m_peptideCount = peptideCount;
+		m_resultSetId = resultSetId;
+		m_description = description;
+		setObservablePeptidesCountFromSerializedProperties(serializedProperties);
+
+		DPeptideSet peptideSet = new DPeptideSet(peptideSetId, peptideSetScore, sequenceCount, peptideSetPeptideCount, peptideMatchCount, resultSummaryId, pepSetProperties);
+		setPeptideSet(peptideSet.getResultSummaryId(), peptideSet);
+
+	}
+
 	private void setObservablePeptidesCountFromSerializedProperties(String serializedProperties) {
 
 		m_observablePeptidesCount = null;

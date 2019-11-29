@@ -6,14 +6,16 @@ import fr.proline.core.algo.msi.inference.ParsimoniousProteinSetInferer
 import fr.proline.core.om.model.msi.ResultSet
 import org.junit.Test
 import org.junit.Assert._
+
 import scala.collection.mutable.ListBuffer
 import fr.proline.core.om.model.msi.Peptide
 import fr.proline.core.algo.msi.filtering.proteinset.PeptidesCountPSFilter
 import fr.proline.core.algo.msi.filtering.proteinset.PepSequencesCountPSFilter
+import fr.proline.core.algo.msi.validation.pepinstance.BasicPepInstanceBuilder
 
 class PepAndSeqCountPSFilterTest {
  
-  val ppsi = new ParsimoniousProteinSetInferer()
+  val ppsi = new ParsimoniousProteinSetInferer(new BasicPepInstanceBuilder())
  
   /**
    * P1 = (pep1, pep2, pep3,pep4)

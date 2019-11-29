@@ -41,15 +41,15 @@ class IsotopeOffsetPSMFilter(var offsetThreshold: Int = 1) extends IPeptideMatch
     })
   }
 
-  /**
-    * Returns the value that will be used to filter the peptide match.
-    */
-  override def getPeptideMatchValueForFiltering(pepMatch: PeptideMatch): Any = {
-    if (pepMatch.properties.isEmpty || pepMatch.properties.get.isotopeOffset.isEmpty)
-      return 0
-
-    pepMatch.properties.get.isotopeOffset.get
-  }
+//  /**
+//    * Returns the value that will be used to filter the peptide match.
+//    */
+//  override def getPeptideMatchValueForFiltering(pepMatch: PeptideMatch): Any = {
+//    if (pepMatch.properties.isEmpty || pepMatch.properties.get.isotopeOffset.isEmpty)
+//      return 0
+//
+//    pepMatch.properties.get.isotopeOffset.get
+//  }
 
 
   /**
