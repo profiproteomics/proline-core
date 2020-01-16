@@ -112,9 +112,7 @@ public class DQuantitationChannel extends QuantitationChannel {
   public void setRawFileIdentifier(String rawFileIdentifier) {
     this.rawFileIdentifier = rawFileIdentifier;
   }
-
-
-
+  
   public Long getLcmsRawMapId() {
     return lcmsRawMapId;
   }
