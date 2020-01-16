@@ -24,6 +24,12 @@ public class DQuantitationChannel extends QuantitationChannel {
   private String rawFilePath;
 
   /**
+   * raw file Name : run.rawFile.identifier
+   */
+  private String rawFileIdentifier;
+
+
+  /**
    * link with the raw map id
    */
   private Long lcmsRawMapId;
@@ -98,6 +104,16 @@ public class DQuantitationChannel extends QuantitationChannel {
   public void setRawFilePath(String rawFilePath) {
     this.rawFilePath = rawFilePath;
   }
+
+  public String getRawFileIdentifier() {
+    return rawFileIdentifier;
+  }
+
+  public void setRawFileIdentifier(String rawFileIdentifier) {
+    this.rawFileIdentifier = rawFileIdentifier;
+  }
+
+
 
   public Long getLcmsRawMapId() {
     return lcmsRawMapId;
