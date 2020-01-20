@@ -70,11 +70,14 @@ object BuildMasterQuantPeptide {
         val countByQChannel = collection.mutable.Map.empty[Long,Int]
 
         for ((qcId, quantPepIons) <- peptideIonMap) {
+          val quantPepIonWRawAb = quantPepIons.map(_.rawAbundance).filter(!_.equals(Float.NaN))
+          val quantPepIonWAb = quantPepIons.map(_.abundance).filter(!_.equals(Float.NaN))
+          val quantPepIonWRT = quantPepIons.map(_.elutionTime).filter(!_.equals(Float.NaN))
           // Build the quant peptide
           val qp = new QuantPeptide(
-            rawAbundance = quantPepIons.map(_.rawAbundance).filter(!_.equals(Float.NaN)).sum,
-            abundance = quantPepIons.map(_.abundance).filter(!_.equals(Float.NaN)).sum,
-            elutionTime = quantPepIons.map(_.elutionTime).filter(!_.equals(Float.NaN)).sum / quantPepIons.length,
+            rawAbundance = if (!quantPepIonWRawAb.isEmpty)quantPepIonWRawAb.sum else Float.NaN,
+            abundance = if (!quantPepIonWAb.isEmpty)quantPepIonWAb.sum else Float.NaN ,
+            elutionTime = if(!quantPepIonWRT.isEmpty) quantPepIonWRT.sum / quantPepIons.length else Float.NaN,
             peptideMatchesCount = quantPepIons.map(_.peptideMatchesCount).sum,
             quantChannelId = qcId,
             selectionLevel = 2
