@@ -998,7 +998,7 @@ class PeakelsDetector(
               // Open TMP SQLite file using a lazy val to perform its instantiation in the appropriate thread
               lazy val peakelFileConnection = PeakelDbWriter.initPeakelStore(peakelFile)
               
-              observableRunSlicePeakels.observeOn(rxIOScheduler).onBackpressureBuffer(PeakelsDetector.BACK_PRESSURE_BUFFER_SIZE).subscribe({ case (rsId,peakels) =>
+              observableRunSlicePeakels.onBackpressureBuffer(PeakelsDetector.BACK_PRESSURE_BUFFER_SIZE).observeOn(rxIOScheduler).subscribe({ case (rsId,peakels) =>
                 
                 logger.trace(s"Storing ${peakels.length} peakels for run slice #$rsId and run #${lcMsRun.id}...")
                 
@@ -1053,7 +1053,7 @@ class PeakelsDetector(
       val peakelRecordingFuture = futurePeakelDetectionResult.flatMap { case (peakelFile, peakelFlow, ms2SpecHeadersByCycle) =>
         
         //val rxCompScheduler = schedulers.ComputationScheduler() // TODO: remove me => we use now our own thread pool
-        val publishedPeakelFlow = peakelFlow.observeOn(rxCompScheduler).onBackpressureBuffer(PeakelsDetector.BACK_PRESSURE_BUFFER_SIZE).publish
+        val publishedPeakelFlow = peakelFlow.onBackpressureBuffer(PeakelsDetector.BACK_PRESSURE_BUFFER_SIZE).observeOn(rxCompScheduler).publish
         
         val rTreePromise = Promise[RTree[java.lang.Integer,geometry.Point]]
         //val entriesBuffer = new ArrayBuffer[Entry[java.lang.Integer,geometry.Point]]
