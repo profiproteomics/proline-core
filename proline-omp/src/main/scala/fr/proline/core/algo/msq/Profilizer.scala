@@ -237,14 +237,6 @@ class Profilizer( expDesign: ExperimentalDesign, groupSetupNumber: Int = 1, mast
           mqPepIon.masterQuantPeptideId = mqPep.id
         }
       }
-    } else {
-      //
-      // if previous step is PEPTIDE based, then update the peptide ions abundance values to reset abundance to raw abundances
-      //
-      val masterQuantPeptideIons = masterQuantPeptides.flatMap(_.masterQuantPeptideIons)
-      for (mqPepIon <- masterQuantPeptideIons) {
-          mqPepIon.setAbundancesForQuantChannels(mqPepIon.getRawAbundancesForQuantChannels(expDesignSetup.qcIds), expDesignSetup.qcIds)
-      }
     }
     
     //

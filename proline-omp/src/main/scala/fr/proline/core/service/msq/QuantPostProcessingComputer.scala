@@ -205,7 +205,17 @@ class QuantPostProcessingComputer(
     // Reset mq peptide selection level
     //
     quantRSM.masterQuantPeptides.foreach { mqPep => if (mqPep.selectionLevel == 1) mqPep.selectionLevel = 2 }
-    
+
+    //
+    // Reset ions abundances to raw abundances
+    //
+
+    val masterQuantPeptideIons = quantRSM.masterQuantPeptides.flatMap(_.masterQuantPeptideIons)
+    for (mqPepIon <- masterQuantPeptideIons) {
+      mqPepIon.setAbundancesForQuantChannels(mqPepIon.getRawAbundancesForQuantChannels(qcIds), qcIds)
+    }
+
+
     //
     // Change mqPeptide selection level sharing peakels of mqPep sharing features
     //
