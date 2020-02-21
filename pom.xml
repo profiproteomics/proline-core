@@ -5,7 +5,7 @@
   <parent>
     <artifactId>profi-pom</artifactId>
     <groupId>fr.proline</groupId>
-    <version>0.6.0-SNAPSHOT</version>  <!-- Snapshot Trunk version -->
+    <version>1.0.0-SNAPSHOT</version>  <!-- Snapshot Trunk version -->
   </parent>
 
   <artifactId>proline-core</artifactId>
@@ -26,8 +26,8 @@
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <core.version>2.2.0-SNAPSHOT</core.version>  <!-- Snapshot Trunk version -->
-    <mzdb.version>0.11.0-SNAPSHOT</mzdb.version>  <!-- Tag version -->
+    <mzdb.version>1.0.0-SNAPSHOT</mzdb.version>
+    <commons.version>1.0.0-SNAPSHOT</commons.version>  <!-- Tag version -->
   </properties>
   <scm>
     <connection>scm:git:https://github.com/profiproteomics/proline-core.git</connection>
@@ -40,12 +40,12 @@
       <dependency>
         <groupId>fr.profi.util</groupId>
         <artifactId>profi-commons-scala_${scala.version}</artifactId>
-        <version>0.10.0-SNAPSHOT</version> <!-- Snapshot Trunk version -->
+        <version>${commons.version}</version>
       </dependency>
       <dependency>
         <groupId>fr.profi</groupId>
         <artifactId>profi-proteomics_${scala.version}</artifactId>
-        <version>0.6.0-SNAPSHOT</version>
+        <version>${commons.version}</version>
       </dependency>
       
       <!-- MzDB access and processing -->
@@ -64,31 +64,31 @@
       <dependency>
         <groupId>fr.proline</groupId>
         <artifactId>proline-om_${scala.version}</artifactId>
-        <version>${core.version}</version>
+        <version>${project.version}</version>
       </dependency>
 
       <dependency>
         <groupId>fr.proline</groupId>
         <artifactId>proline-databases</artifactId>
-        <version>${core.version}</version>
+        <version>${project.version}</version>
       </dependency>
 
       <dependency>
         <groupId>fr.proline</groupId>
         <artifactId>proline-orm</artifactId>
-        <version>${core.version}</version>
+        <version>${project.version}</version>
       </dependency>
 
       <dependency>
         <groupId>fr.proline</groupId>
         <artifactId>proline-dal_${scala.version}</artifactId>
-        <version>${core.version}</version>
+        <version>${project.version}</version>
       </dependency>
 
       <dependency>
         <groupId>fr.proline</groupId>
         <artifactId>proline-om_${scala.version}</artifactId>
-        <version>${core.version}</version>
+        <version>${project.version}</version>
         <type>test-jar</type>
         <scope>test</scope>
       </dependency>
@@ -96,7 +96,7 @@
       <dependency>
         <groupId>fr.proline</groupId>
         <artifactId>proline-databases</artifactId>
-        <version>${core.version}</version>
+        <version>${project.version}</version>
         <type>test-jar</type>
         <scope>test</scope>
       </dependency>
@@ -104,7 +104,7 @@
       <dependency>
         <groupId>fr.proline</groupId>
         <artifactId>proline-dal_${scala.version}</artifactId>
-        <version>${core.version}</version>
+        <version>${project.version}</version>
         <type>test-jar</type>
         <scope>test</scope>
       </dependency>
@@ -118,7 +118,7 @@
     <dependency>
       <groupId>fr.profi.util</groupId>
       <artifactId>profi-commons-java</artifactId>
-      <version>0.9.0-SNAPSHOT</version> <!-- Snapshot Trunk version -->
+      <version>${commons.version}</version> <!-- Snapshot Trunk version -->
     </dependency>
 
     <!-- JUnit tests -->
