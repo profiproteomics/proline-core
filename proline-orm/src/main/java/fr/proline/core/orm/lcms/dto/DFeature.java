@@ -9,7 +9,7 @@ public class DFeature extends Feature {
 	private double predictedElutionTime;
 	private boolean isBestChild;
 	private Long quantChannelId;
-	private Peak peak;
+	private Peak[] peakArray;
 
 	public DFeature(Feature f) {
 		super();
@@ -37,7 +37,7 @@ public class DFeature extends Feature {
 		setFeatureClusterItems(f.getFeatureClusterItems());
 		setFeatureMs2Events(f.getFeatureMs2Events());
 		setFeaturePeakelItems(f.getFeaturePeakelItems());
-		peak = null;
+		peakArray = null;
 
 	}
 
@@ -65,11 +65,11 @@ public class DFeature extends Feature {
 		this.quantChannelId = quantChannelId;
 	}
 
-	public Peak getPeak() {
-		return peak;
+	public Peak[] getPeakArray() {
+		return peakArray;
 	}
 
-	public void setPeak(Peak peak) {
-		this.peak = peak;
+	public void setPeakArray(Peak[] peakArray) {
+		this.peakArray = peakArray;
 	}
 }
