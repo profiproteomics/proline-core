@@ -39,7 +39,6 @@ public class DFeature extends Feature {
 		setFeatureClusterItems(f.getFeatureClusterItems());
 		setFeatureMs2Events(f.getFeatureMs2Events());
 		setFeaturePeakelItems(f.getFeaturePeakelItems());
-		isotopPeaskArray = null;
 
 	}
 
