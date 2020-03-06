@@ -74,4 +74,8 @@ public class DFeature extends Feature {
 	public void addPeakArray(Peak[] peakArray) {
 		isotopPeaskArray.add(peakArray);
 	}
+
+	public boolean hasPeaks() {
+		return ! isotopPeaskArray.isEmpty();
+	}
 }
