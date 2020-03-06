@@ -3,13 +3,15 @@ package fr.proline.core.orm.lcms.dto;
 import fr.proline.core.orm.lcms.Feature;
 import fr.proline.core.orm.lcms.Peak;
 
+import java.util.ArrayList;
+
 public class DFeature extends Feature {
 
 	private static final long serialVersionUID = 1L;
 	private double predictedElutionTime;
 	private boolean isBestChild;
 	private Long quantChannelId;
-	private Peak[] peakArray;
+	private ArrayList<Peak[]> isotopPeaskArray = new ArrayList<>();
 
 	public DFeature(Feature f) {
 		super();
@@ -37,7 +39,7 @@ public class DFeature extends Feature {
 		setFeatureClusterItems(f.getFeatureClusterItems());
 		setFeatureMs2Events(f.getFeatureMs2Events());
 		setFeaturePeakelItems(f.getFeaturePeakelItems());
-		peakArray = null;
+		isotopPeaskArray = null;
 
 	}
 
@@ -65,11 +67,11 @@ public class DFeature extends Feature {
 		this.quantChannelId = quantChannelId;
 	}
 
-	public Peak[] getPeakArray() {
-		return peakArray;
+	public Peak[] getPeakArray(int isotopRank) {
+		return isotopPeaskArray.get(isotopRank);
 	}
 
-	public void setPeakArray(Peak[] peakArray) {
-		this.peakArray = peakArray;
+	public void addPeakArray(Peak[] peakArray) {
+		isotopPeaskArray.add(peakArray);
 	}
 }
