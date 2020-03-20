@@ -1,11 +1,9 @@
 package fr.proline.core.algo.msi
 
 import scala.collection.mutable.ArrayBuffer
-
-import fr.proline.core.om.model.msi.PeptideMatch
-import fr.proline.core.om.model.msi.ProteinMatch
-import fr.proline.core.om.model.msi.ResultSet
+import fr.proline.core.om.model.msi.{PeptideMatch, PeptideMatchProperties, ProteinMatch, ResultSet}
 import fr.profi.util.regex.RegexUtils._
+import fr.profi.util.serialization.ProfiJson
 
 /**
  * @author David Bouyssie
@@ -88,7 +86,10 @@ object TargetDecoyResultSetSplitter extends IResultSetSplitter {
         val sortedPepMatches = msQueryPepMatches.sortBy(_.rank)
         var rank = 1
         for (sortedPepMatch <- sortedPepMatches) {
-          val newRankedPepMatch = sortedPepMatch.copy(id = PeptideMatch.generateNewId, rank = rank, isDecoy = isDecoy, resultSetId = rsId)
+          //deep clone properties by serialization
+          val propertiesAsJson = sortedPepMatch.properties.map(ProfiJson.serialize(_))
+          val newProperties = propertiesAsJson.map(ProfiJson.deserialize[PeptideMatchProperties](_))
+          val newRankedPepMatch = sortedPepMatch.copy(id = PeptideMatch.generateNewId, rank = rank, isDecoy = isDecoy, resultSetId = rsId, properties = newProperties)
           newPepMatches += newRankedPepMatch
           rank += 1
         }
