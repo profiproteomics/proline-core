@@ -27,6 +27,7 @@ import fr.proline.core.orm.uds.dto.DDataset;
 import fr.proline.core.orm.util.JsonSerializer;
 import fr.profi.util.StringUtils;
 import fr.proline.core.orm.msi.dto.*;
+import fr.proline.core.orm.util.*;
 
 /**
  * The persistent class for the result_summary database table.
@@ -34,7 +35,7 @@ import fr.proline.core.orm.msi.dto.*;
  */
 @Entity
 @Table(name = "result_summary")
-public class ResultSummary implements Serializable {
+public class ResultSummary implements Serializable, TransientDataInterface {
 	private static final long serialVersionUID = 1L;
 
 	@Id
@@ -220,9 +221,13 @@ public class ResultSummary implements Serializable {
 		this.serializedProperties = JsonSerializer.getMapper().writeValueAsString(serializedPropertiesMap);
 	}
 
-	public TransientData getTransientData() {
+	public TransientData getTransientData(TransientDataAllocationListener listener) {
 		if (transientData == null) {
 			transientData = new TransientData();
+			if (listener != null) {
+				listener.memoryAllocated(this);
+			}
+
 		}
 		return transientData;
 	}
@@ -238,6 +243,15 @@ public class ResultSummary implements Serializable {
 	public void setMergeMode(MergeMode mode){
 		mergeMode=mode;
 	}
+
+	public void clearMemory() {
+		transientData = null;
+	}
+
+	public String getMemoryName() {
+		return "ResultSummary "+resultSet.getName();
+	}
+
 
 	/**
 	 * Transient Data which will be not saved in database Used by the Proline Studio IHM

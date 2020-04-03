@@ -29,6 +29,8 @@ import fr.proline.core.orm.MergeMode;
 import fr.proline.core.orm.util.JsonSerializer;
 import fr.profi.util.StringUtils;
 import fr.proline.core.orm.msi.dto.*;
+import fr.proline.core.orm.util.TransientDataAllocationListener;
+import fr.proline.core.orm.util.TransientDataInterface;
 
 /**
  * The persistent class for the result_set database table.
@@ -36,7 +38,7 @@ import fr.proline.core.orm.msi.dto.*;
  */
 @Entity
 @Table(name = "result_set")
-public class ResultSet implements Serializable {
+public class ResultSet implements Serializable, TransientDataInterface {
 
 	public enum Type {
 		SEARCH, DECOY_SEARCH, USER, DECOY_USER, QUANTITATION
@@ -233,9 +235,13 @@ public class ResultSet implements Serializable {
 		return result;
 	}
 
-	public TransientData getTransientData() {
+	public TransientData getTransientData(TransientDataAllocationListener listener) {
 		if (transientData == null) {
 			transientData = new TransientData();
+			if (listener != null) {
+				listener.memoryAllocated(this);
+			}
+
 		}
 		return transientData;
 	}
@@ -264,6 +270,14 @@ public class ResultSet implements Serializable {
 
 	public void setMergeMode(MergeMode mode){
 		mergeMode=mode;
+	}
+
+	public void clearMemory() {
+		transientData = null;
+	}
+
+	public String getMemoryName() {
+		return "ResultSet "+getName();
 	}
 
 	/**
