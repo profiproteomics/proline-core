@@ -233,13 +233,6 @@ public class PeptideInstance implements Serializable {
 		this.peptideInstancePeptideMatchMaps = peptideInstancePeptideMatchMaps;
 	}
 
-	/*
-	 * public Set<PeptideMatch> getPeptidesMatches() { return peptidesMatches; }
-	 * 
-	 * public void setPeptidesMatches(Set<PeptideMatch> peptidesMatches) { this.peptidesMatches =
-	 * peptidesMatches; }
-	 */
-
 	public TransientData getTransientData() {
 		if (transientData == null) {
 			transientData = new TransientData();
