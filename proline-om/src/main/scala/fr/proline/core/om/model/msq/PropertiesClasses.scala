@@ -90,8 +90,8 @@ case class MasterQuantPeptideProperties(
 
 case class PepIonAbundanceSummarizingConfig(
    @BeanProperty var methodName: String,
-   @JsonDeserialize( keyAs = classOf[String], contentAs = classOf[String] )
-   @BeanProperty var methodParams: HashMap[String,String] = new HashMap()
+   @JsonDeserialize( keyAs = classOf[java.lang.Long], contentAs = classOf[java.lang.Integer] )
+   @BeanProperty var mqPeptideIonSelLevelById: HashMap[Long, Int] = null
 )
 
 case class MasterQuantProteinSetProfile(

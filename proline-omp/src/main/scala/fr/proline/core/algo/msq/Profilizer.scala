@@ -128,7 +128,7 @@ class Profilizer( expDesign: ExperimentalDesign, groupSetupNumber: Int = 1, mast
         // Reset quant profiles for this masterQuantPeptide
         val mqPepProps = mqPepPropsOpt.get
         mqPepProps.setMqPepProfileByGroupSetupNumber(None)
-        mqPepProps.setMqPepIonAbundanceSummarizingConfig(None)
+       // mqPepProps.setMqPepIonAbundanceSummarizingConfig(None) //VDS don't reset this properties. It's not set again if not in peptideIon Based
       }
     }
     

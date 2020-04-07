@@ -1,10 +1,12 @@
 package fr.proline.core.algo.msq.summarizing
 
 import fr.proline.core.algo.lcms.PepIonAbundanceSummarizingMethod
-
-import scala.collection.mutable.LongMap
+import fr.proline.core.om.model.SelectionLevel
 import fr.proline.core.om.model.msi._
 import fr.proline.core.om.model.msq._
+
+import scala.collection.mutable
+import scala.collection.mutable.LongMap
 
 object BuildMasterQuantPeptide {
 
@@ -25,21 +27,22 @@ object BuildMasterQuantPeptide {
     require(mqPepIons != null && mqPepIons.length > 0, "mqPepIons must not be empty")
 
     // Generate and update master quant peptide id
+    val mqPeptideIonSelLById = new mutable.HashMap[Long, Int]()
     val mqPeptideId = MasterQuantPeptide.generateNewId
     mqPepIons.foreach { mqPepIon =>
       mqPepIon.masterQuantPeptideId = mqPeptideId
+      mqPeptideIonSelLById.put(mqPepIon.id,mqPepIon.selectionLevel)
     }
 
     // Filter MQ peptide ions using the selection level
-    var filteredMQPepIons = mqPepIons.filter(_.selectionLevel >= 2)
+    var filteredMQPepIons = mqPepIons.filter(_.selectionLevel >= SelectionLevel.SELECTED_AUTO)
     // Fall back to input list if none MQ peptide is selected
     if (filteredMQPepIons.isEmpty) filteredMQPepIons = mqPepIons
     val quantPepByQcId = new LongMap[QuantPeptide]()
     // created quantPeptides
-    var mqPepSelectionLevel = 2
+    var mqPepSelectionLevel = SelectionLevel.SELECTED_AUTO
 
     val summarizerProperties = new PepIonAbundanceSummarizingConfig(methodName = pepIonAbundanceSummarizingMethod.toString)
-
 
     pepIonAbundanceSummarizingMethod match {
 
@@ -60,33 +63,40 @@ object BuildMasterQuantPeptide {
           quantPepByQcId += qcId -> qp
         }
         mqPepSelectionLevel = bestMQPepIon.selectionLevel
-        summarizerProperties.getMethodParams += ("best_ion_id" -> bestMQPepIon.id.toString)
+        //Reset selectionlevel map
+        mqPeptideIonSelLById.clear()
+        mqPepIons.foreach { mqPepIon =>
+          if(mqPepIon.id.equals(bestMQPepIon.id))
+            mqPeptideIonSelLById.put(mqPepIon.id,SelectionLevel.SELECTED_AUTO)
+          else if(mqPepIon.selectionLevel>=SelectionLevel.SELECTED_AUTO)
+            mqPeptideIonSelLById.put(mqPepIon.id,SelectionLevel.DESELECTED_AUTO)
+        }
+
+        summarizerProperties.mqPeptideIonSelLevelById = mqPeptideIonSelLById
       }
 
       case PepIonAbundanceSummarizingMethod.SUM => {
 
-        //Group PepIon by quanf channel ids
-        val peptideIonMap: Map[Long, Seq[QuantPeptideIon]] = filteredMQPepIons.flatMap(_.quantPeptideIonMap.map(_._2)).groupBy(_.quantChannelId)
-        val countByQChannel = collection.mutable.Map.empty[Long,Int]
+        //Group PepIon by quant channel ids
+        val peptideIonsByQChId: Map[Long, Seq[QuantPeptideIon]] = filteredMQPepIons.flatMap(_.quantPeptideIonMap.values).groupBy(_.quantChannelId)
 
-        for ((qcId, quantPepIons) <- peptideIonMap) {
+        for ((qcId, quantPepIons) <- peptideIonsByQChId) {
           val quantPepIonWRawAb = quantPepIons.map(_.rawAbundance).filter(!_.equals(Float.NaN))
           val quantPepIonWAb = quantPepIons.map(_.abundance).filter(!_.equals(Float.NaN))
           val quantPepIonWRT = quantPepIons.map(_.elutionTime).filter(!_.equals(Float.NaN))
           // Build the quant peptide
           val qp = new QuantPeptide(
-            rawAbundance = if (!quantPepIonWRawAb.isEmpty)quantPepIonWRawAb.sum else Float.NaN,
-            abundance = if (!quantPepIonWAb.isEmpty)quantPepIonWAb.sum else Float.NaN ,
-            elutionTime = if(!quantPepIonWRT.isEmpty) quantPepIonWRT.sum / quantPepIons.length else Float.NaN,
+            rawAbundance = if (quantPepIonWRawAb.nonEmpty)quantPepIonWRawAb.sum else Float.NaN,
+            abundance = if (quantPepIonWAb.nonEmpty)quantPepIonWAb.sum else Float.NaN ,
+            elutionTime = if(quantPepIonWRT.nonEmpty) quantPepIonWRT.sum / quantPepIons.length else Float.NaN,
             peptideMatchesCount = quantPepIons.map(_.peptideMatchesCount).sum,
             quantChannelId = qcId,
-            selectionLevel = 2
+            selectionLevel = SelectionLevel.SELECTED_AUTO
           )
-          countByQChannel += qcId -> quantPepIons.length
           quantPepByQcId += qcId -> qp
         }
         mqPepSelectionLevel = filteredMQPepIons.head.selectionLevel
-        summarizerProperties.getMethodParams += ("summed_ions_count_by_quant_channel" -> countByQChannel.toString)
+        summarizerProperties.mqPeptideIonSelLevelById = mqPeptideIonSelLById
       }
     }
 
