@@ -248,8 +248,13 @@ public class ResultSummary implements Serializable, TransientDataInterface {
 		transientData = null;
 	}
 
-	public String getMemoryName() {
-		return "ResultSummary "+resultSet.getName();
+	public String getMemoryName(String additionalName) {
+		String rSetName = resultSet.getName();
+		if ((rSetName == null) || (rSetName.length() == 0)) {
+			return "Identification Summary "+additionalName;
+		} else {
+			return "Identification Summary "+rSetName;
+		}
 	}
 
 

@@ -5,5 +5,5 @@ package fr.proline.core.orm.util;
  */
 public interface TransientDataInterface {
     void clearMemory();
-    String getMemoryName();
+    String getMemoryName(String additionalName);
 }

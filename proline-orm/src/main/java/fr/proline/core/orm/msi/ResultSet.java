@@ -277,7 +277,16 @@ public class ResultSet implements Serializable, TransientDataInterface {
 	}
 
 	public String getMemoryName() {
-		return "ResultSet "+getName();
+		return "Search Result "+getName();
+	}
+
+	public String getMemoryName(String additionalName) {
+		String rSetName = getName();
+		if ((rSetName == null) || (rSetName.length() == 0)) {
+			return "Search Result "+additionalName;
+		} else {
+			return "Search Result "+rSetName;
+		}
 	}
 
 	/**
