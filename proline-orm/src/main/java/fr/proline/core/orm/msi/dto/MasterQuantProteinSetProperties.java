@@ -1,7 +1,6 @@
 package fr.proline.core.orm.msi.dto;
 
-import java.util.HashMap;
-import java.util.List;
+import java.util.*;
 
 public class MasterQuantProteinSetProperties {
 
@@ -11,8 +10,9 @@ public class MasterQuantProteinSetProperties {
 
 	HashMap<String, List<MasterQuantProteinSetProfile>> mqProtSetProfilesByGroupSetupNumber;
 
+	Map<Long,Integer> mqPeptideIonSelLevelById;
+	Map<Long,Integer> mqPeptideSelLevelById;
 	List<Long> selectedMasterQuantPeptideIds;
-
 	List<Long> selectedMasterQuantPeptideIonIds;
 
 	public HashMap<String, List<MasterQuantProteinSetProfile>> getMqProtSetProfilesByGroupSetupNumber() {
@@ -24,20 +24,43 @@ public class MasterQuantProteinSetProperties {
 		this.mqProtSetProfilesByGroupSetupNumber = m_mqProtSetProfilesByGroupSetupNumber;
 	}
 
-	public List<Long> getSelectedMasterQuantPeptideIds() {
-		return selectedMasterQuantPeptideIds;
+	public Map<Long, Integer> getMqPeptideIonSelLevelById() {
+		return mqPeptideIonSelLevelById;
 	}
 
-	public void setSelectedMasterQuantPeptideIds(List<Long> selectedMasterQuantPeptideIds) {
-		this.selectedMasterQuantPeptideIds = selectedMasterQuantPeptideIds;
+	public void setMqPeptideIonSelLevelById(Map<Long, Integer> mqPeptideIonSelLevelById) {
+		this.mqPeptideIonSelLevelById = mqPeptideIonSelLevelById;
 	}
+
+	public Map<Long, Integer> getMqPeptideSelLevelById() {
+		return mqPeptideSelLevelById;
+	}
+
+	public void setMqPeptideSelLevelById(Map<Long, Integer> mqPeptideSelLevelById) {
+		this.mqPeptideSelLevelById = mqPeptideSelLevelById;
+	}
+
+	public List<Long> getSelectedMasterQuantPeptideIds() {
+		ArrayList<Long> selectedMQPepIds = new ArrayList<>();
+		Iterator<Long> mqPepSelectionlevelIt= mqPeptideSelLevelById.keySet().iterator();
+		while (mqPepSelectionlevelIt.hasNext()){
+			Long nextMQPId = mqPepSelectionlevelIt.next();
+			if(mqPeptideSelLevelById.get(nextMQPId) >= 2)
+				selectedMQPepIds.add(nextMQPId);
+		}
+		return selectedMQPepIds;
+	}
+
 
 	public List<Long> getSelectedMasterQuantPeptideIonIds() {
-		return selectedMasterQuantPeptideIonIds;
-	}
-
-	public void setSelectedMasterQuantPeptideIonIds(List<Long> selectedMasterQuantPeptideIonIds) {
-		this.selectedMasterQuantPeptideIonIds = selectedMasterQuantPeptideIonIds;
+		ArrayList<Long> selectedMQPepIonIds = new ArrayList<>();
+		Iterator<Long> mqPepIonSelectionlevelIt= mqPeptideIonSelLevelById.keySet().iterator();
+		while (mqPepIonSelectionlevelIt.hasNext()){
+			Long nextMQPId = mqPepIonSelectionlevelIt.next();
+			if(mqPeptideIonSelLevelById.get(nextMQPId) >= 2)
+				selectedMQPepIonIds.add(nextMQPId);
+		}
+		return selectedMQPepIonIds;
 	}
 
 	public static class MasterQuantProteinSetProfile {
