@@ -13,6 +13,7 @@ import fr.proline.core.algo.msq.config.profilizer.PostProcessingConfig
 import fr.proline.core.algo.msq.summarizing.BuildMasterQuantPeptide
 import fr.proline.core.dal.{BuildLazyExecutionContext, DoJDBCWork}
 import fr.proline.core.dal.helper.UdsDbHelper
+import fr.proline.core.om.model.SelectionLevel
 import fr.proline.core.om.model.msq.{ExperimentalDesign, MasterQuantPeptideProperties}
 import fr.proline.core.om.provider.PeptideCacheExecutionContext
 import fr.proline.core.om.provider.lcms.impl.SQLMapSetProvider
@@ -186,6 +187,7 @@ class QuantPostProcessingComputer(
         
         // Re-build the master quant peptides
         val newMqPep = BuildMasterQuantPeptide(mqPepIons, mqPep.peptideInstance, mqPep.resultSummaryId,config.pepIonAbundanceSummarizingMethod)
+        //WARNING: If this code is activated, verify previous selectionlevel to allow or not its modification
         mqPep.selectionLevel = newMqPep.selectionLevel
         // the next step is mandatory since BuildMasterQuantPeptide updates mqPepIons.masterQuantPeptideId to the new MasterQuantPeptide
         mqPepIons.foreach { mqPepIon =>
@@ -202,14 +204,13 @@ class QuantPostProcessingComputer(
     } // end of summarizeFeatures
 
     //
-    // Reset mq peptide selection level
+    // Reset mq peptide selection level, only for AUTO values
     //
     quantRSM.masterQuantPeptides.foreach { mqPep => if (mqPep.selectionLevel == 1) mqPep.selectionLevel = 2 }
 
     //
     // Reset ions abundances to raw abundances
     //
-
     val masterQuantPeptideIons = quantRSM.masterQuantPeptides.flatMap(_.masterQuantPeptideIons)
     for (mqPepIon <- masterQuantPeptideIons) {
       mqPepIon.setAbundancesForQuantChannels(mqPepIon.getRawAbundancesForQuantChannels(qcIds), qcIds)
@@ -260,7 +261,15 @@ class QuantPostProcessingComputer(
 
         // Re-build the master quant peptides
         val newMqPep = BuildMasterQuantPeptide(mqPepIons, mqPep.peptideInstance, mqPep.resultSummaryId, config.pepIonAbundanceSummarizingMethod)
-        mqPep.selectionLevel = newMqPep.selectionLevel
+        //If mqPep.selection_level is AUTO, allow change, if selection_level is DESELEC_MANUAL don't change, if selection_level is SELECT_MANUAL allow change to DESELEC_AUTO
+        mqPep.selectionLevel match {
+          case SelectionLevel.SELECTED_AUTO |  SelectionLevel.DESELECTED_AUTO => mqPep.selectionLevel = newMqPep.selectionLevel
+          case SelectionLevel.SELECTED_MANUAL => {
+            if(newMqPep.selectionLevel == SelectionLevel.DESELECTED_AUTO)
+              mqPep.selectionLevel = newMqPep.selectionLevel
+          }
+        }
+
         //Get properties back
         mqPep.properties.getOrElse(new MasterQuantPeptideProperties()).mqPepIonAbundanceSummarizingConfig = newMqPep.properties.getOrElse(new MasterQuantPeptideProperties()).mqPepIonAbundanceSummarizingConfig
 
@@ -279,7 +288,11 @@ class QuantPostProcessingComputer(
         val mqPepIons = mqPep.masterQuantPeptideIons
         // Re-build the master quant peptides
         val newMqPep = BuildMasterQuantPeptide(mqPep.masterQuantPeptideIons, mqPep.peptideInstance, mqPep.resultSummaryId, config.pepIonAbundanceSummarizingMethod)
-        mqPep.selectionLevel = newMqPep.selectionLevel
+        //allow change only if mqPep.selection_level is AUTO. No changed done on Ions so keep peptides manual selection
+        mqPep.selectionLevel match {
+          case SelectionLevel.SELECTED_AUTO |  SelectionLevel.DESELECTED_AUTO => mqPep.selectionLevel = newMqPep.selectionLevel
+          case default =>
+        }
         //Get properties back
         mqPep.properties.getOrElse(new MasterQuantPeptideProperties()).mqPepIonAbundanceSummarizingConfig = newMqPep.properties.getOrElse(new MasterQuantPeptideProperties()).mqPepIonAbundanceSummarizingConfig
 
