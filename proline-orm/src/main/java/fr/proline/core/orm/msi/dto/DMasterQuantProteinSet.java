@@ -24,7 +24,7 @@ import fr.proline.core.orm.util.JsonSerializer;
 public class DMasterQuantProteinSet {
 	private static final Logger LOG = LoggerFactory.getLogger(DMasterQuantProteinSet.class);
 
-	public static final String MASTER_QUANT_PROTEINSET_WITH_PEPTIDE_MODIFIED = "PEPTIDE_MODIFIED";
+	public static final String MASTER_QUANT_PROTEINSET_WITH_PEPTIDE_MODIFIED = "selection_changed";
 
 	/* MasterQuantComponent fields */
 	private long m_id; //id of associated MasterQuantComponent

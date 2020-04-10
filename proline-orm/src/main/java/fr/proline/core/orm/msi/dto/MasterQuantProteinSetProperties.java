@@ -9,7 +9,7 @@ public class MasterQuantProteinSetProperties {
 	}
 
 	HashMap<String, List<MasterQuantProteinSetProfile>> mqProtSetProfilesByGroupSetupNumber;
-
+	Boolean selectionChanged;
 	Map<Long,Integer> mqPeptideIonSelLevelById;
 	Map<Long,Integer> mqPeptideSelLevelById;
 	List<Long> selectedMasterQuantPeptideIds;
@@ -38,6 +38,14 @@ public class MasterQuantProteinSetProperties {
 
 	public void setMqPeptideSelLevelById(Map<Long, Integer> mqPeptideSelLevelById) {
 		this.mqPeptideSelLevelById = mqPeptideSelLevelById;
+	}
+
+	public Boolean getSelectionChanged() {
+		return selectionChanged;
+	}
+
+	public void setSelectionChanged(Boolean selectionChanged) {
+		this.selectionChanged = selectionChanged;
 	}
 
 	public List<Long> getSelectedMasterQuantPeptideIds() {
