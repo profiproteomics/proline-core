@@ -41,7 +41,7 @@ public class DMasterQuantPeptide {
 	private MasterQuantPeptideProperties m_mqPeptideProperties;
 
 	//List of QuantPPeptide ... to be loaded before use 
-	Map<Long, DQuantPeptide> m_quantPeptideByQchIds = new HashMap<Long, DQuantPeptide>();
+	protected Map<Long, DQuantPeptide> m_quantPeptideByQchIds = new HashMap<Long, DQuantPeptide>();
 
 	//Associated MasterQuantPeptideIons
 	List<MasterQuantPeptideIon> m_masterQPepIons;
@@ -51,6 +51,10 @@ public class DMasterQuantPeptide {
 
 	// Cluster
 	DCluster m_cluster;
+
+	protected DMasterQuantPeptide() {
+		super();
+	}
 
 	public DMasterQuantPeptide(
 		long id,

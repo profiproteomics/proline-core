@@ -1,6 +1,7 @@
 package fr.proline.core.algo.msi
 
 import com.typesafe.scalalogging.LazyLogging
+import fr.profi.util.misc.InMemoryIdGen
 import fr.proline.core.om.model.msi._
 
 import scala.collection.mutable
@@ -10,9 +11,10 @@ case class PeptideInstancePtm(peptideInstance: PeptideInstance, ptm: LocatedPtm)
 
 object PtmSitesIdentifier {
 
-  def getModificationsProbability(pm: PeptideMatch): Float = {
+  def allModificationsProbability(pm: PeptideMatch): Float = {
     val proba = if (pm.properties.isDefined &&
-                    pm.properties.get.ptmSiteProperties.isDefined && pm.properties.get.ptmSiteProperties.get.mascotDeltaScore.isDefined) {
+                    pm.properties.get.ptmSiteProperties.isDefined &&
+                    pm.properties.get.ptmSiteProperties.get.mascotDeltaScore.isDefined) {
       pm.properties.get.ptmSiteProperties.get.mascotDeltaScore.get
     } else {
       0.0f
@@ -38,7 +40,7 @@ object PtmSitesIdentifier {
     result
   }
 
-  def modificationProbability(pm: PeptideMatch, ptm: LocatedPtm): Float = {
+  def singleModificationProbability(pm: PeptideMatch, ptm: LocatedPtm): Float = {
     //	VDS Workaround test for issue #16643
     val f = if (pm.properties.get.ptmSiteProperties.get.getMascotProbabilityBySite.get.contains(ptm.toReadableString())) {
       pm.properties.get.ptmSiteProperties.get.getMascotProbabilityBySite.get(ptm.toReadableString())
@@ -119,14 +121,14 @@ class PtmSitesIdentifier(
           val site = proteinMatchSites.map {
             case (k, peptideInstances) =>
 
-              // -- Search for the best PeptideMatch         
-              //  Should order by score before getting max value. maxBy don't respect "first for equal order" ! 
+              // -- Search for the best PeptideMatch
+              //  Should order by score before getting max value. maxBy don't respect "first for equal order" !
               val bestPMs = peptideInstances.map(t => {
                 var bestProba: Float = 0.00f
                 var bestPM: PeptideMatch = null
                 val sortedPepMatches: Array[PeptideMatch] = t.peptideInstance.peptideMatches.sortBy(_.score).reverse
                 sortedPepMatches.foreach { pepM =>
-                  val proba = PtmSitesIdentifier.modificationProbability(pepM, t.ptm)
+                  val proba = PtmSitesIdentifier.singleModificationProbability(pepM, t.ptm)
                   if (proba > bestProba) {
                     bestPM = pepM
                     bestProba = proba
@@ -139,7 +141,7 @@ class PtmSitesIdentifier(
               var bestProba: Float = 0.00f
               val sortedBestPMs = bestPMs.sortBy(_._1.score).reverse
               sortedBestPMs.foreach(f => {
-                val proba = PtmSitesIdentifier.modificationProbability(f._1, f._2)
+                val proba = PtmSitesIdentifier.singleModificationProbability(f._1, f._2)
                 if (proba > bestProba) {
                   bestPeptideMatch = f._1
                   bestProba = proba
@@ -152,7 +154,7 @@ class PtmSitesIdentifier(
 
               //	        val peptideMatchesSeq = peptideInstances.map(_.peptideInstance.peptide.sequence).toArray
               //	        val isomericPeptideMatchesSeq = isomericPeptideInstances.map(_.peptide.sequence).toArray
-              //	        println(proteinMatchesById(proteinMatchId).accession + ", "+k._2+", "+k._1.toReadableString()+", matches = "+peptideMatchesSeq.mkString(",")+"("+peptideInstances.map(_.peptideInstance.id).toArray.mkString(",")+")"+", isomeric matches = "+isomericPeptideMatchesSeq.mkString(",")+"("+isomericPeptideInstances.map(_.id).toArray.mkString(",")+")") 
+              //	        println(proteinMatchesById(proteinMatchId).accession + ", "+k._2+", "+k._1.toReadableString()+", matches = "+peptideMatchesSeq.mkString(",")+"("+peptideInstances.map(_.peptideInstance.id).toArray.mkString(",")+")"+", isomeric matches = "+isomericPeptideMatchesSeq.mkString(",")+"("+isomericPeptideInstances.map(_.id).toArray.mkString(",")+")")
 
               val peptideIdsBySeqPosition = peptideInstances.groupBy(_.ptm.seqPosition).mapValues(_.map(_.peptideInstance.peptide.id).toArray)
 
@@ -236,7 +238,7 @@ object PtmStatus extends Enumeration {
 
 trait IPtmSiteClusterer {
 
-  def clusterize(proteinMatchId: Long, sites: Array[PtmSite2], peptideMatchProvider: (Array[Long]) => Map[Long, PeptideMatch]): Array[PtmCluster]
+  def clusterize(proteinMatchId: Long, sites: Array[PtmSite2], peptideMatchProvider: (Array[Long]) => Map[Long, PeptideMatch], idGen: InMemoryIdGen): Array[PtmCluster]
 
 }
 
@@ -267,7 +269,7 @@ class PtmSiteExactClusterer(
   private val proteinMatchesById = proteinMatches.map { pm => pm.id -> pm }.toMap
   private var peptideById = resultSummary.peptideInstances.map { pi => pi.peptide.id -> pi.peptide }.toMap
 
-  def clusterize(proteinMatchId: Long, sites: Array[PtmSite2], peptideMatchProvider: (Array[Long]) => Map[Long, PeptideMatch]): Array[PtmCluster] = {
+  def clusterize(proteinMatchId: Long, sites: Array[PtmSite2], peptideMatchProvider: (Array[Long]) => Map[Long, PeptideMatch], idGen: InMemoryIdGen): Array[PtmCluster] = {
 
     var sitesBySequenceMatch = new mutable.HashMap[SequenceMatch, ArrayBuffer[PtmSite2]]()
     var clusters = new ArrayBuffer[PtmCluster]()
@@ -315,15 +317,16 @@ class PtmSiteExactClusterer(
         }
 
         // determine bestPeptideMatch
-        val peptideIds = clusterizedPeptides(PtmStatus.Isomorphic).map(_.id).toArray
-        val peptideMatches = peptideMatchProvider(peptideIds)
+        val isomorphicPeptideIds = clusterizedPeptides(PtmStatus.Isomorphic).map(_.id).toArray
+        val isomorphicPeptideMatches = peptideMatchProvider(isomorphicPeptideIds)
 
-        val bestPeptideMatch = peptideMatches.values.maxBy{ pm => PtmSitesIdentifier.getModificationsProbability(pm)}
+        val bestPeptideMatch = isomorphicPeptideMatches.values.maxBy{ pm => PtmSitesIdentifier.allModificationsProbability(pm)}
 
         clusters += new PtmCluster(
+          id = idGen.generateNewId(),
           ptmSiteLocations = sitesBySequenceMatch(referenceSequenceMatch).map(_.id).toArray,
           bestPeptideMatchId = bestPeptideMatch.id,
-          localizationConfidence = PtmSitesIdentifier.getModificationsProbability(bestPeptideMatch),
+          localizationConfidence = PtmSitesIdentifier.allModificationsProbability(bestPeptideMatch),
           peptideIds = clusterizedPeptides.flatten(_._2).map(_.id).toArray.distinct,
           isomericPeptideIds = Array.empty[Long])
       }

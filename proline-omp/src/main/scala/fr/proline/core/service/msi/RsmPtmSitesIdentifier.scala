@@ -1,11 +1,14 @@
 package fr.proline.core.service.msi
 
+import java.util.concurrent.atomic.AtomicLong
+
 import com.typesafe.scalalogging.LazyLogging
 import fr.profi.util.primitives._
 import fr.profi.util.serialization.ProfiJson
 import fr.profi.api.service.IService
+import fr.profi.util.misc.InMemoryIdGen
 import fr.proline.context.IExecutionContext
-import fr.proline.core.algo.msi.{PtmSiteClusterer, PtmSiteExactClusterer, PtmSitesIdentifier}
+import fr.proline.core.algo.msi.{PtmSiteClusterer, PtmSitesIdentifier}
 import fr.proline.core.dal._
 import fr.proline.core.dal.tables.SelectQueryBuilder._
 import fr.proline.core.dal.tables.SelectQueryBuilder1
@@ -215,7 +218,7 @@ class RsmPtmSitesIdentifierV2(
     resultSummaryId: Long,
     ptmIds: Array[Long],
     clusteringConfigAsMap: Map[String, Any],
-    force: Boolean) extends RsmPtmSitesIdentifier(execContext, resultSummaryId, force) {
+    force: Boolean) extends RsmPtmSitesIdentifier(execContext, resultSummaryId, force) with InMemoryIdGen {
 
   override val schemaName = SchemaName.PTM_DATASET
   val ptmDefinitionById = new SQLPTMProvider(msiDbContext).ptmDefinitionById
@@ -281,7 +284,10 @@ class RsmPtmSitesIdentifierV2(
     val clusterizer = PtmSiteClusterer(clusteringConfigAsMap("method_name").toString,result.resultSummary, proteinMatches)
     val sitesByProteinMatchIds = sites.filter { s => ptmIds.contains(ptmDefinitionById(s.ptmDefinitionId).ptmId) }.groupBy(_.proteinMatchId)
 
-    val clusters = sitesByProteinMatchIds.flatMap{ case (protMatchId, sites) => clusterizer.clusterize(protMatchId, sites, _getPeptideMatchesByPeptideIds) }
+    val clusters = sitesByProteinMatchIds.flatMap{ case (protMatchId, sites) => clusterizer.clusterize(protMatchId, sites, _getPeptideMatchesByPeptideIds, this) }
     clusters.toArray
   }
+
+  private val inMemoryIdSequence = new AtomicLong(0)
+  override def generateNewId(): Long = { inMemoryIdSequence.incrementAndGet() }
 }

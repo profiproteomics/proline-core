@@ -411,6 +411,7 @@ case class PtmDataSet(
 )
 
 case class PtmCluster(
+    val id: Long,
     // Array of PTM site locations Ids
     val ptmSiteLocations: Array[Long],
     // Best (highest PTM probability) peptide match for this PtmSiteTuple
