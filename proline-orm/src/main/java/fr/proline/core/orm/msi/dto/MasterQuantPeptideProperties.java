@@ -62,7 +62,7 @@ public class MasterQuantPeptideProperties {
 		}
 	}
 
-	static class PepIonAbundanceSummarizingConfig {
+	public class PepIonAbundanceSummarizingConfig {
 
 		String methodName;
 		Map<Long,Integer> mqPeptideIonSelLevelById;
