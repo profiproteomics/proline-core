@@ -85,11 +85,13 @@ public class MasterQuantPeptideProperties {
 
 		public List<Long> getSelectedMasterQuantPeptideIonIds() {
 			ArrayList<Long> selectedMQPepIonIds = new ArrayList<>();
-			Iterator<Long>  mqPepIonSelectionlevelIt= mqPeptideIonSelLevelById.keySet().iterator();
-			while (mqPepIonSelectionlevelIt.hasNext()){
-				Long nextMQPId = mqPepIonSelectionlevelIt.next();
-				if(mqPeptideIonSelLevelById.get(nextMQPId) >= 2)
-					selectedMQPepIonIds.add(nextMQPId);
+			if(mqPeptideIonSelLevelById != null && !mqPeptideIonSelLevelById.isEmpty()) {
+				Iterator<Long> mqPepIonSelectionlevelIt = mqPeptideIonSelLevelById.keySet().iterator();
+				while (mqPepIonSelectionlevelIt.hasNext()) {
+					Long nextMQPId = mqPepIonSelectionlevelIt.next();
+					if (mqPeptideIonSelLevelById.get(nextMQPId) >= 2)
+						selectedMQPepIonIds.add(nextMQPId);
+				}
 			}
 			return selectedMQPepIonIds;
 		}

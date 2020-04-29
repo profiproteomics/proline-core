@@ -46,8 +46,10 @@ public class DMasterQuantPeptide {
 	//Associated MasterQuantPeptideIons
 	List<MasterQuantPeptideIon> m_masterQPepIons;
 
-	//DPeptideInstance to provide access to DPeptideMatch
+	//DPeptideInstance to provide access to "Identification" Best DPeptideMatch
 	DPeptideInstance m_dPeptideInstance;
+
+	DPeptideMatch m_representativePepMatch;
 
 	// Cluster
 	DCluster m_cluster;
@@ -57,11 +59,11 @@ public class DMasterQuantPeptide {
 	}
 
 	public DMasterQuantPeptide(
-		long id,
-		int selectionLevel,
-		long objectTreeId,
-		String serializedProperties,
-		Long quantResultSummaryId) {
+			long id,
+			int selectionLevel,
+			long objectTreeId,
+			String serializedProperties,
+			Long quantResultSummaryId) {
 		super();
 		m_id = id;
 		m_selectionLevel = selectionLevel;
@@ -184,6 +186,16 @@ public class DMasterQuantPeptide {
 
 	public void setPeptideInstance(DPeptideInstance peptideInstance) {
 		this.m_dPeptideInstance = peptideInstance;
+	}
+
+	public DPeptideMatch getRepresentativePepMatch() {
+		if(m_representativePepMatch == null && m_dPeptideInstance != null)
+			return m_dPeptideInstance.getBestPeptideMatch();
+		return m_representativePepMatch;
+	}
+
+	public void setRepresentativePepMatch(DPeptideMatch representativePepMatch) {
+		this.m_representativePepMatch = representativePepMatch;
 	}
 
 	public DCluster getCluster() {

@@ -33,6 +33,7 @@ public class DMasterQuantPeptideIon {
 	private double m_moz;
 	private float m_elutionTime;
 	private Long m_lcmsMasterFeatureId;
+	private DPeptideMatch m_representativePepMatch;
 
 	public DMasterQuantPeptideIon() {
 
@@ -145,6 +146,16 @@ public class DMasterQuantPeptideIon {
 
 	public void setBestPeptideMatch(DPeptideMatch m_bestPeptideMatch) {
 		this.m_bestPeptideMatch = m_bestPeptideMatch;
+	}
+
+	public DPeptideMatch getRepresentativePepMatch() {
+		if(m_representativePepMatch == null)
+			return getBestPeptideMatch();
+		return m_representativePepMatch;
+	}
+
+	public void setRepresentativePepMatch(DPeptideMatch representativePepMatch) {
+		this.m_representativePepMatch = representativePepMatch;
 	}
 
 	public Map<Long, DQuantPeptideIon> parseQuantPeptideIonFromProperties(String quantPeptideIonData) {
