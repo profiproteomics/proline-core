@@ -31,7 +31,7 @@ public class QuantPropertiestest {
             assertEquals(1, mqPepProperties.getMqPepProfileByGroupSetupNumber().size());
             assertEquals(1, mqPepProperties.getMqProtSetIds().size());
             assertNotNull(mqPepProperties.m_pepIonAbSummarizingConfig);
-            assertEquals(1,mqPepProperties.m_pepIonAbSummarizingConfig.getmMqPeptideIonSelLevelById().size());
+            assertEquals(1,mqPepProperties.m_pepIonAbSummarizingConfig.getMqPeptideIonSelLevelById().size());
             assertNull(mqPepProperties.getDiscardingReason());
 
             mqPepProperties = objectMapper.readValue(mqPepDiscardBestPropJsonStr, MasterQuantPeptideProperties.class);

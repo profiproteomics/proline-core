@@ -34,9 +34,19 @@ public class DMasterQuantPeptideIon {
 	private float m_elutionTime;
 	private Long m_lcmsMasterFeatureId;
 	private DPeptideMatch m_representativePepMatch;
+	private Boolean m_usedInPeptide;
+	private PepIonStatus m_pepIonStatus;
+
+	public enum PepIonStatus {
+		UNKNOWN, //should not stay in this state !
+		INVALIDATED,
+		VALIDATED,
+		USED_VALIDATED,
+		UNUSED_VALIDATED
+	}
 
 	public DMasterQuantPeptideIon() {
-
+		m_pepIonStatus= PepIonStatus.UNKNOWN;
 	}
 
 	public DMasterQuantPeptideIon(MasterQuantPeptideIon mqpi) {
@@ -48,6 +58,7 @@ public class DMasterQuantPeptideIon {
 		m_moz = mqpi.getMoz();
 		m_elutionTime = mqpi.getElutionTime();
 		m_lcmsMasterFeatureId = mqpi.getLcmsMasterFeatureId();
+		updatePepIonStatus();
 	}
 
 	public DMasterQuantPeptideIon(PeptideInstance pi, MasterQuantPeptideIon mqpi, Peptide p, PeptideMatch bpm) {
@@ -64,8 +75,8 @@ public class DMasterQuantPeptideIon {
 			bpm.getMissedCleavage(), bpm.getScore(), bpm.getResultSet().getId(), bpm.getCDPrettyRank(), bpm.getSDPrettyRank(), bpm.getIsDecoy(),
 			bpm.getSerializedProperties());
 		m_bestPeptideMatch.setPeptide(p);
-
 		m_lcmsMasterFeatureId = mqpi.getLcmsMasterFeatureId();
+		updatePepIonStatus();
 	}
 
 	public long getId() {
@@ -138,6 +149,7 @@ public class DMasterQuantPeptideIon {
 
 	public void setMasterQuantComponent(MasterQuantComponent masterQuantComponent) {
 		this.m_masterQuantComponent = masterQuantComponent;
+		updatePepIonStatus();
 	}
 
 	public DPeptideMatch getBestPeptideMatch() {
@@ -183,5 +195,38 @@ public class DMasterQuantPeptideIon {
 		}
 
 		return m_quantPeptideIonByQchIds;
+	}
+
+	public void setUsedInPeptide(boolean isUsed){
+		if(m_usedInPeptide == null ||  !m_usedInPeptide.equals(isUsed)) {
+			m_usedInPeptide = isUsed;
+			updatePepIonStatus();
+		}
+	}
+
+	public Boolean isUsedInPeptide(){
+		return m_usedInPeptide;
+	}
+
+	private void updatePepIonStatus() {
+
+		if(m_masterQuantComponent == null) {
+			m_pepIonStatus = PepIonStatus.UNKNOWN;
+			return;
+		}
+
+		boolean selected =  m_masterQuantComponent.getSelectionLevel()>=2;
+		if(!selected)
+			m_pepIonStatus = PepIonStatus.INVALIDATED;
+		else if( m_usedInPeptide== null)
+			m_pepIonStatus = PepIonStatus.VALIDATED;
+		else if(m_usedInPeptide)
+			m_pepIonStatus = PepIonStatus.USED_VALIDATED;
+		else
+			m_pepIonStatus = PepIonStatus.UNUSED_VALIDATED;
+	}
+
+	public PepIonStatus getPepIonStatus(){
+		return m_pepIonStatus;
 	}
 }

@@ -75,7 +75,7 @@ public class MasterQuantPeptideProperties {
 			this.methodName = methodName;
 		}
 
-		public Map<Long,Integer> getmMqPeptideIonSelLevelById() {
+		public Map<Long,Integer> getMqPeptideIonSelLevelById() {
 			return mqPeptideIonSelLevelById;
 		}
 
