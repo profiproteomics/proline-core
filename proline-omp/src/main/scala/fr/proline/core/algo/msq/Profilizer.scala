@@ -384,11 +384,13 @@ class Profilizer( expDesign: ExperimentalDesign, groupSetupNumber: Int = 1, mast
     )
     
     // --- Iterate over MQ peptides clusters to summarize corresponding abundance matrix ---
-    val rawAbundanceMatrixBuffer = new ArrayBuffer[Array[Float]](mqPepsClusters.length)
+   // val rawAbundanceMatrixBuffer = new ArrayBuffer[Array[Float]](mqPepsClusters.length)
     val rawAbundancesByProfileClusterBuilder = Map.newBuilder[MasterQuantPeptidesCluster,Array[Float]]
-    rawAbundancesByProfileClusterBuilder.sizeHint(rawAbundanceMatrixBuffer.length)
+    rawAbundancesByProfileClusterBuilder.sizeHint(mqPepsClusters.length)
     val abundanceMatrixBuffer = new ArrayBuffer[Array[Float]](mqPepsClusters.length)
     val psmCountMatrixBuffer = new ArrayBuffer[Array[Int]](mqPepsClusters.length)
+    val psmCountsByProfileClusterBuilder = Map.newBuilder[MasterQuantPeptidesCluster,Array[Int]]
+    psmCountsByProfileClusterBuilder.sizeHint(psmCountMatrixBuffer.length)
     val mqPepsRatiosCvs = new ArrayBuffer[ArrayBuffer[Float]](mqPepsClusters.length)
     
     val abSumMethod = AbundanceSummarizerMethod.withName(config.abundanceSummarizerMethod)
@@ -412,7 +414,6 @@ class Profilizer( expDesign: ExperimentalDesign, groupSetupNumber: Int = 1, mast
       val summarizedRawAbundances = this.summarizeMatrix(mqPepRawAbundanceMatrix, AbundanceSummarizerMethod.SUM)
       //println("summarizedRawAbundances: " + summarizedRawAbundances.mkString("\t"))
 
-      rawAbundanceMatrixBuffer += summarizedRawAbundances
       rawAbundancesByProfileClusterBuilder += mqPepsCluster -> summarizedRawAbundances
       
       // Summarize abundances of the current profile cluster
@@ -424,7 +425,9 @@ class Profilizer( expDesign: ExperimentalDesign, groupSetupNumber: Int = 1, mast
       
       // Summarize PSM counts of the current profile cluster
       val psmCountMatrix = clusteredMqPeps.map( _.getPepMatchesCountsForQuantChannels(expDesignSetup.qcIds) ).toArray
-      psmCountMatrixBuffer += psmCountMatrix.transpose.map( _.sum )
+      val psmCountSummarized = psmCountMatrix.transpose.map( _.sum )
+      psmCountMatrixBuffer += psmCountSummarized
+      psmCountsByProfileClusterBuilder += mqPepsCluster -> psmCountSummarized
       
       // Retrieve ratios
       val ratioMatrix = new ArrayBuffer[Array[Float]](clusteredMqPeps.length)
@@ -454,6 +457,7 @@ class Profilizer( expDesign: ExperimentalDesign, groupSetupNumber: Int = 1, mast
     
     // --- Map raw abundances by the corresponding MQ peptides cluster ---
     val rawAbundancesByProfileCluster = rawAbundancesByProfileClusterBuilder.result
+    val psmCountsByProfileCluster = psmCountsByProfileClusterBuilder.result
     
     // --- Normalize the abundance matrix ---
     val normalizedMatrix = if( config.proteinStatConfig.applyNormalization == false ) abundanceMatrixBuffer.toArray
@@ -531,12 +535,14 @@ class Profilizer( expDesign: ExperimentalDesign, groupSetupNumber: Int = 1, mast
       val mqPeptideIds = mqPepCluster.mqPeptides.map(_.id).toArray
       val rawAbundances = rawAbundancesByProfileCluster(mqPepCluster)
       val abundances = abundancesByProfileCluster(mqPepCluster)
+      val psmCounts = psmCountsByProfileCluster(mqPepCluster)
       
       val quantProfile = new MasterQuantProteinSetProfile(
         rawAbundances = rawAbundances,
         abundances = abundances, //.map(x => 0f),
         ratios = ratios.toList,
-        mqPeptideIds = mqPeptideIds
+        mqPeptideIds = mqPeptideIds,
+        peptideMatchesCounts =  psmCounts
       )
       
       mqProfilesByProtSet(mqProtSet) += quantProfile
@@ -558,8 +564,8 @@ class Profilizer( expDesign: ExperimentalDesign, groupSetupNumber: Int = 1, mast
       val bestMQProtSetProfile = mqProtSet.getBestProfile(groupSetupNumber)
       if (bestMQProtSetProfile.isDefined) {
         //logger.debug("undefined abundance: "+bestMQProtSetProfile.get.abundances.count(ab =>isZeroOrNaN(ab)) )
-        mqProtSet.setAbundancesForQuantChannels(bestMQProtSetProfile.get.abundances,expDesignSetup.qcIds)
-        
+//        mqProtSet.setAbundancesForQuantChannels(bestMQProtSetProfile.get.abundances,expDesignSetup.qcIds)
+        mqProtSet.setAbundancesAndPsmCountsForQuantChannels(bestMQProtSetProfile.get.abundances, bestMQProtSetProfile.get.peptideMatchesCounts, expDesignSetup.qcIds)
         
       } else {
         // FOR TESTS ONLY //
