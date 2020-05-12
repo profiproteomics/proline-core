@@ -246,6 +246,7 @@ object ClusteringMethodParam extends Enumeration {
   type Param = Value
   val EXACT_POSITION_MATCHING = Value("EXACT_POSITION_MATCHING")
   val TOLERANT_POSITION_MATCHING = Value("TOLERANT_POSITION_MATCHING")
+  val ISOMORPHIC_MATCHING = Value("ISOMORPHIC_MATCHING")
 }
 
 object PtmSiteClusterer {
@@ -257,13 +258,15 @@ object PtmSiteClusterer {
     methodParam match {
       case ClusteringMethodParam.EXACT_POSITION_MATCHING => new PtmSiteExactClusterer(resultSummary, proteinMatches)
       case ClusteringMethodParam.TOLERANT_POSITION_MATCHING => new PtmSiteExactClusterer(resultSummary, proteinMatches)
+      case ClusteringMethodParam.ISOMORPHIC_MATCHING => new PtmSiteExactClusterer(resultSummary, proteinMatches, false)
     }
   }
 }
 
 class PtmSiteExactClusterer(
     val resultSummary: ResultSummary,
-    val proteinMatches: Array[ProteinMatch]
+    val proteinMatches: Array[ProteinMatch],
+    val clusterizePartiallyIsomorphicPep: Boolean = true
 ) extends IPtmSiteClusterer with LazyLogging {
 
   private val proteinMatchesById = proteinMatches.map { pm => pm.id -> pm }.toMap
@@ -309,7 +312,9 @@ class PtmSiteExactClusterer(
               clusterizedSequenceMatches += (candidateSequenceMatch -> true)
             }
             case PtmStatus.Compatible | PtmStatus.PartiallyIsomorphic => {
-              clusterizedPeptides.getOrElseUpdate(status, new ArrayBuffer[Peptide]) += peptideById(candidateSequenceMatch.getPeptideId())
+              if (clusterizePartiallyIsomorphicPep) {
+                clusterizedPeptides.getOrElseUpdate(status, new ArrayBuffer[Peptide]) += peptideById(candidateSequenceMatch.getPeptideId())
+              }
             }
             case _ => {}
           }
