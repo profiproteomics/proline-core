@@ -238,6 +238,7 @@ object Ms2CountEntitiesSummarizer extends IMqPepAndProtEntitiesSummarizer with L
           rawAbundance = ms2CountSum,
           abundance = ms2CountSum,
           peptideMatchesCount = ms2CountSum,
+          peptidesCount = if(mergedPepSet.items != null) Some(mergedPepSet.items.length) else None,
           quantChannelId = qcId,
           selectionLevel = 2
         )

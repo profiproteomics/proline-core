@@ -52,6 +52,7 @@ public class DMasterQuantProteinSet {
 	private Map<Long, String> quantStatusByQchIds = new HashMap<Long, String>();
 
 	// List of peptideNumber by Qch
+	//@depreciated : Information should be store in QuantProteinSet know... keep for old data for few version
 	private Map<Long, Integer> quantPeptideNumberByQchIds = new HashMap<Long, Integer>();
 
 	/**
@@ -239,10 +240,20 @@ public class DMasterQuantProteinSet {
 		this.quantStatusByQchIds = quantStatusByQchIds;
 	}
 
+	/**
+	 * @deprecated information should now be stored in QuantProteinSet
+	 * @return  Map<Long, Integer> : number of peptides for each quant channel id
+	 */
+	@Deprecated
 	public Map<Long, Integer> getQuantPeptideNumberByQchIds() {
 		return quantPeptideNumberByQchIds;
 	}
 
+	/**
+	 * @deprecated information should now be stored in QuantProteinSet
+	 * @param quantPeptideNumberByQchIds number of peptides for each quant channel id
+	 */
+	@Deprecated
 	public void setQuantPeptideNumberByQchIds(
 		Map<Long, Integer> quantPeptideNumberByQchIds) {
 		this.quantPeptideNumberByQchIds = quantPeptideNumberByQchIds;

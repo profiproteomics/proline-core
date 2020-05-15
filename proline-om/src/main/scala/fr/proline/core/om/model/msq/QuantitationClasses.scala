@@ -479,7 +479,7 @@ case class QuantProteinSet(
   
   // TODO: fill this value and update the MSIdb
   @JsonDeserialize(contentAs = classOf[java.lang.Integer] )
-  val peptidesCount: Option[Int] = None,
+  var peptidesCount: Option[Int] = None,
   
   val quantChannelId: Long,
   
@@ -597,7 +597,7 @@ case class MasterQuantProteinSet(
     Some(bestProfile)
   }
   
-  // TODO: move to the MasterQuantProteinSetProfile class when peptideMatchesCount has been updated in the database
+ /* // TODO: move to the MasterQuantProteinSetProfile class when peptideMatchesCount has been updated in the database
   def getProfileQuantComponentMap(profile: MasterQuantProteinSetProfile, qcIds: Seq[Long]): LongMap[QuantComponent] = {
     val rawAbundanceByQcId = qcIds.zip(profile.rawAbundances).toLongMap
     val abundanceByQcId = qcIds.zip(profile.abundances).toLongMap
@@ -618,7 +618,7 @@ case class MasterQuantProteinSet(
     }
     
     quantCompMap
-  }
+  }*/
   
   def setAbundancesForQuantChannels( abundances: Seq[Float], quantChannelIds: Seq[Long] ) {
     this.updateOrCreateComponentForQuantChannels(
@@ -628,6 +628,7 @@ case class MasterQuantProteinSet(
         rawAbundance = Float.NaN,
         abundance = abundance,
         peptideMatchesCount = 0,
+        peptidesCount=None,
         proteinSetId = None,
         proteinMatchId = None,
         selectionLevel = 2,
@@ -636,9 +637,9 @@ case class MasterQuantProteinSet(
     )
   }
 
-  def setAbundancesAndPsmCountsForQuantChannels( abundances: Seq[Float], psmCounts: Seq[Int], quantChannelIds: Seq[Long] ) {
+  def setAbundancesAndCountsForQuantChannels(abundances: Seq[Float], psmCounts: Seq[Int],pepCounts: Seq[Int], quantChannelIds: Seq[Long] ) {
 
-    assert(abundances.size.equals(quantChannelIds.size) && psmCounts.size.equals(quantChannelIds.size))
+    assert(abundances.size.equals(quantChannelIds.size) && psmCounts.size.equals(quantChannelIds.size) && pepCounts.size.equals(quantChannelIds.size))
     val quantCompMap = this.getQuantComponentMap()
 
     for (index <- 0 until quantChannelIds.length) {
@@ -648,11 +649,13 @@ case class MasterQuantProteinSet(
       if( quantCompMap.contains(qcId) ) {
         quantCompMap(qcId).abundance = abundances(index)
         quantCompMap(qcId).peptideMatchesCount =  psmCounts(index)
+        quantCompMap(qcId).peptidesCount = Some(pepCounts(index))
       } else {
         val qProtSet = QuantProteinSet(
           rawAbundance = Float.NaN,
           abundance = abundances(index),
           peptideMatchesCount = psmCounts(index),
+          peptidesCount = Some(pepCounts(index)),
           proteinSetId = None,
           proteinMatchId = None,
           selectionLevel = 2,

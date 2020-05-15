@@ -7,6 +7,7 @@ public class DQuantProteinSet {
 	Integer selectionLevel;
 	Integer peptideMatchesCount;
 	Long quantChannelId;
+	Integer peptidesCount = 0;
 	Long proteinSetId = 0l;
 	Long proteinMatchId = 0l;
 
@@ -85,4 +86,11 @@ public class DQuantProteinSet {
 		this.proteinMatchId = proteinMatchId;
 	}
 
+	public Integer getPeptidesCount() {
+		return peptidesCount;
+	}
+
+	public void setPeptidesCount(Integer peptidesCount) {
+		this.peptidesCount = peptidesCount;
+	}
 }

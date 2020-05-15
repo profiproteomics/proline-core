@@ -102,7 +102,8 @@ case class MasterQuantProteinSetProfile(
   @BeanProperty var ratios: List[Option[ComputedRatio]] = List(),
   @BeanProperty var mqPeptideIds: Array[Long] = Array(),
   // TODO: fill me
-  @BeanProperty var peptideMatchesCounts: Array[Int] = Array()
+  @BeanProperty var peptideMatchesCounts: Array[Int] = Array(),
+  @BeanProperty var peptideCounts: Array[Int] = Array()
 ) {
   if( name == null ) name = ""
   if( rawAbundances == null ) rawAbundances = Array()
@@ -110,6 +111,7 @@ case class MasterQuantProteinSetProfile(
   if( ratios == null ) ratios = List()
   if( mqPeptideIds == null ) mqPeptideIds = Array()
   if( peptideMatchesCounts == null ) peptideMatchesCounts = Array()
+  if( peptideCounts == null ) peptideCounts = Array()
 }
  
 case class MasterQuantProteinSetProperties(

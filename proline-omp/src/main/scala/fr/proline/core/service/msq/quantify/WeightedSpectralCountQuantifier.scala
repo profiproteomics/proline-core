@@ -742,6 +742,7 @@ class WeightedSpectralCountQuantifier(
             rawAbundance = protSSC,
             abundance = protWSC,
             peptideMatchesCount = protBSC,
+            peptidesCount = if( peptideSetForPM.items != null) Some(peptideSetForPM.items.length) else None,
             proteinSetId = Some(protSetId),
             proteinMatchId = Some(foundPMIDandAcc._1),
             quantChannelId = qcId,
