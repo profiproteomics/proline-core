@@ -1,20 +1,16 @@
 package fr.proline.core.om.storer.msi.impl
 
-import scala.collection.mutable.ArrayBuffer
-import scala.collection.mutable.HashMap
-import scala.collection.mutable.LongMap
-
 import com.typesafe.scalalogging.LazyLogging
-
 import fr.profi.jdbc.easy._
 import fr.profi.util.collection._
 import fr.profi.util.serialization.ProfiJson
-import fr.proline.context._
 import fr.proline.core.dal._
 import fr.proline.core.dal.tables.msi.MsiDbResultSetTable
 import fr.proline.core.om.model.msi._
 import fr.proline.core.om.storer.msi._
-import fr.proline.core.orm.msi.ResultSet.{ Type => RSType }
+import fr.proline.core.orm.msi.ResultSet.{Type => RSType}
+
+import scala.collection.mutable.{ArrayBuffer, HashMap, LongMap}
 
 class SQLRsStorer(
   val rsWriter: IRsWriter,
@@ -402,17 +398,53 @@ class SQLRsStorer(
     require(msiSearchWriter.isDefined, "A MSI search writer must be provided")
 
     // Synchronize some related objects with the UDSdb
-    DoJDBCWork.withEzDBC(context.getUDSDbConnectionContext) { udsEzDBC =>
-      val enzymes = msiSearch.searchSettings.usedEnzymes
-      for (enzyme <- enzymes) {
-        udsEzDBC.selectAndProcess("SELECT id FROM enzyme WHERE name = ?", enzyme.name) { r =>
-          enzyme.id = r.nextLong
+    var retVal: Long = -1
+    val udsCtxt = context.getUDSDbConnectionContext
+
+    try {
+      DoJDBCWork.withEzDBC(udsCtxt) { udsEzDBC =>
+        val enzymes = msiSearch.searchSettings.usedEnzymes
+        for (enzyme <- enzymes) {
+          udsEzDBC.selectAndProcess("SELECT id FROM enzyme WHERE name = ?", enzyme.name) { r =>
+            enzyme.id = r.nextLong
+          }
+
+          if (enzyme.id <= 0) {
+            //Not define. Store new enzyme.
+            udsEzDBC.executePrepared("INSERT INTO enzyme(name, cleavage_regexp, is_independant, is_semi_specific) VALUES(?,?,?,?)", true) { stmt =>
+              stmt.executeWith(
+                enzyme.name,
+                if (enzyme.cleavageRegexp.isDefined) enzyme.cleavageRegexp.get else null,
+                enzyme.isIndependant,
+                enzyme.isSemiSpecific
+              )
+              enzyme.id = stmt.generatedLong
+            }
+
+            for(ec <- enzyme.enzymeCleavages) {
+              udsEzDBC.executePrepared("INSERT INTO enzyme_cleavage(site, residues,restrictive_residues, enzyme_id) VALUES(?,?,?,?)") { stmt =>
+                stmt.executeWith(
+                  ec.site,
+                  ec.residues,
+                  ec.restrictiveResidues,
+                  enzyme.id
+                )
+              }
+            }
+
+          }
         }
-        require(enzyme.id > 0, "can't find an enzyme named '" + enzyme.name + "' in the UDS-DB")
       }
+         this.msiSearchWriter.get.insertMsiSearch(msiSearch, context)
+
+    } catch {
+      case t: Throwable => {
+        logger.error("Error while storing enzyme", t)
+        retVal
+      }
+
     }
 
-    this.msiSearchWriter.get.insertMsiSearch(msiSearch, context)
   }
 
   def storeMsQueries(msiSearchID: Long, msQueries: Seq[MsQuery], context: StorerContext): StorerContext = {
