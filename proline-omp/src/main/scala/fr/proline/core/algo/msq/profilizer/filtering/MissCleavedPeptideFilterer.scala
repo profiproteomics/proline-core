@@ -22,10 +22,12 @@ object MissCleavedPeptideDiscardingReason extends EnhancedEnum {
 object MissCleavedPeptideFilterer {
   
   import MissCleavedPeptideFilteringMethod._
-  
+
   def discardPeptides( masterQuantPeptides: Seq[MasterQuantPeptide], methodName: String ): Unit = {
-    val filteringMethod = MissCleavedPeptideFilteringMethod.withName(methodName)
-    
+    discardPeptides(masterQuantPeptides, MissCleavedPeptideFilteringMethod.withName(methodName))
+  }
+
+  def discardPeptides( masterQuantPeptides: Seq[MasterQuantPeptide], filteringMethod: MissCleavedPeptideFilteringMethod.Value ): Unit = {
     filteringMethod match {
       case DISCARD_ALL_FORMS => AllCleavageFormsFilterer.discardPeptides(masterQuantPeptides)
       case DISCARD_MISS_CLEAVED_FORMS => MissCleavedFormFilterer.discardPeptides(masterQuantPeptides)

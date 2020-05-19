@@ -4,12 +4,7 @@ import com.typesafe.scalalogging.LazyLogging
 import fr.profi.util.collection._
 import fr.profi.util.math.median
 import fr.profi.util.primitives.isZeroOrNaN
-import fr.proline.core.algo.msq.config.profilizer.AbundanceSummarizerMethod
-import fr.proline.core.algo.msq.config.profilizer.GenericProfilizerConfig
-import fr.proline.core.algo.msq.config.profilizer.MissingAbundancesInferenceMethod
-import fr.proline.core.algo.msq.config.profilizer.MqPeptidesClusteringMethod
-import fr.proline.core.algo.msq.config.profilizer.ProfilizerStatConfig
-import fr.proline.core.algo.msq.config.profilizer.QuantComponentItem
+import fr.proline.core.algo.msq.config.profilizer.{AbundanceSummarizerMethod, MissingAbundancesInferenceMethod, MqPeptidesClusteringMethod, MqPeptidesSelectionMethod, PostProcessingConfig, ProfilizerStatConfig, QuantComponentItem}
 import fr.proline.core.algo.msq.profilizer._
 import fr.proline.core.algo.msq.profilizer.filtering._
 import fr.proline.core.algo.msq.summarizing.BuildMasterQuantPeptide
@@ -20,85 +15,6 @@ import org.apache.commons.math3.stat.StatUtils
 
 import scala.collection.mutable
 import scala.collection.mutable.ArrayBuffer
-import scala.collection.mutable.HashMap
-
-// TODO: recompute raw abundances from peakels
-// (smoothing methods, area VS apex intensity, first isotope vs max one vs isotope pattern fitting)
-
-// TODO REMOVE : Use OM Config !
-//object QuantComponentItem extends EnhancedEnum {
-//  val QUANT_PEPTIDES = Value
-//  val QUANT_PEPTIDE_IONS = Value
-//}
-//
-//case class ProfilizerStatConfig(
-//  // Note: maxCv is experimental => DO NOT PUT IN GUI
-//  var maxCv: Option[Float] = None, // TODO: do not discard peptides => apply this filter during the summarization step ?
-//  statTestsAlpha: Float = 0.01f,
-//  minZScore: Float = 0.4f, // ZScore equals ln(ratio) followed by standardisation
-//  minPsmCountPerRatio: Int = 0, // TODO: remove me ???
-//  applyNormalization: Boolean = true,
-//
-//  applyMissValInference: Boolean = true, // TODO: remove me when IHMs haven been updated
-//  // TODO: replace Some(MissingAbundancesInferenceConfig) by None when IHMs haven been updated
-//  var missValInferenceMethod: String = null,
-//  var missValInferenceConfig: Option[MissingAbundancesInferenceConfig] = None,
-//
-//  applyVarianceCorrection: Boolean = true,
-//  applyTTest: Boolean = true,
-//  applyZTest: Boolean = true
-//) {
-//  // Workaround for jackson support of default values
-//  if(missValInferenceMethod == null) missValInferenceMethod = MissingAbundancesInferenceMethod.GAUSSIAN_MODEL
-//  if(missValInferenceConfig.isEmpty) missValInferenceConfig = Some(MissingAbundancesInferenceConfig())
-//}
-//case class ProfilizerConfig(
-//  discardMissedCleavedPeptides: Boolean = true, // TODO: rename me in discardMissCleavedPeptides
-//  var missCleavedPeptideFilteringMethod: Option[String] = None,
-//
-//  discardOxidizedPeptides: Boolean = true,
-//  var oxidizedPeptideFilteringMethod: Option[String] = None,
-//
-//  //discardLowIdentPeptides: Boolean = false,
-//  useOnlySpecificPeptides: Boolean = true,
-//  discardPeptidesSharingPeakels: Boolean = true,
-//
-//  applyProfileClustering: Boolean = true,
-//  var profileClusteringMethod: Option[String] = None,
-//  profileClusteringConfig: Option[MqPeptidesClustererConfig] = None,
-//
-//  // TODO: rename into abundanceSummarizingMethod ???
-//  var abundanceSummarizerMethod: String = null,
-//
-//  peptideStatConfig: ProfilizerStatConfig = new ProfilizerStatConfig(),
-//  proteinStatConfig: ProfilizerStatConfig = new ProfilizerStatConfig(),
-//
-//  var summarizingBasedOn : Option[String] = None
-//
-//) {
-//  // Workaround for jackson support of default values
-//  if( oxidizedPeptideFilteringMethod.isEmpty ) {
-//    oxidizedPeptideFilteringMethod = Some(OxidizedPeptideFilteringMethod.DISCARD_ALL_FORMS)
-//  }
-//  // Workaround for jackson support of default values
-//  if( missCleavedPeptideFilteringMethod.isEmpty ) {
-//    missCleavedPeptideFilteringMethod = Some(MissCleavedPeptideFilteringMethod.DISCARD_ALL_FORMS)
-//  }
-//  if(profileClusteringMethod.isEmpty) {
-//    profileClusteringMethod = Some(MqPeptidesClusteringMethod.QUANT_PROFILE)
-//  }
-//  if( abundanceSummarizerMethod == null) {
-//    abundanceSummarizerMethod = AbundanceSummarizer.Method.MEAN
-//  }
-//  // force QUANT_PEPTIDE_IONS if Summarizer is LFQ
-//  if (abundanceSummarizerMethod == AbundanceSummarizer.Method.LFQ.toString) {
-//    summarizingBasedOn = Some(QuantComponentItem.QUANT_PEPTIDE_IONS)
-//  }
-//
-//  if (summarizingBasedOn.isEmpty) {
-//    summarizingBasedOn = Some(QuantComponentItem.QUANT_PEPTIDES)
-//  }
-//}
 
 /**
  * Analyze profiles of Master Quant Peptides and Master Quant Protein sets
@@ -113,7 +29,7 @@ class Profilizer( expDesign: ExperimentalDesign, groupSetupNumber: Int = 1, mast
   /**
    * Computes MasterQuantPeptide profiles.
    */
-  def computeMasterQuantPeptideProfiles( masterQuantPeptides: Seq[MasterQuantPeptide], config: GenericProfilizerConfig ) {
+  def computeMasterQuantPeptideProfiles( masterQuantPeptides: Seq[MasterQuantPeptide], config: PostProcessingConfig ) {
     require( masterQuantPeptides.length >= 10, "at least 10 peptides are required for profile analysis")
     
     logger.info("computing master quant peptide profiles...")
@@ -133,25 +49,21 @@ class Profilizer( expDesign: ExperimentalDesign, groupSetupNumber: Int = 1, mast
     }
     
     // --- Apply protein set specific filter if requested ---
-    if( config.useOnlySpecificPeptides ) {
+    if( config.peptidesSelcetionMethod == MqPeptidesSelectionMethod.SPECIFIC ) {
       UnspecificPeptideFilterer.discardPeptides(masterQuantPeptides)
     }
     
     // --- Apply MC filter if requested ---
-    if( config.discardMissedCleavedPeptides ) {
+    if( config.discardMissCleavedPeptides ) {
       require( config.missCleavedPeptideFilteringMethod.isDefined, "config.missCleavedPeptideFilteringMethod is empty")
       MissCleavedPeptideFilterer.discardPeptides(masterQuantPeptides, config.missCleavedPeptideFilteringMethod.get)
     }
     
     // --- Apply Oxidation filter if requested ---
-    if( config.isV1Config && config.discardOxidizedPeptides ) {
-      require( config.oxidizedPeptideFilteringMethod.isDefined, "config.oxidizedPeptideFilteringMethod is empty")
-      OxidizedPeptideFilterer.discardPeptides(masterQuantPeptides, config.oxidizedPeptideFilteringMethod.get)
-    } else if(config.discardModifiedPeptides) {
+    if(config.discardModifiedPeptides) {
       require( config.modifiedPeptideFilteringMethod.isDefined , "config.modifiedPeptideFilteringMethod is empty")
-      require( !config.ptmDefinitionIdsToDiscard.isEmpty , "No modifications specified for discard Modified peptide")
-
-      ModifiedPeptideFilter.discardPeptides(masterQuantPeptides, config.modifiedPeptideFilteringMethod.get, config.ptmDefinitionIdsToDiscard)
+      require( config.modifiedPeptideFilterConfig.isDefined && !(config.modifiedPeptideFilterConfig.get.ptmDefinitionIdsToDiscard.isEmpty && !config.modifiedPeptideFilterConfig.get.ptmPattern.isDefined), "No modifications specified for discard Modified peptide")
+      ModifiedPeptideFilter.discardPeptides(masterQuantPeptides, config.modifiedPeptideFilteringMethod.get, config.modifiedPeptideFilterConfig.get)
     }
 
     // Keep master quant peptides passing all filters (i.e. have a selection level higher than 1)
@@ -162,7 +74,7 @@ class Profilizer( expDesign: ExperimentalDesign, groupSetupNumber: Int = 1, mast
     // WARN: CBy => selectionLevel < 2 are kept, this means that normalization & inference are also done on deselected masterQuantComponents
     
      val mqPepsAfterAllFilters = {
-        if (config.summarizingBasedOn.get == QuantComponentItem.QUANT_PEPTIDES.toString) {
+        if (config.peptideAbundanceSummarizerConfig.isDefined && config.peptideAbundanceSummarizerConfig.get.peptideSummarizingBasedOn.get == QuantComponentItem.QUANT_PEPTIDES.toString) {
           masterQuantPeptides.asInstanceOf[Seq[MasterQuantComponent[QuantComponent]]]
         } else {
           masterQuantPeptides.flatMap(_.masterQuantPeptideIons).asInstanceOf[Seq[MasterQuantComponent[QuantComponent]]]
@@ -190,7 +102,7 @@ class Profilizer( expDesign: ExperimentalDesign, groupSetupNumber: Int = 1, mast
     // TODO modify this to take into account PEPTIDE or ION
     //
     //
-    val normalizedMatrix = if( config.peptideStatConfig.applyNormalization == false ) rawAbundanceMatrix else AbundanceNormalizer.normalizeAbundances(rawAbundanceMatrix)
+    val normalizedMatrix = if( !config.peptideStatConfig.applyNormalization ) rawAbundanceMatrix else AbundanceNormalizer.normalizeAbundances(rawAbundanceMatrix)
     
     require( normalizedMatrix.length == rawAbundanceMatrix.length, "error during normalization, some peptides were lost...")
  
@@ -220,7 +132,7 @@ class Profilizer( expDesign: ExperimentalDesign, groupSetupNumber: Int = 1, mast
       mqQuantComponent.setAbundancesForQuantChannels(abundances,expDesignSetup.qcIds)
     }
 
-     if (config.summarizingBasedOn.get == QuantComponentItem.QUANT_PEPTIDE_IONS.toString) {
+     if (config.isMqPeptideAbundanceSummarizerBasedOn(QuantComponentItem.QUANT_PEPTIDE_IONS)) {
       //
       // if previous step is ION based, then update the associated mqPep Abundance values
       //
@@ -231,7 +143,7 @@ class Profilizer( expDesign: ExperimentalDesign, groupSetupNumber: Int = 1, mast
         val abundances = newMqPep.getAbundancesForQuantChannels(expDesignSetup.qcIds)
         mqPep.setAbundancesForQuantChannels(abundances, expDesignSetup.qcIds)
         //Get properties back
-        mqPep.properties.getOrElse(new MasterQuantPeptideProperties()).mqPepIonAbundanceSummarizingConfig= newMqPep.properties.getOrElse(new MasterQuantPeptideProperties()).mqPepIonAbundanceSummarizingConfig
+        mqPep.properties.getOrElse(MasterQuantPeptideProperties()).mqPepIonAbundanceSummarizingConfig= newMqPep.properties.getOrElse(MasterQuantPeptideProperties()).mqPepIonAbundanceSummarizingConfig
         // the next step is mandatory since BuildMasterQuantPeptide updates mqPepIons.masterQuantPeptideId to the new MasterQuantPeptide
         mqPepIons.foreach { mqPepIon =>
           mqPepIon.masterQuantPeptideId = mqPep.id
@@ -244,9 +156,9 @@ class Profilizer( expDesign: ExperimentalDesign, groupSetupNumber: Int = 1, mast
     //
     
     // Define some mappings
-    val mqPepById = new HashMap[Long,MasterQuantPeptide]()
+    val mqPepById = new mutable.HashMap[Long,MasterQuantPeptide]()
     mqPepById.sizeHint(masterQuantPeptides.length)
-    val ratiosByMQPepId = new HashMap[Long,ArrayBuffer[Option[ComputedRatio]]]()
+    val ratiosByMQPepId = new mutable.HashMap[Long,ArrayBuffer[Option[ComputedRatio]]]()
     ratiosByMQPepId.sizeHint(masterQuantPeptides.length)
     
     // Compute these mappings
@@ -310,10 +222,10 @@ class Profilizer( expDesign: ExperimentalDesign, groupSetupNumber: Int = 1, mast
     for ( (mqPepId,ratios) <- ratiosByMQPepId ) {
 
       val mqPep = mqPepById(mqPepId)
-      val mqPepProps = mqPep.properties.getOrElse( new MasterQuantPeptideProperties() )
+      val mqPepProps = mqPep.properties.getOrElse( MasterQuantPeptideProperties() )
       
-      val quantProfile = new MasterQuantPeptideProfile( ratios = ratios.toList )
-      val mqPeptProfileMap = mqPepProps.getMqPepProfileByGroupSetupNumber.getOrElse( HashMap() )
+      val quantProfile = MasterQuantPeptideProfile(ratios = ratios.toList)
+      val mqPeptProfileMap = mqPepProps.getMqPepProfileByGroupSetupNumber().getOrElse( mutable.HashMap() )
       mqPeptProfileMap += ( groupSetupNumber -> quantProfile )
       mqPepProps.setMqPepProfileByGroupSetupNumber( Some(mqPeptProfileMap) )
       
@@ -326,27 +238,27 @@ class Profilizer( expDesign: ExperimentalDesign, groupSetupNumber: Int = 1, mast
     ()
   }
   
-  def computeMasterQuantProtSetProfiles( masterQuantProtSets: Seq[MasterQuantProteinSet], config: GenericProfilizerConfig) {
+  def computeMasterQuantProtSetProfiles( masterQuantProtSets: Seq[MasterQuantProteinSet], config: PostProcessingConfig) {
     require( masterQuantProtSets.length >= 10, "at least 10 protein sets are required for profile analysis")
     
     logger.info("computing master quant protein set profiles...")
     
     val qcsSampleNum = expDesignSetup.quantChannels.groupBy(_.sampleNumber)
-    val bgBySampleNum = expDesignSetup.groupSetup.biologicalGroups.view.flatMap { bg =>
+    val bgBySampleNum = expDesignSetup.groupSetup.biologicalGroups.seq.view.flatMap { bg =>
       bg.sampleNumbers.map { sampleNumber =>
         sampleNumber -> bg
       }
-    } toMap
+    }.toMap
     val bgByQcIdx = expDesignSetup.quantChannels.map( qc => bgBySampleNum(qc.sampleNumber) )
 
     // Compute the intersection of filtered masterQuantPeptides and mqPeptideSelLevelById
     for (mqProtSet <- masterQuantProtSets) {
 
       val datasetSelLvlMap: mutable.LongMap[Int] = mqProtSet.masterQuantPeptides.toLongMapWith(a => a.id -> a.selectionLevel)
-      val protSetSelLvlMap: HashMap[Long, Int] = mqProtSet.properties.get.getSelectionLevelByMqPeptideId().getOrElse({
+      val protSetSelLvlMap: mutable.HashMap[Long, Int] = mqProtSet.properties.get.getSelectionLevelByMqPeptideId().getOrElse({
         // Note: this default map construction is kept for backward compatibility,
         // it should be now computed during the quantitation phase
-        val defaultSelLvlMap: HashMap[Long, Int] = datasetSelLvlMap.map{case (k ,v) => 
+        val defaultSelLvlMap: mutable.HashMap[Long, Int] = datasetSelLvlMap.map{case (k ,v) =>
           val newSelectionLevel = if (SelectionLevel.isSelected(v)) SelectionLevel.SELECTED_AUTO else SelectionLevel.DESELECTED_AUTO
           k -> newSelectionLevel 
           }(collection.breakOut)
@@ -373,12 +285,12 @@ class Profilizer( expDesign: ExperimentalDesign, groupSetupNumber: Int = 1, mast
     }
 
     // Clusterize MasterQuantPeptides according to the provided method
-    val clusteringMethodName = if( config.applyProfileClustering ) config.profileClusteringMethod.get
+    val clusteringMethodName = if( config.applyProfileClustering ) config.profileClusteringMethod.get.toString
     else MqPeptidesClusteringMethod.PEPTIDE_SET.toString
 
     val mqPepsClusters = MasterQuantPeptidesClusterer.computeMqPeptidesClusters(
       clusteringMethodName,
-      config.profileClusteringConfig,
+      config.profileClustererConfig,
       groupSetupNumber = 1,
       masterQuantProtSets
     )
@@ -395,12 +307,12 @@ class Profilizer( expDesign: ExperimentalDesign, groupSetupNumber: Int = 1, mast
     pepCountsByProfileClusterBuilder.sizeHint(psmCountMatrixBuffer.length)
     val mqPepsRatiosCvs = new ArrayBuffer[ArrayBuffer[Float]](mqPepsClusters.length)
     
-    val abSumMethod = AbundanceSummarizerMethod.withName(config.abundanceSummarizerMethod)
+    val abSumMethod = AbundanceSummarizerMethod.withName(config.peptideAbundanceSummarizingMethod)
     
     for( mqPepsCluster <- mqPepsClusters ) {
 
       val clusteredMqPeps = {
-        if (config.summarizingBasedOn.get == QuantComponentItem.QUANT_PEPTIDES.toString) {
+        if (config.isMqPeptideAbundanceSummarizerBasedOn(QuantComponentItem.QUANT_PEPTIDES)) {
           mqPepsCluster.mqPeptides.asInstanceOf[Seq[MasterQuantComponent[QuantComponent]]]
         } else {
           mqPepsCluster.mqPeptides.flatMap(_.masterQuantPeptideIons).asInstanceOf[Seq[MasterQuantComponent[QuantComponent]]]
@@ -469,9 +381,9 @@ class Profilizer( expDesign: ExperimentalDesign, groupSetupNumber: Int = 1, mast
     val rawAbundancesByProfileCluster = rawAbundancesByProfileClusterBuilder.result
     val psmCountsByProfileCluster = psmCountsByProfileClusterBuilder.result
     val pepCountsByProfileCluster = pepCountsByProfileClusterBuilder.result()
-    
+
     // --- Normalize the abundance matrix ---
-    val normalizedMatrix = if( config.proteinStatConfig.applyNormalization == false ) abundanceMatrixBuffer.toArray
+    val normalizedMatrix = if( !config.proteinStatConfig.applyNormalization ) abundanceMatrixBuffer.toArray
     else AbundanceNormalizer.normalizeAbundances(abundanceMatrixBuffer.toArray)
     
     // --- Compute absolute error model and the filled matrix ---
@@ -488,7 +400,7 @@ class Profilizer( expDesign: ExperimentalDesign, groupSetupNumber: Int = 1, mast
     // --- Compute the ratios corresponding to each profile cluster ---
     
     // Create a map which will store the ratios corresponding to each profile cluster
-    val ratiosByMqPepCluster = mqPepsClusters.view.map( _ -> new ArrayBuffer[Option[ComputedRatio]] ).toMap
+    val ratiosByMqPepCluster = mqPepsClusters.seq.view.map( _ -> new ArrayBuffer[Option[ComputedRatio]]).toMap
     
     // Iterate over the ratio definitions
     for ( ratioDef <- expDesignSetup.groupSetup.ratioDefinitions ) {
@@ -548,8 +460,8 @@ class Profilizer( expDesign: ExperimentalDesign, groupSetupNumber: Int = 1, mast
       val abundances = abundancesByProfileCluster(mqPepCluster)
       val psmCounts = psmCountsByProfileCluster(mqPepCluster)
       val pepCounts = pepCountsByProfileCluster(mqPepCluster)
-      
-      val quantProfile = new MasterQuantProteinSetProfile(
+
+      val quantProfile = MasterQuantProteinSetProfile(
         rawAbundances = rawAbundances,
         abundances = abundances, //.map(x => 0f),
         ratios = ratios.toList,
@@ -564,9 +476,12 @@ class Profilizer( expDesign: ExperimentalDesign, groupSetupNumber: Int = 1, mast
     // Update Master Quant protein sets properties
     for( (mqProtSet,mqProfiles) <- mqProfilesByProtSet ) {
       //if (mqProfiles.isEmpty) println(mqProtSet.proteinSet.getRepresentativeProteinMatch().map(_.accession).getOrElse("no") )
+      
+      val mqProtSetProps = mqProtSet.properties.getOrElse( MasterQuantProteinSetProperties() )
+      val mqProtSetProfileMap = mqProtSetProps.getMqProtSetProfilesByGroupSetupNumber().getOrElse( mutable.HashMap() )
       val mqProtSetProps = mqProtSet.properties.getOrElse( new MasterQuantProteinSetProperties() )
       val mqProtSetProfileMap = mqProtSetProps.getMqProtSetProfilesByGroupSetupNumber.getOrElse( HashMap() )
-      
+
       mqProtSetProfileMap += (groupSetupNumber -> mqProfiles.toArray)
       mqProtSetProps.setMqProtSetProfilesByGroupSetupNumber( Some(mqProtSetProfileMap) )
       
@@ -666,9 +581,9 @@ class Profilizer( expDesign: ExperimentalDesign, groupSetupNumber: Int = 1, mast
           // Check we have enough abundances (at least 3)
           if( sampleAbundances.length > 2 ) {
             val sampleStatSummary = CommonsStatHelper.calcExtendedStatSummary(sampleAbundances)
-            val abundance = sampleStatSummary.getMedian.toFloat
+            val abundance = sampleStatSummary.getMedian().toFloat
             
-            if( isZeroOrNaN(abundance) == false )
+            if( !isZeroOrNaN(abundance) )
               absoluteErrors += AbsoluteErrorObservation( abundance, sampleStatSummary.getStandardDeviation.toFloat )
           }
         }
@@ -689,16 +604,16 @@ class Profilizer( expDesign: ExperimentalDesign, groupSetupNumber: Int = 1, mast
     }
     
     // Estimate the absolute noise model using technical replicates
-    val absoluteNoiseModel = if( absoluteErrors.isEmpty == false ) {
+    val absoluteNoiseModel = if( !absoluteErrors.isEmpty ) {
       ErrorModelComputer.computeAbsoluteErrorModel(absoluteErrors,nbins=Some(errorModelBinsCount))    
     // Estimate the relative noise model using sample replicates
-    } else if( relativeErrors.isEmpty == false ) {
+    } else if( !relativeErrors.isEmpty ) {
       //
       // TODO CBy : cannot understand how that can happen ?? relativeErrors is never updated since l.542 
       //
       this.logger.warn("Insufficient number of analysis replicates => try to estimate absolute noise model using relative observations")
       //this.logger.debug("relativeErrors:" + relativeErrors.length + ", filtered zero :" + relativeErrors.filter(_.abundance > 0).length)
-      ErrorModelComputer.computeRelativeErrorModel(relativeErrors, nbins=Some(errorModelBinsCount)).toAbsoluteErrorModel
+      ErrorModelComputer.computeRelativeErrorModel(relativeErrors, nbins = Some(errorModelBinsCount)).toAbsoluteErrorModel()
     
     // Create a fake Error Model
     } else {
@@ -720,7 +635,7 @@ class Profilizer( expDesign: ExperimentalDesign, groupSetupNumber: Int = 1, mast
     
     logger.debug("config.applyMissValInference value: "+ config.applyMissValInference)
     
-    if (config.applyMissValInference == false) return normalizedMatrix
+    if (!config.applyMissValInference) return normalizedMatrix
     
     /*if (minQCsCountPerSample < 3) {
       // TODO: find what to do if when insufficient technical replicates
@@ -796,13 +711,13 @@ class Profilizer( expDesign: ExperimentalDesign, groupSetupNumber: Int = 1, mast
     val numeratorSampleNumbers = expDesignSetup.sampleNumbersByGroupNumber(ratioDef.numeratorGroupNumber)
     val denominatorSampleNumbers = expDesignSetup.sampleNumbersByGroupNumber(ratioDef.denominatorGroupNumber)
     val allSampleNumbers = numeratorSampleNumbers ++ denominatorSampleNumbers
-    require( numeratorSampleNumbers != null && numeratorSampleNumbers.isEmpty == false, "numeratorSampleNumbers must be defined" )
-    require( denominatorSampleNumbers != null && denominatorSampleNumbers.isEmpty == false, "denominatorSampleNumbers must be defined" )
+    require( numeratorSampleNumbers != null && !numeratorSampleNumbers.isEmpty, "numeratorSampleNumbers must be defined" )
+    require( denominatorSampleNumbers != null && !denominatorSampleNumbers.isEmpty, "denominatorSampleNumbers must be defined" )
     
     // Map quant channel indices by the sample number
-    val qcIndicesBySampleNum = ( allSampleNumbers ).map { sampleNum =>
-      sampleNum -> expDesignSetup.quantChannelsBySampleNumber(sampleNum).map( qc => expDesignSetup.qcIdxById(qc.id) )
-    } toMap
+    val qcIndicesBySampleNum = allSampleNumbers.map { sampleNum =>
+          sampleNum -> expDesignSetup.quantChannelsBySampleNumber(sampleNum).map( qc => expDesignSetup.qcIdxById(qc.id) )
+        }.toMap
     
     def _getSamplesAbundances(abundances: Array[Float], sampleNumbers: Array[Int]): Array[Float] = {
       val qcIndices = sampleNumbers.map( qcIndicesBySampleNum(_) )
@@ -854,7 +769,7 @@ class Profilizer( expDesign: ExperimentalDesign, groupSetupNumber: Int = 1, mast
         val (numerator, numStdDev) = ( numeratorSummary.getMedian().toFloat, numeratorSummary.getStandardDeviation.toFloat )
         val (denom, denomStdDev) = ( denominatorSummary.getMedian().toFloat, denominatorSummary.getStandardDeviation.toFloat )
         
-        if (numerator.isNaN == false &&  numStdDev.isNaN == false && denom.isNaN == false && denomStdDev.isNaN == false) {
+        if (!numerator.isNaN &&  !numStdDev.isNaN && !denom.isNaN && !denomStdDev.isNaN) {
           absoluteVariationsBuffer += AbsoluteErrorObservation( numerator, numStdDev )
           absoluteVariationsBuffer += AbsoluteErrorObservation( denom, denomStdDev )
         } else {
@@ -879,7 +794,7 @@ class Profilizer( expDesign: ExperimentalDesign, groupSetupNumber: Int = 1, mast
       val denominatorPsmCounts = _getSamplesPsmCounts(psmCountRow, denominatorSampleNumbers)
       
       // Compute the ratio for this row
-      val ratio = new AverageAbundanceRatio( rowIdx, numeratorSummary, denominatorSummary, numeratorPsmCounts, denominatorPsmCounts )
+      val ratio = AverageAbundanceRatio( rowIdx, numeratorSummary, denominatorSummary, numeratorPsmCounts, denominatorPsmCounts )
       ratiosBuffer += ratio
       
       // Update the relative error model

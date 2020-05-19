@@ -22,9 +22,9 @@ object AlnMethod extends Enumeration {
   val ITERATIVE = Value("ITERATIVE")
 }
 
-class PepIonAbundanceSummarizingMethodRef extends TypeReference[PepIonAbundanceSummarizingMethod.type]
+class MqPepIonAbundanceSummarizingMethodRef extends TypeReference[MqPepIonAbundanceSummarizingMethod.type]
 
-object PepIonAbundanceSummarizingMethod extends Enumeration {
+object MqPepIonAbundanceSummarizingMethod extends Enumeration {
   val BEST_ION = Value
   val SUM = Value
 }
@@ -59,6 +59,15 @@ object NormalizationMethod extends Enumeration {
   val MEDIAN_RATIO = Value("MEDIAN_RATIO")
   val INTENSITY_SUM = Value("INTENSITY_SUM")
   val MEDIAN_INTENSITY = Value("MEDIAN_INTENSITY")
+}
+
+
+class PeakelsSummarizingMethodRef extends TypeReference[PeakelsSummarizingMethod.type]
+
+object PeakelsSummarizingMethod extends Enumeration {
+  val APEX_INTENSITY = Value("APEX_INTENSITY")
+  val AREA = Value("AREA")
+
 }
 
 case class AlignmentParams(

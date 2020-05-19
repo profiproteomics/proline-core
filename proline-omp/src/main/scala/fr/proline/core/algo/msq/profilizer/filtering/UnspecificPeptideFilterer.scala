@@ -6,7 +6,7 @@ object UnspecificPeptideFilterer extends IMasterQuantPeptideFiltering {
   
   def discardPeptides( masterQuantPeptides: Seq[MasterQuantPeptide] ): Unit = {
     this.foreachIdentifiedAndSelectedPeptide(masterQuantPeptides) { (mqPep,pepInst) =>
-      if( pepInst.isValidProteinSetSpecific == false )
+      if( !pepInst.isValidProteinSetSpecific )
         this.discardPeptide(mqPep, "Peptide sequence is not specific to this protein set")
     }
   }

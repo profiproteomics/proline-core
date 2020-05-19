@@ -2,7 +2,7 @@ package fr.proline.core.algo.msq.summarizing
 
 import com.typesafe.scalalogging.LazyLogging
 import fr.profi.util.collection._
-import fr.proline.core.algo.lcms.PepIonAbundanceSummarizingMethod
+import fr.proline.core.algo.lcms.MqPepIonAbundanceSummarizingMethod
 import fr.proline.core.om.model.lcms.MapSet
 import fr.proline.core.om.model.msi._
 import fr.proline.core.om.model.msq._
@@ -21,7 +21,7 @@ class ResidueLabelingEntitiesSummarizer(
   lcmsMapSet: MapSet,
   spectrumIdByRsIdAndScanNumber: LongMap[LongMap[Long]],
   ms2ScanNumbersByFtId: LongMap[Array[Int]],
-  abundanceSummarizerMethod: PepIonAbundanceSummarizingMethod.Value
+  abundanceSummarizerMethod: MqPepIonAbundanceSummarizingMethod.Value
 ) extends IMqPepAndProtEntitiesSummarizer with LazyLogging {
 
   def this(qcByRSMIdAndTagId: Map[(Long, Long), QuantChannel],
@@ -29,7 +29,7 @@ class ResidueLabelingEntitiesSummarizer(
             lcmsMapSet: MapSet,
             spectrumIdByRsIdAndScanNumber: LongMap[LongMap[Long]],
             ms2ScanNumbersByFtId: LongMap[Array[Int]] ){
-      this(qcByRSMIdAndTagId, tagByPtmId, lcmsMapSet, spectrumIdByRsIdAndScanNumber, ms2ScanNumbersByFtId,  PepIonAbundanceSummarizingMethod.BEST_ION)
+      this(qcByRSMIdAndTagId, tagByPtmId, lcmsMapSet, spectrumIdByRsIdAndScanNumber, ms2ScanNumbersByFtId,  MqPepIonAbundanceSummarizingMethod.BEST_ION)
   }
   
   //type CombinedQIons = (QuantPeptideIon,MasterQuantPeptideIon,Long)

@@ -30,6 +30,7 @@ import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.LongMap
 
 // Factory for Proline-Cortex
+@deprecated
 object QuantProfilesComputer {
   
   def apply(
@@ -56,6 +57,7 @@ object QuantProfilesComputer {
   
 }
 
+@deprecated
 class QuantProfilesComputer(
   executionContext: IExecutionContext,
   experimentalDesign: ExperimentalDesign,
@@ -122,7 +124,7 @@ class QuantProfilesComputer(
       val lcmsDbCtx = executionContext.getLCMSDbConnectionContext
       val mapSetProvider = new SQLMapSetProvider(lcmsDbCtx = lcmsDbCtx)
       val mapSet = mapSetProvider.getMapSet(udsMasterQuantChannel.getLcmsMapSetId, loadPeakels = true)
-      val masterFtById = mapSet.masterMap.features.view.map( ft => ft.id -> ft ).toMap
+      val masterFtById = mapSet.masterMap.features.toSeq.view.map( ft => ft.id -> ft ).toMap
       
       // --- 1.3 Apply some corrections to the MQ peptide ions --- //
       logger.info("Applying some corrections to the master quant peptide ions...")
@@ -222,7 +224,7 @@ class QuantProfilesComputer(
       val lcmsDbCtx = executionContext.getLCMSDbConnectionContext
       val mapSetProvider = new SQLMapSetProvider(lcmsDbCtx = lcmsDbCtx)
       val mapSet = mapSetProvider.getMapSet(udsMasterQuantChannel.getLcmsMapSetId, loadPeakels = true)
-      val masterFtById = mapSet.masterMap.features.view.map(ft => ft.id -> ft).toMap
+      val masterFtById = mapSet.masterMap.features.toSeq.view.map(ft => ft.id -> ft).toMap
 
       val mqPepIonIdsByFeatureId = LongMap[scala.collection.mutable.Set[Long]]()
       quantRSM.masterQuantPeptides.flatMap(_.masterQuantPeptideIons).foreach { mqPepIon => 
@@ -277,7 +279,7 @@ class QuantProfilesComputer(
     )
     
     // --- 3. Compute MasterQuantPeptides profiles --- //
-    profilizer.computeMasterQuantPeptideProfiles(quantRSM.masterQuantPeptides, config.getGenericProfilizerConfig)
+    profilizer.computeMasterQuantPeptideProfiles(quantRSM.masterQuantPeptides, config.toPostProcessingConfig)
     
     /*val computedMqProtSets = this.computeMasterQuantProteinSets(udsMasterQuantChannel,quantRSM.masterQuantPeptides,quantRSM.resultSummary,Seq())
     val map = computedMqProtSets.view.map( mq => mq.proteinSet.id -> mq ).toMap
@@ -291,7 +293,7 @@ class QuantProfilesComputer(
     }*/
     
     // --- 4. Compute MasterQuantProtSets profiles --- //
-    profilizer.computeMasterQuantProtSetProfiles(quantRSM.masterQuantProteinSets, config.getGenericProfilizerConfig)
+    profilizer.computeMasterQuantProtSetProfiles(quantRSM.masterQuantProteinSets, config.toPostProcessingConfig)
     
     /*quantRSM.masterQuantProteinSets.foreach { mqProtSet =>
         

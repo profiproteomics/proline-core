@@ -1,6 +1,6 @@
 package fr.proline.core.algo.msq.summarizing
 
-import fr.proline.core.algo.lcms.PepIonAbundanceSummarizingMethod
+import fr.proline.core.algo.lcms.MqPepIonAbundanceSummarizingMethod
 import fr.proline.core.om.model.SelectionLevel
 import fr.proline.core.om.model.msi._
 import fr.proline.core.om.model.msq._
@@ -15,14 +15,14 @@ object BuildMasterQuantPeptide {
              masterPepInstAsOpt: Option[PeptideInstance],
              quantRsmId: Long
            ): MasterQuantPeptide = {
-    apply(mqPepIons, masterPepInstAsOpt, quantRsmId, PepIonAbundanceSummarizingMethod.BEST_ION)
+    apply(mqPepIons, masterPepInstAsOpt, quantRsmId, MqPepIonAbundanceSummarizingMethod.BEST_ION)
   }
 
   def apply(
              mqPepIons: Seq[MasterQuantPeptideIon],
              masterPepInstAsOpt: Option[PeptideInstance],
              quantRsmId: Long,
-             pepIonAbundanceSummarizingMethod: PepIonAbundanceSummarizingMethod.Value
+             pepIonAbundanceSummarizingMethod: MqPepIonAbundanceSummarizingMethod.Value
            ): MasterQuantPeptide = {
     require(mqPepIons != null && mqPepIons.length > 0, "mqPepIons must not be empty")
 
@@ -46,7 +46,7 @@ object BuildMasterQuantPeptide {
 
     pepIonAbundanceSummarizingMethod match {
 
-      case PepIonAbundanceSummarizingMethod.BEST_ION => {
+      case MqPepIonAbundanceSummarizingMethod.BEST_ION => {
 
         val bestMQPepIon = getBestPeptideIon(filteredMQPepIons)
         for ((qcId, quantPepIon) <- bestMQPepIon.quantPeptideIonMap) {
@@ -75,7 +75,7 @@ object BuildMasterQuantPeptide {
         summarizerProperties.mqPeptideIonSelLevelById = mqPeptideIonSelLById
       }
 
-      case PepIonAbundanceSummarizingMethod.SUM => {
+      case MqPepIonAbundanceSummarizingMethod.SUM => {
 
         //Group PepIon by quant channel ids
         val peptideIonsByQChId: Map[Long, Seq[QuantPeptideIon]] = filteredMQPepIons.flatMap(_.quantPeptideIonMap.values).groupBy(_.quantChannelId)

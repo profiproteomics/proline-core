@@ -20,6 +20,7 @@ object OxidizedPeptideDiscardingReason extends EnhancedEnum {
   val LESS_ABUNDANT_THAN_OTHER_OXIDIZED_FORM = Value("Peptide less abundant than an other oxidized/unmodified form")
 }
 
+@deprecated
 object OxidizedPeptideFilterer {
   
   import fr.proline.core.algo.msq.config.profilizer.OxidizedPeptideFilteringMethod._
