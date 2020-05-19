@@ -89,6 +89,14 @@ object MqPeptidesSelectionMethod extends EnhancedEnum {
   val RAZOR_AND_SPECIFIC = Value
 }
 
+object RazorStrategyMethod extends EnhancedEnum {
+    val MOST_SPECIFIC_PEP_SELECTION = Value
+}
+
+case class MqPeptidesSelectionConfig(
+  razorStrategyMethod : RazorStrategyMethod.Value = RazorStrategyMethod.MOST_SPECIFIC_PEP_SELECTION
+)
+
 object QuantComponentItem extends EnhancedEnum {
   val QUANT_PEPTIDES = Value
   val QUANT_PEPTIDE_IONS = Value
@@ -239,6 +247,7 @@ case class PostProcessingConfigV2(
       pepIonAbundanceSummarizingMethod = pepIonAbundanceSummarizingMethod,
       peptideStatConfig = peptideStatConfig,
       peptidesSelcetionMethod = if (useOnlySpecificPeptides) MqPeptidesSelectionMethod.SPECIFIC else MqPeptidesSelectionMethod.ALL_PEPTIDES,
+      peptidesSelectionConfig = None,
       discardMissCleavedPeptides = discardMissCleavedPeptides,
       missCleavedPeptideFilteringMethod = if (missCleavedPeptideFilteringMethod.isDefined) Some(MissCleavedPeptideFilteringMethod.withName(missCleavedPeptideFilteringMethod.get)) else None,
       discardModifiedPeptides = discardModifiedPeptides,
@@ -274,6 +283,7 @@ case class PostProcessingConfig(
     //PROTEINS level
     @(JsonScalaEnumeration @field)(classOf[MqPeptidesSelectionMethodRef])
     peptidesSelcetionMethod: MqPeptidesSelectionMethod.Value = MqPeptidesSelectionMethod.ALL_PEPTIDES, //alt: SPECIFIC, RAZOR_AND_SPECIFIC
+    var peptidesSelectionConfig: Option[MqPeptidesSelectionConfig] = None,
 
     discardMissCleavedPeptides: Boolean = true,
     @(JsonScalaEnumeration @field)(classOf[MissCleavedPeptideFilteringMethodRef])
@@ -295,6 +305,11 @@ case class PostProcessingConfig(
 
     proteinStatConfig: ProfilizerStatConfig = new ProfilizerStatConfig()
   ) {
+
+  //if peptidesSelectionConfig not specified and RAZOR_AND_SPECIFIC is specified, set to default method
+  if(peptidesSelcetionMethod.equals(MqPeptidesSelectionMethod.RAZOR_AND_SPECIFIC) && peptidesSelectionConfig.isEmpty){
+    peptidesSelectionConfig = Some(MqPeptidesSelectionConfig(razorStrategyMethod = RazorStrategyMethod.MOST_SPECIFIC_PEP_SELECTION))
+  }
 
   def isMqPeptideAbundanceSummarizerBasedOn(component: String): Boolean = {
     if (peptideAbundanceSummarizerConfig.isDefined) {
@@ -361,6 +376,7 @@ case class ProfilizerConfig(
       pepIonAbundanceSummarizingMethod = MqPepIonAbundanceSummarizingMethod.BEST_ION,
       peptideStatConfig = peptideStatConfig,
       peptidesSelcetionMethod = if (useOnlySpecificPeptides) MqPeptidesSelectionMethod.SPECIFIC else MqPeptidesSelectionMethod.ALL_PEPTIDES,
+      peptidesSelectionConfig= None,
       discardMissCleavedPeptides = discardMissedCleavedPeptides,
       missCleavedPeptideFilteringMethod = if (missCleavedPeptideFilteringMethod.isDefined) Some(MissCleavedPeptideFilteringMethod.withName(missCleavedPeptideFilteringMethod.get)) else None,
       discardModifiedPeptides = discardOxidizedPeptides,
