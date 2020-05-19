@@ -479,8 +479,6 @@ class Profilizer( expDesign: ExperimentalDesign, groupSetupNumber: Int = 1, mast
       
       val mqProtSetProps = mqProtSet.properties.getOrElse( MasterQuantProteinSetProperties() )
       val mqProtSetProfileMap = mqProtSetProps.getMqProtSetProfilesByGroupSetupNumber().getOrElse( mutable.HashMap() )
-      val mqProtSetProps = mqProtSet.properties.getOrElse( new MasterQuantProteinSetProperties() )
-      val mqProtSetProfileMap = mqProtSetProps.getMqProtSetProfilesByGroupSetupNumber.getOrElse( HashMap() )
 
       mqProtSetProfileMap += (groupSetupNumber -> mqProfiles.toArray)
       mqProtSetProps.setMqProtSetProfilesByGroupSetupNumber( Some(mqProtSetProfileMap) )
