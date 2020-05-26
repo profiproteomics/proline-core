@@ -49,27 +49,27 @@ public class MasterQuantProteinSetProperties {
 	}
 
 	public List<Long> getSelectedMasterQuantPeptideIds() {
-		ArrayList<Long> selectedMQPepIds = new ArrayList<>();
-		Iterator<Long> mqPepSelectionlevelIt= mqPeptideSelLevelById.keySet().iterator();
-		while (mqPepSelectionlevelIt.hasNext()){
-			Long nextMQPId = mqPepSelectionlevelIt.next();
-			if(mqPeptideSelLevelById.get(nextMQPId) >= 2)
-				selectedMQPepIds.add(nextMQPId);
-		}
-		return selectedMQPepIds;
+		return getSelectedMasterQuantObjectIds(mqPeptideSelLevelById);
 	}
 
 
 	public List<Long> getSelectedMasterQuantPeptideIonIds() {
-		ArrayList<Long> selectedMQPepIonIds = new ArrayList<>();
-		Iterator<Long> mqPepIonSelectionlevelIt= mqPeptideIonSelLevelById.keySet().iterator();
-		while (mqPepIonSelectionlevelIt.hasNext()){
-			Long nextMQPId = mqPepIonSelectionlevelIt.next();
-			if(mqPeptideIonSelLevelById.get(nextMQPId) >= 2)
-				selectedMQPepIonIds.add(nextMQPId);
-		}
-		return selectedMQPepIonIds;
+		return getSelectedMasterQuantObjectIds(mqPeptideIonSelLevelById);
 	}
+
+	private List<Long> getSelectedMasterQuantObjectIds(Map<Long,Integer> quandCompoSelLevelById) {
+		ArrayList<Long> selectedMQCompoIds = new ArrayList<>();
+		if(quandCompoSelLevelById != null) {
+			Iterator<Long> mqCompoSelectionlevelIt = quandCompoSelLevelById.keySet().iterator();
+			while (mqCompoSelectionlevelIt.hasNext()) {
+				Long nextMQCompId = mqCompoSelectionlevelIt.next();
+				if (quandCompoSelLevelById.get(nextMQCompId) >= 2)
+					selectedMQCompoIds.add(nextMQCompId);
+			}
+		}
+		return selectedMQCompoIds;
+	}
+
 
 	public static class MasterQuantProteinSetProfile {
 		List<Float> abundances;
