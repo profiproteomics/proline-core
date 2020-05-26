@@ -4,7 +4,7 @@ import com.typesafe.scalalogging.LazyLogging
 import fr.profi.util.collection._
 import fr.profi.util.math.median
 import fr.profi.util.primitives.isZeroOrNaN
-import fr.proline.core.algo.msq.config.profilizer.{AbundanceSummarizerMethod, MissingAbundancesInferenceMethod, MqPeptidesClusteringMethod, MqPeptidesSelectionMethod, PostProcessingConfig, ProfilizerStatConfig, QuantComponentItem}
+import fr.proline.core.algo.msq.config.profilizer.{AbundanceSummarizerMethod, MissingAbundancesInferenceMethod, MqPeptidesClusteringMethod, MqPeptidesSelectionConfig, MqPeptidesSelectionMethod, PostProcessingConfig, ProfilizerStatConfig, QuantComponentItem, RazorStrategyMethod}
 import fr.proline.core.algo.msq.profilizer._
 import fr.proline.core.algo.msq.profilizer.filtering._
 import fr.proline.core.algo.msq.summarizing.BuildMasterQuantPeptide
@@ -239,7 +239,7 @@ class Profilizer( expDesign: ExperimentalDesign, groupSetupNumber: Int = 1, mast
   }
   
   def computeMasterQuantProtSetProfiles( masterQuantProtSets: Seq[MasterQuantProteinSet], config: PostProcessingConfig) {
-    require( masterQuantProtSets.length >= 10, "at least 10 protein sets are required for profile analysis")
+    require( masterQuantProtSets.length >= 10, "at least 10 protein sets are required for profile analysis")//VDS : depends on config ??
     
     logger.info("computing master quant protein set profiles...")
     
@@ -251,9 +251,14 @@ class Profilizer( expDesign: ExperimentalDesign, groupSetupNumber: Int = 1, mast
     }.toMap
     val bgByQcIdx = expDesignSetup.quantChannels.map( qc => bgBySampleNum(qc.sampleNumber) )
 
+    val useRazor = config.peptidesSelcetionMethod.equals(MqPeptidesSelectionMethod.RAZOR_AND_SPECIFIC)
+    val nbrSpecificMqPepByMqProtSetId = if(useRazor) masterQuantProtSets.map(mqprot => mqprot.id() -> mqprot.getSpecificMqPepCount()).toMap  else Map.empty[Long,Int]
+    val mqProtSetById = if(useRazor) masterQuantProtSets.map(mqprot => mqprot.id() -> mqprot).toMap  else Map.empty[Long,MasterQuantProteinSet]
+    val assignedMqPepIdToProteSet = new mutable.LongMap[Long]()
+
     // Compute the intersection of filtered masterQuantPeptides and mqPeptideSelLevelById
     for (mqProtSet <- masterQuantProtSets) {
-
+      val mqPepById: mutable.LongMap[MasterQuantPeptide] = if(useRazor) mqProtSet.masterQuantPeptides.toLongMapWith(a => a.id -> a) else mutable.LongMap.empty
       val datasetSelLvlMap: mutable.LongMap[Int] = mqProtSet.masterQuantPeptides.toLongMapWith(a => a.id -> a.selectionLevel)
       val protSetSelLvlMap: mutable.HashMap[Long, Int] = mqProtSet.properties.get.getSelectionLevelByMqPeptideId().getOrElse({
         // Note: this default map construction is kept for backward compatibility,
@@ -273,8 +278,68 @@ class Profilizer( expDesign: ExperimentalDesign, groupSetupNumber: Int = 1, mast
         val datasetSelLvl = datasetSelLvlMap(mqPepId)
 
         // Compute new automatic selection level
-        val newAutoSelLvl = if (SelectionLevel.isSelected(datasetSelLvl)) SelectionLevel.SELECTED_AUTO
+        var newAutoSelLvl = if (SelectionLevel.isSelected(datasetSelLvl)) SelectionLevel.SELECTED_AUTO
         else SelectionLevel.DESELECTED_AUTO
+
+        // If peptide selection method is RAZOR and peptide is selected, update selection for protein set using razor rules
+        // rule for MOST_SPECIFIC_PEP_SELECTION: assign peptide to protein set with max nbr specific peptide and if equality choose
+        // protein set with higher score (--> to change to protein set with higher abundance through quantchannels
+        if(newAutoSelLvl == SelectionLevel.SELECTED_AUTO && useRazor) {
+          // verify if this peptide has allready been seen
+          if(assignedMqPepIdToProteSet.contains(mqPepId)) {
+            if( !assignedMqPepIdToProteSet(mqPepId).equals(mqProtSet.id)) { //mqpep should not be assign to this protein
+              newAutoSelLvl = SelectionLevel.DESELECTED_AUTO
+            }
+          } else { //mqPep not already seen, get choosen proteinset for it
+/*          // to uncomment when more than one method...
+            val mqSelectionConfig: MqPeptidesSelectionConfig = config.peptidesSelectionConfig.getOrElse(MqPeptidesSelectionConfig)
+            mqSelectionConfig.razorStrategyMethod match {
+              case RazorStrategyMethod.MOST_SPECIFIC_PEP_SELECTION
+            }*/
+
+            val mqpep = mqPepById(mqPepId)
+            if (mqpep.isProteinSetSpecific.isDefined && !mqpep.isProteinSetSpecific.get) {
+              logger.trace("-------- RAZOR TEST on mqpep Id "+mqpep.id)
+              // masterQuantPeptide is shared between proteinSet. Assign to only one regarding RAZOR RULE
+              //-- TODO If razor config is MOST_SPECIFIC_PEP_SELECTION
+              val mqProtIds = mqpep.getMasterQuantProteinSetIds().get // if isProteinSetSpecific defined getMasterQuantProteinSetIds should also...
+              val pepProtSetIdToNbrSpecificMqPep = mqProtIds.map(prId => prId -> nbrSpecificMqPepByMqProtSetId(prId)).toMap
+              val maxNbrSp = pepProtSetIdToNbrSpecificMqPep.maxBy(_._2)._2
+              logger.trace("-------- RAZOR max number of specific pep  =" +maxNbrSp)
+              val pepProtWithMaxSp = pepProtSetIdToNbrSpecificMqPep.filter(_._2 == maxNbrSp)
+              var chosenProtSet = mqProtSet.id()
+              if (pepProtWithMaxSp.size > 1) {
+                logger.trace("-------- RAZOR more than one with max nbr sp. pep: "+pepProtWithMaxSp.size)
+                //getProtSet with higher score ... //VDS TODO: use sum abundance for all quantChannels
+                val max = pepProtWithMaxSp.maxBy(entry => mqProtSetById(entry._1).proteinSet.peptideSet.score)
+                if (!mqProtSet.id().equals(max._1)) { // This is not proteinset to associate peptide to
+                  //Max protSet is not this protein set ... save information, and set to deselected for this prot
+                  chosenProtSet = max._1
+                  logger.trace("-------- RAZOR chosen prot set: "+chosenProtSet+"(not current)")
+                  newAutoSelLvl = SelectionLevel.DESELECTED_AUTO
+                } else { // else it is this protein set.  chosenProtSet and selection level already OK
+                  logger.trace("-------- RAZOR chosen prot set is current "+chosenProtSet)
+                }
+
+              } else { //only one protein set with max nbr specific pep
+                logger.trace("-------- RAZOR one prot set with max sp. pep")
+                val maxEntry = pepProtWithMaxSp.head
+                if (!mqProtSet.id().equals(maxEntry._1)) {
+                  chosenProtSet = pepProtWithMaxSp.head._1 //save information of which proteinset pep should be assign to and set to deselected for this prot
+                  logger.trace("-------- RAZOR chosen prot set "+chosenProtSet+" (not current)")
+                  newAutoSelLvl = SelectionLevel.DESELECTED_AUTO
+                } else {
+                  logger.trace("-------- RAZOR chosen prot set is current "+chosenProtSet)
+                }
+              }
+
+              assignedMqPepIdToProteSet.put(mqPepId, chosenProtSet) //save information for next time peptide will be seen
+
+            }  // else mqPep is specific to protein set, keep selected. No need to put in assignedMqPepIdToProteSet. Should be seen once !
+
+          }
+        }
+
 
         if (protSetSelLvl != newAutoSelLvl) {
           protSetSelLvlMap.update(mqPepId, newAutoSelLvl)
