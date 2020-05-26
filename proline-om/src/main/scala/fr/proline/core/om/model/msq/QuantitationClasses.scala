@@ -538,7 +538,14 @@ case class MasterQuantProteinSet(
     require( mqcId != 0, "masterQuantComponentId is not defined" )
     mqcId
   }
-  
+
+  def getSpecificMqPepCount() : Int = {
+    if(masterQuantPeptides == null)
+      return 0
+
+    masterQuantPeptides.filter( pep =>  pep.isProteinSetSpecific.isDefined && pep.isProteinSetSpecific.get ).length
+  }
+
   def getBestProfile( groupSetupNumber: Int ): Option[MasterQuantProteinSetProfile] = {
     if( properties.isEmpty ) return None
     
