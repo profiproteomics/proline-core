@@ -184,14 +184,13 @@ public class DMasterQuantProteinSet {
 		this.mqProteinSetProperties = properties;
 	}
 
-	public MasterQuantProteinSetProperties getMasterQuantProtSetProperties() throws Exception {
+	public MasterQuantProteinSetProperties getMasterQuantProtSetProperties()  {
 		if ((mqProteinSetProperties == null) && (m_serializedProperties != null)) {
 			try {
 				//	Parse properties to get Values
 				mqProteinSetProperties = parseJsonProperties(m_serializedProperties);
 			} catch (Exception e) {
 				LOG.warn(" Error parsiong MasterQuantProteinSetProperties ", e);
-
 			}
 
 		}
