@@ -822,8 +822,9 @@ class PeakelsDetector(
               val time = ms2Sh.getElutionTime()
               
               // Double check we are in the right time range
-              // TODO: is this really needed ?
-              if (time >= firstTime && time <= lastTime) {
+              // TODO: is this really needed ? CBy : no this is not needed and it
+              // leads to missing assignation since the MS2 can occur after the last MS1 scan of the peakel
+              //              if (time >= firstTime && time <= lastTime) {
                 
                 // Keep only identified MS2 scans
                 val pepMatches = pepMatchesMatrix(ms2Sh.getInitialId())
@@ -847,7 +848,7 @@ class PeakelsDetector(
                     psmIdx += 1
                   }
                 }
-              }
+//              }
               
               ms2ShIdx += 1
             } // ends while (ms2ShIdx < ms2SpecHeadersCount)
@@ -952,7 +953,7 @@ class PeakelsDetector(
                 msLevel = 1,
                 mzTolPPM = mozTolPPM,
                 minNbOverlappingIPs = 5,
-                peakelFinderConfig = SmartPeakelFinderConfig(maxIntensityRelThresh = 0.75f)
+                peakelFinderConfig = SmartPeakelFinderConfig(minPeaksCount = 3, maxIntensityRelThresh = 0.75f)
               )
             )
             
