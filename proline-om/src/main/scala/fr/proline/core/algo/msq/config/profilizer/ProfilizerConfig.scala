@@ -246,7 +246,7 @@ case class PostProcessingConfigV2(
       discardPepIonsSharingPeakels = discardPeptidesSharingPeakels,
       pepIonAbundanceSummarizingMethod = pepIonAbundanceSummarizingMethod,
       peptideStatConfig = peptideStatConfig,
-      peptidesSelcetionMethod = if (useOnlySpecificPeptides) MqPeptidesSelectionMethod.SPECIFIC else MqPeptidesSelectionMethod.ALL_PEPTIDES,
+      peptidesSelectionMethod = if (useOnlySpecificPeptides) MqPeptidesSelectionMethod.SPECIFIC else MqPeptidesSelectionMethod.ALL_PEPTIDES,
       peptidesSelectionConfig = None,
       discardMissCleavedPeptides = discardMissCleavedPeptides,
       missCleavedPeptideFilteringMethod = if (missCleavedPeptideFilteringMethod.isDefined) Some(MissCleavedPeptideFilteringMethod.withName(missCleavedPeptideFilteringMethod.get)) else None,
@@ -280,9 +280,9 @@ case class PostProcessingConfig(
 
     peptideStatConfig: ProfilizerStatConfig = new ProfilizerStatConfig(),
 
-    //PROTEINS level
-    @(JsonScalaEnumeration @field)(classOf[MqPeptidesSelectionMethodRef])
-    peptidesSelcetionMethod: MqPeptidesSelectionMethod.Value = MqPeptidesSelectionMethod.ALL_PEPTIDES, //alt: SPECIFIC, RAZOR_AND_SPECIFIC
+     //PROTEINS level
+     @(JsonScalaEnumeration @field)(classOf[MqPeptidesSelectionMethodRef])
+    peptidesSelectionMethod: MqPeptidesSelectionMethod.Value = MqPeptidesSelectionMethod.ALL_PEPTIDES, //alt: SPECIFIC, RAZOR_AND_SPECIFIC
     var peptidesSelectionConfig: Option[MqPeptidesSelectionConfig] = None,
 
     discardMissCleavedPeptides: Boolean = true,
@@ -307,7 +307,7 @@ case class PostProcessingConfig(
   ) {
 
   //if peptidesSelectionConfig not specified and RAZOR_AND_SPECIFIC is specified, set to default method
-  if(peptidesSelcetionMethod.equals(MqPeptidesSelectionMethod.RAZOR_AND_SPECIFIC) && peptidesSelectionConfig.isEmpty){
+  if(peptidesSelectionMethod.equals(MqPeptidesSelectionMethod.RAZOR_AND_SPECIFIC) && peptidesSelectionConfig.isEmpty){
     peptidesSelectionConfig = Some(MqPeptidesSelectionConfig(razorStrategyMethod = RazorStrategyMethod.MOST_SPECIFIC_PEP_SELECTION))
   }
 
@@ -375,7 +375,7 @@ case class ProfilizerConfig(
       discardPepIonsSharingPeakels = discardPeptidesSharingPeakels,
       pepIonAbundanceSummarizingMethod = MqPepIonAbundanceSummarizingMethod.BEST_ION,
       peptideStatConfig = peptideStatConfig,
-      peptidesSelcetionMethod = if (useOnlySpecificPeptides) MqPeptidesSelectionMethod.SPECIFIC else MqPeptidesSelectionMethod.ALL_PEPTIDES,
+      peptidesSelectionMethod = if (useOnlySpecificPeptides) MqPeptidesSelectionMethod.SPECIFIC else MqPeptidesSelectionMethod.ALL_PEPTIDES,
       peptidesSelectionConfig= None,
       discardMissCleavedPeptides = discardMissedCleavedPeptides,
       missCleavedPeptideFilteringMethod = if (missCleavedPeptideFilteringMethod.isDefined) Some(MissCleavedPeptideFilteringMethod.withName(missCleavedPeptideFilteringMethod.get)) else None,

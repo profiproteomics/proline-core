@@ -49,7 +49,7 @@ class Profilizer( expDesign: ExperimentalDesign, groupSetupNumber: Int = 1, mast
     }
     
     // --- Apply protein set specific filter if requested ---
-    if( config.peptidesSelcetionMethod == MqPeptidesSelectionMethod.SPECIFIC ) {
+    if( config.peptidesSelectionMethod == MqPeptidesSelectionMethod.SPECIFIC ) {
       UnspecificPeptideFilterer.discardPeptides(masterQuantPeptides)
     }
     
@@ -251,7 +251,7 @@ class Profilizer( expDesign: ExperimentalDesign, groupSetupNumber: Int = 1, mast
     }.toMap
     val bgByQcIdx = expDesignSetup.quantChannels.map( qc => bgBySampleNum(qc.sampleNumber) )
 
-    val useRazor = config.peptidesSelcetionMethod.equals(MqPeptidesSelectionMethod.RAZOR_AND_SPECIFIC)
+    val useRazor = config.peptidesSelectionMethod.equals(MqPeptidesSelectionMethod.RAZOR_AND_SPECIFIC)
     val nbrSpecificMqPepByMqProtSetId = if(useRazor) masterQuantProtSets.map(mqprot => mqprot.id() -> mqprot.getSpecificMqPepCount()).toMap  else Map.empty[Long,Int]
     val mqProtSetById = if(useRazor) masterQuantProtSets.map(mqprot => mqprot.id() -> mqprot).toMap  else Map.empty[Long,MasterQuantProteinSet]
     val assignedMqPepIdToProteSet = new mutable.LongMap[Long]()
