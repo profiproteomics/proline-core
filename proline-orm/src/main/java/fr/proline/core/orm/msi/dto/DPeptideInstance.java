@@ -59,6 +59,10 @@ public class DPeptideInstance {
 		return m_elutionTime;
 	}
 
+	public void setElutionTime(Float elutionTime) {
+		this.m_elutionTime = elutionTime;
+	}
+
 	public DPeptideMatch getBestPeptideMatch() {
 		return m_bestPeptideMatch;
 	}
