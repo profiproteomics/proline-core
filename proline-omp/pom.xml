@@ -87,6 +87,13 @@
       <artifactId>rxjava</artifactId>
       <version>1.3.0</version>
     </dependency>
+
+    <dependency>
+      <groupId>net.sourceforge.jdistlib</groupId>
+      <artifactId>jdistlib</artifactId>
+      <version>0.4.5</version>
+    </dependency>
+
     <dependency>
       <groupId>io.reactivex</groupId>
       <artifactId>rxscala_${scala.version}</artifactId>
