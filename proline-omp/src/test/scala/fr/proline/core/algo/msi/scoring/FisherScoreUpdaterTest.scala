@@ -4,6 +4,7 @@ import com.typesafe.scalalogging.StrictLogging
 import fr.proline.core.algo.msi.inference.ParsimoniousProteinSetInferer
 import fr.proline.core.algo.msi.validation.pepinstance.BasicPepInstanceBuilder
 import org.apache.commons.math3.distribution.ChiSquaredDistribution
+import org.apfloat.{Apfloat, ApfloatMath}
 import org.junit.Test
 import org.scalatest.junit.JUnitSuite
 
@@ -77,6 +78,41 @@ class FisherScoreUpdaterTest extends JUnitSuite with StrictLogging {
     logger.info("math.log10 = "+math.log10(bd.doubleValue()))
 
   }
+
+  @Test
+  def precision() = {
+
+    val score = 150.0d
+    val q = 3
+
+    val pValue = math.pow(10, -score / 10.0)
+    val sidak = (1.0d - math.pow(1.0d - pValue, q))
+    val score2 = (-10.0 * math.log10(sidak))
+
+    logger.info("pValue = "+pValue)
+    logger.info("sidak = "+sidak)
+    logger.info("score = "+score2)
+
+
+    val bpValue = BigDecimal(math.pow(10, -score / 10.0))
+    val bsidak = (1.0d - (BigDecimal(1.0d) - bpValue).pow(q))
+    val bScore = (-10.0 * BasicPepInstanceBuilder.log10(bsidak, bsidak.scale)).doubleValue()
+    logger.info("BigDecimal pValue = "+bpValue)
+    logger.info("BigDecimal sidak = "+bsidak)
+    logger.info("BigDecimal score = "+ bScore)
+
+    val precision = 50
+    val apScore = new Apfloat(score, precision)
+    val appValue = ApfloatMath.pow(new Apfloat(10.0, precision), apScore.divide(new Apfloat(10.0, precision)).negate())
+    val apSidak = new Apfloat(1.0,precision).subtract(ApfloatMath.pow(new Apfloat(1.0, precision).subtract(appValue), new Apfloat(q, precision)))
+    val aPScore2 = ApfloatMath.log(apSidak, new Apfloat(10, precision)).multiply(new Apfloat(-10.0, precision))
+    logger.info("ApFloat pValue = "+appValue)
+    logger.info("ApFloat sidak = "+apSidak)
+    logger.info("ApFloat score = "+ aPScore2)
+
+
+  }
+
 
   @Test
   def cumSumTest() = {

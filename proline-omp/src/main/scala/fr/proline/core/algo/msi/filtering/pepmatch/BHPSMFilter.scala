@@ -3,7 +3,8 @@ package fr.proline.core.algo.msi.filtering.pepmatch
 import com.typesafe.scalalogging.LazyLogging
 import fr.profi.util.primitives.toFloat
 import fr.proline.core.algo.msi.filtering.{FilterPropertyKeys, IPeptideMatchFilter, PepMatchFilterParams, PeptideMatchFiltering}
-import fr.proline.core.om.model.msi.PeptideMatch
+import fr.proline.core.om.model.msi.{Ms2Query, PeptideMatch}
+import org.apfloat.{Apfloat, ApfloatMath}
 
 import scala.collection.mutable.HashMap
 
@@ -65,7 +66,21 @@ class BHPSMFilter(var adjPValueTreshold: Float = 0.01f) extends IPeptideMatchFil
 
     val (decoyPepMatches, targetPepMatches) = filteredPepMatches.partition(_.isDecoy)
 
-    var pValues = targetPepMatches.map(pepMatch => Math.pow(10, -pepMatch.score/10.0)).toArray
+    var pValues1 = targetPepMatches.map(pepMatch => Math.pow(10, -pepMatch.score/10.0)).toArray
+    var candidates = targetPepMatches.map(pepMatch => pepMatch.msQuery.properties.get.getTargetDbSearch.get.getCandidatePeptidesCount).toArray
+    var queryIds = targetPepMatches.map(pepMatch => pepMatch.msQuery.initialId).toArray
+
+    var pValues = targetPepMatches.map(pepMatch => {
+      val q = pepMatch.msQuery.properties.get.getTargetDbSearch.get.getCandidatePeptidesCount
+      val qp = math.max(1, math.log10(q))
+
+      val precision = 50
+      val apScore = new Apfloat(pepMatch.score, precision)
+      val appValue = ApfloatMath.pow(new Apfloat(10.0, precision), apScore.divide(new Apfloat(10.0, precision)).negate())
+      val apSidak = new Apfloat(1.0,precision).subtract(ApfloatMath.pow(new Apfloat(1.0, precision).subtract(appValue), new Apfloat(qp, precision)))
+      apSidak.doubleValue()
+    }).toArray
+
     var adjustedPValues = BHFilter.adjustPValues(pValues)
 
     for (i <- 0 to pValues.length-1) {
