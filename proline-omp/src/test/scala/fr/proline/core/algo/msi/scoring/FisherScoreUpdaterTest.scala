@@ -82,8 +82,8 @@ class FisherScoreUpdaterTest extends JUnitSuite with StrictLogging {
   @Test
   def precision() = {
 
-    val score = 150.0d
-    val q = 3
+    val score = 165.0d
+    val q = math.log10(357)
 
     val pValue = math.pow(10, -score / 10.0)
     val sidak = (1.0d - math.pow(1.0d - pValue, q))
@@ -95,13 +95,16 @@ class FisherScoreUpdaterTest extends JUnitSuite with StrictLogging {
 
 
     val bpValue = BigDecimal(math.pow(10, -score / 10.0))
-    val bsidak = (1.0d - (BigDecimal(1.0d) - bpValue).pow(q))
-    val bScore = (-10.0 * BasicPepInstanceBuilder.log10(bsidak, bsidak.scale)).doubleValue()
+
+//    val bsidak = (1.0d - (BigDecimal(1.0d) - bpValue).pow(q))
+//    val bScore = (-10.0 * BasicPepInstanceBuilder.log10(bsidak, bsidak.scale)).doubleValue()
+    val bsidak = (1.0d - math.exp(q*math.log((BigDecimal(1.0d) - bpValue).doubleValue())))
+    val bScore = (-10.0 * math.log10(bsidak))
     logger.info("BigDecimal pValue = "+bpValue)
     logger.info("BigDecimal sidak = "+bsidak)
     logger.info("BigDecimal score = "+ bScore)
 
-    val precision = 50
+    val precision = 128
     val apScore = new Apfloat(score, precision)
     val appValue = ApfloatMath.pow(new Apfloat(10.0, precision), apScore.divide(new Apfloat(10.0, precision)).negate())
     val apSidak = new Apfloat(1.0,precision).subtract(ApfloatMath.pow(new Apfloat(1.0, precision).subtract(appValue), new Apfloat(q, precision)))
@@ -109,7 +112,7 @@ class FisherScoreUpdaterTest extends JUnitSuite with StrictLogging {
     logger.info("ApFloat pValue = "+appValue)
     logger.info("ApFloat sidak = "+apSidak)
     logger.info("ApFloat score = "+ aPScore2)
-
+    logger.info("ApFloat score (as double) = "+ aPScore2.doubleValue())
 
   }
 
