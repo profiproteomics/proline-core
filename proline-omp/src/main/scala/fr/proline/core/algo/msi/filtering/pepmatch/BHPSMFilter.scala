@@ -1,5 +1,9 @@
 package fr.proline.core.algo.msi.filtering.pepmatch
 
+import java.io.PrintWriter
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
+
 import com.typesafe.scalalogging.LazyLogging
 import fr.profi.util.primitives.toFloat
 import fr.proline.core.algo.msi.filtering.{FilterPropertyKeys, IPeptideMatchFilter, PepMatchFilterParams, PeptideMatchFiltering}
@@ -74,7 +78,7 @@ class BHPSMFilter(var adjPValueTreshold: Float = 0.01f) extends IPeptideMatchFil
       val q = pepMatch.msQuery.properties.get.getTargetDbSearch.get.getCandidatePeptidesCount
       val qp = math.max(1, math.log10(q))
 
-      val precision = 50
+      val precision = 64
       val apScore = new Apfloat(pepMatch.score, precision)
       val appValue = ApfloatMath.pow(new Apfloat(10.0, precision), apScore.divide(new Apfloat(10.0, precision)).negate())
       val apSidak = new Apfloat(1.0,precision).subtract(ApfloatMath.pow(new Apfloat(1.0, precision).subtract(appValue), new Apfloat(qp, precision)))
@@ -82,6 +86,21 @@ class BHPSMFilter(var adjPValueTreshold: Float = 0.01f) extends IPeptideMatchFil
     }).toArray
 
     var adjustedPValues = BHFilter.adjustPValues(pValues)
+
+    val filePath = "c:/Local/tmp/Proline_QueriesCandidates"+ (DateTimeFormatter.ofPattern("yyyy-MM-dd_HH_mm").format(LocalDateTime.now))+".tsv"
+
+    val file = new java.io.File(filePath)
+    val writer = new PrintWriter(file)
+
+    for ((queryId, index) <- queryIds.zipWithIndex) {
+      val row = List(index.toString, queryId.toString, candidates(index).toString, pValues1(index), pValues(index).toString,adjustedPValues(index).toString )
+      writer.print(row.mkString("\t"))
+      writer.println()
+      writer.flush()
+    }
+
+    writer.close()
+
 
     for (i <- 0 to pValues.length-1) {
         targetPepMatches(i).isValidated = (adjustedPValues(i) < adjPValueTreshold)
