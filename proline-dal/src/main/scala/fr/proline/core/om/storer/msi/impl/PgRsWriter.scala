@@ -219,8 +219,19 @@ private[msi] object PgRsWriter extends AbstractSQLRsWriter() {
               peptideMatch.properties.get.getOmssaProperties.get.setIonSeries(null)
             } else if(peptideMatch.properties.get.getXtandemProperties.isDefined) {
               // also extract ion series for xtandem
-              val ionSeriesMatches: Array[String] = peptideMatch.properties.get.getXtandemProperties.get.getIonSeriesMatches.map(entry => entry._1 + "=" + entry._2).toArray
-              val ionSeriesScores: Array[String] = peptideMatch.properties.get.getXtandemProperties.get.getIonSeriesScores.map(entry => entry._1 + "=" + entry._2).toArray
+
+              val ionSeriesMatches: Array[String] = {
+                if (peptideMatch.properties.get.getXtandemProperties.get.getIonSeriesMatches != null)
+                  peptideMatch.properties.get.getXtandemProperties.get.getIonSeriesMatches.map(entry => entry._1 + "=" + entry._2).toArray
+                else
+                  Array.empty[String]
+              }
+              val ionSeriesScores: Array[String] = {
+                if (peptideMatch.properties.get.getXtandemProperties.get.getIonSeriesScores != null )
+                  peptideMatch.properties.get.getXtandemProperties.get.getIonSeriesScores.map(entry => entry._1 + "=" + entry._2).toArray
+                else
+                  Array.empty[String]
+              }
               // convert the two maps into a single array (at least for now)
               val ionSeries: Array[String] = ionSeriesMatches ++ ionSeriesScores
               ionSeriesById.put(key, ionSeries)
