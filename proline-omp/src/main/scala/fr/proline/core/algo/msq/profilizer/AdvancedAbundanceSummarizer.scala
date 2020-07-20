@@ -7,12 +7,12 @@ import fr.profi.util.math.filteredMean
 import fr.profi.util.math.filteredMedian
 import fr.profi.util.primitives.isZeroOrNaN
 import fr.profi.util.random.generatePositiveGaussianValues
-import fr.proline.core.algo.msq.config.profilizer.AbundanceSummarizerMethod
+import fr.proline.core.algo.msq.config.profilizer.MqPeptideAbundanceSummarizingMethod
 import fr.proline.core.om.model.msq.ExperimentalDesignSetup
 
 object AdvancedAbundanceSummarizer extends LazyLogging {
 
-  def summarizeAbundanceMatrix(abundanceMatrix: Array[Array[Float]], method: AbundanceSummarizerMethod.Value, expDesignSetup: ExperimentalDesignSetup): Array[Float] = {
+  def summarizeAbundanceMatrix(abundanceMatrix: Array[Array[Float]], method: MqPeptideAbundanceSummarizingMethod.Value, expDesignSetup: ExperimentalDesignSetup): Array[Float] = {
 
     val matrixLength = abundanceMatrix.length
     require(matrixLength > 0, AbundanceSummarizer.EMPTY_MATRIX_MESSAGE)
@@ -20,7 +20,7 @@ object AdvancedAbundanceSummarizer extends LazyLogging {
     if (matrixLength == 1) return abundanceMatrix.head
 
     method match {
-      case AbundanceSummarizerMethod.MEDIAN_BIOLOGICAL_PROFILE => summarizeUsingMBP(abundanceMatrix, expDesignSetup)
+      case MqPeptideAbundanceSummarizingMethod.MEDIAN_BIOLOGICAL_PROFILE => summarizeUsingMBP(abundanceMatrix, expDesignSetup)
       case _ => throw AbundanceSummarizer.createNoImplemError(method)
     }
 
@@ -57,7 +57,7 @@ object AdvancedAbundanceSummarizer extends LazyLogging {
       logger.warn("Can't compute biological median profile for abundance summarizing (not enough defined values), fallback to MEDIAN_PROFILE")
       return AbundanceSummarizer.summarizeAbundanceMatrix(
         abundanceMatrix,
-        AbundanceSummarizerMethod.MEDIAN_PROFILE
+        MqPeptideAbundanceSummarizingMethod.MEDIAN_PROFILE
       )
     }
 
@@ -75,7 +75,7 @@ object AdvancedAbundanceSummarizer extends LazyLogging {
     // Note: if there no intensity for a given sample, we will not generate values for this sample (missing values)
     val samplesMedianProfile = AbundanceSummarizer.summarizeAbundanceMatrix(
       filteredSamplesMedianAbMatrix,
-      AbundanceSummarizerMethod.MEDIAN_PROFILE
+      MqPeptideAbundanceSummarizingMethod.MEDIAN_PROFILE
     )
     //println("samplesMedianProfile", samplesMedianProfile.mkString("\t"))
 
@@ -92,7 +92,7 @@ object AdvancedAbundanceSummarizer extends LazyLogging {
       // Compute TOP3 mean values
       val top3MeanSampleAb = AbundanceSummarizer.summarizeAbundanceMatrix(
         sampleAbMatrix,
-        AbundanceSummarizerMethod.MEAN_OF_TOP3
+        MqPeptideAbundanceSummarizingMethod.MEAN_OF_TOP3
       )
 
       // Compute ranks of TOP3 mean values
@@ -146,7 +146,7 @@ object AdvancedAbundanceSummarizer extends LazyLogging {
       logger.warn("Can't compute CVs for abundance summarizing, fall back to MEDIAN_PROFILE")
       return AbundanceSummarizer.summarizeAbundanceMatrix(
         abundanceMatrix,
-        AbundanceSummarizerMethod.MEDIAN_PROFILE
+        MqPeptideAbundanceSummarizingMethod.MEDIAN_PROFILE
       )
     }
 

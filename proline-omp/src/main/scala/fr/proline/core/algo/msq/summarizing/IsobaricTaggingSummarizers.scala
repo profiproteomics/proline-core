@@ -3,7 +3,7 @@ package fr.proline.core.algo.msq.summarizing
 import com.typesafe.scalalogging.LazyLogging
 import fr.profi.util.collection._
 import fr.proline.core.algo.lcms.MqPepIonAbundanceSummarizingMethod
-import fr.proline.core.algo.msq.config.profilizer.AbundanceSummarizerMethod
+import fr.proline.core.algo.msq.config.profilizer.MqPeptideAbundanceSummarizingMethod
 import fr.proline.core.algo.msq.profilizer.AbundanceSummarizer
 import fr.proline.core.om.model.lcms.MapSet
 import fr.proline.core.om.model.msi._
@@ -88,7 +88,7 @@ class IsobaricTaggingEntitiesSummarizer(
           // Summarize abundance matrix
           val summarizedRawAbundanceMatrix = AbundanceSummarizer.summarizeAbundanceMatrix(
             mqReporterIonRawAbundanceMatrix,
-            AbundanceSummarizerMethod.MEDIAN_PROFILE
+            MqPeptideAbundanceSummarizingMethod.MEDIAN_PROFILE
           )
           
           // Retrieve the best peptide match

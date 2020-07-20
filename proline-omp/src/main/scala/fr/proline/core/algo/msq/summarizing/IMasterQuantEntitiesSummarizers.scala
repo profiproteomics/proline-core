@@ -84,11 +84,11 @@ trait IMQProteinSetSummarizer {
                 abundanceSumByQcId(qcId) += quantPep.abundance
                 pepCountByQcId.getOrElseUpdate(qcId,0)
                 pepCountByQcId(qcId) += 1
+
+                pepMatchesCountByQcId.getOrElseUpdate(qcId,0)
+                pepMatchesCountByQcId(qcId) += quantPep.peptideMatchesCount
               }
-  
-              pepMatchesCountByQcId.getOrElseUpdate(qcId,0)
-              pepMatchesCountByQcId(qcId) += quantPep.peptideMatchesCount
-              
+
 //              if (quantPep.peptideMatchesCount > 0) {
 //                pepCountByQcId.getOrElseUpdate(qcId,0)
 //                pepCountByQcId(qcId) += 1
