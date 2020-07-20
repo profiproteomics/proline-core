@@ -3,7 +3,7 @@ package fr.proline.core.algo.msq.profilizer
 import com.typesafe.scalalogging.LazyLogging
 import fr.profi.util.math.median
 import fr.profi.util.primitives.isZeroOrNaN
-import fr.proline.core.algo.msq.config.profilizer.AbundanceSummarizerMethod
+import fr.proline.core.algo.msq.config.profilizer.MqPeptideAbundanceSummarizingMethod
 
 import scala.collection.mutable.ArrayBuffer
 
@@ -21,7 +21,7 @@ object AbundanceSummarizer extends LazyLogging {
 //    val LFQ = Value
 //  }
   
-  val advancedMethods = List(AbundanceSummarizerMethod.MEDIAN_BIOLOGICAL_PROFILE)
+  val advancedMethods = List(MqPeptideAbundanceSummarizingMethod.MEDIAN_BIOLOGICAL_PROFILE)
   
   val EMPTY_MATRIX_MESSAGE = "abundanceMatrix is empty"
   
@@ -29,7 +29,7 @@ object AbundanceSummarizer extends LazyLogging {
     s"No implementation corresponding to the $methodName method."
   )
   
-  def summarizeAbundanceMatrix( abundanceMatrix: Array[Array[Float]], method: AbundanceSummarizerMethod.Value ): Array[Float] = {
+  def summarizeAbundanceMatrix( abundanceMatrix: Array[Array[Float]], method: MqPeptideAbundanceSummarizingMethod.Value ): Array[Float] = {
     
     val matrixLength = abundanceMatrix.length
     require( matrixLength > 0, EMPTY_MATRIX_MESSAGE )
@@ -37,20 +37,20 @@ object AbundanceSummarizer extends LazyLogging {
     if( matrixLength == 1 ) return abundanceMatrix.head
     
     method match {
-      case AbundanceSummarizerMethod.BEST_SCORE =>  {
+      case MqPeptideAbundanceSummarizingMethod.BEST_SCORE =>  {
         // Note: a BEST_SCORE approach could be implemented here, but this will lead to a more complicated the API
-        throw createNoImplemError(AbundanceSummarizerMethod.BEST_SCORE)
+        throw createNoImplemError(MqPeptideAbundanceSummarizingMethod.BEST_SCORE)
       }
-      case AbundanceSummarizerMethod.MAX_ABUNDANCE_SUM => summarizeUsingMaxAbundanceSum(abundanceMatrix)
-      case AbundanceSummarizerMethod.MEAN => summarizeUsingMean(abundanceMatrix)
-      case AbundanceSummarizerMethod.MEAN_OF_TOP3 => summarizeUsingMeanOfTop3(abundanceMatrix)
-      case AbundanceSummarizerMethod.MEDIAN => summarizeUsingMedian(abundanceMatrix)
-      case AbundanceSummarizerMethod.MEDIAN_PROFILE => summarizeUsingMedianProfile(abundanceMatrix)
-      case AbundanceSummarizerMethod.MEDIAN_BIOLOGICAL_PROFILE =>  {
-        throw createNoImplemError(AbundanceSummarizerMethod.MEDIAN_BIOLOGICAL_PROFILE)
+      case MqPeptideAbundanceSummarizingMethod.MAX_ABUNDANCE_SUM => summarizeUsingMaxAbundanceSum(abundanceMatrix)
+      case MqPeptideAbundanceSummarizingMethod.MEAN => summarizeUsingMean(abundanceMatrix)
+      case MqPeptideAbundanceSummarizingMethod.MEAN_OF_TOP3 => summarizeUsingMeanOfTop3(abundanceMatrix)
+      case MqPeptideAbundanceSummarizingMethod.MEDIAN => summarizeUsingMedian(abundanceMatrix)
+      case MqPeptideAbundanceSummarizingMethod.MEDIAN_PROFILE => summarizeUsingMedianProfile(abundanceMatrix)
+      case MqPeptideAbundanceSummarizingMethod.MEDIAN_BIOLOGICAL_PROFILE =>  {
+        throw createNoImplemError(MqPeptideAbundanceSummarizingMethod.MEDIAN_BIOLOGICAL_PROFILE)
       }
-      case AbundanceSummarizerMethod.SUM => summarizeUsingSum(abundanceMatrix)
-      case AbundanceSummarizerMethod.LFQ => LFQSummarizer.summarize(abundanceMatrix)
+      case MqPeptideAbundanceSummarizingMethod.SUM => summarizeUsingSum(abundanceMatrix)
+      case MqPeptideAbundanceSummarizingMethod.MEDIAN_RATIO_FITTING => LFQSummarizer.summarize(abundanceMatrix)
     }
     
   }

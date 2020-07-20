@@ -4,7 +4,7 @@ import com.typesafe.scalalogging.LazyLogging
 import fr.profi.util.collection._
 import fr.profi.util.math.median
 import fr.profi.util.primitives.isZeroOrNaN
-import fr.proline.core.algo.msq.config.profilizer.{AbundanceSummarizerMethod, MissingAbundancesInferenceMethod, MqPeptidesClusteringMethod, MqPeptidesSelectionConfig, MqPeptidesSelectionMethod, PostProcessingConfig, ProfilizerStatConfig, QuantComponentItem, RazorStrategyMethod}
+import fr.proline.core.algo.msq.config.profilizer.{MqPeptideAbundanceSummarizingMethod, MissingAbundancesInferenceMethod, MqPeptidesClusteringMethod, MqPeptidesSelectionConfig, MqPeptidesSelectionMethod, PostProcessingConfig, ProfilizerStatConfig, QuantComponentItem, RazorStrategyMethod}
 import fr.proline.core.algo.msq.profilizer._
 import fr.proline.core.algo.msq.profilizer.filtering._
 import fr.proline.core.algo.msq.summarizing.BuildMasterQuantPeptide
@@ -372,7 +372,7 @@ class Profilizer( expDesign: ExperimentalDesign, groupSetupNumber: Int = 1, mast
     pepCountsByProfileClusterBuilder.sizeHint(psmCountMatrixBuffer.length)
     val mqPepsRatiosCvs = new ArrayBuffer[ArrayBuffer[Float]](mqPepsClusters.length)
     
-    val abSumMethod = AbundanceSummarizerMethod.withName(config.peptideAbundanceSummarizingMethod)
+    val abSumMethod = MqPeptideAbundanceSummarizingMethod.withName(config.peptideAbundanceSummarizingMethod)
     
     for( mqPepsCluster <- mqPepsClusters ) {
 
@@ -390,24 +390,26 @@ class Profilizer( expDesign: ExperimentalDesign, groupSetupNumber: Int = 1, mast
       // Summarize raw abundances of the current profile cluster
       val mqPepRawAbundanceMatrix = clusteredMqPeps.map( _.getRawAbundancesForQuantChannels(expDesignSetup.qcIds) ).toArray
       
-      val summarizedRawAbundances = this.summarizeMatrix(mqPepRawAbundanceMatrix, AbundanceSummarizerMethod.SUM)
+      val summarizedRawAbundances = this.summarizeMatrix(mqPepRawAbundanceMatrix, MqPeptideAbundanceSummarizingMethod.SUM)
       //println("summarizedRawAbundances: " + summarizedRawAbundances.mkString("\t"))
 
       rawAbundancesByProfileClusterBuilder += mqPepsCluster -> summarizedRawAbundances
       
       // Summarize abundances of the current profile cluster
+      val mqPepAbundanceMatrix = clusteredMqPeps.map( _.getAbundancesForQuantChannels(expDesignSetup.qcIds) ).toArray
+
+      // Summarize Peptide count of the current profile cluster
       val pepCountMatrixBuilder = Array.newBuilder[Int]
       pepCountMatrixBuilder.sizeHint(expDesignSetup.qcIds.length)
-      val mqPepAbundanceMatrix = clusteredMqPeps.map( _.getAbundancesForQuantChannels(expDesignSetup.qcIds) ).toArray
-      mqPepAbundanceMatrix.transpose.map{ qChAbs =>
-        val nbpep = qChAbs.count(!_.isNaN)
+      mqPepsCluster.mqPeptides.map( _.getAbundancesForQuantChannels(expDesignSetup.qcIds) ).transpose.map{ qChAbs =>
+        val nbpep = qChAbs.count(a => !a.isNaN && !(a <= 0.0f))
         pepCountMatrixBuilder += nbpep
       }
       val pepCountMatrix = pepCountMatrixBuilder.result()
       pepCountsByProfileClusterBuilder += mqPepsCluster -> pepCountMatrix
 
+
       val abRow = this.summarizeMatrix(mqPepAbundanceMatrix, abSumMethod)
-      //println(mqPepsCluster.name + " abRow: " + abRow.mkString("\t"))
       abundanceMatrixBuffer += abRow
       
       // Summarize PSM counts of the current profile cluster
@@ -581,17 +583,17 @@ class Profilizer( expDesign: ExperimentalDesign, groupSetupNumber: Int = 1, mast
     ()
   }
   
-  private def summarizeMatrix(abundanceMatrix: Array[Array[Float]], abSumMethod: AbundanceSummarizerMethod.Value): Array[Float] = {
+  private def summarizeMatrix(abundanceMatrix: Array[Array[Float]], abSumMethod: MqPeptideAbundanceSummarizingMethod.Value): Array[Float] = {
     if(abundanceMatrix.isEmpty) return Array()
     if(abundanceMatrix.length == 1) abundanceMatrix.head
 
-    import AbundanceSummarizerMethod._
+    import MqPeptideAbundanceSummarizingMethod._
     
     // Summarize raw abundances of the current profile cluster
     val finalAbSumMethod = abSumMethod
 
     // If the method is not median profile
-    val summarizedAbundances = if (finalAbSumMethod == LFQ) {
+    val summarizedAbundances = if (finalAbSumMethod == MEDIAN_RATIO_FITTING) {
       LFQSummarizer.summarize(abundanceMatrix, minAbundanceByQcIds)
       
     } else if (!AbundanceSummarizer.advancedMethods.contains(finalAbSumMethod)) {

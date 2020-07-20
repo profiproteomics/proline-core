@@ -54,19 +54,6 @@ object MissCleavedPeptideFilteringMethod extends EnhancedEnum {
 }
 
 
-// TODO: rename AbundanceSummarizerMethod
-object AbundanceSummarizerMethod extends EnhancedEnum {
-  val BEST_SCORE = Value // has no implementation here, should be called before
-  val MAX_ABUNDANCE_SUM = Value // return one single row
-  val MEAN = Value
-  val MEAN_OF_TOP3 = Value
-  val MEDIAN = Value
-  val MEDIAN_BIOLOGICAL_PROFILE = Value // has no implementation here, should be called before
-  val MEDIAN_PROFILE = Value
-  val SUM = Value
-  val LFQ = Value // TODO: rename me MEDIAN_RATIO_FITTING
-}
-
 class MqPeptideAbundanceSummarizingMethodRef extends TypeReference[MqPeptideAbundanceSummarizingMethod.type]
 
 object MqPeptideAbundanceSummarizingMethod extends EnhancedEnum {
@@ -78,8 +65,23 @@ object MqPeptideAbundanceSummarizingMethod extends EnhancedEnum {
   val MEDIAN_BIOLOGICAL_PROFILE = Value // has no implementation here, should be called before
   val MEDIAN_PROFILE = Value
   val SUM = Value
+//  val LFQ = Value // TODO: rename me MEDIAN_RATIO_FITTING
   val MEDIAN_RATIO_FITTING = Value
 }
+
+//class MqPeptideAbundanceSummarizingMethodRef extends TypeReference[MqPeptideAbundanceSummarizingMethod.type]
+//
+//object MqPeptideAbundanceSummarizingMethod extends EnhancedEnum {
+//  val BEST_SCORE = Value // has no implementation here, should be called before
+//  val MAX_ABUNDANCE_SUM = Value // return one single row
+//  val MEAN = Value
+//  val MEAN_OF_TOP3 = Value
+//  val MEDIAN = Value
+//  val MEDIAN_BIOLOGICAL_PROFILE = Value // has no implementation here, should be called before
+//  val MEDIAN_PROFILE = Value
+//  val SUM = Value
+//  val MEDIAN_RATIO_FITTING = Value
+//}
 
 class MqPeptidesSelectionMethodRef extends TypeReference[MqPeptidesSelectionMethod.type]
 
@@ -230,10 +232,10 @@ case class PostProcessingConfigV2(
     profileClusteringMethod = Some(MqPeptidesClusteringMethod.QUANT_PROFILE)
   }
   if( abundanceSummarizingMethod == null) {
-    abundanceSummarizingMethod = AbundanceSummarizerMethod.MEAN
+    abundanceSummarizingMethod = MqPeptideAbundanceSummarizingMethod.MEAN
   }
   // force QUANT_PEPTIDE_IONS if Summarizer is LFQ
-  if (abundanceSummarizingMethod == AbundanceSummarizerMethod.LFQ.toString) {
+  if (abundanceSummarizingMethod.equalsIgnoreCase("LFQ")) {
     summarizingBasedOn = Some(QuantComponentItem.QUANT_PEPTIDE_IONS)
   }
 
@@ -256,7 +258,7 @@ case class PostProcessingConfigV2(
       applyProfileClustering = applyProfileClustering,
       profileClusteringMethod = if (profileClusteringMethod.isDefined) Some(MqPeptidesClusteringMethod.withName(profileClusteringMethod.get)) else None,
       profileClustererConfig =  profileClusteringConfig,
-      peptideAbundanceSummarizingMethod =  MqPeptideAbundanceSummarizingMethod.withName(abundanceSummarizingMethod),
+      peptideAbundanceSummarizingMethod =  if (abundanceSummarizingMethod.equalsIgnoreCase("LFQ")) MqPeptideAbundanceSummarizingMethod.MEDIAN_RATIO_FITTING else MqPeptideAbundanceSummarizingMethod.withName(abundanceSummarizingMethod),
       peptideAbundanceSummarizerConfig = Some(MqPeptideAbundanceSummarizerConfig(peptideSummarizingBasedOn = summarizingBasedOn)),
       proteinStatConfig = proteinStatConfig
       )
@@ -311,12 +313,12 @@ case class PostProcessingConfig(
     peptidesSelectionConfig = Some(MqPeptidesSelectionConfig(razorStrategyMethod = RazorStrategyMethod.MOST_SPECIFIC_PEP_SELECTION))
   }
 
-  def isMqPeptideAbundanceSummarizerBasedOn(component: String): Boolean = {
+  def isMqPeptideAbundanceSummarizerBasedOn(component: QuantComponentItem.Value): Boolean = {
     if (peptideAbundanceSummarizerConfig.isDefined) {
-      (peptideAbundanceSummarizerConfig.get.peptideSummarizingBasedOn.get == component)
+      (peptideAbundanceSummarizerConfig.get.peptideSummarizingBasedOn.get == component.toString)
     } else {
-      ((peptideAbundanceSummarizingMethod == AbundanceSummarizerMethod.LFQ) && (component == QuantComponentItem.QUANT_PEPTIDE_IONS)) ||
-        ((peptideAbundanceSummarizingMethod != AbundanceSummarizerMethod.LFQ) && (component == QuantComponentItem.QUANT_PEPTIDES))
+      ((peptideAbundanceSummarizingMethod == MqPeptideAbundanceSummarizingMethod.MEDIAN_RATIO_FITTING) && (component == QuantComponentItem.QUANT_PEPTIDE_IONS)) ||
+        ((peptideAbundanceSummarizingMethod != MqPeptideAbundanceSummarizingMethod.MEDIAN_RATIO_FITTING) && (component == QuantComponentItem.QUANT_PEPTIDES))
     }
   }
 
@@ -337,7 +339,6 @@ case class ProfilizerConfig(
   var profileClusteringMethod: Option[String] = None,
   profileClusteringConfig: Option[MqPeptidesClustererConfig] = None,
 
-  // TODO: rename into abundanceSummarizingMethod ???
   var abundanceSummarizerMethod: String = null,
 
   peptideStatConfig: ProfilizerStatConfig = new ProfilizerStatConfig(),
@@ -358,10 +359,10 @@ case class ProfilizerConfig(
     profileClusteringMethod = Some(MqPeptidesClusteringMethod.QUANT_PROFILE)
   }
   if( abundanceSummarizerMethod == null) {
-    abundanceSummarizerMethod = AbundanceSummarizerMethod.MEAN
+    abundanceSummarizerMethod = MqPeptideAbundanceSummarizingMethod.MEAN
   }
   // force QUANT_PEPTIDE_IONS if Summarizer is LFQ
-  if (abundanceSummarizerMethod == AbundanceSummarizerMethod.LFQ.toString) {
+  if (abundanceSummarizerMethod.equalsIgnoreCase("LFQ")) {
     summarizingBasedOn = Some(QuantComponentItem.QUANT_PEPTIDE_IONS)
   }
 
@@ -385,7 +386,7 @@ case class ProfilizerConfig(
       applyProfileClustering = applyProfileClustering,
       profileClusteringMethod = if (profileClusteringMethod.isDefined) Some(MqPeptidesClusteringMethod.withName(profileClusteringMethod.get)) else None,
       profileClustererConfig =  profileClusteringConfig,
-      peptideAbundanceSummarizingMethod =  MqPeptideAbundanceSummarizingMethod.withName(abundanceSummarizerMethod),
+      peptideAbundanceSummarizingMethod =  if (abundanceSummarizerMethod.equalsIgnoreCase("LFQ")) MqPeptideAbundanceSummarizingMethod.MEDIAN_RATIO_FITTING else MqPeptideAbundanceSummarizingMethod.withName(abundanceSummarizerMethod),
       peptideAbundanceSummarizerConfig = Some(MqPeptideAbundanceSummarizerConfig(peptideSummarizingBasedOn = summarizingBasedOn)),
       proteinStatConfig = proteinStatConfig
     )
