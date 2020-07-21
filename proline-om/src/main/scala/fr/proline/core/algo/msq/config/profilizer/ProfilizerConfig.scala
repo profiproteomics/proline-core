@@ -313,6 +313,12 @@ case class PostProcessingConfig(
     peptidesSelectionConfig = Some(MqPeptidesSelectionConfig(razorStrategyMethod = RazorStrategyMethod.MOST_SPECIFIC_PEP_SELECTION))
   }
 
+  //if discardMissCleavedPeptides selected with no specified missCleavedPeptideFilteringMethod, set method to default
+  if(discardMissCleavedPeptides && missCleavedPeptideFilteringMethod.isEmpty ){
+    missCleavedPeptideFilteringMethod = Some(MissCleavedPeptideFilteringMethod.DISCARD_MISS_CLEAVED_FORMS)
+  }
+
+
   def isMqPeptideAbundanceSummarizerBasedOn(component: QuantComponentItem.Value): Boolean = {
     if (peptideAbundanceSummarizerConfig.isDefined) {
       (peptideAbundanceSummarizerConfig.get.peptideSummarizingBasedOn.get == component.toString)
