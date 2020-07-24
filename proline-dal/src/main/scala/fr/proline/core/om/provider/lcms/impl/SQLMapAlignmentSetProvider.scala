@@ -64,11 +64,13 @@ class SQLMapAlignmentSetProvider( val lcmsDbCtx: LcMsDbConnectionContext ) exten
   }
   
   def buildMapAlignment( mapAlnRecord: ResultSetRow ): MapAlignment = {
-    
+
+    // Sometimes timeList or deltaTimeList can be empty and the mapping to float values will raise an exception
+    // we do not need to keep such alignments, so instead we return null (and we filter null alignments later on)
     val massStart = mapAlnRecord.getFloat(MapAlnCols.MASS_START)
     val massEnd = mapAlnRecord.getFloat(MapAlnCols.MASS_END)
-    val timeList = mapAlnRecord.getString(MapAlnCols.TIME_LIST).split(" ") map { _.toFloat }
-    val deltaTimeList = mapAlnRecord.getString(MapAlnCols.DELTA_TIME_LIST).split(" ") map { _.toFloat }
+    val timeList = mapAlnRecord.getString(MapAlnCols.TIME_LIST).split(" ").filter(!_.isEmpty) map { _.toFloat }
+    val deltaTimeList = mapAlnRecord.getString(MapAlnCols.DELTA_TIME_LIST).split(" ").filter(!_.isEmpty) map { _.toFloat }
     
     new MapAlignment(
       refMapId = toLong(mapAlnRecord.getAny(MapAlnCols.FROM_MAP_ID)),
