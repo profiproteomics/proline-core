@@ -4,30 +4,42 @@
   <parent>
     <artifactId>proline-core</artifactId>
     <groupId>fr.proline</groupId>
-    <version>2.2.0-SNAPSHOT</version>
+    <version>2.2.0_jdk11-SNAPSHOT</version>
   </parent>
 
-  <artifactId>proline-om_${scala.version}</artifactId>
+  <artifactId>proline-om_${scala.compat.version}</artifactId>
 
   <name>${project.artifactId}</name>
 
   <dependencies>
 
     <dependency>
+      <groupId>org.slf4j</groupId>
+      <artifactId>slf4j-api</artifactId>
+    </dependency>
+
+    <dependency>
       <groupId>org.scala-lang</groupId>
       <artifactId>scala-library</artifactId>
+      <!-- Version inherited from ProFI-Pom -->
+    </dependency>
+
+    <dependency>
+      <groupId>org.scala-lang</groupId>
+      <artifactId>scala-reflect</artifactId>
+      <!-- Version inherited from ProFI-Pom -->
     </dependency>
 
     <dependency>
       <groupId>com.typesafe.scala-logging</groupId>
-      <artifactId>scala-logging_${scala.version}</artifactId>
+      <artifactId>scala-logging_${scala.compat.version}</artifactId>
       <!-- Version inherited from ProFI-Pom -->
     </dependency>
 
     <!-- Serialization -->
     <dependency>
       <groupId>com.fasterxml.jackson.module</groupId>
-      <artifactId>jackson-module-scala_${scala.version}</artifactId>
+      <artifactId>jackson-module-scala_${scala.compat.version}</artifactId>
       <!-- Version inherited from ProFI-Pom -->
     </dependency>
 
@@ -52,20 +64,20 @@
     <!-- ProFi Commons -->
     <dependency>
       <groupId>fr.profi.util</groupId>
-      <artifactId>profi-commons-scala_${scala.version}</artifactId>
+      <artifactId>profi-commons-scala_${scala.compat.version}</artifactId>
       <!-- Version inherited from parent POM -->
     </dependency>
     
     <!-- ProFi Proteomics  -->
     <dependency>
       <groupId>fr.profi</groupId>
-      <artifactId>profi-proteomics_${scala.version}</artifactId>
+      <artifactId>profi-proteomics_${scala.compat.version}</artifactId>
     </dependency>
     
     <!-- mzdb-access (needed only for model classes) -->
     <dependency>
       <groupId>fr.profi</groupId>
-      <artifactId>mzdb-access_${scala.version}</artifactId>
+      <artifactId>mzdb-access_${scala.compat.version}</artifactId>
       <!-- Version inherited from ProFI-Pom -->
       <exclusions>
         <exclusion>
@@ -78,7 +90,7 @@
     <!-- mzdb-processing (needed only for model classes) -->
     <dependency>
       <groupId>fr.profi</groupId>
-      <artifactId>mzdb-processing_${scala.version}</artifactId>
+      <artifactId>mzdb-processing_${scala.compat.version}</artifactId>
       <!-- Version inherited from ProFI-Pom -->
       <exclusions>
         <exclusion>
@@ -91,7 +103,13 @@
     <!-- Test -->
     <dependency>
       <groupId>org.scalatest</groupId>
-      <artifactId>scalatest_${scala.version}</artifactId>
+      <artifactId>scalatest_${scala.compat.version}</artifactId>
+      <scope>test</scope>
+    </dependency>
+
+    <dependency>
+      <groupId>org.scalactic</groupId>
+      <artifactId>scalactic_${scala.compat.version}</artifactId>
       <scope>test</scope>
     </dependency>
 
@@ -102,7 +120,6 @@
 
       <plugin>
         <artifactId>maven-jar-plugin</artifactId>
-
         <executions>
           <execution>
             <goals>
