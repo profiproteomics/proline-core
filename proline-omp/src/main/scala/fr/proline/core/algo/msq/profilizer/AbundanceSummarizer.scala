@@ -129,7 +129,7 @@ object AbundanceSummarizer extends LazyLogging {
     }
     
     // Scale up the absolute abundances
-    val( top3MaxValue, top3MaxIdx ) = top3MeanAbundances.zipWithIndex.maxBy(_._1)
+    val( top3MaxValue, top3MaxIdx ) = top3MeanAbundances.zipWithIndex.maxBy(_._1)//VDS Warning maxBy may return wrong value if NaN
     val curMaxValue = absoluteAbundances(top3MaxIdx)
     val scalingFactor = top3MaxValue / curMaxValue
     val scaledAbundances = absoluteAbundances.map( _ * scalingFactor )

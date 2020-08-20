@@ -327,6 +327,7 @@ class PeakelsDetector(
           }      
           
           // Create TMP master feature builders
+          //VDS Warning maxBy may return wrong value if NaN
           val bestFt = masterFtChildren.maxBy(_.intensity)
           
           val mftBuilder = new MasterFeatureBuilder(
@@ -356,7 +357,7 @@ class PeakelsDetector(
                   childFt <- mftBuilder.children
                 ) {
                   if (childFt.isCluster) {
-                    val bestFt = childFt.subFeatures.maxBy(_.intensity)
+                    val bestFt = childFt.subFeatures.maxBy(_.intensity)//VDS Warning maxBy may return wrong value if NaN
                     mftBuilderByFtId.put(bestFt.id, mftBuilder)
                   } else {
                     mftBuilderByFtId.put(childFt.id, mftBuilder)
@@ -473,7 +474,7 @@ class PeakelsDetector(
                     Seq()
                   } else {
                     // Else determine a reference for this group
-                    val refFt = detectedChildFtsInGroup.maxBy(_.intensity)
+                    val refFt = detectedChildFtsInGroup.maxBy(_.intensity)//VDS Warning maxBy may return wrong value if NaN
 
                     lcMsRuns.withFilter { lcMsRun =>
                       childFtByProcMapId.contains(processedMapByRunId(lcMsRun.id).id) == false

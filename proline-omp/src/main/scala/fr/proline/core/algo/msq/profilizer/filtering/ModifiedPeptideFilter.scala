@@ -121,6 +121,7 @@ case class LowestAbundantModifiedFormFilterer(ptmsToConsider: Array[Long], ptmPa
       val allDetectedForms = if( mqPepOpt.isEmpty ) oxMqPeps else oxMqPeps ++ List(mqPepOpt.get)
 
       // We compare the abundances of the different forms
+      //VDS Warning maxBy may return wrong value if NaN
       val mostAbundantMqPepId = allDetectedForms.maxBy(_.getBestQuantPeptide.rawAbundance).id
 
       // Discard low abundance forms

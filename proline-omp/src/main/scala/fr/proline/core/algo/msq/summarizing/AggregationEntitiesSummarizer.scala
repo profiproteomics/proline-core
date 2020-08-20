@@ -71,6 +71,7 @@ class AggregationEntitiesSummarizer(
 
           if (!bestQPepIon.isDefined) {
             logger.warn(s"Cannot find quant peptide ion from $childQCIds, look for the highest abundance instead")
+            //VDS Warning maxBy may return wrong value if NaN
             bestQPepIon = Some(filteredQPepIons.maxBy(_.abundance))
           }
 

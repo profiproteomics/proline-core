@@ -156,7 +156,7 @@ class FeatureSummarizer(
   ): Array[Float] = {
     indexedFeatures.map { case (feature, index) =>
       val theoIP = IsotopePatternEstimator.getTheoreticalPattern(feature.moz, feature.charge)
-      val maxTheoIntensityIdxPair = theoIP.abundances.zipWithIndex.maxBy(_._1)      
+      val maxTheoIntensityIdxPair = theoIP.abundances.zipWithIndex.maxBy(_._1)  //VDS Warning maxBy may return wrong value if NaN
       val maxIdx = maxTheoIntensityIdxPair._2
       
       val peakelIntensities = peakelIntensitiesByFeature(feature)
@@ -238,7 +238,7 @@ class FeatureSummarizer(
     // Summarize the matrix to a single median isotope pattern
     val medianIP = AbundanceSummarizer.summarizeAbundanceMatrix(fixedLengthIntensityMatrix, MqPeptideAbundanceSummarizingMethod.MEDIAN_PROFILE)
     //println("medianIP",medianIP.toList)
-    val maxIdx = medianIP.zipWithIndex.maxBy(_._1)._2
+    val maxIdx = medianIP.zipWithIndex.maxBy(_._1)._2 //VDS Warning maxBy may return wrong value if NaN
     
     indexedFeatures.map { case (feature, index) =>
 

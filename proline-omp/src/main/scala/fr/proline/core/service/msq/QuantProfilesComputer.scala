@@ -160,7 +160,7 @@ class QuantProfilesComputer(
               val ftOpt = ft.subFeatures.find(_.id == qPepIonFtId)
               if( ftOpt.isDefined) ftOpt.get
               else {
-                ft.subFeatures.maxBy(_.intensity)
+                ft.subFeatures.maxBy(_.intensity)//VDS Warning maxBy may return wrong value if NaN
               }
             }
             /*if(mainClusterFt.relations.peakelItems.isEmpty) {
@@ -244,7 +244,7 @@ class QuantProfilesComputer(
         for (mqPepIon <- mqPepIons) {
           val masterFt = masterFtById(mqPepIon.lcmsMasterFeatureId.get)
           val sharedFtsCount = masterFt.children.count { ft =>
-            val mainFt = if (!ft.isCluster) ft else ft.subFeatures.maxBy(_.intensity)
+            val mainFt = if (!ft.isCluster) ft else ft.subFeatures.maxBy(_.intensity)//VDS Warning maxBy may return wrong value if NaN
             mainFt.getBasePeakel().getOrElse(mainFt.relations.peakelItems(0).getPeakel().get).featuresCount > 1
           }
 

@@ -139,7 +139,7 @@ object ClusterizeFeatures extends LazyLogging {
   
   private def _findMostIntenseFeature(features: List[Feature]): Feature = {
     
-    features.maxBy(_.intensity)
+    features.maxBy(_.intensity) //VDS Warning maxBy may return wrong value if intensity contains NaN
     // Group features by intensity
     /*val ftByIntensity = features map { ft => (ft.intensity -> ft) }
     //push(@{ ftByIntensity( _.intensity ) }, _ ) for features
