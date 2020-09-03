@@ -128,8 +128,8 @@ CREATE SEQUENCE public.enzyme_cleavage_id_seq;
 CREATE TABLE public.enzyme_cleavage (
                 id BIGINT NOT NULL DEFAULT nextval('public.enzyme_cleavage_id_seq'),
                 site VARCHAR(6) NOT NULL,
-                residues VARCHAR(20) NOT NULL,
-                restrictive_residues VARCHAR(20),
+                residues VARCHAR(26) NOT NULL,
+                restrictive_residues VARCHAR(26),
                 enzyme_id BIGINT NOT NULL,
                 CONSTRAINT enzyme_cleavage_pk PRIMARY KEY (id)
 );

@@ -102,8 +102,8 @@ CREATE UNIQUE INDEX public.enzyme_name_idx
 CREATE TABLE public.enzyme_cleavage (
                 id IDENTITY NOT NULL,
                 site VARCHAR(6) NOT NULL,
-                residues VARCHAR(20) NOT NULL,
-                restrictive_residues VARCHAR(20),
+                residues VARCHAR(26) NOT NULL,
+                restrictive_residues VARCHAR(26),
                 enzyme_id BIGINT NOT NULL,
                 CONSTRAINT enzyme_cleavage_pk PRIMARY KEY (id)
 );
