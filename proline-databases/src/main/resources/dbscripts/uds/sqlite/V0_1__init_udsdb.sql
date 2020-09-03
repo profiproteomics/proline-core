@@ -105,8 +105,8 @@ CREATE TABLE enzyme (
 CREATE TABLE enzyme_cleavage (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 site TEXT(6) NOT NULL,
-                residues TEXT(20) NOT NULL,
-                restrictive_residues TEXT(20),
+                residues TEXT(26) NOT NULL,
+                restrictive_residues TEXT(26),
                 enzyme_id INTEGER NOT NULL,
                 FOREIGN KEY (enzyme_id) REFERENCES enzyme (id)
 );
