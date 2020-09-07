@@ -1,11 +1,10 @@
 package fr.proline.core.service.msi
 
 import com.typesafe.scalalogging.LazyLogging
-import fr.profi.jdbc.easy._
 import fr.profi.api.service.IService
+import fr.profi.jdbc.easy._
 import fr.proline.context.IExecutionContext
-import fr.proline.core.algo.msi.AdditionMode
-import fr.proline.core.algo.msi.ResultSetAdder
+import fr.proline.core.algo.msi.{AdditionMode, ResultSetAdder}
 import fr.proline.core.dal.DoJDBCWork
 import fr.proline.core.dal.context._
 import fr.proline.core.dal.helper.MsiDbHelper
@@ -13,13 +12,13 @@ import fr.proline.core.dal.tables.msi.MsiDbResultSetRelationTable
 import fr.proline.core.om.model.msi.{ResultSet, ResultSetProperties}
 import fr.proline.core.om.provider.PeptideCacheExecutionContext
 import fr.proline.core.om.provider.msi.IResultSetProvider
-import fr.proline.core.om.provider.msi.impl.ORMResultSetProvider
-import fr.proline.core.om.provider.msi.impl.SQLResultSetProvider
+import fr.proline.core.om.provider.msi.impl.{ORMResultSetProvider, SQLResultSetProvider}
 import fr.proline.core.om.storer.msi.RsStorer
 import fr.proline.core.om.storer.msi.impl.StorerContext
+import fr.proline.core.orm.msi.PeptideReadablePtmString
 
-import scala.collection.mutable.ArrayBuffer
-import scala.collection.mutable.LongMap
+import scala.collection.mutable
+import scala.collection.mutable.{ArrayBuffer, LongMap}
 
 object ResultSetMerger {
 
@@ -214,7 +213,7 @@ class ResultSetMerger(
       decoyRs.properties = Some(rsProperties)
 
       executeOnProgress() //execute registered action during progress
-
+      _loadReadablePtmString(storerContext, decoyRsIds)
       DoJDBCWork.withEzDBC(storerContext.getMSIDbConnectionContext) { msiEzDBC =>
         /* Store merged decoy result set */
         _storeMergedResultSet(storerContext, msiEzDBC, decoyRs, decoyRsIds)
@@ -226,13 +225,22 @@ class ResultSetMerger(
     }
 
     executeOnProgress() //execute registered action during progress
-
+    _loadReadablePtmString(storerContext, targetRsIds)
     DoJDBCWork.withEzDBC(storerContext.getMSIDbConnectionContext) { msiEzDBC =>
       /* Store merged target result set */
       _storeMergedResultSet(storerContext, msiEzDBC, mergedResultSet, targetRsIds)
     } // end of JDBC work
 
     logger.debug("Merged TARGET ResultSet Id: " + mergedResultSet.id)
+  }
+
+  private def _loadReadablePtmString( storerContext: StorerContext, rsIds: Seq[Long]): mutable.Map[Long,PeptideReadablePtmString] ={
+    val pepReadablePtmStringByPepId : mutable.Map[Long,PeptideReadablePtmString] = storerContext.getEntityCache(classOf[PeptideReadablePtmString])
+    //clear previous data
+    pepReadablePtmStringByPepId.clear()
+    val msiDbHelper = new MsiDbHelper(storerContext.getMSIDbConnectionContext)
+    pepReadablePtmStringByPepId ++= msiDbHelper.getReadablePtmForResultSets(rsIds)
+    pepReadablePtmStringByPepId
   }
 
   private def _storeMergedResultSet(
