@@ -87,21 +87,6 @@ class BHPSMFilter(var adjPValueTreshold: Float = 0.01f) extends IPeptideMatchFil
 
     var adjustedPValues = BHFilter.adjustPValues(pValues)
 
-    val filePath = "c:/Local/tmp/Proline_QueriesCandidates"+ (DateTimeFormatter.ofPattern("yyyy-MM-dd_HH_mm").format(LocalDateTime.now))+".tsv"
-
-    val file = new java.io.File(filePath)
-    val writer = new PrintWriter(file)
-
-    for ((queryId, index) <- queryIds.zipWithIndex) {
-      val row = List(index.toString, queryId.toString, candidates(index).toString, pValues1(index), pValues(index).toString,adjustedPValues(index).toString )
-      writer.print(row.mkString("\t"))
-      writer.println()
-      writer.flush()
-    }
-
-    writer.close()
-
-
     for (i <- 0 to pValues.length-1) {
         targetPepMatches(i).isValidated = (adjustedPValues(i) < adjPValueTreshold)
     }
