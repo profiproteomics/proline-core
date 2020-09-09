@@ -11,20 +11,16 @@ import fr.proline.core.dal._
 import fr.proline.core.dal.helper.MsiDbHelper
 import fr.proline.core.dal.tables.SelectQueryBuilder1
 import fr.proline.core.dal.tables.SelectQueryBuilder._
-import fr.proline.core.dal.tables.msi.{
-  MsiDbPeptideTable,
-  MsiDbPeptideMatchTable,
-  MsiDbPeptideMatchRelationTable,
-  MsiDbPeptideReadablePtmStringTable,
-  MsiDbProteinMatchTable,
-  MsiDbSequenceMatchTable
-}
+import fr.proline.core.dal.tables.msi.{MsiDbPeptideMatchRelationTable, MsiDbPeptideMatchTable, MsiDbPeptideReadablePtmStringTable, MsiDbPeptideTable, MsiDbProteinMatchTable, MsiDbSequenceMatchTable}
 import fr.proline.core.om.storer.msi.IRsStorer
 import fr.proline.core.om.model.msi._
 import fr.proline.repository.util.PostgresUtils
 import fr.profi.util.sql.encodeRecordForPgCopy
 import fr.profi.util.StringUtils
 import fr.profi.util.primitives._
+import fr.proline.core.orm.msi.PeptideReadablePtmString
+
+import scala.collection.mutable
 
 private[msi] object PgRsWriter extends AbstractSQLRsWriter() {
 
@@ -104,41 +100,32 @@ private[msi] object PgRsWriter extends AbstractSQLRsWriter() {
   //def fetchExistingProteins( protCRCs: Seq[String] ): Array[Protein] = null
 
   //def storeNewProteins( proteins: Seq[Protein] ): Array[Protein] = null
-  
-  override def insertRsReadablePtmStrings(rs: ResultSet, msiDbCtx: MsiDbConnectionContext): Int = {
-    
+  override  def insertSpecifiedRsReadablePtmStrings(rs: ResultSet, readablePtmStringByPepId: Map[Long, PeptideReadablePtmString], msiDbCtx: MsiDbConnectionContext): Int = {
+
     DoJDBCReturningWork.withConnection(msiDbCtx) { msiCon =>
-      
+
       // Define some vars
       val bulkCopyManager = PostgresUtils.getCopyManager(msiCon)
       val rsId = rs.id
-  
-      /*
-      // Create TMP table
-      val tmpReadblePtmTableName = "tmp_peptide_readable_ptm_string_" + (scala.math.random * 1000000).toInt
-      logger.info("creating temporary table '" + tmpReadblePtmTableName + "'...")
-      
-      val stmt = msiCon.createStatement()
-      stmt.executeUpdate("CREATE TEMP TABLE " + tmpReadblePtmTableName + " (LIKE peptide_readable_ptm_string) ON COMMIT DROP")
-      */
-      
+
       // Bulk insert of readable ptm strings
       logger.info("BULK insert of readable ptm strings")
-      
+
       //val pgBulkLoader = bulkCopyManager.copyIn("COPY " + tmpReadblePtmTableName + " ( " + readablePtmTableCols + " ) FROM STDIN")
       val pgBulkLoader = bulkCopyManager.copyIn(
         s"COPY ${MsiDbPeptideReadablePtmStringTable.name} ($readablePtmTableCols) FROM STDIN"
       )
-      
+
       // Iterate over peptides
       for (peptide <- rs.peptides; if StringUtils.isNotEmpty(peptide.readablePtmString)) {
-        
-        val readablePtmValues = List(          
+        val pepReadablePtm =  if(readablePtmStringByPepId.contains(peptide.id)) readablePtmStringByPepId(peptide.id).getReadablePtmString else  peptide.readablePtmString
+
+        val readablePtmValues = List(
           peptide.id,
           rsId,
-          peptide.readablePtmString
+          pepReadablePtm
         )
-        
+
         // Store readable PTM string
         val readablePtmBytes = encodeRecordForPgCopy(readablePtmValues)
         pgBulkLoader.writeToCopy(readablePtmBytes, 0, readablePtmBytes.length)
@@ -146,17 +133,14 @@ private[msi] object PgRsWriter extends AbstractSQLRsWriter() {
 
       // End of BULK copy
       val nbInsertedRecords = pgBulkLoader.endCopy()
-      
-      /*
-      // Move TMP table content to MAIN table
-      logger.info("move TMP table " + tmpReadblePtmTableName + " into MAIN peptide_readable_ptm_string table")
-      stmt.executeUpdate("INSERT into peptide_readable_ptm_string (" + readablePtmTableCols + ") " +
-        "SELECT " + readablePtmTableCols + " FROM " + tmpReadblePtmTableName
-      )*/
-      
+
       nbInsertedRecords.toInt
-      
+
     }
+  }
+
+  override def insertRsReadablePtmStrings(rs: ResultSet, msiDbCtx: MsiDbConnectionContext): Int = {
+    insertSpecifiedRsReadablePtmStrings(rs, Map.empty[Long, PeptideReadablePtmString], msiDbCtx)
   }
 
   override def insertRsPeptideMatches(rs: ResultSet, msiDbCtx: MsiDbConnectionContext): Int = {

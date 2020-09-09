@@ -1008,9 +1008,11 @@ class JPARsStorer(override val pklWriter: Option[IPeaklistWriter] = None) extend
     }
 
     /* Create PeptideReadablePtmString entities */
+    val readablePtmStringByPepId: Map[Long, PeptideReadablePtmString] = storerContext.getEntityCache(classOf[PeptideReadablePtmString]).toMap
     for (peptide <- peptides) {
+      val pepReadablePtm =  if(readablePtmStringByPepId.contains(peptide.id)) readablePtmStringByPepId(peptide.id).getReadablePtmString else  peptide.readablePtmString
 
-      if (StringUtils.isNotEmpty(peptide.readablePtmString)) {
+      if (StringUtils.isNotEmpty(pepReadablePtm)) {
         val peptIdent = new PeptideIdent(peptide.sequence, peptide.ptmString)
 
         val optionalMsiPeptide = msiPeptides.get(peptIdent)
@@ -1027,7 +1029,7 @@ class JPARsStorer(override val pklWriter: Option[IPeaklistWriter] = None) extend
           readablePtmStringEntity.setId(readablePtmStringEntityPK)
           readablePtmStringEntity.setPeptide(msiPeptide) // MSI Peptide must be in persistence context
           readablePtmStringEntity.setResultSet(msiResultSet) // MSI ResultSet must be in persistence context
-          readablePtmStringEntity.setReadablePtmString(peptide.readablePtmString)
+          readablePtmStringEntity.setReadablePtmString(pepReadablePtm)
 
           msiEm.persist(readablePtmStringEntity)
           logger.trace(s"PeptideReadablePtmString '${peptide.readablePtmString}' persisted")

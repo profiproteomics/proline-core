@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<architect-project version="1.0" appversion="1.0.7">
+<architect-project version="1.0" appversion="1.0.8">
  <project-name>UDS-DB</project-name>
  <print-settings numCopies="1" zoom="1.0" pageNumbersPrinted="true" orientation="1" paperWidth="612.0" paperHeight="792.0" leftBorder="50.0" rightBorder="50.0" topBorder="50.0" bottomBorder="50.0" />
  <project-data-sources>
@@ -949,10 +949,10 @@ If true, any given peptide need only conform to the cleavage specificity at one 
 Valid values for this field are:
 N-term, C-term.</remarks>
     </column>
-    <column id="COL279" populated="true" UUID="fa592af1-ac59-4021-8a98-0dfdfa6953b5" autoIncrement="false" autoIncrementSequenceName="enzyme_cleavage_residues_seq" defaultValue="" name="residues" nullable="0" physicalName="residues" precision="20" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="12" userDefinedTypeUUID="831ac2d4-0e65-47ec-a0b7-62b7f6b8760a" >
+    <column id="COL279" populated="true" UUID="fa592af1-ac59-4021-8a98-0dfdfa6953b5" autoIncrement="false" autoIncrementSequenceName="enzyme_cleavage_residues_seq" defaultValue="" name="residues" nullable="0" physicalName="residues" precision="26" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="12" userDefinedTypeUUID="831ac2d4-0e65-47ec-a0b7-62b7f6b8760a" >
      <remarks>A list of one letter code residues at which cleavage occurs.</remarks>
     </column>
-    <column id="COL280" populated="true" UUID="830c8eb5-ef22-468a-b56e-9948310f338c" autoIncrement="false" autoIncrementSequenceName="enzyme_cleavage_restrictive_residues_seq" defaultValue="" name="restrictive_residues" nullable="1" physicalName="restrictive_residues" precision="20" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="12" userDefinedTypeUUID="831ac2d4-0e65-47ec-a0b7-62b7f6b8760a" >
+    <column id="COL280" populated="true" UUID="830c8eb5-ef22-468a-b56e-9948310f338c" autoIncrement="false" autoIncrementSequenceName="enzyme_cleavage_restrictive_residues_seq" defaultValue="" name="restrictive_residues" nullable="1" physicalName="restrictive_residues" precision="26" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="12" userDefinedTypeUUID="831ac2d4-0e65-47ec-a0b7-62b7f6b8760a" >
      <remarks>A string which main contains one or more residue symbols restricting enzyme cleavage.</remarks>
     </column>
     <column id="COL281" populated="true" UUID="24828bf2-a426-4d1b-af20-8992c1707a3a" autoIncrement="false" autoIncrementSequenceName="enzyme_enzyme_id_seq_1" defaultValue="" name="enzyme_id" nullable="0" physicalName="enzyme_id" precision="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="-5" userDefinedTypeUUID="433cc8af-284d-4abb-8ef7-08ebcb34dbf1" >
@@ -1609,7 +1609,7 @@ It should not contain an extension and be unique across all the database.</remar
   <liquibase-settings useSeparateChangeSets="false" generateId="false" idStart="1"/>
  </compare-dm-settings>
  <create-kettle-job-settings filePath="" jobName="" schemaName="" kettleJoinType="0" savingToFile="true" />
- <play-pen zoom="0.8367503291570025" viewportX="0" viewportY="155" relationship-style="rectilinear" names-displayLogicalNames="true" showPrimaryTag="true" showForeignTag="true" showAlternateTag="true" columnVisibility="ALL" relationshipLabelVisibility="true">
+ <play-pen zoom="0.8367503291570025" viewportX="0" viewportY="0" relationship-style="rectilinear" names-displayLogicalNames="true" showPrimaryTag="true" showForeignTag="true" showAlternateTag="true" columnVisibility="ALL" relationshipLabelVisibility="true">
   <table-pane table-ref="TAB1" x="859" y="206" bgColor="0xbfd6ff" fgColor="0x000000" rounded="true" dashed="false"/>
   <table-pane table-ref="TAB27" x="688" y="680" bgColor="0xe4e4b8" fgColor="0x000000" rounded="true" dashed="false"/>
   <table-pane table-ref="TAB37" x="536" y="889" bgColor="0xe4e4b8" fgColor="0x000000" rounded="true" dashed="false"/>

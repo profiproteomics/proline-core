@@ -23,7 +23,9 @@ import fr.proline.core.om.provider.msi.impl.SQLResultSummaryProvider
 import fr.proline.core.om.storer.msi.impl.StorerContext
 import fr.proline.core.om.storer.msi.RsStorer
 import fr.proline.core.om.storer.msi.RsmStorer
+import fr.proline.core.orm.msi.PeptideReadablePtmString
 
+import scala.collection.mutable
 import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.LongMap
 
@@ -175,7 +177,7 @@ class ResultSummaryMerger(
     var childRsmPropsOpt = Option.empty[ResultSummaryProperties]
 
     val rsmAdder = new ResultSummaryAdder(
-      resultSetId = ResultSummary.generateNewId(),
+      resultSetId = ResultSet.generateNewId(),
       isDecoy = false,
       pepSetScoreUpdater = pepSetScoreUpdater,
       additionMode = additionMode
@@ -198,7 +200,8 @@ class ResultSummaryMerger(
     }
 
     val mergedTargetRsm = rsmAdder.toResultSummary()
-
+    //load readable PTM from child result sets to be uniform
+    _loadReadablePtmString(storerContext, childTargetRsIds)
     val rsmProperties = mergedTargetRsm.properties.getOrElse(new ResultSummaryProperties())
     rsmProperties.setMergeMode(Some(additionMode.toString))
     mergedTargetRsm.properties = Some(rsmProperties)
@@ -230,6 +233,10 @@ class ResultSummaryMerger(
       }
 
       val decoyRsm = decoyRsmAdder.toResultSummary()
+
+      //load readable PTM from child result sets to be uniform
+      _loadReadablePtmString(storerContext, childDecoyRsIds)
+
       val rsmProperties = decoyRsm.properties.getOrElse(new ResultSummaryProperties())
       rsmProperties.setMergeMode(Some(additionMode.toString))
       decoyRsm.properties = Some(rsmProperties)
@@ -297,6 +304,15 @@ class ResultSummaryMerger(
     _storeResultSummary(storerContext, mergedTargetRsm, targetRsmIds, childTargetRsIds)
 
     mergedTargetRsm
+  }
+
+private def _loadReadablePtmString( storerContext: StorerContext, rsIds: Seq[Long]): mutable.Map[Long,PeptideReadablePtmString] ={
+    val pepReadablePtmStringByPepId : mutable.Map[Long,PeptideReadablePtmString] = storerContext.getEntityCache(classOf[PeptideReadablePtmString])
+    //clear previous data
+    pepReadablePtmStringByPepId.clear()
+    val msiDbHelper = new MsiDbHelper(storerContext.getMSIDbConnectionContext)
+    pepReadablePtmStringByPepId ++= msiDbHelper.getReadablePtmForResultSets(rsIds)
+    pepReadablePtmStringByPepId
   }
 
   private def _storeResultSummary(

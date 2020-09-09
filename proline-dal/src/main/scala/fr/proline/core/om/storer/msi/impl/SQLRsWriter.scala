@@ -11,7 +11,7 @@ import fr.proline.core.dal.tables.SelectQueryBuilder1
 import fr.proline.core.dal.tables.msi._
 import fr.proline.core.om.model.msi._
 import fr.proline.core.om.storer.msi._
-import fr.proline.core.orm.msi.ObjectTreeSchema
+import fr.proline.core.orm.msi.{ObjectTreeSchema, PeptideReadablePtmString}
 
 import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.HashMap
@@ -122,29 +122,34 @@ abstract class AbstractSQLRsWriter() extends IRsWriter {
 
     newProteins.toArray
   }
-  
-  def insertRsReadablePtmStrings(rs: ResultSet, msiDbCtx: MsiDbConnectionContext): Int = {
-    
+
+  def insertSpecifiedRsReadablePtmStrings(rs: ResultSet, readablePtmStringByPepId: Map[Long, PeptideReadablePtmString], msiDbCtx: MsiDbConnectionContext): Int = {
+
     // Define some vars
     val rsId = rs.id
     var count = 0
-    
+
     DoJDBCWork.withEzDBC(msiDbCtx) { msiEzDBC =>
-      
+
       val ptmStringInsertQuery = MsiDbPeptideReadablePtmStringTable.mkInsertQuery()
-      
+
       msiEzDBC.executeInBatch( ptmStringInsertQuery ) { stmt =>
         for ( peptide <- rs.peptides; if StringUtils.isNotEmpty(peptide.readablePtmString) ) {
+          val pepReadablePtm =  if(readablePtmStringByPepId.contains(peptide.id)) readablePtmStringByPepId(peptide.id).getReadablePtmString else  peptide.readablePtmString
           count += stmt.executeWith(
             peptide.id,
             rsId,
-            peptide.readablePtmString
+            pepReadablePtm
           )
         }
       }
     }
 
     count
+  }
+
+  def insertRsReadablePtmStrings(rs: ResultSet, msiDbCtx: MsiDbConnectionContext): Int = {
+    insertSpecifiedRsReadablePtmStrings(rs, Map.empty[Long, PeptideReadablePtmString], msiDbCtx)
   }
 
   def insertRsPeptideMatches(rs: ResultSet, msiDbCtx: MsiDbConnectionContext): Int = {

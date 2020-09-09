@@ -9,6 +9,8 @@ import fr.proline.core.dal.tables.msi.MsiDbResultSetRelationTable
 import fr.proline.core.dal.tables.msi.MsiDbResultSummaryRelationTable
 import fr.proline.core.dal.DoJDBCReturningWork
 import fr.proline.core.dal.DoJDBCWork
+import fr.proline.core.om.storer.msi.impl.StorerContext
+import fr.proline.core.orm.msi.PeptideReadablePtmString
 
 import scala.annotation.tailrec
 import scala.collection.mutable
@@ -401,7 +403,25 @@ class MsiDbHelper(msiDbCtx: DatabaseConnectionContext) {
     }
 
   }
-  
+
+  def getReadablePtmForResultSets( rsIds: Seq[Long]): mutable.Map[Long,PeptideReadablePtmString] ={
+    val pepReadablePtmStringByPepId = mutable.Map.empty[Long,PeptideReadablePtmString]
+
+    val getReadablePtmQuery = "SELECT peptide_id, readable_ptm_string FROM peptide_readable_ptm_string WHERE peptide_readable_ptm_string.result_set_id IN  (" + rsIds.mkString(",") + ") "
+    DoJDBCWork.withEzDBC(msiDbCtx) { msiEzDBC =>
+      msiEzDBC.selectAndProcess(getReadablePtmQuery){ resultSetRow  =>
+        val pepId = resultSetRow.getLong("peptide_id")
+        if(!pepReadablePtmStringByPepId.contains(pepId)) {
+          val pepReadablePtmAsStr = resultSetRow.getString("readable_ptm_string")
+          val pepReadablePtm = new PeptideReadablePtmString()
+          pepReadablePtm.setReadablePtmString(pepReadablePtmAsStr)
+          pepReadablePtmStringByPepId.put(pepId, pepReadablePtm)
+        }
+      }
+    } // end of JDBC work
+    pepReadablePtmStringByPepId
+  }
+
     // Unimod Id are Long
   def getUnimodIdByPtmId(): Map[Long,Long] = {
      

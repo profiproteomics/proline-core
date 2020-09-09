@@ -8,8 +8,10 @@ import fr.proline.core.dal._
 import fr.proline.core.dal.tables.msi.MsiDbResultSetTable
 import fr.proline.core.om.model.msi._
 import fr.proline.core.om.storer.msi._
+import fr.proline.core.orm.msi.PeptideReadablePtmString
 import fr.proline.core.orm.msi.ResultSet.{Type => RSType}
 
+import scala.collection.mutable
 import scala.collection.mutable.{ArrayBuffer, HashMap, LongMap}
 
 class SQLRsStorer(
@@ -237,9 +239,12 @@ class SQLRsStorer(
 
     val msiDb = context.getMSIDbConnectionContext
 
+    //Get optional StorerContext  Map for Peptide ReadablePtmString.
+    val readablePtmStringByPepId: Map[Long, PeptideReadablePtmString] = context.getEntityCache(classOf[PeptideReadablePtmString]).toMap
     // Store readable PTM strings
-    val ptmCount = this.rsWriter.insertRsReadablePtmStrings(resultSet, msiDb)
+    val ptmCount = this.rsWriter.insertSpecifiedRsReadablePtmStrings(resultSet, readablePtmStringByPepId, msiDb)
     logger.info(ptmCount + " readable PTMs have been stored !")
+
 
     // Retrieve peptide matches
     val peptideMatches = resultSet.peptideMatches

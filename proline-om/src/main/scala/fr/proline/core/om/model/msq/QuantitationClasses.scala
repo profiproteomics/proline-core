@@ -2,7 +2,6 @@ package fr.proline.core.om.model.msq
 
 import scala.collection.mutable.LongMap
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize
-
 import fr.profi.util.collection._
 import fr.profi.util.misc.InMemoryIdGen
 import fr.profi.util.primitives.isZeroOrNaN
@@ -38,7 +37,19 @@ trait MasterQuantComponent[A <: QuantComponent] extends Item {
   protected def setQuantComponentMap(quantComponentMap: LongMap[A]): Unit
   
   protected def getMostAbundantQuantComponent(): A = {
-    this.getQuantComponentMap.values.maxBy(_.abundance)
+    val allQComponents = this.getQuantComponentMap.values
+    var bestQC: A = null.asInstanceOf[A]
+    allQComponents.foreach( qc => {
+      if(bestQC==null){
+        bestQC = qc
+      } else if(!qc.abundance.isNaN) {
+        if(bestQC.abundance.isNaN)
+            bestQC=qc
+        else if(bestQC.abundance < qc.abundance)
+          bestQC =qc
+      }
+    })
+    bestQC
   }
   
   protected def getQuantComponentPepMatchesCount( quantChannelId: Long ): Int = {
