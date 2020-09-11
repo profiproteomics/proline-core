@@ -9,34 +9,7 @@ import fr.profi.util.serialization.ProfiJson
 import fr.proline.core.om.model.msi.{PeptideInstance, PeptideMatch, PeptideSet, PeptideSetItem, ProteinMatch, ResultSummary}
 import fr.proline.core.om.provider.msi.IResultSummaryProvider
 import fr.proline.core.om.storer.msi.IRsmDuplicator
-import fr.proline.core.orm.msi.Peptide
-import fr.proline.core.orm.msi.MsQuery
-import fr.proline.core.orm.msi.{PeptideInstance => MsiPeptideInstance}
-import fr.proline.core.orm.msi.{PeptideInstancePeptideMatchMap => MsiPepInstPepMatchMap}
-import fr.proline.core.orm.msi.{PeptideInstancePeptideMatchMapPK => MsiPepInstPepMatchMapPK}
-import fr.proline.core.orm.msi.{PeptideMatch => MsiPeptideMatch}
-import fr.proline.core.orm.msi.{PeptideMatchRelation => MsiPeptideMatchRelation}
-import fr.proline.core.orm.msi.{PeptideMatchRelationPK => MsiPeptideMatchRelationPK}
-import fr.proline.core.orm.msi.{PeptideReadablePtmString => MsiPeptideReadablePtmString}
-import fr.proline.core.orm.msi.{PeptideReadablePtmStringPK => MsiPeptideReadablePtmStringPK}
-import fr.proline.core.orm.msi.{PeptideSet => MsiPeptideSet}
-import fr.proline.core.orm.msi.{PeptideSetPeptideInstanceItem => MsiPeptideSetItem}
-import fr.proline.core.orm.msi.{PeptideSetPeptideInstanceItemPK => MsiPeptideSetItemPK}
-import fr.proline.core.orm.msi.{PeptideSetProteinMatchMap => MsiPepSetProtMatchMap}
-import fr.proline.core.orm.msi.{PeptideSetProteinMatchMapPK => MsiPepSetProtMatchMapPK}
-import fr.proline.core.orm.msi.{PeptideSetRelationPK => MsiPeptideSetRelationPK}
-import fr.proline.core.orm.msi.{PeptideSetRelation => MsiPeptideSetRelation}
-import fr.proline.core.orm.msi.{ProteinMatch => MsiProteinMatch}
-import fr.proline.core.orm.msi.ProteinMatchSeqDatabaseMap
-import fr.proline.core.orm.msi.ProteinMatchSeqDatabaseMapPK
-import fr.proline.core.orm.msi.{ProteinSet => MsiProteinSet}
-import fr.proline.core.orm.msi.{ProteinSetProteinMatchItem => MsiProtSetProtMatchItem}
-import fr.proline.core.orm.msi.{ProteinSetProteinMatchItemPK => MsiProtSetProtMatchItemPK}
-import fr.proline.core.orm.msi.{ResultSet => MsiResultSet}
-import fr.proline.core.orm.msi.{ResultSummary => MsiResultSummary}
-import fr.proline.core.orm.msi.{Scoring => MsiScoring}
-import fr.proline.core.orm.msi.{SequenceMatch => MsiSequenceMatch}
-import fr.proline.core.orm.msi.SequenceMatchPK
+import fr.proline.core.orm.msi.{MsQuery, MsiSearch, Peptide, ProteinMatchSeqDatabaseMap, ProteinMatchSeqDatabaseMapPK, SequenceMatchPK, PeptideInstance => MsiPeptideInstance, PeptideInstancePeptideMatchMap => MsiPepInstPepMatchMap, PeptideInstancePeptideMatchMapPK => MsiPepInstPepMatchMapPK, PeptideMatch => MsiPeptideMatch, PeptideMatchRelation => MsiPeptideMatchRelation, PeptideMatchRelationPK => MsiPeptideMatchRelationPK, PeptideReadablePtmString => MsiPeptideReadablePtmString, PeptideReadablePtmStringPK => MsiPeptideReadablePtmStringPK, PeptideSet => MsiPeptideSet, PeptideSetPeptideInstanceItem => MsiPeptideSetItem, PeptideSetPeptideInstanceItemPK => MsiPeptideSetItemPK, PeptideSetProteinMatchMap => MsiPepSetProtMatchMap, PeptideSetProteinMatchMapPK => MsiPepSetProtMatchMapPK, PeptideSetRelation => MsiPeptideSetRelation, PeptideSetRelationPK => MsiPeptideSetRelationPK, ProteinMatch => MsiProteinMatch, ProteinSet => MsiProteinSet, ProteinSetProteinMatchItem => MsiProtSetProtMatchItem, ProteinSetProteinMatchItemPK => MsiProtSetProtMatchItemPK, ResultSet => MsiResultSet, ResultSummary => MsiResultSummary, Scoring => MsiScoring, SequenceMatch => MsiSequenceMatch}
 import fr.proline.core.util.ResidueUtils.scalaCharToCharacter
 import javax.persistence.{EntityManager, TypedQuery}
 import fr.proline.core.orm.msi.repository.ScoringRepository
@@ -50,13 +23,15 @@ class RsmDuplicator(rsmProvider: IResultSummaryProvider) extends IRsmDuplicator 
   def cloneAndStoreRSMWithSubset(sourceRSM: ResultSummary, emptyRSM: MsiResultSummary, emptyRS: MsiResultSet, eraseSourceIds: Boolean, msiEm: EntityManager): ResultSummary = {
     var start = System.currentTimeMillis()
 
+    val sourceRS = sourceRSM.resultSet.get
+
     // Retrieve result summary and result set ids
     val quantRsmId = emptyRSM.getId
     val quantRsId = emptyRS.getId
 
     // Retrieve peptide instances of the merged result summary
     val sourcePepInstances: Array[PeptideInstance] = sourceRSM.peptideInstances
-    val sourcePepMatchById: Map[Long, PeptideMatch] = sourceRSM.resultSet.get.getPeptideMatchById()
+    val sourcePepMatchById: Map[Long, PeptideMatch] = sourceRS.getPeptideMatchById()
 
     // Get Default Scoring : Mascot Standard
     //VDS FIXME which default ?!
@@ -458,6 +433,14 @@ class RsmDuplicator(rsmProvider: IResultSummaryProvider) extends IRsmDuplicator 
     end  = System.currentTimeMillis()
     this.logger.info("END storing  peptide sets relations ... steps duration "+(end-start) + " ms")
     start = end
+
+    //Save RS specific values : msisearch if defined. TODO should we clone also serializes_properties and merges_rsm ?
+    if(sourceRS.getMSISearchId >0 ){
+      val msiMsiSearch = msiEm.find(classOf[MsiSearch], sourceRS.getMSISearchId)
+      emptyRS.setMsiSearch(msiMsiSearch)
+      msiEm.merge(emptyRS)
+    }
+
     msiEm.flush()
     end  = System.currentTimeMillis()
     this.logger.info("ENtity manager flushed. duration "+(end-start) + " ms")
