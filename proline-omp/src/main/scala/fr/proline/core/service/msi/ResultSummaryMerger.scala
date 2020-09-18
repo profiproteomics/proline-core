@@ -276,7 +276,7 @@ class ResultSummaryMerger(
     logger.debug("calculated FDR for merged RSM : "+calculatedFDR)
     // Compute merged RSM properties
     val valProps = RsmValidationProperties(
-        params = if(childRsmValPropsOpt.isDefined) childRsmValPropsOpt.get.params else RsmValidationParamsProperties(),
+        params = RsmValidationParamsProperties(),
         results = RsmValidationResultsProperties(
           psmResults = Some(
             RsmValidationResultProperties(
