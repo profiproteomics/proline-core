@@ -105,7 +105,8 @@ class SinglePSMPerPrettyRankFilter(var targetRs: IResultSetLike = null) extends 
                 // filter using ProteinMatch nbrPeptideCount.
                 if (protMatchesOpt.isDefined &&
                   (bestPsmProtMatchesOpt.isEmpty
-                    || (getMaxNbrPepForProtMatches(protMatchesOpt.get) > getMaxNbrPepForProtMatches(bestPsmProtMatchesOpt.get))))
+                    || (getMaxNbrPepForProtMatches(protMatchesOpt.get) > getMaxNbrPepForProtMatches(bestPsmProtMatchesOpt.get))
+                    || (getMaxNbrPepForProtMatches(protMatchesOpt.get) == getMaxNbrPepForProtMatches(bestPsmProtMatchesOpt.get) && currentPsm.deltaMoz<bestRankPsm.deltaMoz) ))
                   bestRankPsm = currentPsm
                   logger.trace("**** more than One PSMs... Found new best "+bestRankPsm.peptide.sequence+" for "+entry._1+"-"+sameRankPSMs._1)
               }
