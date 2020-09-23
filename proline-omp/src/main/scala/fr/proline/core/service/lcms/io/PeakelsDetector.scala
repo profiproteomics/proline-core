@@ -8,8 +8,9 @@ import com.github.davidmoten.rtree._
 import com.typesafe.scalalogging.LazyLogging
 import fr.profi.chemistry.model.MolecularConstants
 import fr.profi.ms.algo.IsotopePatternEstimator
-import fr.profi.mzdb._
+import fr.profi.mzdb.{FeatureDetectorConfig, MzDbFeatureDetector, MzDbReader, SmartPeakelFinderConfig}
 import fr.profi.mzdb.algo.PeakelsPatternPredictor
+import fr.profi.mzdb.model.{PutativeFeature, SpectrumHeader, Feature => MzDbFeature, Peakel => MzDbPeakel}
 import fr.profi.mzdb.model.{PutativeFeature, SpectrumHeader, Feature => MzDbFeature, Peakel => MzDbPeakel}
 import fr.profi.mzdb.peakeldb.PeakelDbHelper
 import fr.profi.mzdb.peakeldb.io.{PeakelDbReader, PeakelDbWriter}
@@ -17,6 +18,7 @@ import fr.profi.mzdb.util.ms.MsUtils
 import fr.profi.util.collection._
 import fr.profi.util.metrics.Metric
 import fr.proline.context.LcMsDbConnectionContext
+import fr.proline.core.Settings
 import fr.proline.core.algo.lcms._
 import fr.proline.core.algo.lcms.alignment.AlignmentResult
 import fr.proline.core.algo.msq.config._
@@ -953,8 +955,19 @@ class PeakelsDetector(
               FeatureDetectorConfig(
                 msLevel = 1,
                 mzTolPPM = mozTolPPM,
-                minNbOverlappingIPs = 5,
-                peakelFinderConfig = SmartPeakelFinderConfig(minPeaksCount = 3, maxIntensityRelThresh = 0.75f)
+                minNbOverlappingIPs = Settings.FeatureDetectorConfig.minNbOverlappingIPs,
+                intensityPercentile = Settings.FeatureDetectorConfig.intensityPercentile,
+                maxConsecutiveGaps = Settings.FeatureDetectorConfig.maxConsecutiveGaps,
+                peakelFinderConfig = SmartPeakelFinderConfig(
+                  minPeaksCount = Settings.SmartPeakelFinderConfig.minPeaksCount,
+                  miniMaxiDistanceThresh = Settings.SmartPeakelFinderConfig.miniMaxiDistanceThresh,
+                  maxIntensityRelThresh = Settings.SmartPeakelFinderConfig.maxIntensityRelThresh,
+                  useOscillationFactor = Settings.SmartPeakelFinderConfig.useOscillationFactor,
+                  maxOscillationFactor = Settings.SmartPeakelFinderConfig.maxOscillationFactor,
+                  usePartialSGSmoother = Settings.SmartPeakelFinderConfig.usePartialSGSmoother,
+                  useBaselineRemover = Settings.SmartPeakelFinderConfig.useBaselineRemover,
+                  useSmoothing = Settings.SmartPeakelFinderConfig.useSmoothing
+                )
               )
             )
             
