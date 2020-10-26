@@ -413,8 +413,9 @@ case class MasterQuantPeptide(
   def getMasterQuantProteinSetIds(): Option[Array[Long]] = {
     if( this.properties.isDefined ) this.properties.get.getMqProtSetIds() else None
   }
-  
-  def isProteinSetSpecific: Option[Boolean] = {
+
+  //VDS Attention il se peut que les ProteinSet soit invalid !
+  def   isProteinSetSpecific: Option[Boolean] = {
 
     val protSetIdCount = this.getMasterQuantProteinSetIds.map( _.length ).getOrElse(0)
     if( protSetIdCount == 0 ) return None
@@ -550,12 +551,6 @@ case class MasterQuantProteinSet(
     mqcId
   }
 
-  def getSpecificMqPepCount() : Int = {
-    if(masterQuantPeptides == null)
-      return 0
-
-    masterQuantPeptides.filter( pep =>  pep.isProteinSetSpecific.isDefined && pep.isProteinSetSpecific.get ).length
-  }
 
   def getBestProfile( groupSetupNumber: Int ): Option[MasterQuantProteinSetProfile] = {
     if( properties.isEmpty ) return None
