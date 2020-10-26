@@ -437,7 +437,7 @@ case class MasterQuantPeptide(
   def getBestQuantPeptide: QuantPeptide = this.getMostAbundantQuantComponent()
   
   def getQuantPeptidePepMatchesCount( quantChannelId: Long ): Int = {
-    this.getQuantPeptidePepMatchesCount(quantChannelId)
+    this.getQuantComponentPepMatchesCount(quantChannelId)
   }
   
   def getQuantPeptideRawAbundance( quantChannelId: Long, applySelectionFilter: Boolean = false ): Float = {
