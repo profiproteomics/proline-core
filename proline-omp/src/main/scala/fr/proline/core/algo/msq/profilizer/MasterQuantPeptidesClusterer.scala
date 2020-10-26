@@ -78,7 +78,7 @@ trait IMqPeptidesClusterer {
       // Retrieve selected master quant peptides in this protein set
       val selLvlByMqPepIdOpt = masterQuantProtSet.properties.get.getSelectionLevelByMqPeptideId
       val selMqPepIdSet = if (selLvlByMqPepIdOpt.isEmpty) Set.empty[Long]
-      else selLvlByMqPepIdOpt.get.filter(_._2 >= 2).keySet
+          else selLvlByMqPepIdOpt.get.filter(_._2 >= 2).keySet
       
       // Keep only selected master quant peptides
       val selectedMqPeps = masterQuantProtSet.masterQuantPeptides.filter { mqPep =>

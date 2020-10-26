@@ -592,12 +592,13 @@ class Profilizer( expDesign: ExperimentalDesign, groupSetupNumber: Int = 1, mast
         mqProtSet.setAbundancesAndCountsForQuantChannels(bestMQProtSetProfile.get.abundances, bestMQProtSetProfile.get.peptideMatchesCounts,bestMQProtSetProfile.get.peptideCounts, expDesignSetup.qcIds)
         
       } else {
-        // FOR TESTS ONLY //
-        //logger.debug("empty abundances")
-        
+
+        //No Profile for current ProteinSet. This means no peptides quantitation associated to it. Set all values to Nan/0
         // Set abundances to NaN
         for( qProtSet <- mqProtSet.quantProteinSetMap.values ) {
           qProtSet.abundance = Float.NaN
+          qProtSet.peptidesCount = Some(0)
+          qProtSet.peptideMatchesCount = 0
         }
         
         // Deselect master quant protein set
