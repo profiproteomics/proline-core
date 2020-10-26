@@ -252,8 +252,37 @@ class Profilizer( expDesign: ExperimentalDesign, groupSetupNumber: Int = 1, mast
     val bgByQcIdx = expDesignSetup.quantChannels.map( qc => bgBySampleNum(qc.sampleNumber) )
 
     val useRazor = config.peptidesSelectionMethod.equals(MqPeptidesSelectionMethod.RAZOR_AND_SPECIFIC)
-    val nbrSpecificMqPepByMqProtSetId = if(useRazor) masterQuantProtSets.map(mqprot => mqprot.id() -> mqprot.getSpecificMqPepCount()).toMap  else Map.empty[Long,Int]
     val mqProtSetById = if(useRazor) masterQuantProtSets.map(mqprot => mqprot.id() -> mqprot).toMap  else Map.empty[Long,MasterQuantProteinSet]
+    val isPepSpecificBymqPepId = mutable.LongMap.empty[Boolean]
+    val nbrSpecificMqPepByMqProtSetId : mutable.LongMap[Int] =  mutable.LongMap.empty[Int]
+    if(useRazor) {
+      masterQuantProtSets.foreach( mqProt => {
+        if(mqProt.proteinSet.isValidated){
+          var nbSpecificPep = 0
+          mqProt.masterQuantPeptides.foreach( mqPep =>{
+            if(isPepSpecificBymqPepId.contains(mqPep.id)) {
+              if(isPepSpecificBymqPepId(mqPep.id)) //should not occur !
+                nbSpecificPep += 1
+            } else {
+              var nbProtSet = 0
+              if (mqPep.getMasterQuantProteinSetIds().isDefined) {
+                mqPep.getMasterQuantProteinSetIds().get.foreach(mqProtId => {
+                  if (mqProtSetById(mqProtId).proteinSet.isValidated)
+                    nbProtSet += 1
+                })
+              }
+              if (nbProtSet == 1) {
+                nbSpecificPep += 1
+                isPepSpecificBymqPepId += mqPep.id -> true
+              } else
+                isPepSpecificBymqPepId += mqPep.id -> false
+            }
+          })//End go through protein set's peptides
+          nbrSpecificMqPepByMqProtSetId += mqProt.id() -> nbSpecificPep
+        } // Process only valid Protein Set
+      }) //end go through proteinSet
+    }
+
     val assignedMqPepIdToProteSet = new mutable.LongMap[Long]()
 
     // Compute the intersection of filtered masterQuantPeptides and mqPeptideSelLevelById
@@ -285,7 +314,7 @@ class Profilizer( expDesign: ExperimentalDesign, groupSetupNumber: Int = 1, mast
         // rule for MOST_SPECIFIC_PEP_SELECTION: assign peptide to protein set with max nbr specific peptide and if equality choose
         // protein set with higher score (--> to change to protein set with higher abundance through quantchannels
         if(newAutoSelLvl == SelectionLevel.SELECTED_AUTO && useRazor) {
-          // verify if this peptide has allready been seen
+          // verify if this peptide has already been seen
           if(assignedMqPepIdToProteSet.contains(mqPepId)) {
             if( !assignedMqPepIdToProteSet(mqPepId).equals(mqProtSet.id)) { //mqpep should not be assign to this protein
               newAutoSelLvl = SelectionLevel.DESELECTED_AUTO
@@ -298,15 +327,18 @@ class Profilizer( expDesign: ExperimentalDesign, groupSetupNumber: Int = 1, mast
             }*/
 
             val mqpep = mqPepById(mqPepId)
-            if (mqpep.isProteinSetSpecific.isDefined && !mqpep.isProteinSetSpecific.get) {
+            if (isPepSpecificBymqPepId.contains(mqpep.id)  || (mqpep.isProteinSetSpecific.isDefined && !mqpep.isProteinSetSpecific.get) ) {
               logger.trace("-------- RAZOR TEST on mqpep Id "+mqpep.id)
               // masterQuantPeptide is shared between proteinSet. Assign to only one regarding RAZOR RULE
               //-- TODO If razor config is MOST_SPECIFIC_PEP_SELECTION
               val mqProtIds = mqpep.getMasterQuantProteinSetIds().get // if isProteinSetSpecific defined getMasterQuantProteinSetIds should also...
-              val pepProtSetIdToNbrSpecificMqPep = mqProtIds.map(prId => prId -> nbrSpecificMqPepByMqProtSetId(prId)).toMap
-              val maxNbrSp = pepProtSetIdToNbrSpecificMqPep.maxBy(_._2)._2
+              val nbrSpecPepByProtSetId = mutable.LongMap.empty[Int]
+              mqProtIds.map(prId =>
+                { nbrSpecPepByProtSetId += (prId -> nbrSpecificMqPepByMqProtSetId.getOrElse(prId,0)) }
+              )
+              val maxNbrSp = nbrSpecPepByProtSetId.maxBy(_._2)._2
               logger.trace("-------- RAZOR max number of specific pep  =" +maxNbrSp)
-              val pepProtWithMaxSp = pepProtSetIdToNbrSpecificMqPep.filter(_._2 == maxNbrSp)
+              val pepProtWithMaxSp = nbrSpecPepByProtSetId.filter(_._2 == maxNbrSp)
               var chosenProtSet = mqProtSet.id()
               if (pepProtWithMaxSp.size > 1) {
                 logger.trace("-------- RAZOR more than one with max nbr sp. pep: "+pepProtWithMaxSp.size)
