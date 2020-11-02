@@ -16,6 +16,7 @@ public class DProteinMatch {
 	private int m_peptideCount;
 	private long m_resultSetId;
 	private String m_description;
+	private String m_geneName;
 	private DBioSequence m_bioSequence = null;
 	private Integer m_observablePeptidesCount = null;
 
@@ -34,6 +35,17 @@ public class DProteinMatch {
 		setObservablePeptidesCountFromSerializedProperties(serializedProperties);
 	}
 
+	public DProteinMatch(long id, String accession, Float score, int peptideCount, long resultSetId, String description, String geneName, String serializedProperties) {
+		m_id = id;
+		m_accession = accession;
+		m_score = score;
+		m_peptideCount = peptideCount;
+		m_resultSetId = resultSetId;
+		m_description = description;
+		m_geneName = geneName;
+		setObservablePeptidesCountFromSerializedProperties(serializedProperties);
+	}
+
 	public DProteinMatch(
 		long id,
 		String accession,
@@ -41,6 +53,7 @@ public class DProteinMatch {
 		int peptideCount,
 		long resultSetId,
 		String description,
+		String geneName,
 		String serializedProperties,
 		long peptideSetId,
 		Float peptideSetScore,
@@ -54,6 +67,7 @@ public class DProteinMatch {
 		m_peptideCount = peptideCount;
 		m_resultSetId = resultSetId;
 		m_description = description;
+		m_geneName = geneName;
 		setObservablePeptidesCountFromSerializedProperties(serializedProperties);
 
 		DPeptideSet peptideSet = new DPeptideSet(peptideSetId, peptideSetScore, sequenceCount, peptideSetPeptideCount, peptideMatchCount, resultSummaryId);
@@ -100,6 +114,14 @@ public class DProteinMatch {
 
 	public void setAccession(String accession) {
 		m_accession = accession;
+	}
+
+	public String getGeneName() {
+		return m_geneName;
+	}
+
+	public void setGeneName(String geneName) {
+		this.m_geneName = geneName;
 	}
 
 	public Float getScore() {
