@@ -15,8 +15,10 @@ import fr.proline.core.orm.msi.ObjectTreeSchema.SchemaName
 import fr.proline.core.orm.msi.repository.ObjectTreeSchemaRepository
 import fr.proline.core.orm.msi.{MasterQuantComponent => MsiMasterQuantComponent, MasterQuantPeptideIon => MsiMasterQuantPepIon, MasterQuantReporterIon => MsiMasterQuantRepIon, ObjectTree => MsiObjectTree, ObjectTreeSchema => MsiObjectTreeSchema, PeptideInstance => MsiPeptideInstance, PeptideInstancePeptideMatchMap => MsiPepInstPepMatchMap, PeptideInstancePeptideMatchMapPK => MsiPepInstPepMatchMapPK, PeptideMatch => MsiPeptideMatch, PeptideMatchRelation => MsiPeptideMatchRelation, PeptideMatchRelationPK => MsiPeptideMatchRelationPK, PeptideReadablePtmString => MsiPeptideReadablePtmString, PeptideReadablePtmStringPK => MsiPeptideReadablePtmStringPK, PeptideSet => MsiPeptideSet, PeptideSetPeptideInstanceItem => MsiPeptideSetItem, PeptideSetPeptideInstanceItemPK => MsiPeptideSetItemPK, PeptideSetProteinMatchMap => MsiPepSetProtMatchMap, PeptideSetProteinMatchMapPK => MsiPepSetProtMatchMapPK, ProteinMatch => MsiProteinMatch, ProteinSet => MsiProteinSet, ProteinSetProteinMatchItem => MsiProtSetProtMatchItem, ProteinSetProteinMatchItemPK => MsiProtSetProtMatchItemPK, ResultSet => MsiResultSet, ResultSummary => MsiResultSummary, Scoring => MsiScoring, SequenceMatch => MsiSequenceMatch}
 import fr.proline.core.orm.uds.MasterQuantitationChannel
+
 import scala.collection.JavaConversions.asScalaSet
 import scala.collection.JavaConversions.setAsJavaSet
+import scala.collection.mutable
 import scala.collection.mutable.{ArrayBuffer, HashMap, LongMap}
 
 abstract class AbstractMasterQuantChannelQuantifier extends LazyLogging {
@@ -177,7 +179,25 @@ abstract class AbstractMasterQuantChannelQuantifier extends LazyLogging {
         val tmpId = tmpMqPepIonIdByCharge(mqPepIon.charge)
         mqPepIonIdByTmpId.put(tmpId,mqPepIon.id)
       }
-      
+
+      // Update the master quant peptide properties ion ids
+      if(mqPeptide.properties.isDefined && mqPeptide.properties.get.mqPepIonAbundanceSummarizingConfig.isDefined){
+        val mqPepProps = mqPeptide.properties.get
+        val tmpMqPepIonIdToSLevel = mqPepProps.mqPepIonAbundanceSummarizingConfig.get.mqPeptideIonSelLevelById
+        //update peptideIons ids
+        val mqPeptideIonSelLById = new mutable.HashMap[Long, Int]()
+        tmpMqPepIonIdToSLevel.foreach( e => {
+          mqPeptideIonSelLById.put(mqPepIonIdByTmpId(e._1),e._2)
+        })
+        mqPepProps.mqPepIonAbundanceSummarizingConfig.get.setMqPeptideIonSelLevelById(mqPeptideIonSelLById)
+        // Update the OM
+        mqPeptide.properties = Some( mqPepProps )
+
+        // Update the ORM
+        msiMqPep.setSerializedProperties( ProfiJson.serialize(mqPepProps) )
+
+      }
+
       mqPeptide.id -> msiMqPep
     }
     
