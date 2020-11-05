@@ -80,9 +80,13 @@ class AggregationEntitiesSummarizer(
               newQuantPepIons += bestQPepIon.get.copy(quantChannelId = qc.id, peptideMatchesCount = filteredQPepIons.map(_.peptideMatchesCount).sum)
             }
             case AbundanceComputationMethod.INTENSITY_SUM => {
+              val quantPepIonWRawAb = filteredQPepIons.map(_.rawAbundance).filter(!_.equals(Float.NaN))
+              val quantPepIonWAb = filteredQPepIons.map(_.abundance).filter(!_.equals(Float.NaN))
+              //val quantPepIonWRT = filteredQPepIons.map(_.elutionTime).filter(!_.equals(Float.NaN))
+
               newQuantPepIons += bestQPepIon.get.copy(
-                rawAbundance = filteredQPepIons.map(_.rawAbundance).sum,
-                abundance = filteredQPepIons.map(_.abundance).sum,
+                rawAbundance = if (quantPepIonWRawAb.nonEmpty)quantPepIonWRawAb.sum else Float.NaN,
+                abundance =  if (quantPepIonWAb.nonEmpty)quantPepIonWAb.sum else Float.NaN ,
                 peptideMatchesCount = filteredQPepIons.map(_.peptideMatchesCount).sum,
                 quantChannelId = qc.id)
             }
