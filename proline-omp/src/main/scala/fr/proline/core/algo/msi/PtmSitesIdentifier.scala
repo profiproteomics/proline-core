@@ -296,6 +296,9 @@ class PtmSiteExactClusterer(
     var orderedSequenceMatches = sitesBySequenceMatch.toSeq.sortBy(_._2.size).reverse.map { _._1 }
     var clusterizedSequenceMatches = new mutable.HashMap[SequenceMatch, Boolean]()
 
+    val createdClusterIds = new ArrayBuffer[Long]()
+    val clustersByLowerSitePosition = new mutable.HashMap[Int, ArrayBuffer[PtmCluster]]()
+
     for (referenceSequenceMatch <- orderedSequenceMatches) {
       if (!clusterizedSequenceMatches.contains(referenceSequenceMatch)) {
         val clusterizedPeptides = new mutable.HashMap[PtmStatus.Value, ArrayBuffer[Peptide]]()
@@ -326,16 +329,33 @@ class PtmSiteExactClusterer(
         val isomorphicPeptideMatches = peptideMatchProvider(isomorphicPeptideIds)
 
         val bestPeptideMatch = isomorphicPeptideMatches.values.maxBy{ pm => PtmSitesIdentifier.allModificationsProbability(pm)}
-
-        clusters += new PtmCluster(
+        val sitePosList = sitesBySequenceMatch(referenceSequenceMatch).map(_.seqPosition).toArray.sorted
+        val nextCluster = new PtmCluster(
           id = idGen.generateNewId(),
           ptmSiteLocations = sitesBySequenceMatch(referenceSequenceMatch).map(_.id).toArray,
           bestPeptideMatchId = bestPeptideMatch.id,
           localizationConfidence = PtmSitesIdentifier.allModificationsProbability(bestPeptideMatch),
           peptideIds = clusterizedPeptides.flatten(_._2).map(_.id).toArray.distinct,
           isomericPeptideIds = Array.empty[Long])
+        createdClusterIds += nextCluster.id //save id used for cluster of current proteinMatch
+        //Associate current cluster to lower site position
+        val ptmClusters = clustersByLowerSitePosition.getOrElse(sitePosList.head, new ArrayBuffer[PtmCluster]())
+        ptmClusters += nextCluster
+        clustersByLowerSitePosition.put(sitePosList.head,ptmClusters)
+        //clusters += nextCluster
       }
     }
+
+    //Reorder cluster to increment Ids depending on Site position.
+    val sitePositions = clustersByLowerSitePosition.keySet.toArray.sorted
+    var currentIndexInIds = 0
+    sitePositions.foreach( pos => {
+      val clustersForPosition = clustersByLowerSitePosition(pos)
+      clustersForPosition.foreach( c => {
+        clusters += c.copy(id = createdClusterIds(currentIndexInIds))
+        currentIndexInIds = currentIndexInIds+1
+      })
+    })
 
     clusters.toArray
   }
