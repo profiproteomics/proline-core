@@ -22,19 +22,19 @@ class LoessSmoother extends IAlnSmoother {
     }
 
     // Apply the loess smoothing
-    val smoothedYVals = new LoessInterpolator().smooth(xVals.toArray, yVals.toArray)
-    //    val smoothedYVals = {
-    //      // Adjust the bandwidth parameter B to the number of points N.
-    //      // The LoessInterpolator allows any bandwidth if N <= 2
-    //      // Max value for the bandwidth is 1
-    //      // B * N has to be over 2
-    //      var bandwidth = LoessInterpolator.DEFAULT_BANDWIDTH
-    //      val n = yVals.size
-    //      if(n > 2) {
-    //        while (bandwidth * n < 2 && bandwidth < 1) { bandwidth += 0.1 }
-    //      }
-    //      new LoessInterpolator(bandwidth, LoessInterpolator.DEFAULT_ROBUSTNESS_ITERS).smooth(xVals.toArray, yVals.toArray)
-    //    }
+//    val smoothedYVals = new LoessInterpolator().smooth(xVals.toArray, yVals.toArray)
+      val smoothedYVals = {
+        // Adjust the bandwidth parameter B to the number of points N.
+        // The LoessInterpolator allows any bandwidth if N <= 2
+        // Max value for the bandwidth is 1
+        // B * N has to be over 2
+        var bandwidth = LoessInterpolator.DEFAULT_BANDWIDTH
+        val n = yVals.size
+        if(n > 2) {
+          while (bandwidth * n < 2 && bandwidth < 1) { bandwidth += 0.1 }
+        }
+        new LoessInterpolator(bandwidth, LoessInterpolator.DEFAULT_ROBUSTNESS_ITERS).smooth(xVals.toArray, yVals.toArray)
+      }
 
     // Fill buffers with smoothed values
     val newLandmarks = xVals.zip(smoothedYVals).map { xy =>
