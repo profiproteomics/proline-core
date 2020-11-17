@@ -98,7 +98,7 @@ public class PeaklistSoftware implements Serializable {
 		DATA_ANALYSIS_4_0("Data Analysis", "4.0"),
 		DATA_ANALYSIS_4_1("Data Analysis", "4.1"),
 		MASCOT_DLL("mascot.dll"),
-		MASCOT_DISTILLER("Mascot Distiller"),
+		MASCOT_DISTILLER("Mascot Distiller", "2.5"),
 		MAX_QUANT("MaxQuant"),
 		PROLINE("Proline", "1.0"),
 		PROTEIN_PILOT("Protein Pilot"),
