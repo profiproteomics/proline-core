@@ -7,7 +7,7 @@ import fr.proline.core.om.model.msi._
 import scala.collection.mutable
 import scala.collection.mutable.ArrayBuffer
 
-case class PeptideInstancePtm(peptideInstance: PeptideInstance, ptm: LocatedPtm)
+case class PeptideInstancePtmTuple(peptideInstance: PeptideInstance, ptm: LocatedPtm)
 
 object PtmSitesIdentifier {
 
@@ -97,44 +97,45 @@ class PtmSitesIdentifier(
 
     for (peptideSet <- resultSummary.peptideSets) {
       for (proteinMatchId <- peptideSet.proteinMatchIds) {
-        // test if that proteinMatch is member of a validated protein sets
+
+        // Apply PTM site identification only on validated protein sets
         if (validatedProteinMatchesById.contains(proteinMatchId)) {
 
           val sequenceMatchesByPeptideId = proteinMatchesById(proteinMatchId).sequenceMatches.groupBy { _.getPeptideId()  }
-          val proteinMatchSites = scala.collection.mutable.Map[(Long, Int), ArrayBuffer[PeptideInstancePtm]]()
+          val proteinMatchSites = scala.collection.mutable.Map[(Long, Int), ArrayBuffer[PeptideInstancePtmTuple]]()
           val peptideInstanceIdsBySeqPtm = scala.collection.mutable.Map[String, ArrayBuffer[Long]]()
           val peptideInstancesById = peptideSet.getPeptideInstances().map(pi => (pi.id -> pi)).toMap
 
           for (peptideInstance <- peptideSet.getPeptideInstances().filter(!_.peptide.ptms.isEmpty)) {
-            val key = _getKey(peptideInstance)
-            peptideInstanceIdsBySeqPtm.getOrElseUpdate(key, ArrayBuffer.empty[Long]) += peptideInstance.id
+            val aaSeqAndPTMsKey = _getAASequenceAndPTMsAsString(peptideInstance)
+            peptideInstanceIdsBySeqPtm.getOrElseUpdate(aaSeqAndPTMsKey, ArrayBuffer.empty[Long]) += peptideInstance.id
 
             for (seqMatch <- sequenceMatchesByPeptideId(peptideInstance.peptide.id)) {
               for (ptm <- peptideInstance.peptide.ptms) {
                 if (PtmSitesIdentifier.isModificationProbabilityDefined(peptideInstance.peptideMatches.head, ptm)) {
-                  proteinMatchSites.getOrElseUpdate((ptm.definition.id, ptm.seqPosition + seqMatch.start - 1), ArrayBuffer.empty[PeptideInstancePtm]) += PeptideInstancePtm(peptideInstance, ptm)
+                  proteinMatchSites.getOrElseUpdate((ptm.definition.id, ptm.seqPosition + seqMatch.start - 1), ArrayBuffer.empty[PeptideInstancePtmTuple]) += PeptideInstancePtmTuple(peptideInstance, ptm)
                 }
               }
             }
           }
 
           val site = proteinMatchSites.map {
-            case (k, peptideInstances) =>
+            case (ptmDefinitionPositionTuple, peptideInstances) =>
 
               // -- Search for the best PeptideMatch
               //  Should order by score before getting max value. maxBy don't respect "first for equal order" !
-              val bestPMs = peptideInstances.map(t => {
+              val bestPMs = peptideInstances.map(peptideInstancePtmTuple => {
                 var bestProba: Float = 0.00f
                 var bestPM: PeptideMatch = null
-                val sortedPepMatches: Array[PeptideMatch] = t.peptideInstance.peptideMatches.sortBy(_.score).reverse
+                val sortedPepMatches: Array[PeptideMatch] = peptideInstancePtmTuple.peptideInstance.peptideMatches.sortBy(_.score).reverse
                 sortedPepMatches.foreach { pepM =>
-                  val proba = PtmSitesIdentifier.singleModificationProbability(pepM, t.ptm)
+                  val proba = PtmSitesIdentifier.singleModificationProbability(pepM, peptideInstancePtmTuple.ptm)
                   if (proba > bestProba) {
                     bestPM = pepM
                     bestProba = proba
                   }
                 }
-                (bestPM -> t.ptm)
+                (bestPM -> peptideInstancePtmTuple.ptm)
               })
 
               var bestPeptideMatch: PeptideMatch = null
@@ -148,20 +149,15 @@ class PtmSitesIdentifier(
                 }
               })
 
-              val isomericPeptideInstanceIds = peptideInstances.flatMap(piptm => peptideInstanceIdsBySeqPtm(_getKey(piptm.peptideInstance))).distinct
+              val isomericPeptideInstanceIds = peptideInstances.flatMap(piptm => peptideInstanceIdsBySeqPtm(_getAASequenceAndPTMsAsString(piptm.peptideInstance))).distinct
               isomericPeptideInstanceIds --= peptideInstances.map(_.peptideInstance.id)
               val isomericPeptideInstances = isomericPeptideInstanceIds.map(id => peptideInstancesById(id))
-
-              //	        val peptideMatchesSeq = peptideInstances.map(_.peptideInstance.peptide.sequence).toArray
-              //	        val isomericPeptideMatchesSeq = isomericPeptideInstances.map(_.peptide.sequence).toArray
-              //	        println(proteinMatchesById(proteinMatchId).accession + ", "+k._2+", "+k._1.toReadableString()+", matches = "+peptideMatchesSeq.mkString(",")+"("+peptideInstances.map(_.peptideInstance.id).toArray.mkString(",")+")"+", isomeric matches = "+isomericPeptideMatchesSeq.mkString(",")+"("+isomericPeptideInstances.map(_.id).toArray.mkString(",")+")")
-
               val peptideIdsBySeqPosition = peptideInstances.groupBy(_.ptm.seqPosition).mapValues(_.map(_.peptideInstance.peptide.id).toArray)
 
               PtmSite(
                 proteinMatchId = proteinMatchId,
-                ptmDefinitionId = k._1,
-                seqPosition = k._2,
+                ptmDefinitionId = ptmDefinitionPositionTuple._1,
+                seqPosition = ptmDefinitionPositionTuple._2,
                 bestPeptideMatchId = bestPeptideMatch.id,
                 localizationConfidence = bestProba,
                 peptideIdsByPtmPosition = peptideIdsBySeqPosition,
@@ -226,7 +222,7 @@ class PtmSitesIdentifier(
    * get a key for the given PeptideInstance based on sequence and ptms definition sorted by name. This means that to peptide instances with
    * same sequence and a same modification located at a different position get the same key.
    */
-  private def _getKey(peptideInstance: PeptideInstance): String = {
+  private def _getAASequenceAndPTMsAsString(peptideInstance: PeptideInstance): String = {
     peptideInstance.peptide.sequence + peptideInstance.peptide.ptms.map(_.definition.toReadableString()).sorted.mkString
   }
 
@@ -249,7 +245,7 @@ object ClusteringMethodParam extends Enumeration {
   val ISOMORPHIC_MATCHING = Value("ISOMORPHIC_MATCHING")
 }
 
-object PtmSiteClusterer {
+object PtmSiteClusterer extends LazyLogging {
   def apply(clusteringMethodName: String, resultSummary: ResultSummary, proteinMatches: Array[ProteinMatch]): IPtmSiteClusterer = {
     this.apply(ClusteringMethodParam.withName(clusteringMethodName), resultSummary, proteinMatches)
   }
@@ -261,6 +257,24 @@ object PtmSiteClusterer {
       case ClusteringMethodParam.ISOMORPHIC_MATCHING => new PtmSiteExactClusterer(resultSummary, proteinMatches, false)
     }
   }
+
+  def groupSitesBySequenceMatch(sites: Array[PtmSite2], sequenceMatchesByPeptideId: Map[Long, Array[SequenceMatch]]) : Map[SequenceMatch, Array[PtmSite2]] = {
+    val sitesBySequenceMatch = new mutable.HashMap[SequenceMatch, ArrayBuffer[PtmSite2]]()
+    sites.map { ptmSite => ptmSite -> ptmSite.peptideIdsByPtmPosition.values.toArray.flatten.distinct }.foreach {
+      case (site, ids) =>
+        ids.foreach { peptideId =>
+          // partition sites by sequence matches
+          val sequenceMatch = sequenceMatchesByPeptideId(peptideId).filter(sm => (site.seqPosition >= sm.start) && (site.seqPosition <= sm.end))
+          if (!sequenceMatch.isEmpty) {
+            sitesBySequenceMatch.getOrElseUpdate(sequenceMatch.head, new ArrayBuffer[PtmSite2]) += site
+          } else {
+            logger.error(s"The PTM site ${site} has no sequence match for peptide id ${peptideId}")
+          }
+        }
+    }
+    sitesBySequenceMatch.toMap.mapValues(_.toArray)
+  }
+
 }
 
 class PtmSiteExactClusterer(
@@ -274,41 +288,35 @@ class PtmSiteExactClusterer(
 
   def clusterize(proteinMatchId: Long, sites: Array[PtmSite2], peptideMatchProvider: (Array[Long]) => Map[Long, PeptideMatch], idGen: InMemoryIdGen): Array[PtmCluster] = {
 
-    var sitesBySequenceMatch = new mutable.HashMap[SequenceMatch, ArrayBuffer[PtmSite2]]()
     var clusters = new ArrayBuffer[PtmCluster]()
 
     val sequenceMatchesByPeptideId = proteinMatchesById(proteinMatchId).sequenceMatches.groupBy { _.getPeptideId()  }
 
-    // group sites by peptideIds
-    sites.map { s => s -> s.peptideIdsByPtmPosition.values.toArray.flatten.distinct }.foreach {
-      case (site, ids) =>
-        ids.foreach { id =>
-          // partition sites by sequence matches
-          val sequenceMatch = sequenceMatchesByPeptideId(id).filter(sm => (site.seqPosition >= sm.start) && (site.seqPosition <= sm.end) )
-          if (!sequenceMatch.isEmpty) {
-            sitesBySequenceMatch.getOrElseUpdate(sequenceMatch.head, new ArrayBuffer[PtmSite2]) += site
-          } else {
-            logger.error(s"The PTM site ${site} has no sequence match for peptide id ${id} = ${peptideById(id)}")
-          }
-        }
-    }
+    val sitesBySequenceMatch = PtmSiteClusterer.groupSitesBySequenceMatch(sites, sequenceMatchesByPeptideId)
 
-    var orderedSequenceMatches = sitesBySequenceMatch.toSeq.sortBy(_._2.size).reverse.map { _._1 }
+    // sequenceMatches ordered by number of matching ptmSites
+    val orderedSequenceMatches = sitesBySequenceMatch.toSeq.sortBy(_._2.size).reverse.map { _._1 }
     var clusterizedSequenceMatches = new mutable.HashMap[SequenceMatch, Boolean]()
 
     val createdClusterIds = new ArrayBuffer[Long]()
     val clustersByLowerSitePosition = new mutable.HashMap[Int, ArrayBuffer[PtmCluster]]()
 
-    for (referenceSequenceMatch <- orderedSequenceMatches) {
-      if (!clusterizedSequenceMatches.contains(referenceSequenceMatch)) {
-        val clusterizedPeptides = new mutable.HashMap[PtmStatus.Value, ArrayBuffer[Peptide]]()
-        clusterizedPeptides.getOrElseUpdate(PtmStatus.Isomorphic, new ArrayBuffer[Peptide]) += peptideById(referenceSequenceMatch.getPeptideId());
+    for (sequenceMatch <- orderedSequenceMatches) {
+      //do not clusterize if the current sequenceMatch is already clusterized
+      if (!clusterizedSequenceMatches.contains(sequenceMatch)) {
 
-        var matchingSequenceMatches = sitesBySequenceMatch(referenceSequenceMatch).flatMap(_.peptideIdsByPtmPosition.flatMap(_._2)).distinct.flatMap(sequenceMatchesByPeptideId(_)).toArray
-        // restrict to sequenceMatch for which their is at least one site from the reference matching on it
-        matchingSequenceMatches = matchingSequenceMatches.filter(sm => (sm.start <= referenceSequenceMatch.end) && (sm.end >= referenceSequenceMatch.start )).filter(!clusterizedSequenceMatches.contains(_))
+        val clusterizedPeptides = new mutable.HashMap[PtmStatus.Value, ArrayBuffer[Peptide]]()
+        clusterizedPeptides.getOrElseUpdate(PtmStatus.Isomorphic, new ArrayBuffer[Peptide]) += peptideById(sequenceMatch.getPeptideId());
+
+        // retrieve all peptide id matching at least one of the sequenceMatch's sites
+        var matchingSequenceMatches = sitesBySequenceMatch(sequenceMatch).flatMap(_.peptideIdsByPtmPosition.flatMap(_._2)).distinct.flatMap(sequenceMatchesByPeptideId(_)).toArray
+        // keep only sequence matches with bounds (start,stop) intersecting the reference sequenceMatch (this could not be the case for peptide repeated in the protein sequence
+        matchingSequenceMatches = matchingSequenceMatches.filter(sm => (sm.start <= sequenceMatch.end) && (sm.end >= sequenceMatch.start ))
+        // keep only sequenceMatches that are not already clusterized. IS THIS NECESSARY ??
+        matchingSequenceMatches = matchingSequenceMatches.filter(!clusterizedSequenceMatches.contains(_))
+        // evaluate the status of each sequence match
         for (candidateSequenceMatch <- matchingSequenceMatches) {
-          val status = comparePeptidesPtms(referenceSequenceMatch, candidateSequenceMatch, sitesBySequenceMatch, proteinMatchId)
+          val status = comparePeptidesPtms(sequenceMatch, candidateSequenceMatch, sitesBySequenceMatch)
           status match {
             case PtmStatus.Isomorphic => {
               clusterizedPeptides(status) += peptideById(candidateSequenceMatch.getPeptideId())
@@ -329,14 +337,15 @@ class PtmSiteExactClusterer(
         val isomorphicPeptideMatches = peptideMatchProvider(isomorphicPeptideIds)
 
         val bestPeptideMatch = isomorphicPeptideMatches.values.maxBy{ pm => PtmSitesIdentifier.allModificationsProbability(pm)}
-        val sitePosList = sitesBySequenceMatch(referenceSequenceMatch).map(_.seqPosition).toArray.sorted
+        val sitePosList = sitesBySequenceMatch(sequenceMatch).map(_.seqPosition).toArray.sorted
         val nextCluster = new PtmCluster(
           id = idGen.generateNewId(),
-          ptmSiteLocations = sitesBySequenceMatch(referenceSequenceMatch).map(_.id).toArray,
+          ptmSiteLocations = sitesBySequenceMatch(sequenceMatch).map(_.id).toArray,
           bestPeptideMatchId = bestPeptideMatch.id,
           localizationConfidence = PtmSitesIdentifier.allModificationsProbability(bestPeptideMatch),
           peptideIds = clusterizedPeptides.flatten(_._2).map(_.id).toArray.distinct,
           isomericPeptideIds = Array.empty[Long])
+
         createdClusterIds += nextCluster.id //save id used for cluster of current proteinMatch
         //Associate current cluster to lower site position
         val ptmClusters = clustersByLowerSitePosition.getOrElse(sitePosList.head, new ArrayBuffer[PtmCluster]())
@@ -360,21 +369,28 @@ class PtmSiteExactClusterer(
     clusters.toArray
   }
 
-  def comparePeptidesPtms(reference: SequenceMatch, candidate: SequenceMatch, sitesBySequenceMatch: mutable.HashMap[SequenceMatch, ArrayBuffer[PtmSite2]], proteinMatchId: Long): PtmStatus.Value = {
+  def comparePeptidesPtms(reference: SequenceMatch, candidate: SequenceMatch, sitesBySequenceMatch: Map[SequenceMatch, Array[PtmSite2]]): PtmStatus.Value = {
     val refSites = sitesBySequenceMatch(reference)
     val candidateSites = sitesBySequenceMatch(candidate)
     val diffRC = refSites.filter(!candidateSites.contains(_))
     val diffCR = candidateSites.filter(!refSites.contains(_))
+
+    // same identified sites in each sequence matches
     if ((diffCR.size == 0) && (diffRC.size == 0)) {
       return PtmStatus.Isomorphic
     } else if (diffCR.size == 0) {
-
+      // the reference sequence match get more sites than the candidate sequence match
       val sitesInCandidateBounds = diffRC.filter(s => (s.seqPosition >= candidate.start) && (s.seqPosition <= candidate.end))
-      if (sitesInCandidateBounds.length == 0)
+      if (sitesInCandidateBounds.length == 0) {
+        // but this sites are located outside of the candidate seqMatch bounds: the candidate is partially isomorphic
         return PtmStatus.PartiallyIsomorphic
-      else
+      } else {
+        // there is some additional sites located inside the candidate sequenceMatch bounds, consider them as conflicting
         return PtmStatus.Conflicting
+      }
     } else {
+      // the candidate sequence match gets more sites than the reference. Since we start with the sequence with the highest
+      // number of sites, consider them as conflicting
       return PtmStatus.Conflicting
     }
   }
