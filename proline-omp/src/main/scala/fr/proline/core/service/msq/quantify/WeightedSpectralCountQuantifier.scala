@@ -22,6 +22,7 @@ import fr.proline.core.orm.msi.{ResultSummary => MsiResultSummary}
 import fr.proline.core.orm.uds.MasterQuantitationChannel
 
 import scala.collection.JavaConversions.{asScalaSet, iterableAsScalaIterable}
+import scala.collection.mutable
 import scala.collection.mutable.{ArrayBuffer, HashMap, LongMap}
 
 
@@ -382,7 +383,18 @@ class WeightedSpectralCountQuantifier(
         protSet.getRepresentativeProteinMatch().get.accession
       } else {
         val typicalPM = msiEm.find(classOf[fr.proline.core.orm.msi.ProteinMatch], protSet.getRepresentativeProteinMatchId())
-        typicalPM.getAccession
+      typicalPM.getAccession
+    }
+
+      val samesetPMAccession : Seq[String] = if(protSet.samesetProteinMatches!= null && protSet.samesetProteinMatches.isDefined){
+        protSet.samesetProteinMatches.get.map(prM => prM.accession).toSeq
+      } else {
+        val sameSetAccsBuilder = mutable.Seq.newBuilder[String]
+        protSet.getSameSetProteinMatchIds.foreach( prMId => {
+          val typicalPM = msiEm.find(classOf[fr.proline.core.orm.msi.ProteinMatch], protSet.getSameSetProteinMatchIds )
+          sameSetAccsBuilder += typicalPM.getAccession
+        })
+        sameSetAccsBuilder.result()
       }
 
       
@@ -402,7 +414,7 @@ class WeightedSpectralCountQuantifier(
         weightByPepId += pepI.peptideId -> 0.0f //will be computed later see computePeptideWeight method
       })
       val mergedRSMPepSCInfo = new PeptidesSCDescription(pepSpecificIds = pepSpecif.result, nbrPSMSpecific = nbrPSMSpecif, weightByPeptideId = weightByPepId)
-      val protSetSCDescr = new ProteinSetSCDescription(proteinSet = protSet, typicalPMAcc = pmAccession, refRSMPeptidesInfo = mergedRSMPepSCInfo)
+      val protSetSCDescr = new ProteinSetSCDescription(proteinSet = protSet, typicalPMAcc = pmAccession, samesetPMAcc = samesetPMAccession, refRSMPeptidesInfo = mergedRSMPepSCInfo)
 
       if (identRSMsByPepRefRSM.contains(mergedResultSummary.id)){ // ref RSM is also ref peptide SC RSM
     	  protSetSCDescr.peptideInfoByRSMId += (mergedResultSummary.id -> mergedRSMPepSCInfo)
@@ -669,17 +681,38 @@ class WeightedSpectralCountQuantifier(
         //Get PeptideSet containing protein in current RSM if exist
         var peptideSetForPM: PeptideSet = null
         var foundPMIDandAcc: (Long, String) = null
+        var foundTypical=false
+        var foundSameSet = false
 
         val pepSetByPMIt = protMatchesAccListByPepSet.iterator
         while (pepSetByPMIt.hasNext) { // && peptideSetForPM == null) {
           val nextEntry: (PeptideSet, Seq[(Long, String)]) = pepSetByPMIt.next
           nextEntry._2.foreach(pmIdAndAcc => {
             if (pmIdAndAcc._2.equals(currentProteinSetWeightStruct.typicalPMAcc)) {
-              if (peptideSetForPM != null)
+              if (peptideSetForPM != null ) {
                 logger.warn(" --- !!  FOUND AN OTHER MATCH FOR " + currentProteinSetWeightStruct.typicalPMAcc + " => " + peptideSetForPM.isSubset + " and " + nextEntry._1.id)
-              peptideSetForPM = nextEntry._1
-              foundPMIDandAcc = pmIdAndAcc
-            }
+                if(foundSameSet && !foundTypical) {
+                  peptideSetForPM = nextEntry._1
+                  foundPMIDandAcc = pmIdAndAcc
+                  foundTypical = true
+                }
+              } else { //First "found"
+                peptideSetForPM = nextEntry._1
+                foundPMIDandAcc = pmIdAndAcc
+                foundTypical = true
+              }
+            } else { //Search from samesets
+              if(currentProteinSetWeightStruct.samesetPMAcc.contains(pmIdAndAcc._2)) {
+                //found a parent sameset in a leaf
+                foundSameSet = true
+                if(!foundTypical){
+                  peptideSetForPM = nextEntry._1
+                  foundPMIDandAcc = pmIdAndAcc
+                }
+                if (peptideSetForPM != null )
+                  logger.warn(" --- !!  FOUND AN OTHER MATCH FOR " + currentProteinSetWeightStruct.typicalPMAcc + " => " + peptideSetForPM.isSubset + " and " + nextEntry._1.id)
+              }//End found an entry
+            } //End search from samesets
 
           })
         }

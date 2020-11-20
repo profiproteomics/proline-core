@@ -17,6 +17,7 @@ case class SpectralCountConfig(
 case class ProteinSetSCDescription(
   val proteinSet: ProteinSet,
   val typicalPMAcc: String,
+  val samesetPMAcc: Seq[String],
   val refRSMPeptidesInfo: PeptidesSCDescription,
   var peptideInfoByRSMId: Map[Long, PeptidesSCDescription] = Map.empty[Long, PeptidesSCDescription]
 )
