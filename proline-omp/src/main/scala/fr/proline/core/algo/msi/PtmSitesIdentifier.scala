@@ -336,7 +336,7 @@ class PtmSiteExactClusterer(
         val isomorphicPeptideIds = clusterizedPeptides(PtmStatus.Isomorphic).map(_.id).toArray
         val isomorphicPeptideMatches = peptideMatchProvider(isomorphicPeptideIds)
 
-        val bestPeptideMatch = isomorphicPeptideMatches.values.maxBy{ pm => PtmSitesIdentifier.allModificationsProbability(pm)}
+        val bestPeptideMatch = isomorphicPeptideMatches.map(_._2).toArray.sortBy(_.score).reverse.maxBy{ pm => PtmSitesIdentifier.allModificationsProbability(pm)}
         val sitePosList = sitesBySequenceMatch(sequenceMatch).map(_.seqPosition).toArray.sorted
         val nextCluster = new PtmCluster(
           id = idGen.generateNewId(),
