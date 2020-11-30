@@ -88,7 +88,7 @@ object BuildMasterQuantPeptide {
           val qp = new QuantPeptide(
             rawAbundance = if (quantPepIonWRawAb.nonEmpty)quantPepIonWRawAb.sum else Float.NaN,
             abundance = if (quantPepIonWAb.nonEmpty)quantPepIonWAb.sum else Float.NaN ,
-            elutionTime = if(quantPepIonWRT.nonEmpty) quantPepIonWRT.sum / quantPepIons.length else Float.NaN,
+            elutionTime = if(quantPepIonWRT.nonEmpty) quantPepIonWRT.sum / quantPepIonWRT.length else Float.NaN,
             peptideMatchesCount = quantPepIons.map(_.peptideMatchesCount).sum,
             quantChannelId = qcId,
             selectionLevel = SelectionLevel.SELECTED_AUTO
