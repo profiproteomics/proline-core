@@ -143,7 +143,7 @@ abstract class AbstractMapSetDetector (
         case "basePeakel.apex" => basePeakel.getApexIntensity()
         case "basePeakel.area" => basePeakel.area
         case "feature.area" => mzDbFt.area
-        case "feature.sumIsotopeApexes" => mzDbFt.getPeakels().foldLeft(0){ (sum, p) => sum + p.getApexIntensity()}
+        case "feature.sumIsotopeApexes" => mzDbFt.getPeakels().foldLeft(0.0f){ (sum, p) => sum + p.getApexIntensity()}
       }
     }
 

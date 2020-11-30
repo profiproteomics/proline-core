@@ -24,8 +24,12 @@ object Settings {
   }
 
   val featureIntensity = config.getString("MapSetDetector.featureIntensity")
+  val doNotFilterAssignedPeakels = config.getBoolean("MapSetDetector.PeakelsDetector.doNotFilterAssignedPeakels")
 
-  private val _smartPeakelFinderConfig = config.getConfig("MapSetDetector.SmartPeakelFinderConfig")
-  private val _featureDetectorConfig = config.getConfig("MapSetDetector.FeatureDetectorConfig")
+  object LoessSmoother {
+    val defaultBandwidth = config.getConfig("LoessSmoother").getDouble("defaultBandwidth")
+  }
+  private val _smartPeakelFinderConfig = config.getConfig("MapSetDetector.PeakelsDetector.SmartPeakelFinderConfig")
+  private val _featureDetectorConfig = config.getConfig("MapSetDetector.PeakelsDetector.FeatureDetectorConfig")
 
 }

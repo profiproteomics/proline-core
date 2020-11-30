@@ -155,18 +155,30 @@ class PeakelsDetector(
         featureTuples += featureTuple
       }
     }
-    
+
+    val isomericPeptidesMap = new HashMap[Peptide, Array[Peptide]]()
+
+    def buildIsomericPeptidesMap(peptides: Seq[Peptide]): Unit = {
+      val peptidesBySeqPtmsKey = peptides.groupBy(peptide => peptide.sequence + peptide.ptms.map(_.definition.toReadableString()).sorted.mkString)
+      for((key, isomericPeptides) <- peptidesBySeqPtmsKey) {
+        isomericPeptides.foreach(peptide => isomericPeptidesMap += (peptide -> isomericPeptides.toArray))
+      }
+    }
+
     private val conflictingPeptidesMap_lock = new Object()
     val conflictingPeptidesMap = new HashMap[(Peptide, Int), ArrayBuffer[Peptide]]()
 
-    def getConflictedPeptides(peptideAndCharge: (Peptide, Int)): Option[ArrayBuffer[Peptide]] = {
-      conflictingPeptidesMap.get(peptideAndCharge)
+    def getConflictingPeptides(peptideAndCharge: (Peptide, Int)): Option[Array[Peptide]] = {
+      val r = conflictingPeptidesMap.getOrElse(peptideAndCharge, ArrayBuffer.empty[Peptide]).toArray ++ isomericPeptidesMap.getOrElse(peptideAndCharge._1, Array.empty[Peptide])
+      if (r.isEmpty){ None } else { Some(r) }
     }
-    def addConflictedPeptides(peptideAndCharge: (Peptide, Int), peptides: Seq[Peptide]) {
+
+    def addConflictingPeptides(peptideAndCharge: (Peptide, Int), peptides: Seq[Peptide]) {
       conflictingPeptidesMap_lock.synchronized {
         conflictingPeptidesMap.getOrElseUpdate(peptideAndCharge, ArrayBuffer[Peptide]()) ++= peptides
       }
     }
+
   }
     
   def detectMapSetFromPeakels(
@@ -210,7 +222,9 @@ class PeakelsDetector(
     val rxCompScheduler = rx.lang.scala.JavaConversions.javaSchedulerToScalaScheduler(
       rx.schedulers.Schedulers.from(computationThreadPool)
     )
-    
+
+    detectorEntityCache.buildIsomericPeptidesMap(peptideMatchByRunIdAndScanNumber.flatMap(_._2).flatMap(_._2).map(_.peptide).toSeq.distinct)
+
     try {
       
       // Create a peakel publisher that will be used to insert a stream of peakels in the LCMSdb
@@ -519,7 +533,7 @@ class PeakelsDetector(
               pf.maxObservedIntensity = refFt.apexIntensity
               
               val multiMatchedMzDbPeakelIds = ArrayBuffer.empty[Int]
-              val conflictingPeptides = detectorEntityCache.getConflictedPeptides((peptide, charge)).orNull
+              val conflictingPeptides = detectorEntityCache.getConflictingPeptides((peptide, charge)).orNull
               val mzDbPeakelIdsByPeptideAndCharge = mzDbPeakelIdsByPeptideAndChargeByRunId.getOrElse(lcMsRunId, null)
               
               if (conflictingPeptides != null && mzDbPeakelIdsByPeptideAndCharge != null) {
@@ -626,7 +640,7 @@ class PeakelsDetector(
       
       // Convert the peakel queue into a lambda stream that will be passed to the peakel storer
       val forEachPeakel = { onEachPeakel: (Peakel => Unit) =>
-        
+
         while (!isLastPublishedPeakel || !publishedPeakelQueue.isEmpty()) {
           val peakelOpt = publishedPeakelQueue.take()
           if (peakelOpt.isDefined) {
@@ -982,7 +996,7 @@ class PeakelsDetector(
           } finally {
             mzDb.close()
           }
-          
+
         }
 
         val futureResult = resultPromise.future.map { case (observableRunSlicePeakels, ms1SpecHeaders, ms2SpecHeadersByCycle) =>
@@ -1229,7 +1243,7 @@ class PeakelsDetector(
               Some(rTree),
               identifiedPeakel,
               charge,
-              isPredicted = false,
+              false,
               sameChargePeakelMatches.map(_.spectrumHeader.getId).distinct.toArray
             )
             if (mzDbFt.getPeakelsCount == 1) runMetrics.incr("psm monoisotopic features")
@@ -1253,7 +1267,7 @@ class PeakelsDetector(
               mzDbPeakelIdsByPeptideAndCharge.getOrElseUpdate(peptideAndCharge, ArrayBuffer[Int]()) += identifiedPeakel.id
               
               if (peptides.length > 1) {
-                entityCache.addConflictedPeptides(peptideAndCharge, peptides)
+                entityCache.addConflictingPeptides(peptideAndCharge, peptides)
               }
             }
         
@@ -1473,7 +1487,7 @@ class PeakelsDetector(
             // Update putative feature of conflicting peptides in this run to allow peakel re-assignment
             val charge = putativeFt.charge
             val peptide = peptideByPutativeFtId(putativeFt.id)
-            val conflictingPeptides = entityCache.getConflictedPeptides((peptide, charge)).orNull
+            val conflictingPeptides = entityCache.getConflictingPeptides((peptide, charge)).orNull
             if (conflictingPeptides != null) {
               for (conflictingPeptide <- conflictingPeptides) {
                 for (pft <- putativeFtsByPeptideAndRunId((peptide, lcMsRunId))) {
@@ -1627,13 +1641,22 @@ class PeakelsDetector(
       metric.incr("missing peakel: no peakel found in the peakelDB")
       return None
     }
-    
-    // Apply some filters to the found peakels
+
+    // Apply some filters to the found peakels: they must not be already assigned or included in a pool of peakels
+    // that could be matched multiple times
     val multimatchedPeakelIdSet = multimatchedMzDbPeakelIds.toSet
-    val matchingPeakels = foundPeakels.filter { foundPeakel =>
-      multimatchedPeakelIdSet.contains(foundPeakel.id) || ! assignedMzDbPeakelIdSet.contains(foundPeakel.id)
+    val matchingPeakels = if (Settings.doNotFilterAssignedPeakels) {
+      foundPeakels
+    } else {
+      foundPeakels.filter { foundPeakel =>
+        multimatchedPeakelIdSet.contains(foundPeakel.id) || !assignedMzDbPeakelIdSet.contains(foundPeakel.id)
+      }
     }
-    
+
+    if ((foundPeakels.size - matchingPeakels.size) > 0) {
+      metric.storeValue("missing peakel:more found than unassigned", (foundPeakels.size - matchingPeakels.size))
+    }
+
     /*start = System.nanoTime()
     val coelutingPeakels = if (matchingPeakels.isEmpty) { null } else {
       
@@ -1678,8 +1701,7 @@ class PeakelsDetector(
       metric.incr("missing peakel: only one peakel matching")
       if (filteredPeakels.head._2) { metric.incr("missing peakel: only one peakel matching which is reliable") }
       Some(filteredPeakels.head)
-    }
-    else {
+    } else {
       
       var reliablePeakels = filteredPeakels.filter(_._2)
       if (reliablePeakels.isEmpty) { 
