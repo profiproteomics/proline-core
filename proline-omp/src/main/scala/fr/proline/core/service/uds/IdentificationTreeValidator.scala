@@ -49,7 +49,7 @@ object IdentificationTreeValidator {
           useTdCompetition = useTdCompetition,
           pepMatchFilters = validationConfig.pepMatchPreFilters,
           pepMatchValidator = validationConfig.pepMatchValidator,
-          peptideSetScoring = Some( validationConfig.pepSetScoring.getOrElse(PepSetScoring.MASCOT_MODIFIED_MUDPIT_SCORE) ),
+          peptideSetScoring = Some( validationConfig.pepSetScoring.getOrElse(PepSetScoring.MASCOT_STANDARD_SCORE) ),
           protSetFilters = validationConfig.protSetFilters,
           protSetValidator = validationConfig.protSetValidator
         )
@@ -162,15 +162,17 @@ class IdentificationTreeValidator(
           
           // Replace the result set by the validated one
           rsm.resultSet = validatedRsOpt
-          
-          val decoyRsm = rsm.decoyResultSummary.get
-          val validatedDecoyRsOpt = decoyRsm.getValidatedResultSet()
-          
-          // Set the decoy result set as the validated decoy one
-          validatedRsOpt.get.decoyResultSet = validatedDecoyRsOpt
-          
-          // Do the same in the decoy result summary
-          decoyRsm.resultSet = validatedDecoyRsOpt
+
+          if (rsm.decoyResultSummary.isDefined) {
+            val decoyRsm = rsm.decoyResultSummary.get
+            val validatedDecoyRsOpt = decoyRsm.getValidatedResultSet()
+
+            // Set the decoy result set as the validated decoy one
+            validatedRsOpt.get.decoyResultSet = validatedDecoyRsOpt
+
+            // Do the same in the decoy result summary
+            decoyRsm.resultSet = validatedDecoyRsOpt
+          }
         }
         
         rsmByRsId += targetRsId -> rsm
