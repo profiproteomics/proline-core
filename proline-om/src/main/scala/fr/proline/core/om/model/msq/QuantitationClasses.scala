@@ -246,10 +246,11 @@ case class QuantPeptideIon(
  ) extends LcmsQuantComponent {
   
   // Check some requirements
-  if( ms2MatchingFrequency.isDefined ) {
+  // FIXME: how to compute ms2MatchingFrequency of chimera MS/MS spectra
+  /*if( ms2MatchingFrequency.isDefined ) {
     val freq = ms2MatchingFrequency.get
     require( freq >= 0f && freq <= 1f, "MS2 matching frequency must be a number between 0 and 1, but not " + freq )
-  }
+  }*/
   
 }
 
