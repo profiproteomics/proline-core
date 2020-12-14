@@ -2,28 +2,14 @@ package fr.proline.core.util.generator.msi
 
 import java.text.SimpleDateFormat
 import java.util.Date
+
 import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.HashSet
 import com.typesafe.scalalogging.StrictLogging
 import fr.profi.util.ms.massToMoz
 import fr.profi.util.primitives.toInt
 import fr.profi.util.random.randomInt
-import fr.proline.core.om.model.msi.Activation
-import fr.proline.core.om.model.msi.Instrument
-import fr.proline.core.om.model.msi.InstrumentConfig
-import fr.proline.core.om.model.msi.MSISearch
-import fr.proline.core.om.model.msi.Ms2Query
-import fr.proline.core.om.model.msi.Peaklist
-import fr.proline.core.om.model.msi.PeaklistSoftware
-import fr.proline.core.om.model.msi.Peptide
-import fr.proline.core.om.model.msi.PeptideMatch
-import fr.proline.core.om.model.msi.PeptideMatchScoreType
-import fr.proline.core.om.model.msi.Protein
-import fr.proline.core.om.model.msi.ProteinMatch
-import fr.proline.core.om.model.msi.ResultSet
-import fr.proline.core.om.model.msi.SearchSettings
-import fr.proline.core.om.model.msi.SeqDatabase
-import fr.proline.core.om.model.msi.SequenceMatch
+import fr.proline.core.om.model.msi.{Activation, Instrument, InstrumentConfig, LocatedPtm, MSISearch, Ms2Query, Peaklist, PeaklistSoftware, Peptide, PeptideMatch, PeptideMatchProperties, PeptideMatchPtmSiteProperties, PeptideMatchScoreType, Protein, ProteinMatch, ResultSet, SearchSettings, SeqDatabase, SequenceMatch}
 import fr.profi.chemistry.model.Enzyme
 
 /**
@@ -33,30 +19,22 @@ import fr.profi.chemistry.model.Enzyme
  * Each protein sequence is the exact concatenation of corresponding peptide sequences.
  * No management of subsets/samesets of peptides.
  *
- * Required
- * @param nbPeps Number of non redundant peptides to create
- * @param nbProts Number of non redundant proteins to create
  *
- * Optional
  * @param minPepSeqLength Minimum length for peptide sequence
  * @param maxPepSeqLength Maximum length for peptide sequence
  *
  */
 class ResultSetFakeGenerator(
-  nbPeps: Int,
-  nbProts: Int,
-  minPepSeqLength: Int = 8,
-  maxPepSeqLength: Int = 20
+  minPepSeqLength: Int,
+  maxPepSeqLength: Int
 ) extends AnyRef with StrictLogging {
 
-  require(nbPeps > 0, "Peptides # must be > 0")
-  require(nbProts > 0 && nbProts <= nbPeps, "Protein # must be > 0 and <= peptides #")
-  
   // Public fields
   val allPeps = ArrayBuffer[Peptide]()
   val allPepMatches = ArrayBuffer[PeptideMatch]()
   val allProtMatches = ArrayBuffer[ProteinMatch]()
-  val proteinById = collection.mutable.Map[Long,Protein]()
+  val proteinById = collection.mutable.Map[Long, Protein]()
+
   def allProts = proteinById.values // for compat with old API (before introduction of proteinById Map)
 
   // Constants
@@ -69,25 +47,37 @@ class ResultSetFakeGenerator(
   private var pepIdByPepMatchId = collection.mutable.Map[Long, Long]()
   private var pepMatchIdsByPepId = collection.mutable.Map[Long, ArrayBuffer[Long]]()
 
-  // Define some vars related to ProteinMatch entity  
+  // Define some vars related to ProteinMatch entity
   private var tmpProtMatchById = collection.mutable.Map[Long, ProteinMatch]()
   private var tmpProtMatchIdsByPepId = collection.mutable.Map[Long, ArrayBuffer[Long]]()
 
   // Define some vars related to Peptide entity
   private val allPepSeqs = HashSet[String]() //to check sequence unicity
   private val usedMissedCleavages = HashSet[Int]() //to missed cleavages unicity
-  
+
   // Create a map of Peptides for each Protein sequence
   val allPepsByProtSeq = collection.mutable.Map[String, ArrayBuffer[Peptide]]()
-  
-  _buildResultSet()
-  
+
+  def this(nbPeps: Int, nbProts: Int, minPepSeqLength: Int = 8, maxPepSeqLength: Int = 20) = {
+    this(minPepSeqLength, maxPepSeqLength)
+    require(nbPeps > 0, "Peptides # must be > 0")
+    require(nbProts > 0 && nbProts <= nbPeps, "Protein # must be > 0 and <= peptides #")
+
+    _buildResultSet(nbPeps, nbProts)
+  }
+
+  def this(proteinSequence: String) = {
+    this(minPepSeqLength = 8, maxPepSeqLength = 20)
+    _createProteinMatch(proteinSequence, Seq[Peptide](), ArrayBuffer.empty[SequenceMatch])
+    allPepsByProtSeq += proteinSequence -> (ArrayBuffer.empty[Peptide])
+  }
+
   /**
    * Builds the result set.
    * This private method is only called once time by the constructor.
    * 
    */
-  private def _buildResultSet() {
+  private def _buildResultSet(nbPeps: Int, nbProts: Int) {
 
     // Estimate an average number of peptides for each protein
     val avgNbPepsPerGroup: Int = nbPeps / nbProts
@@ -149,7 +139,61 @@ class ResultSetFakeGenerator(
     }
     
   }
-  
+
+  def addPeptide(pepSeq: String, ptms : Array[LocatedPtm] = Array.empty[LocatedPtm], probabilities: Array[Float] = Array.empty[Float], proteinMatch: ProteinMatch) : ResultSetFakeGenerator  = {
+
+    val peptideMatch = _createPeptideAndPeptideMatch(pepSequence = pepSeq, missedCleavage = 0, ptms = ptms, RSId = RESULT_SET_ID)
+
+    if (!ptms.isEmpty) {
+      require(ptms.size == probabilities.size, "A probability must be associated with each located ptm")
+      val map = ptms.map(_.toReadableString).zip(probabilities).toMap
+      // sets the ptm probabilities
+      peptideMatch.properties = Some(PeptideMatchProperties(ptmSiteProperties = Some(PeptideMatchPtmSiteProperties(
+        mascotDeltaScore = Some(0.80f), mascotProbabilityBySite = map
+      ))))
+    }
+    // Link this peptide to the protein
+    val pattern = pepSeq.r
+    val protSeq = proteinMatch.protein.get.sequence
+    val matches = pattern.findAllMatchIn(protSeq)
+    matches.foreach{ m =>
+
+      // For each Peptide of the group, create a PeptideMatch
+      val startIdx = m.start + 1
+      val endIdx = m.end
+      val resBefore = if ((m.start-1)> 0) protSeq.charAt(m.start-1) else '-'
+      val resAfter = if (endIdx < protSeq.length) protSeq.charAt(endIdx) else '-'
+
+      val newSM = new SequenceMatch(
+        start = startIdx,
+        end = endIdx,
+        residueBefore = resBefore,
+        residueAfter = resAfter,
+        peptide = Some(peptideMatch.peptide),
+        bestPeptideMatch = Some(peptideMatch),
+        resultSetId = RESULT_SET_ID
+      )
+
+      // Add newly created sequence match
+      proteinMatch.sequenceMatches = (proteinMatch.sequenceMatches.toBuffer += newSM).toArray
+      proteinMatch.peptideMatchesCount += 1
+
+      logger.info("SequenceMatch {} added", newSM)
+
+
+    }
+    // Add the built peptide to the allPepsByProtSeq Map
+    allPepsByProtSeq(protSeq) += peptideMatch.peptide
+
+    // Add peptide id to the tmpProtMatchIdsByPepId Map
+    tmpProtMatchIdsByPepId += peptideMatch.peptide.id -> (new ArrayBuffer(1) += proteinMatch.id)
+
+    _updatePeptideMaps()
+    logger.info("Peptide {} added", pepSeq)
+
+    ResultSetFakeGenerator.this
+  }
+
   /**
    * Creates one new Peptide (+Ms2Query, +PeptideMatch) from the peptideArray
    * and associate new SequenceMatch with an EXISTING ProteinMatch.
@@ -223,12 +267,12 @@ class ResultSetFakeGenerator(
    * @param RSId the result set id
    * @return the created PeptideMatch
    */
-  private def _createPeptideAndPeptideMatch(pepSequence: String, missedCleavage: Int, RSId: Long): PeptideMatch = {
+  private def _createPeptideAndPeptideMatch(pepSequence: String, missedCleavage: Int, ptms: Array[LocatedPtm] = Array.empty[LocatedPtm], RSId: Long): PeptideMatch = {
 
     val builtPep = new Peptide(
       id = Peptide.generateNewId,
       sequence = pepSequence,
-      ptms = null,
+      ptms = ptms,
       calculatedMass = Peptide.calcMass(pepSequence)
     )
     
@@ -542,17 +586,13 @@ class ResultSetFakeGenerator(
    */
   def createNewProteinMatchFromPeptides(peptides: Seq[Peptide]): ResultSetFakeGenerator = {
     require(peptides!= null && peptides.length > 0,"at least one peptide must be provided")
-    
-    val newProtMatchId = ProteinMatch.generateNewId
+
     val protSeqBuilder = new StringBuilder    
     val protMatchSeqMatches = ArrayBuffer[SequenceMatch]()
     var( startIdx, endIdx ) = (0,-1)
 
     for (currPep <- peptides) {
-      
-      // Update the mapping between peptides and protein matches
-      tmpProtMatchIdsByPepId.getOrElseUpdate(currPep.id, new ArrayBuffer[Long]) += newProtMatchId
-      
+
       var currPepSeq = currPep.sequence
       
       // Append the peptide sequence to the protein one
@@ -586,11 +626,20 @@ class ResultSetFakeGenerator(
     
     // Build the protein entity
     val currProtSeq = protSeqBuilder.result
+    _createProteinMatch(currProtSeq, peptides, protMatchSeqMatches)
+
+    // Update some mappings
+    allPepsByProtSeq += (currProtSeq -> (new ArrayBuffer(peptides.length) ++ peptides) )
+
+    ResultSetFakeGenerator.this
+  }
+
+  private def _createProteinMatch(proteinSequence: String, peptides: Seq[Peptide], sequenceMatches: ArrayBuffer[SequenceMatch]) = {
     val currProt = new Protein(
       Protein.generateNewId,
-      currProtSeq,
-      Protein.calcMass(currProtSeq),
-      Protein.calcPI(currProtSeq),
+      proteinSequence,
+      Protein.calcMass(proteinSequence),
+      Protein.calcPI(proteinSequence),
       crc64 = null,
       alphabet = "aa"
     )
@@ -598,24 +647,23 @@ class ResultSetFakeGenerator(
 
     // Create a new ProteinMatch
     val newProtMatch = new ProteinMatch(
-      id = newProtMatchId,
+      id = ProteinMatch.generateNewId,
       accession = ResultSetRandomator.randomProtAccession,
       description = "Generated protein match",
       proteinId = currProt.id,
       protein = Option(currProt),
       scoreType = "mascot:standard score",
       peptideMatchesCount = peptides.size, //1 PeptideMatch per Peptide
-      sequenceMatches = protMatchSeqMatches.toArray,
+      sequenceMatches = sequenceMatches.toArray,
       resultSetId = RESULT_SET_ID
     )
-    
+
     allProtMatches += newProtMatch
-
-    // Update some mappings
-    allPepsByProtSeq += (currProtSeq -> (new ArrayBuffer(peptides.length) ++ peptides) )
     tmpProtMatchById += newProtMatch.id -> newProtMatch
+    // Update the mapping between peptides and protein matches
+    peptides.foreach(currPep => tmpProtMatchIdsByPepId.getOrElseUpdate(currPep.id, new ArrayBuffer[Long]) += newProtMatch.id)
 
-    ResultSetFakeGenerator.this
+    newProtMatch
   }
 
   /**

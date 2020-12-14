@@ -3,7 +3,8 @@ package fr.proline.core.util.generator.msi
 import org.junit.Test
 import org.scalatest.junit.JUnitSuite
 import com.typesafe.scalalogging.StrictLogging
-import fr.proline.core.om.model.msi.ResultSet
+import fr.proline.core.om.model.msi.{IonTypes, LocatedPtm, PtmDefinition, PtmEvidence, PtmNames, ResultSet}
+
 
 @Test
 class ResultSetFakeGeneratorTest extends JUnitSuite with StrictLogging {
@@ -22,6 +23,55 @@ class ResultSetFakeGeneratorTest extends JUnitSuite with StrictLogging {
     assert(rsb.allPepMatches.size == nbPeps)
 
 //    rsb.printForDebug  
+  }
+
+  @Test
+  def resultSetFromProteinSeq(): Unit = {
+
+    val pp150_seq = "MSLQFIGLQRRDVVALVNFLRHLTQKPDVDLEAHPKILKKCGEKRLHRRTVLFNELMLWL" +
+      "GYYRELRFHNPDLSSVLEEFEVRCVAVARRGYTYPFGDRGKARDHLAVLDRTEFDTDVRH" +
+      "DAEIVERALVSAVILAKMSVRETLVTAIGQTEPIAFVHLKDTEVQRIEENLEGVRRNMFC" +
+      "VKPLDLNLDRHANTALVNAVNKLVYTGRLIMNVRRSWEELERKCLARIQERCKLLVKELR" +
+      "MCLSFDSNYCRNILKHAVENGDSADTLLELLIEDFDIYVDSFPQSAHTFLGARSPSLEFD" +
+      "DDANLLSLGGGSAFSSVPKKHVPTQPLDGWSWIASPWKGHKPFRFEAHGSLAPAAEAHAA" +
+      "RSAAVGYYDEEEKRRERQKRVDDEVVQREKQQLKAWEERQQNLQQRQQQPPPPARKPSAS" +
+      "RRLFGSSADEDDDDDDDEKNIFTPIKKPGTSGKGAASGGGVSSIFSGLLSSGSQKPTSGP" +
+      "LNIPQQQQRHAAFSLVSPQVTKASPGRVRRDSAWDVRPLTETRGDLFSGDEDSDSSDGYP" +
+      "PNRQDPRFTDTLVDITDTETSAKPPVTTAYKFEQPTLTFGAGVNVPAGAGAAILTPTPVN" +
+      "PSTAPAPAPTPTFAGTQTPVNGNSPWAPTAPLPGDMNPANWPRERAWALKNPHLAYNPFR" +
+      "MPTTSTASQNTVSTTPRRPSTPRAAVTQTASRDAADEVWALRDQTAESPVEDSEEEDDDS" +
+      "SDTGSVVSLGHTTPSSDYNNDVISPPSQTPEQSTPSRIRKAKLSSPMTTTSTSQKPVLGK" +
+      "RVATPHASARAQTVTSTPVQGRLEKQVSGTPSTVPATLLQPQPASSKTTSSRNVTSGAGT" +
+      "SSASSARQPSASASVLSPTEDDVVSPATSPLSMLSSASPSPAKSAPPSPVKGRGSRVGVP" +
+      "SLKPTLGGKAVVGRPPSVPVSGSAPGRLSGSSRAASTTPTYPAVTTVYPPSSTAKSSVSN" +
+      "APPVASPSILKPGASAALQSRRSTGTAAVGSPVKSTTGMKTVAFDLSSPQKSGTGPQPGS" +
+      "AGMGGAKTPSDAVQNILQKIEKIKNTEE"
+
+
+    val pEvidence = new PtmEvidence(ionType = IonTypes.Precursor, composition = "H O(3) P", monoMass = 79.966331, averageMass = 79.9799, false)
+
+    val pS = new PtmDefinition(id= 52, location = "Anywhere", names = PtmNames("Phospho", "Phosphorylation"), ptmEvidences = Array(pEvidence), residue ='S', ptmId = 16L, unimodId = 21)
+    val pT = new PtmDefinition(id= 51, location = "Anywhere", names = PtmNames("Phospho", "Phosphorylation"), ptmEvidences = Array(pEvidence), residue ='T', ptmId = 16L, unimodId = 21)
+    val pY = new PtmDefinition(id= 50, location = "Anywhere", names = PtmNames("Phospho", "Phosphorylation"), ptmEvidences = Array(pEvidence), residue ='Y', ptmId = 16L, unimodId = 21)
+
+    val rsb = new ResultSetFakeGenerator(proteinSequence = pp150_seq)
+    val proteinMatch = rsb.allProtMatches(0)
+    rsb.addPeptide( pepSeq = "FHNPDLSSVLEEFEVR", proteinMatch = proteinMatch)
+    rsb.addPeptide(pepSeq = "CVAVAR", proteinMatch = proteinMatch)
+    rsb.addPeptide(pepSeq = "CVAVARR", proteinMatch = proteinMatch)
+
+    rsb.addPeptide(pepSeq = "HAAFSLVSPQVTKASPGR", proteinMatch = proteinMatch) //todo: existe en deux versions (S5,S15) et (S8,S15)
+
+    rsb.addPeptide(
+      pepSeq = "HAAFSLVSPQVTK",
+      ptms = Array(new LocatedPtm(definition = pS, seqPosition = 8, precursorDelta =  pEvidence)),
+      probabilities = Array(0.98f),
+      proteinMatch = proteinMatch
+    )
+
+    rsb.addPeptide(pepSeq = "GDLFSGDEDSDSSDGYPPNR",proteinMatch = proteinMatch) //todo: existe en 8 versions differentes
+
+    val rs = rsb.toResultSet()
   }
 
   @Test
