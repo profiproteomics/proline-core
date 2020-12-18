@@ -6,6 +6,7 @@ import fr.proline.core.om.model.msi.PtmDefinition
 import fr.proline.core.om.model.msi.PtmLocation
 import fr.proline.core.om.provider.msi.IPTMProvider
 import fr.proline.core.om.util.PeptidesOMConverterUtil
+import fr.proline.core.orm.msi.Ptm
 import fr.proline.core.orm.msi.repository.{MsiPtmRepository => MsiPtmRepo}
 import fr.proline.core.util.ResidueUtils._
 
@@ -88,8 +89,18 @@ class ORMPTMProvider(val msiDbCtx: MsiDbConnectionContext) extends IPTMProvider 
     })
     Some(ptmToReturn)
   }
+
   def getPtmId(shortName: String): Option[Long] = {
-    val foundPtm = MsiPtmRepo.findPtmForShortName(msiDbCtx.getEntityManager, shortName)
+    var foundPtm : Ptm = null
+    try {
+      foundPtm = MsiPtmRepo.findPtmForShortName(msiDbCtx.getEntityManager, shortName)
+    } catch {
+      case t: Throwable => {
+        logger.error("Error getting PTM {} ",shortName, t)
+        foundPtm = null
+      }
+    }
+
 
     if (foundPtm == null) {
       None
