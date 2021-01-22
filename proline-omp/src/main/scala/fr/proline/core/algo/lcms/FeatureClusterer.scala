@@ -18,7 +18,9 @@ object ClusterTimeComputation extends Enumeration {
 }
 
 object ClusterizeFeatures extends LazyLogging {
-  
+
+  val EPSILON = 1e-3
+
   val ftMozSortingFunc = new Function2[Feature, Feature, Boolean] {
     def apply(a: Feature, b: Feature): Boolean = if (a.moz < b.moz) true else false
   }
@@ -57,12 +59,14 @@ object ClusterizeFeatures extends LazyLogging {
 
     // Compute some vars for the feature cluster
     val unclusterizedFtsAsList = unclusterizedFeatures.toList
-    val medianFt = getMedianObject(unclusterizedFtsAsList, this.ftMozSortingFunc)
-    val moz = medianFt.moz
     
     val intensity = this._computeClusterIntensity(unclusterizedFtsAsList, intensityComputationMethod)
     val elutionTime = this._computeClusterTime(unclusterizedFtsAsList, timeComputationMethod)
-    
+
+    val medianFtOpt = unclusterizedFtsAsList.find( ft => math.abs(ft.intensity - intensity) < EPSILON )
+    val medianFt = medianFtOpt.getOrElse(getMedianObject(unclusterizedFtsAsList, this.ftMozSortingFunc))
+    val moz = medianFt.moz
+
     // Set some vars
     val ms2EventIdSetBuilder = scala.collection.immutable.Set.newBuilder[Long]
     for (ft <- unclusterizedFeatures) {
