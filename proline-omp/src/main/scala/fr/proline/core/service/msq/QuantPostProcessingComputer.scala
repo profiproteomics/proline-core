@@ -270,6 +270,8 @@ class QuantPostProcessingComputer(
             if(newMqPep.selectionLevel == SelectionLevel.DESELECTED_AUTO)
               mqPep.selectionLevel = newMqPep.selectionLevel
           }
+          case SelectionLevel.DESELECTED_MANUAL => {}
+
         }
 
         //Get properties back

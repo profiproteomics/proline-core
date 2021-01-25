@@ -9,7 +9,7 @@
   </parent>
 
   <artifactId>proline-core</artifactId>
-  <version>2.1.0</version>
+  <version>2.1.1</version>
   <packaging>pom</packaging>
 
   <name>${project.artifactId}</name>
@@ -26,7 +26,7 @@
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <core.version>2.1.0</core.version>  <!-- Snapshot Trunk version -->
+    <core.version>2.1.1</core.version>  <!-- Snapshot Trunk version -->
     <mzdb.version>0.10.0</mzdb.version>  <!-- Tag version -->
   </properties>
 
