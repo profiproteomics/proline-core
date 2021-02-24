@@ -516,7 +516,7 @@ case class PeptideInstance(
   /** Returns true if the sequence is specific to a protein match. */
   def isProteinMatchSpecific(): Boolean = { proteinMatchesCount == 1 }
 
-  def score =  {if (properties.isDefined) properties.get.score else None}
+  def scoringProperties =  {if (properties.isDefined) properties.get.score else None}
 }
 
 case class PeptideInstanceProperties(

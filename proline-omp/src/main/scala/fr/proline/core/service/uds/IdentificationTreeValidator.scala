@@ -195,8 +195,7 @@ class IdentificationTreeValidator(
   private def _validateResultSet(rs: ResultSet): ResultSummary = {
 
     val tdAnalyzerBuilder = new TDAnalyzerBuilder(TargetDecoyAnalyzers.BASIC)
-    tdAnalyzerBuilder.targetRs = Some(rs)
-    tdAnalyzerBuilder.estimator = if (useTdCompetition) { Some(TargetDecoyComputers.GIGY_COMPUTER) } else { Some(TargetDecoyComputers.KALL_STOREY_COMPUTER) }
+    tdAnalyzerBuilder.estimator = if (useTdCompetition) { Some(TargetDecoyEstimators.GIGY_COMPUTER) } else { Some(TargetDecoyEstimators.KALL_STOREY_COMPUTER) }
 
     val linkTargetRsToFilter = (filter: IPeptideMatchFilter) => _linkTargetRsToFilter(filter, rs)
 
@@ -217,10 +216,14 @@ class IdentificationTreeValidator(
     )
 
     // Instantiate a result set validator
-    val rsValidator = new ResultSetValidator(
+    val rsValidator = ResultSetValidator(
       execContext = execContext,
       targetRs = rs,
-      validationConfig = configuration
+      validationConfig = configuration,
+      inferenceMethod = Some(InferenceMethod.PARSIMONIOUS),
+      storeResultSummary = true,
+      propagatePepMatchValidation = false,
+      propagateProtSetValidation = false
     )
 
     rsValidator.run()
@@ -300,8 +303,7 @@ class IdentificationTreeValidator(
 
       // Build Target/Decoy analyzer
       val tdAnalyzerBuilder = new TDAnalyzerBuilder(TargetDecoyAnalyzers.BASIC)
-      tdAnalyzerBuilder.targetRs = Some(mergedTargetRs)
-      tdAnalyzerBuilder.estimator = if (useTdCompetition) { Some(TargetDecoyComputers.GIGY_COMPUTER) } else { Some(TargetDecoyComputers.KALL_STOREY_COMPUTER) }
+      tdAnalyzerBuilder.estimator = if (useTdCompetition) { Some(TargetDecoyEstimators.GIGY_COMPUTER) } else { Some(TargetDecoyEstimators.KALL_STOREY_COMPUTER) }
 
       val linkTargetRsToFilter = (filter: IPeptideMatchFilter) => _linkTargetRsToFilter(filter, mergedTargetRs)
 
@@ -322,11 +324,15 @@ class IdentificationTreeValidator(
         protSetValidator = protSetValidator
       )
       // Instantiate a result set validator
-      val rsValidator = new ResultSetValidator(
+      val rsValidator = ResultSetValidator(
         execContext = execContext,
         targetRs = mergedTargetRs,
         validationConfig = configuration,
-        storeResultSummary = true
+        inferenceMethod = Some(InferenceMethod.PARSIMONIOUS),
+        storeResultSummary = true,
+        propagatePepMatchValidation = false,
+        propagateProtSetValidation = false
+
       )
 
       rsValidator.run()

@@ -80,17 +80,18 @@ class RsAdderFromResultFileTest extends StrictLogging with RsAdderFromResultFile
 
     storeBuiltResultSet(builtRS)
 
-    val tdAnalyzerBuilder = new TDAnalyzerBuilder(TargetDecoyAnalyzers.BASIC, estimator = Some(TargetDecoyComputers.GIGY_COMPUTER))
-
-    val rsValidation = new ResultSetValidator(
+    val rsValidation = ResultSetValidator(
       execContext = executionContext,
       targetRs = builtRS,
       validationConfig = ValidationConfig(
-        tdAnalyzerBuilder = Some(tdAnalyzerBuilder),
+        tdAnalyzerBuilder = None,
         pepMatchPreFilters = Some(Seq(new ScorePSMFilter(scoreThreshold = 22.0f))),
         pepMatchValidator = None,
         protSetFilters = None),
-      storeResultSummary = true
+      inferenceMethod = Some(InferenceMethod.PARSIMONIOUS),
+      storeResultSummary = true,
+      propagatePepMatchValidation = false,
+      propagateProtSetValidation = false
     )
 
     val result = rsValidation.runService()

@@ -34,8 +34,8 @@ class SinglePSMPerPrettyRankFilter(var targetRs: IResultSetLike = null) extends 
 
   /**
     * Filter PSM in order to have a single PSM per  pretty rank per query. If more than one PSM exist for pretty rank the selected PSM will be
-    *  - the one specified in map (Query-rank)->PSM (through threshold value)
-    *  - if none : the PSM identifying the protein with max number of PSM
+    *  - the one specified in the map (Query-rank)->PSM (through threshold value map)
+    *  - if no map is specified  : the PSM identifying the protein with the highest number of PSM
     *
     * @param pepMatches All PeptideMatches
     * @param incrementalValidation If incrementalValidation is set to false,

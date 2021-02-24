@@ -11,12 +11,11 @@ import scala.collection.mutable.ArrayBuffer
 
 class TDAnalyzerBuilder(
     var analyzer: TargetDecoyAnalyzers.Analyzer,
-    var estimator: Option[TargetDecoyComputers.Computer] = None,
-    var targetRs: Option[ResultSet] = None,
+    var estimator: Option[TargetDecoyEstimators.Estimator] = None,
     var params: Option[Map[String, AnyVal]] = None
 ) extends LazyLogging {
 
-  def build(): Option[ITargetDecoyAnalyzer] = {
+  def build(targetRs: Option[ResultSet]): Option[ITargetDecoyAnalyzer] = {
 
     require(targetRs.isDefined || estimator.isDefined, "An estimator or a ResultSet must be defined to build a TDAnalyzer")
 
@@ -43,8 +42,8 @@ class TDAnalyzerBuilder(
         Some(new BasicTDAnalyzer(TargetDecoyComputer.calcCdFDR)) // arbitrary decision
       } else {
         estimator match {
-          case Some(TargetDecoyComputers.KALL_STOREY_COMPUTER) => Some(new BasicTDAnalyzer(TargetDecoyComputer.calcSdFDR))
-          case Some(TargetDecoyComputers.GIGY_COMPUTER) => Some(new BasicTDAnalyzer(TargetDecoyComputer.calcCdFDR))
+          case Some(TargetDecoyEstimators.KALL_STOREY_COMPUTER) => Some(new BasicTDAnalyzer(TargetDecoyComputer.calcSdFDR))
+          case Some(TargetDecoyEstimators.GIGY_COMPUTER) => Some(new BasicTDAnalyzer(TargetDecoyComputer.calcCdFDR))
           case None => {
             // No estimator specified: use auto determination based on the targetRs mode
             tdMode match {
@@ -63,52 +62,13 @@ class TDAnalyzerBuilder(
 
 }
 
-//object BuildTDAnalyzer extends LazyLogging {
-//
-//  def apply(
-//    useTdCompetition: Boolean,
-//    targetRs: ResultSet,
-//    targetDecoyAnalyzer: TargetDecoyAnalyzers.Analyzer
-//  ): Option[ITargetDecoyAnalyzer] = {
-//
-//    require(targetRs != null, "ResultSet is null")
-//
-//    val rsId = targetRs.id
-//    val decoyRS = targetRs.decoyResultSet
-//
-//    if ((decoyRS != null) && decoyRS.isDefined) {
-//      val tdModeAsStrOpt = targetRs.getTargetDecoyMode()
-//      require(tdModeAsStrOpt.isDefined, "ResultSet #" + rsId + " has no valid TargetDecoyMode Property")
-//
-//      val tdMode = TargetDecoyModes.withName(tdModeAsStrOpt.get)
-//      val tdAnalyzer = {
-//        if (targetDecoyAnalyzer == TargetDecoyAnalyzers.GORSHKOV) {
-//          new GorshkovTDAnalyzer()
-//        } else if (tdMode == TargetDecoyModes.MIXED) {
-//          this.logger.warn("ResultSet #" + rsId + " has mixed target/decoy modes => competition based TD analyzer has to be used")
-//          // TODO: add to result set creation log
-//          new BasicTDAnalyzer(TargetDecoyModes.CONCATENATED, useTdCompetition) // arbitrary
-//        } else
-//          new BasicTDAnalyzer(tdMode, useTdCompetition)
-//      }
-//      logger.info("ResultSet #" + rsId + " will be validated using Target Decoy Analyzer "+tdAnalyzer.toString)
-//      Some(tdAnalyzer)
-//    } else {
-//      logger.warn("ResultSet #" + rsId + " has no associated decoy ResultSet")
-//      None
-//    }
-//
-//  }
-//
-//}
-
 abstract class ITargetDecoyAnalyzer {
 
   def calcTDStatistics(targetPepMatches: Seq[PeptideMatch], decoyPepMatches: Seq[PeptideMatch]): ValidationResult
 
   def calcTDStatistics(pepMatchJointMap: Map[Long, Seq[PeptideMatch]]): ValidationResult
 
-  protected def calcTDStatistics(targetMatchesCount: Int, decoyMatchesCount: Int): ValidationResult
+  def calcTDStatistics(targetMatchesCount: Int, decoyMatchesCount: Int): ValidationResult
 
   def performROCAnalysis(
     targetPepMatches: Seq[PeptideMatch],
@@ -198,75 +158,6 @@ abstract class AbstractTargetDecoyAnalyzer extends ITargetDecoyAnalyzer with Laz
     rocPoints.toArray
   }
 
-//  // Note : this implementation seems to be too long to process (too many decoy peptide matches)
-//  // TODO: remove me
-//  def performROCAnalysisV2(
-//    targetPepMatches: Seq[PeptideMatch],
-//    decoyPepMatches: Seq[PeptideMatch],
-//    validationFilter: IOptimizablePeptideMatchFilter
-//  ): Array[ValidationResult] = {
-//
-//    // Memorize validation status of peptide matches
-//    val allPepMatches = targetPepMatches ++ decoyPepMatches
-//    val pepMatchValStatusMap = PeptideMatchFiltering.getPepMatchValidationStatusMap(allPepMatches)
-//
-//    // Build the peptide match joint map
-//    val pmJointMap = TargetDecoyComputer.buildPeptideMatchJointMap(targetPepMatches, Some(decoyPepMatches))
-//    logger.debug("ROCAnalysisV2 PeptideMatches joint Map size: " + pmJointMap.size)
-//
-//    // Define some vars
-//    val rocPoints = new ArrayBuffer[ValidationResult]
-//
-//    // Sort decoy PSMs from the best to the worst according to the validation filter
-//    val sortedDecoyPepMatches = validationFilter.sortPeptideMatches(decoyPepMatches)
-//
-//    logger.debug("ROCAnalysisV2 entering sortedDecoyPepMatches loop ...")
-//
-//    val start = System.currentTimeMillis
-//
-//    // Iterate over sorted decoy PSMs => each PSM is taken as a new threshold (breaks if FDR is greater than 50%)
-//    breakable {
-//      for (threshDecoyPepMatch <- sortedDecoyPepMatches) {
-//
-//        // Restore peptide matches validation status to include previous filtering steps
-//        PeptideMatchFiltering.restorePepMatchValidationStatus(allPepMatches, pepMatchValStatusMap)
-//
-//        // Retrieve next filter threshold
-//        val thresholdValue = validationFilter.getPeptideMatchValueForFiltering(threshDecoyPepMatch)
-//
-//        // Increase the threshold just a little bit in order to exclude the current decoy PSM (should maximize sensitivity)
-//        // and inject the obtained value in the validation filter
-//        validationFilter.setThresholdValue(validationFilter.getNextValue(thresholdValue))
-//
-//        // Apply filter on target and decoy peptide matches
-//        validationFilter.filterPeptideMatches(allPepMatches, incrementalValidation = true, traceability = false)
-//
-//        // Compute the ROC point
-//        val rocPoint = this.calcTDStatistics(pmJointMap)
-//        logger.trace("New FDR = " + rocPoint.fdr)
-//
-//        // Set ROC point validation properties
-//        rocPoint.addProperties(validationFilter.getFilterProperties())
-//
-//        // Add ROC point to the curve
-//        rocPoints += rocPoint
-//
-//        // Breaks if current FDR equals zero
-//        if (rocPoint.fdr.isDefined && rocPoint.fdr.get > MAX_FDR) break
-//
-//      }
-//    }
-//
-//    val end = System.currentTimeMillis
-//    logger.debug("ROCAnalysisV2 sortedDecoyPepMatches loop completed in " + (end - start) + "ms, starting restorePepMatchValidationStatus ...")
-//
-//    // Restore peptide matches validation status
-//    PeptideMatchFiltering.restorePepMatchValidationStatus(allPepMatches, pepMatchValStatusMap)
-//
-//    logger.debug("ROCAnalysisV2 restorePepMatchValidationStatus done")
-//
-//    rocPoints.toArray
-//  }
 
   def performROCAnalysis(
     targetPepMatches: Seq[PeptideMatch],
@@ -406,64 +297,6 @@ object RocPointsFilter {
   }
 }
 
-//class BasicTDAnalyzer(val targetDecoyMode: TargetDecoyModes.Value, var useTdCompetition: Boolean = true) extends AbstractTargetDecoyAnalyzer {
-//
-//  def calcTDStatistics(targetPepMatches: Seq[PeptideMatch], decoyPepMatches: Seq[PeptideMatch] ): ValidationResult = {
-//
-//    val targetMatchesCount = targetPepMatches.count(_.isValidated)
-//    val decoyMatchesCount = decoyPepMatches.count(_.isValidated)
-//    this.calcTDStatistics(targetMatchesCount, decoyMatchesCount)
-//  }
-//
-//  protected def calcTDStatistics(targetMatchesCount: Int, decoyMatchesCount: Int): ValidationResult = {
-//
-//    val fdr = if (targetMatchesCount == 0) Float.NaN
-//    else {
-//      targetDecoyMode match {
-//        case TargetDecoyModes.CONCATENATED => TargetDecoyComputer.calcCdFDR(targetMatchesCount, decoyMatchesCount)
-//        case TargetDecoyModes.SEPARATED    => {
-//          if( useTdCompetition ) TargetDecoyComputer.calcCdFDR(targetMatchesCount, decoyMatchesCount)
-//          else TargetDecoyComputer.calcSdFDR(targetMatchesCount, decoyMatchesCount)
-//        }
-//        case _                             => throw new Exception("unsupported target decoy mode: " + targetDecoyMode)
-//      }
-//    }
-//
-//    ValidationResult(
-//      targetMatchesCount = targetMatchesCount,
-//      decoyMatchesCount = Some(decoyMatchesCount),
-//      fdr = if (fdr.isNaN) None else Some(fdr)
-//    )
-//
-//  }
-//
-//  def calcTDStatistics(pepMatchJointMap: Map[Long, Seq[PeptideMatch]]): ValidationResult = {
-//    val allPepMatches = pepMatchJointMap.flatMap(_._2).toSeq
-//    val (decoyPepMatches, targetPepMatches) = allPepMatches.partition(_.isDecoy)
-//
-//    this.calcTDStatistics(targetPepMatches, decoyPepMatches)
-//  }
-//
-//  override def performROCAnalysis(
-//    targetPepMatches: Seq[PeptideMatch],
-//    decoyPepMatches: Seq[PeptideMatch],
-//    validationFilter: IOptimizablePeptideMatchFilter): Array[ValidationResult] = {
-//
-//    val rocPoints = super.performROCAnalysis(targetPepMatches, decoyPepMatches, validationFilter)
-//    // maintain the same logic as previous implementation : when using performROCAnalysisV1, no rocPoint filters was applied
-//    //TODO: conserver comme ca ou accepter un fitre des rocpoints ? Si on supprime, penser a modifier les Tests Unitaires
-//    if(validationFilter.isInstanceOf[MascotPValuePSMFilter]) {
-//      rocPoints
-//    } else {
-//      RocPointsFilter.byTargetDecoyEdges(rocPoints)
-//    }
-//  }
-//
-//  override def toString(): String = {
-//    "BasicTDAnalyzer(targetDecoyMode="+ targetDecoyMode.toString +",useTdCompetition="+useTdCompetition+")"
-//  }
-//}
-
 
 
 class BasicTDAnalyzer(tdComputer: (Int, Int) => Float) extends AbstractTargetDecoyAnalyzer {
@@ -475,7 +308,7 @@ class BasicTDAnalyzer(tdComputer: (Int, Int) => Float) extends AbstractTargetDec
     this.calcTDStatistics(targetMatchesCount, decoyMatchesCount)
   }
 
-  protected def calcTDStatistics(targetMatchesCount: Int, decoyMatchesCount: Int): ValidationResult = {
+  def calcTDStatistics(targetMatchesCount: Int, decoyMatchesCount: Int): ValidationResult = {
 
     val fdr = if (targetMatchesCount == 0) Float.NaN
     else { tdComputer(targetMatchesCount, decoyMatchesCount) }
@@ -540,7 +373,7 @@ class GorshkovTDAnalyzer(dbSizeRatio: Float = 1.0f) extends AbstractTargetDecoyA
     this.calcTDStatistics(targetPepMatches, decoyPepMatches)
   }
 
-  override protected def calcTDStatistics(targetMatchesCount: Int, decoyMatchesCount: Int): ValidationResult = {
+  override def calcTDStatistics(targetMatchesCount: Int, decoyMatchesCount: Int): ValidationResult = {
     val fdr = if (targetMatchesCount == 0) Float.NaN else 100*(decoyMatchesCount + 1).toFloat / (dbSizeRatio*targetMatchesCount)
     ValidationResult(
       targetMatchesCount = targetMatchesCount,

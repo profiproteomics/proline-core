@@ -7,7 +7,7 @@ import org.scalatest.junit.JUnitSuite
 import com.typesafe.scalalogging.StrictLogging
 import fr.proline.core.algo.msi.filtering.pepmatch.{BHFilter, ScorePSMFilter}
 import fr.proline.core.algo.msi.filtering.IPeptideMatchSorter
-import fr.proline.core.algo.msi.validation.pepmatch.{BasicPepMatchValidator, TDPepMatchValidatorWithFDROptimization}
+import fr.proline.core.algo.msi.validation.pepmatch.{TDPepMatchValidator, TDPepMatchValidatorWithFDROptimization}
 import fr.proline.core.om.model.msi._
 import fr.proline.core.util.generator.msi.ResultSetFakeGenerator
 import org.junit.Before
@@ -35,7 +35,7 @@ class TargetDecoyAnalyzersTest extends JUnitSuite with StrictLogging {
     prop.targetDecoyMode = Some("CONCATENATED")
     rs.properties = Some(prop)
 
-    val tdAnalyzer = new TDAnalyzerBuilder(analyzer = TargetDecoyAnalyzers.BASIC, targetRs = Some(rs)).build
+    val tdAnalyzer = new TDAnalyzerBuilder(analyzer = TargetDecoyAnalyzers.BASIC).build(Some(rs))
     assertNotNull(tdAnalyzer)
     assertTrue(tdAnalyzer.isDefined)
     assertTrue(tdAnalyzer.get.isInstanceOf[BasicTDAnalyzer])
@@ -122,7 +122,7 @@ class TargetDecoyAnalyzersTest extends JUnitSuite with StrictLogging {
   @Test(expected = classOf[IllegalArgumentException])
   def getBasicTDAnalyzerWoSSProperties() = {
 
-    val tdAnalyzer = new TDAnalyzerBuilder(analyzer = TargetDecoyAnalyzers.BASIC, targetRs = Some(rs)).build
+    val tdAnalyzer = new TDAnalyzerBuilder(analyzer = TargetDecoyAnalyzers.BASIC).build(Some(rs))
   }
 
   @Test
@@ -132,7 +132,7 @@ class TargetDecoyAnalyzersTest extends JUnitSuite with StrictLogging {
     rs.properties = Some(prop)
 
     val sorter: IPeptideMatchSorter = new ScorePSMFilter()
-    val tdAnalyzer = new TDAnalyzerBuilder(analyzer = TargetDecoyAnalyzers.BASIC, targetRs = Some(rs)).build
+    val tdAnalyzer = new TDAnalyzerBuilder(analyzer = TargetDecoyAnalyzers.BASIC).build(Some(rs))
     assertNotNull(tdAnalyzer)
     assertTrue(tdAnalyzer.isDefined)
     assertTrue(tdAnalyzer.get.isInstanceOf[BasicTDAnalyzer])
@@ -148,7 +148,7 @@ class TargetDecoyAnalyzersTest extends JUnitSuite with StrictLogging {
   def getCorrectComputedTDAnalyzerWSorter() = {
 
     val sorter: IPeptideMatchSorter = new ScorePSMFilter()
-    val tdAnalyzer = new TDAnalyzerBuilder(analyzer = TargetDecoyAnalyzers.BASIC, targetRs = Some(rs)).build
+    val tdAnalyzer = new TDAnalyzerBuilder(analyzer = TargetDecoyAnalyzers.BASIC).build(Some(rs))
     assertNotNull(tdAnalyzer)
     assertTrue(tdAnalyzer.isDefined)
     // FIXME: remove this comment when ComputedTDAnalyzer is fixed

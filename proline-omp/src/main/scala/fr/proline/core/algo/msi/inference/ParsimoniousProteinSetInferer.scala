@@ -14,7 +14,7 @@ class ParsimoniousProteinSetInferer(
 ) extends IProteinSetInferer with LazyLogging {
 
 
-  def computeResultSummary( resultSet: ResultSet, keepSubsummableSubsets: Boolean = true, peptideInstanceFilters: Option[Seq[IPeptideInstanceFilter]] = None): ResultSummary = {
+  def computeResultSummary( resultSet: ResultSet, keepSubsummableSubsets: Boolean = true, peptideInstanceFilteringFunction: Option[(Seq[PeptideInstance]) => Unit] = None): ResultSummary = {
     
     // Retrieve some vars
     val proteinMatches = resultSet.proteinMatches
@@ -35,8 +35,9 @@ class ParsimoniousProteinSetInferer(
     }
 
     // filter Peptide instances
-    if (peptideInstanceFilters.isDefined) {
-      peptideInstanceFilters.get.foreach(f => f.filterPeptideInstances(peptideInstances));
+    if (peptideInstanceFilteringFunction.isDefined) {
+      val filteringFunction = peptideInstanceFilteringFunction.get
+      filteringFunction(peptideInstances);
     }
 
     peptideInstances = peptideInstances.filter(_.isValidated)

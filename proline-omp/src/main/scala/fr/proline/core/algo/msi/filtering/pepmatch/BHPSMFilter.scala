@@ -70,10 +70,6 @@ class BHPSMFilter(var adjPValueTreshold: Float = 0.01f) extends IPeptideMatchFil
 
     val (decoyPepMatches, targetPepMatches) = filteredPepMatches.partition(_.isDecoy)
 
-    var pValues1 = targetPepMatches.map(pepMatch => Math.pow(10, -pepMatch.score/10.0)).toArray
-    var candidates = targetPepMatches.map(pepMatch => pepMatch.msQuery.properties.get.getTargetDbSearch.get.getCandidatePeptidesCount).toArray
-    var queryIds = targetPepMatches.map(pepMatch => pepMatch.msQuery.initialId).toArray
-
     var pValues = targetPepMatches.map(pepMatch => {
       val q = pepMatch.msQuery.properties.get.getTargetDbSearch.get.getCandidatePeptidesCount
       val qp = math.max(1, math.log10(q))

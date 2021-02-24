@@ -7,3 +7,9 @@ case class FilterDescriptor (
   @BeanProperty var description: Option[String] = None,
   @BeanProperty var properties: Option[Map[String,Any]] = None
 )
+
+case class ValidatorDescriptor (
+    @BeanProperty var name: String,
+    @BeanProperty var description: Option[String] = None,
+    @BeanProperty var properties: Option[Map[String,Any]] = None
+)

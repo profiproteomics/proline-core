@@ -19,7 +19,9 @@ class ProtSetRulesValidator(
   val protSetFilterRule2: IProteinSetFilter
 ) extends IProteinSetValidator with LazyLogging {
   require( protSetFilterRule1.filterParameter == protSetFilterRule2.filterParameter )
-  
+
+  def validatorName: String = "Protein set rules validator"
+  def validatorDescription: String = "Protein set rules validator"
   def filterParameter = protSetFilterRule1.filterParameter
   def filterDescription = protSetFilterRule1.filterDescription
   def getFilterProperties = {
@@ -30,9 +32,8 @@ class ProtSetRulesValidator(
   }
   
   val expectedFdr = Option.empty[Float]
-  var targetDecoyMode = Option.empty[TargetDecoyModes.Value]
-  
-  def validateProteinSets( targetRsm: ResultSummary, decoyRsm: Option[ResultSummary] ): ValidationResults = {
+
+  def validateProteinSets(targetRsm: ResultSummary, decoyRsm: Option[ResultSummary], tdAnalyzer: Option[ITargetDecoyAnalyzer]): ValidationResults = {
     
     // Retrieve some vars
     val targetProtSets = targetRsm.proteinSets
@@ -53,7 +54,7 @@ class ProtSetRulesValidator(
     decoyProtSets.map(ProteinSetFiltering.updateValidatedProteinSetsCount(_))
     
     // Compute validation result
-    val valResult = this.computeValidationResult(targetRsm, decoyRsm)
+    val valResult = this.computeValidationResult(targetRsm, decoyRsm, tdAnalyzer)
     
     // Update validation result properties
     /*valResult.addProperties(
