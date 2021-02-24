@@ -1,8 +1,8 @@
 package fr.proline.core.algo.msi
 
 import fr.proline.core.algo.msi.filtering.IPeptideInstanceFilter
-import fr.proline.core.algo.msi.validation.{BuildPeptideInstanceBuilder, IPeptideInstanceBuilder, PeptideInstanceBuilders}
-import fr.proline.core.om.model.msi.{ResultSet, ResultSummary}
+import fr.proline.core.algo.msi.validation.{BuildPeptideInstanceBuilder, IPeptideInstanceBuilder, PeptideInstanceBuilders, ValidationResult}
+import fr.proline.core.om.model.msi.{PeptideInstance, ResultSet, ResultSummary}
 import inference._
 
 trait IProteinSetInferer {
@@ -12,7 +12,7 @@ trait IProteinSetInferer {
    * Only validated peptideMatch will be considered while inferring Protein Sets
    *
    */
-  def computeResultSummary( resultSet: ResultSet, keepSubsummableSubsets: Boolean, peptideInstanceFilters: Option[Seq[IPeptideInstanceFilter]] = None) : ResultSummary
+  def computeResultSummary( resultSet: ResultSet, keepSubsummableSubsets: Boolean, peptideInstanceFilteringFunction: Option[(Seq[PeptideInstance]) => Unit] = None) : ResultSummary
 
 }
 

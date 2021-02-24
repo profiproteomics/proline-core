@@ -16,17 +16,17 @@ class BHPepInstanceFilter(var adjPValueTreshold: Float = 0.01f) extends IPeptide
 
   def filterPeptideInstances(pepInstances: Seq[PeptideInstance]): Unit = {
 
-    val filteredPepMatches = pepInstances.filter(_.isValidated)
-    val (decoyPepInstances, targetPepInstances) = filteredPepMatches.partition(_.isDecoy)
+    val filteredPeptideInstances = pepInstances.filter(_.isValidated)
+    val (decoyPepInstances, targetPepInstances) = filteredPeptideInstances.partition(_.isDecoy)
 
-    var pValues = targetPepInstances.map(_.score.get.pValue).toArray
+    var pValues = targetPepInstances.map(_.scoringProperties.get.pValue).toArray
     var adjustedPValues = BHFilter.adjustPValues(pValues)
 
     for (i <- 0 to pValues.length-1) {
         targetPepInstances(i).isValidated = (adjustedPValues(i) < adjPValueTreshold)
     }
 
-    pValues = decoyPepInstances.map(_.score.get.pValue).toArray
+    pValues = decoyPepInstances.map(_.scoringProperties.get.pValue).toArray
     adjustedPValues = BHFilter.adjustPValues(pValues)
 
     for (i <- 0 to pValues.length-1) {

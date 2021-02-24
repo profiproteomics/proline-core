@@ -30,10 +30,10 @@ class SinglePSMPerQueryFilter(var targetRs: IResultSetLike = null) extends IPept
   }
 
   /**
-    * Filter PSM in order to have a single PSM per query. If more than one PSM for query the selected PSM will be
-    *  - the one specified in map Query->PSM (through threshold value)
-    *  - if none : the higher score
-    *  - if more score equality : the PSM identifying the protein with max number of PSM
+    * Filter PSM in order to have a single PSM per query. If more than one PSM for a query the selected PSM will be
+    *  - the one specified in the map Query->PSM (through threshold value map)
+    *  - if no map is specified : the highest score
+    *  - if there is multiple PSM with the same highest score : the PSM identifying the protein with the max number of PSM
     *
     * @param pepMatches All PeptideMatches
     * @param incrementalValidation If incrementalValidation is set to false,

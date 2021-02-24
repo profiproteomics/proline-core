@@ -1,11 +1,10 @@
 package fr.proline.core.algo.msi.validation.pepinstance
 
 import java.math.{MathContext, RoundingMode}
-
 import com.typesafe.scalalogging.LazyLogging
 import fr.proline.core.algo.msi.inference.ParsimoniousProteinSetInferer
 import fr.proline.core.algo.msi.validation.IPeptideInstanceBuilder
-import fr.proline.core.om.model.msi.{PeptideInstance, PeptideInstanceProperties, PeptideMatch, ScoringProperties}
+import fr.proline.core.om.model.msi.{PeptideInstance, PeptideInstanceProperties, PeptideMatch, PeptideMatchScoreType, ScoringProperties}
 
 
 object BasicPepInstanceBuilder {
@@ -45,6 +44,7 @@ object BasicPepInstanceBuilder {
   }
 
 }
+
 class BasicPepInstanceBuilder extends IPeptideInstanceBuilder with LazyLogging {
 
   def buildPeptideInstance(pepMatchGroup: Array[PeptideMatch], resultSummaryId: Long): PeptideInstance = {
@@ -55,25 +55,31 @@ class BasicPepInstanceBuilder extends IPeptideInstanceBuilder with LazyLogging {
     // VDS: in order to ensure always same  best Peptide math use score AND deltaMoz
     val bestPepMatch = PeptideMatch.getBestOnScoreDeltaMoZ(pepMatchGroup)
 
-    val pvalue = 1.0d - (1.0d - BigDecimal(math.pow(10, -bestPepMatch.score/10.0))).pow(pepMatchGroup.length)
-    val score = (-10.0 * BasicPepInstanceBuilder.log10(pvalue, pvalue.scale)).doubleValue()
+    val pepInstProps = if (pepMatchGroup.filter(_.scoreType != PeptideMatchScoreType.MASCOT_IONS_SCORE).size == 0) {
 
-    val pepInstProps = PeptideInstanceProperties(
-      Some(ScoringProperties(
-        pValue = pvalue.doubleValue(),
-        score = score,
-        scoreType = Some("Dunn-Sidak corrected"))))
+      val pvalue = 1.0d - (1.0d - BigDecimal(math.pow(10, -bestPepMatch.score / 10.0))).pow(pepMatchGroup.length)
+      val score = (-10.0 * BasicPepInstanceBuilder.log10(pvalue, pvalue.scale)).doubleValue()
 
-     new PeptideInstance(
+      Some(PeptideInstanceProperties(
+        Some(ScoringProperties(
+          pValue = pvalue.doubleValue(),
+          score = score,
+          scoreType = Some("Dunn-Sidak corrected")))))
+      } else {
+        None
+      }
+
+      new PeptideInstance(
       id = PeptideInstance.generateNewId(),
       peptide = bestPepMatch.peptide,
       peptideMatchIds = pepMatchIds,
       bestPeptideMatchId = bestPepMatch.id,
+      isDecoy = pepMatchGroup.count(_.isDecoy) > 0,
       peptideMatches = pepMatchGroup,
       totalLeavesMatchCount = -1,
-      properties = Some(pepInstProps),
+      properties = pepInstProps,
       //peptideMatchPropertiesById = peptideMatchPropertiesById,
       resultSummaryId = resultSummaryId
     )
-  }
+    }
 }

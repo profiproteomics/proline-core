@@ -12,9 +12,9 @@ import fr.proline.core.algo.msi.filtering._
 class PepMatchRulesValidatorWithFDROptimization(
   val pepMatchFilterRule1: IOptimizablePeptideMatchFilter,
   val pepMatchFilterRule2: IOptimizablePeptideMatchFilter, 
-  val expectedFdr: Option[Float],
-  var targetDecoyMode: Option[TargetDecoyModes.Value]
+  val expectedFdr: Option[Float]
   ) extends AbstractPepMatchRulesValidator with LazyLogging {
+
   require( pepMatchFilterRule1.filterParameter == pepMatchFilterRule2.filterParameter )
   
   def filterParameter = pepMatchFilterRule1.filterParameter
@@ -29,15 +29,9 @@ class PepMatchRulesValidatorWithFDROptimization(
   // The initial threshold value must correspond to the one used for peptide match validation
   val initialThresholdValueAsDouble = pepMatchFilterRule1.getThresholdValueAsDouble
   
-  def validateProteinSets( targetRsm: ResultSummary, decoyRsm: Option[ResultSummary] ): ValidationResults = {
+  def validateProteinSets( targetRsm: ResultSummary, decoyRsm: Option[ResultSummary], tdAnalyzer: Option[ITargetDecoyAnalyzer]): ValidationResults = {
     require( decoyRsm.isDefined, "a decoy result summary must be provided")
-    
-    // Retrieve some vars
-    //val valResultProps = targetRsm.validationProperties("results").asInstanceOf[Map[String,Any]]
-    //val pepMatchValidationProps = valResultProps("peptide_matches").asInstanceOf[Map[String,Any]]
-//    val valResultProps = targetRsm.properties.get.getValidationProperties().get
-//    val pepMatchValidationProps = valResultProps.getResults().getPeptideResults().get
-    
+
     // Retrieve some vars
     val( targetProtSets, decoyProtSets ) = ( targetRsm.proteinSets, decoyRsm.get.proteinSets )
     val allProtSets = targetProtSets ++ decoyProtSets
@@ -59,7 +53,7 @@ class PepMatchRulesValidatorWithFDROptimization(
       this._validateProteinSets( allProtSets, allPepMatchesByProtSetId, Array(validationRules(0)) )
       
       // Compute validation result
-      val valResult = this.computeValidationResult(targetRsm, decoyRsm)
+      val valResult = this.computeValidationResult(targetRsm, decoyRsm, tdAnalyzer)
       
       // Update current FDR
       currentFdr = valResult.fdr.get
@@ -90,7 +84,7 @@ class PepMatchRulesValidatorWithFDROptimization(
           this._validateProteinSets( allProtSets, allPepMatchesByProtSetId, validationRules )
           
           // Compute validation result
-          val rocPoint = this.computeValidationResult(targetRsm, decoyRsm)
+          val rocPoint = this.computeValidationResult(targetRsm, decoyRsm, tdAnalyzer)
           
           // Update current FDR
           currentFdr = rocPoint.fdr.get
@@ -134,9 +128,7 @@ class PepMatchRulesValidatorWithFDROptimization(
       /// Update probablity threshold of the single peptide rule
       // Lower p-value decrease when near from expected FDR
       pepMatchFilterRule1.setThresholdValue(pepMatchFilterRule1.getNextValue(pepMatchFilterRule1.getThresholdValue))
-      
-      //if( currentFdr < maxFdr ) { pepMatchFilterRule1.pValueThreshold *= 0.95f } // arbitrary value
-      //else { pepMatchFilterRule1.pValueThreshold *= 0.80f } // arbitrary value
+
     }
     
     // Set validation rules probability thresholds using the previously obtained expected ROC point

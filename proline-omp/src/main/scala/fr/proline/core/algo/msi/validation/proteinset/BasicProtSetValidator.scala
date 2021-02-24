@@ -13,15 +13,17 @@ import fr.proline.core.om.model.msi.ResultSummary
  * 
  */ 
 class BasicProtSetValidator( val validationFilter: IProteinSetFilter ) extends IProteinSetValidator with LazyLogging {
-  
+
+  override def validatorName: String = "Basic protein set validator"
+  override def validatorDescription: String = "Basic protein set validator method"
+
   def filterParameter = validationFilter.filterParameter
   def filterDescription = validationFilter.filterDescription
   def getFilterProperties = validationFilter.getFilterProperties
   
   val expectedFdr = Option.empty[Float]
-  var targetDecoyMode = Option.empty[TargetDecoyModes.Value]
-  
-  def validateProteinSets( targetRsm: ResultSummary, decoyRsm: Option[ResultSummary] ): ValidationResults = {
+
+  def validateProteinSets( targetRsm: ResultSummary, decoyRsm: Option[ResultSummary], tdAnalyzer: Option[ITargetDecoyAnalyzer]): ValidationResults = {
     
     // Retrieve some vars
     val targetProtSets = targetRsm.proteinSets
@@ -29,17 +31,17 @@ class BasicProtSetValidator( val validationFilter: IProteinSetFilter ) extends I
     val allProtSets = targetProtSets ++ decoyProtSets.getOrElse(Array())
     
     // Filter protein sets
-    validationFilter.filterProteinSets( allProtSets, true, true )
+    validationFilter.filterProteinSets(allProtSets, true, true)
     
     // Update validatedProteinSetsCount of peptide instances
     ProteinSetFiltering.updateValidatedProteinSetsCount(targetProtSets)
-    decoyProtSets.map( ProteinSetFiltering.updateValidatedProteinSetsCount(_) )
+    decoyProtSets.map(ProteinSetFiltering.updateValidatedProteinSetsCount(_))
     
     // Compute validation result
-    val valResult = this.computeValidationResult(targetRsm, decoyRsm)
+    val valResult = this.computeValidationResult(targetRsm, decoyRsm, tdAnalyzer)
     
     // Update validation result properties
-    valResult.addProperties( validationFilter.getFilterProperties )
+    valResult.addProperties(validationFilter.getFilterProperties)
     
     // Return validation results
     ValidationResults( valResult )

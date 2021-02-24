@@ -2,6 +2,7 @@ package fr.proline.core.service.msi
 
 import com.typesafe.scalalogging.StrictLogging
 import fr.profi.util.primitives.toInt
+import fr.proline.core.algo.msi.InferenceMethod
 import fr.proline.core.algo.msi.filtering.pepmatch.ScorePSMFilter
 import fr.proline.core.algo.msi.filtering.proteinset.SpecificPeptidesPSFilter
 import fr.proline.core.algo.msi.filtering.{FilterPropertyKeys, ProtSetFilterParams}
@@ -44,14 +45,16 @@ class RsmProtSetFiltererTest extends StrictLogging {
     val nbrPepProteo = 1
     val pepFilters = Seq(new ScorePSMFilter(scoreThreshold = scoreTh))
     val protProteoTypiqueFilters = Seq(new SpecificPeptidesPSFilter(nbrPepProteo))
-    val tdAnalyzerBuilder = new TDAnalyzerBuilder(TargetDecoyAnalyzers.BASIC, Some(TargetDecoyComputers.GIGY_COMPUTER))
 
     logger.info(" RSMProtSetFilterer : step1. validate RS using score")
-    val rsValidation = new ResultSetValidator(
+    val rsValidation = ResultSetValidator(
       execContext = executionContext,
       targetRs = targetRS,
-      validationConfig = ValidationConfig(tdAnalyzerBuilder = Some(tdAnalyzerBuilder), pepMatchPreFilters = Some(pepFilters)),
-      storeResultSummary = true
+      validationConfig = ValidationConfig(tdAnalyzerBuilder = None, pepMatchPreFilters = Some(pepFilters)),
+      inferenceMethod = Some(InferenceMethod.PARSIMONIOUS),
+      storeResultSummary = true,
+      propagatePepMatchValidation = false,
+      propagateProtSetValidation = false
     )
 	 
     val result = rsValidation.runService

@@ -50,7 +50,7 @@ object RsmProteinSetFilterer {
 
 
 /**
- * Filter ProteinSet of specified ResultSummary using specified protein ser filters.
+ * Filter ProteinSet of specified ResultSummary using specified protein set filters.
  *
  */
 
@@ -91,7 +91,7 @@ class RsmProteinSetFilterer (
 
     	// Apply filter
     	val protSetValidatorForFiltering = new BasicProtSetValidator(protSetFilter)
-        val valResults = protSetValidatorForFiltering.validateProteinSets(targetRsm)
+        val valResults = protSetValidatorForFiltering.validateProteinSets(targetRsm, None)
         finalValidationResult = valResults.finalResult
 
         logger.debug(

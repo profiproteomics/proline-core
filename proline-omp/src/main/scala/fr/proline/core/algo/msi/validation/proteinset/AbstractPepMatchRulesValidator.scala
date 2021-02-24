@@ -11,7 +11,10 @@ import fr.proline.core.algo.msi.filtering._
 case class ValidationRule( minPeptideCount: Int, pepMatchFilter: IOptimizablePeptideMatchFilter )
 
 abstract class AbstractPepMatchRulesValidator extends IProteinSetValidator {
-  
+
+  override def validatorName: String = "Peptide match rules validator"
+  override def validatorDescription = "Peptide match rules validator method"
+
   val pepMatchFilterRule1: IOptimizablePeptideMatchFilter
   val pepMatchFilterRule2: IOptimizablePeptideMatchFilter
   
@@ -28,7 +31,7 @@ abstract class AbstractPepMatchRulesValidator extends IProteinSetValidator {
       val bestPepMatches = bestPepMatchesByPepSetId(proteinSet.peptideSet.id)
       var isProteinSetValid = false
       
-      for( rule <- rules ) {
+      for (rule <- rules) {
         
         // Count the number of valid peptide matches
         val validPepMatchesCount = bestPepMatches.count( rule.pepMatchFilter.isPeptideMatchValid( _ ) )
@@ -38,50 +41,10 @@ abstract class AbstractPepMatchRulesValidator extends IProteinSetValidator {
       }
       
       // Update protein set validity
-      if( isProteinSetValid == false ) proteinSet.isValidated = false
+      if (isProteinSetValid == false) proteinSet.isValidated = false
       
     }
     
   }
-  
-//  
-//  private def userValidationParamsToValidationRules( validationParams: UserValidationParams ): Array[ValidationRule] = {
-//    
-//    val minPepSeqLength = validationParams.minPepSeqLength
-//    val valProps = validationParams.properties.get
-//    val pValueRule1 = valProps("p_value_rule_1").asInstanceOf[Float]
-//    val pValueRule2 = valProps("p_value_rule_2").asInstanceOf[Float]
-//    
-//    Array( ValidationRule( 1, pValueRule1, minPepSeqLength ),
-//           ValidationRule( 2, pValueRule2, minPepSeqLength )
-//         )
-//  }
 
-//  def validateWithUserParams( validationParams: UserValidationParams, rsm: ResultSummary ): ValidationResults = {
-//    
-//    val validationRules = this.userValidationParamsToValidationRules( validationParams )    
-//    val validProtSets = this.validateProteinSets( rsm.proteinSets, rsm.getBestPepMatchesByProtSetId, validationRules )
-//    
-//    val expectedRocPoint = ValidationResult( validProtSets.length )
-//    
-//    ValidationResults( expectedRocPoint, None )
-//    
-//  }
-//  
-//  def validateWithUserParams( validationParams: UserValidationParams,
-//                              targetRsm: ResultSummary,
-//                              decoyRsm: ResultSummary ): ValidationResults = {
-//    
-//    val validationRules = this.userValidationParamsToValidationRules( validationParams )
-//                           
-//    val validTargetProtSets = this.validateProteinSets( targetRsm.proteinSets, targetRsm.getBestPepMatchesByProtSetId, validationRules )
-//    val validDecoyProtSets = this.validateProteinSets( decoyRsm.proteinSets, decoyRsm.getBestPepMatchesByProtSetId, validationRules )
-//    
-//    val( nbTargetMatches, nbDecoyMatches ) = ( validTargetProtSets.length, validDecoyProtSets.length )    
-//    val fdr = (100 * nbDecoyMatches).toFloat / nbTargetMatches
-//    
-//    val expectedResult = ValidationResult( nbTargetMatches, Some(nbTargetMatches), Some(fdr) )    
-//    ValidationResults( expectedResult, None )
-//
-//  }
 }

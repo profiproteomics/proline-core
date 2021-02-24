@@ -157,19 +157,6 @@ trait IPeptideMatchFilter extends IFilter  {
    */
   def filterPeptideMatches(pepMatches: Seq[PeptideMatch], incrementalValidation: Boolean, traceability: Boolean): Unit
 
-
-  /**
-   * Specify if the filter should be excuted as a simple PreValidation Filter or after the validation process.
-   * In this last case, the FDR will be impacted !  
-   */
-  def postValidationFilter(): Boolean = {
-    _postValidation
-  }
-  
-  def setAsPostValidationFilter(postValidation: Boolean) {
-    _postValidation = postValidation
-  }
-  
 }
 
 /**

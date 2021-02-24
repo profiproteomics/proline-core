@@ -32,7 +32,7 @@ class FisherScoreUpdater extends IPeptideSetScoreUpdater with LazyLogging {
 
   override def updateScoreOfPeptideSets(rsm: ResultSummary, params: Any*): Unit = {
     for (peptideSet <- rsm.peptideSets) {
-      val scores = peptideSet.getPeptideInstances.map(_.properties.get.getScore.get.score)
+      val scores = peptideSet.getPeptideInstances.map(_.scoringProperties.get.score)
       val maxScore = peptideSetScore(scores)
       peptideSet.score = maxScore._1.toFloat
       peptideSet.scoreType = PepSetScoring.FISHER_SCORE.toString

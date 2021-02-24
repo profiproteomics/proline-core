@@ -44,18 +44,18 @@ class ResultSetValidatorF122817Test extends StrictLogging {
     val scoreTh = 22.0f
     val pepFilters = Seq(new ScorePSMFilter(scoreThreshold = scoreTh))
 
-    val tdAnalyzerBuilder = new TDAnalyzerBuilder(TargetDecoyAnalyzers.BASIC, estimator = Some(TargetDecoyComputers.GIGY_COMPUTER))
-
-    val rsValidation = new ResultSetValidator(
+    val rsValidation =  ResultSetValidator(
       execContext = executionContext,
       targetRs = targetRS,
       validationConfig = ValidationConfig(
-        tdAnalyzerBuilder = Some(tdAnalyzerBuilder),
+        tdAnalyzerBuilder = None,
         pepMatchPreFilters = Some(pepFilters),
         pepMatchValidator = None,
         protSetFilters = None),
       inferenceMethod = Some(InferenceMethod.PARSIMONIOUS), 
-      storeResultSummary = true
+      storeResultSummary = true,
+      propagatePepMatchValidation = false,
+      propagateProtSetValidation = false
     )
 
     val result = rsValidation.runService
@@ -111,9 +111,9 @@ class ResultSetValidatorF136482Test extends StrictLogging {
 
     val scoreTh = 22.0f
     val pepFilters = Seq(new ScorePSMFilter(scoreThreshold = scoreTh))
-    val tdAnalyzerBuilder = new TDAnalyzerBuilder(TargetDecoyAnalyzers.BASIC, estimator = Some(TargetDecoyComputers.GIGY_COMPUTER))
+    val tdAnalyzerBuilder = new TDAnalyzerBuilder(TargetDecoyAnalyzers.BASIC, estimator = Some(TargetDecoyEstimators.GIGY_COMPUTER))
 
-    val rsValidation = new ResultSetValidator(
+    val rsValidation = ResultSetValidator(
       execContext = executionContext,
       targetRs = targetRS,
       validationConfig = ValidationConfig(
@@ -121,7 +121,10 @@ class ResultSetValidatorF136482Test extends StrictLogging {
         pepMatchPreFilters = Some(pepFilters),
         pepMatchValidator = None,
         protSetFilters = None),
-      storeResultSummary = false
+      inferenceMethod = Some(InferenceMethod.PARSIMONIOUS),
+      storeResultSummary = false,
+      propagatePepMatchValidation = false,
+      propagateProtSetValidation = false
     )
 
     val result = rsValidation.runService
@@ -179,13 +182,16 @@ class ResultSetValidatorF136482Test extends StrictLogging {
     val seqBuilder = Seq.newBuilder[IPeptideMatchFilter]
     val maxRank = 1
     seqBuilder += new PrettyRankPSMFilter(maxPrettyRank = maxRank)
-    val tdAnalyzerBuilder = new TDAnalyzerBuilder(TargetDecoyAnalyzers.BASIC, estimator = Some(TargetDecoyComputers.GIGY_COMPUTER))
+    val tdAnalyzerBuilder = new TDAnalyzerBuilder(TargetDecoyAnalyzers.BASIC, estimator = Some(TargetDecoyEstimators.GIGY_COMPUTER))
 
-    val rsValidation = new ResultSetValidator(
+    val rsValidation = ResultSetValidator(
       execContext = executionContext,
       targetRs = targetRS,
       validationConfig = ValidationConfig(tdAnalyzerBuilder = Some(tdAnalyzerBuilder), pepMatchPreFilters = Some(seqBuilder.result())),
-      storeResultSummary = false
+      inferenceMethod = Some(InferenceMethod.PARSIMONIOUS),
+      storeResultSummary = false,
+      propagatePepMatchValidation = false,
+      propagateProtSetValidation = false
     )
 
     val result = rsValidation.runService
@@ -272,15 +278,18 @@ class ResultSetValidatorF136482Test extends StrictLogging {
     val seqBuilder = Seq.newBuilder[IPeptideMatchFilter]
     val maxRank = 1
     seqBuilder += new PrettyRankPSMFilter(maxPrettyRank = maxRank)
-   val tdAnalyzerBuilder = new TDAnalyzerBuilder(TargetDecoyAnalyzers.BASIC, estimator = Some(TargetDecoyComputers.GIGY_COMPUTER))
+   val tdAnalyzerBuilder = new TDAnalyzerBuilder(TargetDecoyAnalyzers.BASIC, estimator = Some(TargetDecoyEstimators.GIGY_COMPUTER))
 
-    val rsValidation = new ResultSetValidator(
+    val rsValidation = ResultSetValidator(
       execContext = executionContext,
       targetRs = targetRS,
       validationConfig = ValidationConfig(
         tdAnalyzerBuilder = Some(tdAnalyzerBuilder),
         pepMatchPreFilters = Some(seqBuilder.result())),
-      storeResultSummary = false
+      inferenceMethod = Some(InferenceMethod.PARSIMONIOUS),
+      storeResultSummary = false,
+      propagatePepMatchValidation = false,
+      propagateProtSetValidation = false
     )
 
     val result = rsValidation.runService
@@ -310,15 +319,18 @@ class ResultSetValidatorF136482Test extends StrictLogging {
       expectedFdr = Some(7.0f)
     )
 
-    val tdAnalyzerBuilder = new TDAnalyzerBuilder(TargetDecoyAnalyzers.BASIC, estimator = Some(TargetDecoyComputers.GIGY_COMPUTER))
+    val tdAnalyzerBuilder = new TDAnalyzerBuilder(TargetDecoyAnalyzers.BASIC, estimator = Some(TargetDecoyEstimators.GIGY_COMPUTER))
 
     //    ComputedFDRPeptideMatchFilter( 1.0F, new ScorePSMFilter() )
     logger.info(" ResultSetValidator testScoreFDRValidation Create service")
-    val rsValidation = new ResultSetValidator(
+    val rsValidation = ResultSetValidator(
       execContext = executionContext,
       targetRs = targetRS,
       validationConfig = ValidationConfig(tdAnalyzerBuilder = Some(tdAnalyzerBuilder), pepMatchValidator = Some(fdrValidator)),
-      storeResultSummary = false
+      inferenceMethod = Some(InferenceMethod.PARSIMONIOUS),
+      storeResultSummary = false,
+      propagatePepMatchValidation = false,
+      propagateProtSetValidation = false
     )
 
     logger.debug(" ResultSetValidator testScoreFDRValidation RUN  service")
@@ -387,14 +399,17 @@ class ResultSetValidatorF136482Test extends StrictLogging {
     val nbrPepProteo = 1
     val pepFilters = Seq(new ScorePSMFilter(scoreThreshold = scoreTh))
     val protProteoTypiqueFilters = Seq(new SpecificPeptidesPSFilter(nbrPepProteo))
-    val tdAnalyzerBuilder = new TDAnalyzerBuilder(TargetDecoyAnalyzers.BASIC, estimator = Some(TargetDecoyComputers.GIGY_COMPUTER))
+    val tdAnalyzerBuilder = new TDAnalyzerBuilder(TargetDecoyAnalyzers.BASIC, estimator = Some(TargetDecoyEstimators.GIGY_COMPUTER))
 
     logger.info(" ResultSetValidator testProtSpecificPSMValidation Create service")
-    val rsValidation = new ResultSetValidator(
+    val rsValidation = ResultSetValidator(
       execContext = executionContext,
       targetRs = targetRS,
       validationConfig = ValidationConfig(tdAnalyzerBuilder = Some(tdAnalyzerBuilder), pepMatchPreFilters = Some(pepFilters), protSetFilters = Some(protProteoTypiqueFilters)),
-      storeResultSummary = false
+      inferenceMethod = Some(InferenceMethod.PARSIMONIOUS),
+      storeResultSummary = false,
+      propagatePepMatchValidation = false,
+      propagateProtSetValidation = false
     )
 
     logger.debug(" ResultSetValidator testProtSpecificPSMValidation RUN service")
@@ -488,10 +503,10 @@ class ResultSetValidatorF136482Test extends StrictLogging {
       expectedFdr = Some(7.0f)
     )
 
-    val tdAnalyzerBuilder = new TDAnalyzerBuilder(TargetDecoyAnalyzers.BASIC, estimator = Some(TargetDecoyComputers.GIGY_COMPUTER))
+    val tdAnalyzerBuilder = new TDAnalyzerBuilder(TargetDecoyAnalyzers.BASIC, estimator = Some(TargetDecoyEstimators.GIGY_COMPUTER))
 
     logger.info("ResultSetValidator testRankAndScoreFDRValidation Create service")
-    val rsValidation = new ResultSetValidator(
+    val rsValidation = ResultSetValidator(
       execContext = executionContext,
       targetRs = targetRS,
       validationConfig = ValidationConfig(
@@ -499,7 +514,10 @@ class ResultSetValidatorF136482Test extends StrictLogging {
         pepMatchPreFilters = Some(Seq(firstRankFilter)),
         pepMatchValidator = Some(fdrValidator)
       ),
-      storeResultSummary = false
+      inferenceMethod = Some(InferenceMethod.PARSIMONIOUS),
+      storeResultSummary = false,
+      propagatePepMatchValidation = false,
+      propagateProtSetValidation = false
     )
 
     logger.debug("ResultSetValidator testRankAndScoreFDRValidation RUN service")
@@ -536,14 +554,13 @@ class ResultSetValidatorF136482Test extends StrictLogging {
       //protSetScoreUpdater = Some(new MascotProteinSetScoreUpdater(-20f)),
       protSetFilterRule1 = new ScoreProtSetFilter,
       protSetFilterRule2 = new ScoreProtSetFilter,
-      expectedFdr = Some(1.0f),
-      targetDecoyMode = Some(TargetDecoyModes.CONCATENATED)
+      expectedFdr = Some(1.0f)
     )
 
-    val tdAnalyzerBuilder = new TDAnalyzerBuilder(TargetDecoyAnalyzers.BASIC, estimator = Some(TargetDecoyComputers.GIGY_COMPUTER))
+    val tdAnalyzerBuilder = new TDAnalyzerBuilder(TargetDecoyAnalyzers.BASIC, estimator = Some(TargetDecoyEstimators.GIGY_COMPUTER))
 
     logger.info("ResultSetValidator testProtSetFDRValidation Create service")
-    val rsValidation = new ResultSetValidator(
+    val rsValidation =  ResultSetValidator(
       execContext = executionContext,
       targetRs = targetRS,
       validationConfig = ValidationConfig(
@@ -551,7 +568,10 @@ class ResultSetValidatorF136482Test extends StrictLogging {
         pepMatchPreFilters = Some(pepFilters),
         protSetValidator = Some(protSetValidator)
       ),
-      storeResultSummary = false
+      inferenceMethod = Some(InferenceMethod.PARSIMONIOUS),
+      storeResultSummary = false,
+      propagatePepMatchValidation = false,
+      propagateProtSetValidation = false
     )
 
     logger.debug("ResultSetValidator testProtSetFDRValidation RUN service")
@@ -580,20 +600,19 @@ class ResultSetValidatorF136482Test extends StrictLogging {
       expectedFdr = Some(7.0f)
     )
 
-    val tdAnalyzerBuilder = new TDAnalyzerBuilder(TargetDecoyAnalyzers.BASIC, estimator = Some(TargetDecoyComputers.GIGY_COMPUTER))
+    val tdAnalyzerBuilder = new TDAnalyzerBuilder(TargetDecoyAnalyzers.BASIC, estimator = Some(TargetDecoyEstimators.GIGY_COMPUTER))
 
     // Create protein set validator
     val protSetValidator = new ProtSetRulesValidatorWithFDROptimization(
       //protSetScoreUpdater = Some(new MascotProteinSetScoreUpdater(-20f)),
       protSetFilterRule1 = new ScoreProtSetFilter,
       protSetFilterRule2 = new ScoreProtSetFilter,
-      expectedFdr = Some(1.0f),
-      targetDecoyMode = Some(tdMode)
+      expectedFdr = Some(1.0f)
     )
 
 
     logger.info("ResultSetValidator testPepMatchAndProtSetFDRValidation Create service")
-    val rsValidation = new ResultSetValidator(
+    val rsValidation = ResultSetValidator(
       execContext = ResultSetValidatorF136482Test.executionContext,
       targetRs = targetRS,
       validationConfig = ValidationConfig(
@@ -603,8 +622,9 @@ class ResultSetValidatorF136482Test extends StrictLogging {
         protSetValidator = Some(protSetValidator),
         pepSetScoring = Some(PepSetScoring.MASCOT_MODIFIED_MUDPIT_SCORE)),
       inferenceMethod = Some(InferenceMethod.PARSIMONIOUS),
-
-      storeResultSummary = false
+      storeResultSummary = false,
+      propagatePepMatchValidation = false,
+      propagateProtSetValidation = false
     )
 
     logger.debug("ResultSetValidator testPepMatchAndProtSetFDRValidation RUN service")
@@ -641,13 +661,16 @@ class ResultSetValidatorF136482Test extends StrictLogging {
     val pValTh = 0.01f
     val pepFilters = Seq(new MascotPValuePSMFilter(pValue = pValTh, useHomologyThreshold = false))
 
-    val tdAnalyzerBuilder = new TDAnalyzerBuilder(TargetDecoyAnalyzers.BASIC, estimator = Some(TargetDecoyComputers.GIGY_COMPUTER))
+    val tdAnalyzerBuilder = new TDAnalyzerBuilder(TargetDecoyAnalyzers.BASIC, estimator = Some(TargetDecoyEstimators.GIGY_COMPUTER))
 
-    val rsValidation = new ResultSetValidator(
+    val rsValidation =  ResultSetValidator(
       execContext = executionContext,
       targetRs = targetRS,
       validationConfig = ValidationConfig(tdAnalyzerBuilder = Some(tdAnalyzerBuilder), pepMatchPreFilters = Some(pepFilters)),
-      storeResultSummary = false
+      inferenceMethod = Some(InferenceMethod.PARSIMONIOUS),
+      storeResultSummary = false,
+      propagatePepMatchValidation = false,
+      propagateProtSetValidation = false
     )
 
     val result = rsValidation.runService
@@ -704,13 +727,16 @@ class ResultSetValidatorF136482Test extends StrictLogging {
   def testMascotHomologyPValueValidation() {
     val pValTh = 0.01f
     val pepFilters = Seq(new MascotPValuePSMFilter(pValue = pValTh, useHomologyThreshold = true))
-    val tdAnalyzerBuilder = new TDAnalyzerBuilder(TargetDecoyAnalyzers.BASIC, estimator = Some(TargetDecoyComputers.GIGY_COMPUTER))
+    val tdAnalyzerBuilder = new TDAnalyzerBuilder(TargetDecoyAnalyzers.BASIC, estimator = Some(TargetDecoyEstimators.GIGY_COMPUTER))
 
-    val rsValidation = new ResultSetValidator(
+    val rsValidation = ResultSetValidator(
       execContext = executionContext,
       targetRs = targetRS,
       validationConfig = ValidationConfig(tdAnalyzerBuilder = Some(tdAnalyzerBuilder), pepMatchPreFilters = Some(pepFilters)),
-      storeResultSummary = false
+      inferenceMethod = Some(InferenceMethod.PARSIMONIOUS),
+      storeResultSummary = false,
+      propagatePepMatchValidation = false,
+      propagateProtSetValidation = false
     )
 
     val result = rsValidation.runService
@@ -792,14 +818,17 @@ class ResultSetValidatorF068213Test extends StrictLogging {
       validationFilter = new MascotPValuePSMFilter(pValue = pValTh, useHomologyThreshold = false),
       expectedFdr = Some(0.60240966f)
     )
-    val tdAnalyzerBuilder = new TDAnalyzerBuilder(TargetDecoyAnalyzers.BASIC, estimator = Some(TargetDecoyComputers.GIGY_COMPUTER))
+    val tdAnalyzerBuilder = new TDAnalyzerBuilder(TargetDecoyAnalyzers.BASIC, estimator = Some(TargetDecoyEstimators.GIGY_COMPUTER))
 
     logger.info(" ResultSetValidator test FDR on IT Validation . Create service")
-    val rsValidation = new ResultSetValidator(
+    val rsValidation = ResultSetValidator(
       execContext = executionContext,
       targetRs = targetRS,
       validationConfig = ValidationConfig(tdAnalyzerBuilder = Some(tdAnalyzerBuilder), pepMatchValidator = Some(fdrValidator)),
-      storeResultSummary = false
+      inferenceMethod = Some(InferenceMethod.PARSIMONIOUS),
+      storeResultSummary = false,
+      propagatePepMatchValidation = false,
+      propagateProtSetValidation = false
     )
 
     val result = rsValidation.runService
@@ -848,13 +877,16 @@ class ResultSetValidatorF068213Test extends StrictLogging {
 
     val pValTh = 0.1f
     val pepFilters = Seq(new MascotPValuePSMFilter(pValue = pValTh, useHomologyThreshold = false))
-    val tdAnalyzerBuilder = new TDAnalyzerBuilder(TargetDecoyAnalyzers.BASIC, estimator = Some(TargetDecoyComputers.GIGY_COMPUTER))
+    val tdAnalyzerBuilder = new TDAnalyzerBuilder(TargetDecoyAnalyzers.BASIC, estimator = Some(TargetDecoyEstimators.GIGY_COMPUTER))
 
-    val rsValidation = new ResultSetValidator(
+    val rsValidation = ResultSetValidator(
       execContext = executionContext,
       targetRs = targetRS,
       validationConfig = ValidationConfig(tdAnalyzerBuilder = Some(tdAnalyzerBuilder), pepMatchPreFilters = Some(pepFilters)),
-      storeResultSummary = false
+      inferenceMethod = Some(InferenceMethod.PARSIMONIOUS),
+      storeResultSummary = false,
+      propagatePepMatchValidation = false,
+      propagateProtSetValidation = false
     )
 
     val result = rsValidation.runService
@@ -980,7 +1012,7 @@ class ResultSetValidatorF027737Test extends StrictLogging {
     
     val tdAnalyzerBuilder = new TDAnalyzerBuilder(
       analyzer = TargetDecoyAnalyzers.BASIC,
-      estimator = if (useTdCompetition) { Some(TargetDecoyComputers.GIGY_COMPUTER) } else { Some(TargetDecoyComputers.KALL_STOREY_COMPUTER) }
+      estimator = if (useTdCompetition) { Some(TargetDecoyEstimators.GIGY_COMPUTER) } else { Some(TargetDecoyEstimators.KALL_STOREY_COMPUTER) }
     )
     val fdrValidator = new TDPepMatchValidatorWithFDROptimization(
       validationFilter = new MascotAdjustedEValuePSMFilter(),
@@ -988,14 +1020,17 @@ class ResultSetValidatorF027737Test extends StrictLogging {
     )
 
     logger.info("testSeparatedSearchValidation: Create ResultSetValidator service")
-    val rsValidator = new ResultSetValidator(
+    val rsValidator =  ResultSetValidator(
       execContext = executionContext,
       targetRs = targetRS,
       validationConfig = ValidationConfig(
         tdAnalyzerBuilder = Some(tdAnalyzerBuilder),
         pepMatchPreFilters = Some(Seq(new PrettyRankPSMFilter(1))),
         pepMatchValidator = Some(fdrValidator)),
-      storeResultSummary = false
+      inferenceMethod = Some(InferenceMethod.PARSIMONIOUS),
+      storeResultSummary = false,
+      propagatePepMatchValidation = false,
+      propagateProtSetValidation = false
     )
 
     logger.debug("testSeparatedSearchValidation: RUN ResultSetValidator service")
@@ -1009,21 +1044,24 @@ class ResultSetValidatorF027737Test extends StrictLogging {
   @Test
   def testValidationWithoutPsms() {
 
-    val tdAnalyzerBuilder = new TDAnalyzerBuilder(analyzer = TargetDecoyAnalyzers.BASIC, estimator = Some(TargetDecoyComputers.GIGY_COMPUTER), targetRs = Some(targetRS))
+    val tdAnalyzerBuilder = new TDAnalyzerBuilder(analyzer = TargetDecoyAnalyzers.BASIC, estimator = Some(TargetDecoyEstimators.GIGY_COMPUTER))
     val fdrValidator = new TDPepMatchValidatorWithFDROptimization(
       validationFilter = new MascotAdjustedEValuePSMFilter(),
       expectedFdr = Some(5.0f)
     )
 
     logger.info("testValidationWithoutPsms: Create ResultSetValidator service")
-    val rsValidator = new ResultSetValidator(
+    val rsValidator = ResultSetValidator(
       execContext = executionContext,
       targetRs = targetRS,
       validationConfig = ValidationConfig(
         tdAnalyzerBuilder = Some(tdAnalyzerBuilder),
         pepMatchPreFilters = Some(Seq(new PrettyRankPSMFilter(0))),
         pepMatchValidator = Some(fdrValidator)),
-      storeResultSummary = false
+      inferenceMethod = Some(InferenceMethod.PARSIMONIOUS),
+      storeResultSummary = false,
+      propagatePepMatchValidation = false,
+      propagateProtSetValidation = false
     )
     
     val result = rsValidator.runService
