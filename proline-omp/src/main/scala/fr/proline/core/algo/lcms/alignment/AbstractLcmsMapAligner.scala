@@ -80,44 +80,48 @@ abstract class AbstractLcmsMapAligner extends LazyLogging {
       // Compute feature alignments
       val ftAlignments = new ArrayBuffer[MapAlignment](0)
 
-      for ((massRangeIdx,landmarks) <- landmarksByMassIdx if landmarks.isEmpty == false) {
+      for ((massRangeIdx,landmarks) <- landmarksByMassIdx) {
 
-        val landmarksSortedByTime = landmarks.sortBy( _.time )
-        var smoothedLandmarks = alnSmoother.smoothLandmarks( landmarksSortedByTime, alnConfig.smoothingMethodParams )
-        // FIXME: this should not be empty
-        if( smoothedLandmarks.isEmpty ) {
-          logger.warn("Empty array of smoothed Landmarks, use the original landmarks instead")
-          smoothedLandmarks = landmarksSortedByTime
-        }
+        if (!landmarks.isEmpty) {
+          val landmarksSortedByTime = landmarks.sortBy(_.time)
+          var smoothedLandmarks = alnSmoother.smoothLandmarks(landmarksSortedByTime, alnConfig.smoothingMethodParams)
+          // FIXME: this should not be empty
+          if (smoothedLandmarks.isEmpty) {
+            logger.warn("Empty array of smoothed Landmarks, use the original landmarks instead")
+            smoothedLandmarks = landmarksSortedByTime
+          }
 
-        /*val timeList = landmarksSortedByTime.map { _.time }
+          /*val timeList = landmarksSortedByTime.map { _.time }
         val deltaTimeList = landmarksSortedByTime.map { _.deltaTime }*/
 
-        val( timeList, deltaTimeList ) = ( new ArrayBuffer[Float](smoothedLandmarks.length), new ArrayBuffer[Float](smoothedLandmarks.length) )
-        var prevTimePlusDelta = smoothedLandmarks(0).time + smoothedLandmarks(0).deltaTime - 1
-        var prevTime = -1f
-        smoothedLandmarks.sortBy( _.time ).foreach { lm =>
+          val (timeList, deltaTimeList) = (new ArrayBuffer[Float](smoothedLandmarks.length), new ArrayBuffer[Float](smoothedLandmarks.length))
+          var prevTimePlusDelta = smoothedLandmarks(0).time + smoothedLandmarks(0).deltaTime - 1
+          var prevTime = -1f
+          smoothedLandmarks.sortBy(_.time).foreach { lm =>
 
-          val timePlusDelta = lm.time + lm.deltaTime
+            val timePlusDelta = lm.time + lm.deltaTime
 
-          // Filter time+delta values which are not greater than the previous one
-          if( lm.time > prevTime && timePlusDelta > prevTimePlusDelta ) {
-            timeList += lm.time
-            deltaTimeList += lm.deltaTime
-            prevTime = lm.time
-            prevTimePlusDelta = timePlusDelta
+            // Filter time+delta values which are not greater than the previous one
+            if (lm.time > prevTime && timePlusDelta > prevTimePlusDelta) {
+              timeList += lm.time
+              deltaTimeList += lm.deltaTime
+              prevTime = lm.time
+              prevTimePlusDelta = timePlusDelta
+            }
           }
+
+          val mapAlignment = new MapAlignment(
+            refMapId = map1.id,
+            targetMapId = map2.id,
+            massRange = (massRangeIdx * massInterval, (massRangeIdx + 1) * massInterval),
+            timeList = timeList.toArray,
+            deltaTimeList = deltaTimeList.toArray
+          )
+
+          ftAlignments += mapAlignment //alnSmoother.smoothMapAlignment( landmarksSortedByTime, alnParams.smoothingParams )
+        } else {
+          logger.warn("Non landmarks found for massRange {} from map #{} and map #{}", massRangeIdx, map1.id, map2.id)
         }
-
-        val mapAlignment = new MapAlignment(
-          refMapId = map1.id,
-          targetMapId = map2.id,
-          massRange = (massRangeIdx*massInterval,(massRangeIdx+1)*massInterval),
-          timeList = timeList.toArray,
-          deltaTimeList = deltaTimeList.toArray
-        )
-
-        ftAlignments += mapAlignment //alnSmoother.smoothMapAlignment( landmarksSortedByTime, alnParams.smoothingParams )
       }
 
       if( ftAlignments.isEmpty ) {

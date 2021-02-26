@@ -347,7 +347,7 @@ case class MapSet(
       if( _mapAlnSetByMapIdPair.contains(refMapId->targetMapId) ) {
         val mapAlnSet = _mapAlnSetByMapIdPair(refMapId->targetMapId)
         Some(mapAlnSet.calcTargetMapElutionTime(time, mass))
-      // Else we need to make to consecutive time conversions
+      // Else we need to make two consecutive time conversions
       } else {
         // Convert time into the reference map scale
         val toRefMapAlnSetOpt = _mapAlnSetByMapIdPair.get(refMapId -> alnRefMapId)
