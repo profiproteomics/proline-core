@@ -1,9 +1,10 @@
 package fr.proline.core.algo.msi
 
-import scala.collection.mutable.{ ArrayBuffer, HashMap, HashSet }
+import java.util.Date
 
+import scala.collection.mutable.{ArrayBuffer, HashMap, HashSet}
 import com.typesafe.scalalogging.LazyLogging
-
+import fr.profi.chemistry.model.Enzyme
 import fr.profi.util.StringUtils.isEmpty
 import fr.proline.core.algo.msi.validation.TargetDecoyModes
 import fr.proline.core.om.model.msi._
@@ -101,7 +102,57 @@ class ResultSetAdder(
     
     this
   }
- 
+
+
+  def mergeMsiSearches(msiSearches: ArrayBuffer[MSISearch]): Option[MSISearch] = {
+
+    val msmsSearchSettings = {
+      val msmsSearches = msiSearches.map(_.searchSettings.msmsSearchSettings).filter(_.isDefined).map(_.get)
+      if (msmsSearches.isEmpty) {
+        None
+      } else {
+       Some(MSMSSearchSettings(
+         ms2ChargeStates = msmsSearches.map(_.ms2ChargeStates).reduceOption((s1, s2) => if (s1 == s2) s1 else "").getOrElse(""),
+         ms2ErrorTol = msmsSearches.map(_.ms2ErrorTol).reduceOption((d1, d2) => if (d1 == d2) d1 else -1.0).getOrElse(-1.0),
+         ms2ErrorTolUnit = msmsSearches.map(_.ms2ErrorTolUnit).reduceOption((s1, s2) => if (s1 == s2) s1 else "").getOrElse("")
+       ))
+      }
+    }
+
+    val mergedMsiSearch = new MSISearch(
+      id = MSISearch.generateNewId(),
+      resultFileName = msiSearches.map(_.resultFileName).reduceOption((s1, s2) => if (s1 == s2) s1 else "").getOrElse(""),
+      searchSettings = new SearchSettings(
+        id = SearchSettings.generateNewId(),
+        softwareName = msiSearches.map(_.searchSettings.softwareName).reduceOption((s1, s2) => if (s1 == s2) s1 else "").getOrElse(""),
+        softwareVersion = msiSearches.map(_.searchSettings.softwareVersion).reduceOption((v1, v2) => if (v1 == v2) v1 else "").getOrElse(""),
+        taxonomy = msiSearches.map(_.searchSettings.taxonomy).reduceOption((t1, t2) => if (t1 == t2) t1 else "").getOrElse(""),
+        maxMissedCleavages = msiSearches.map(_.searchSettings.maxMissedCleavages).reduceOption((m1, m2) => if (m1 == m2) m1 else -1).getOrElse(-1),
+        ms1ChargeStates = msiSearches.map(_.searchSettings.ms1ChargeStates).reduceOption((c1, c2) => if (c1 == c2) c1 else "").getOrElse(""),
+        ms1ErrorTol =  msiSearches.map(_.searchSettings.ms1ErrorTol).reduceOption((m1, m2) => if (m1 == m2) m1 else -1.0).getOrElse(-1.0),
+        ms1ErrorTolUnit = msiSearches.map(_.searchSettings.ms1ErrorTolUnit).reduceOption((m1, m2) => if (m1 == m2) m1 else "").getOrElse(""),
+        isDecoy = msiSearches.map(_.searchSettings.isDecoy).reduceOption((d1, d2) => if (d1 == d2) d1 else false).getOrElse((false)),
+        usedEnzymes = msiSearches.map(_.searchSettings.usedEnzymes).reduceOption((l1, l2) => if (l1.map(_.id).sameElements(l2.map(_.id))) l1 else Array.empty[Enzyme]).getOrElse(Array.empty[Enzyme]),
+        variablePtmDefs = msiSearches.map(_.searchSettings.variablePtmDefs).reduceOption((l1, l2) => if (l1.map(_.id).sameElements(l2.map(_.id))) l1 else Array.empty[PtmDefinition]).getOrElse(Array.empty[PtmDefinition]),
+        fixedPtmDefs =  msiSearches.map(_.searchSettings.fixedPtmDefs).reduceOption((l1, l2) => if (l1.map(_.id).sameElements(l2.map(_.id))) l1 else Array.empty[PtmDefinition]).getOrElse(Array.empty[PtmDefinition]),
+        seqDatabases =  msiSearches.map(_.searchSettings.seqDatabases).reduceOption((l1, l2) => if (l1.toIndexedSeq.sameElements(l2.toIndexedSeq)) l1 else Array.empty[SeqDatabase]).getOrElse(Array.empty[SeqDatabase]),
+        instrumentConfig = msiSearches.map(_.searchSettings.instrumentConfig).headOption.orNull,
+        msmsSearchSettings = msmsSearchSettings
+      ),
+      peakList = new Peaklist(
+        id = Peaklist.generateNewId(),
+        fileType = msiSearches.map(_.peakList.fileType).reduceOption((s1, s2) => if (s1 == s2) s1 else "").getOrElse(""),
+        path = msiSearches.map(_.peakList.path).reduceOption((s1, s2) => if (s1 == s2) s1 else "").getOrElse(""),
+        rawFileIdentifier = msiSearches.map(_.peakList.rawFileIdentifier).reduceOption((s1, s2) => if (s1 == s2) s1 else "").getOrElse(""),
+        msLevel = msiSearches.map(_.peakList.msLevel).reduceOption((l1, l2) => if (l1 == l2) l1 else -1).getOrElse(-1),
+        spectrumDataCompression = msiSearches.map(_.peakList.spectrumDataCompression).reduceOption((s1, s2) => if (s1 == s2) s1 else "").getOrElse(""),
+        peaklistSoftware = msiSearches.map(_.peakList.peaklistSoftware).headOption.orNull
+      ),
+      date = msiSearches.map(_.date).reduceOption((d1, d2) => if (d1 == d2) d1 else new Date(0L)).getOrElse(new Date(0L))
+    )
+
+    Some(mergedMsiSearch)
+  }
 
   def toResultSet(): ResultSet = {
     val start = System.currentTimeMillis()
@@ -143,6 +194,7 @@ class ResultSetAdder(
     // Create merged result set
     val mergedResultSet = new ResultSet(
       id = resultSetId,
+      msiSearch = mergeMsiSearches(msiSearches),
       childMsiSearches = msiSearches.toArray,
       proteinMatches = mergedProteinMatches.toArray.sortBy( - _.score ), // sort by descending score
       peptideMatches = mergedPeptideMatches,

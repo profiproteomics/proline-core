@@ -253,60 +253,60 @@ object MascotValidationHelper extends LazyLogging {
     jointTable
   }
   
-  // TODO: move to an other package
-  def rocAnalysisOnPair(pmJointTable: Array[Pair[PeptideMatch, PeptideMatch]],
-                        pmScoringParam: String = "log_evalue"): Array[ValidationResult] = { // pmScoringParam = log_evalue || score_offset
-
-    // Create anonymous functions to extract the right peptide match values
-    val logEvaluePicker = { pm: PeptideMatch => if (pm != null) -log10(calcPepMatchEvalue(pm)) else 0 } // 0 is for S=0 and IT=13
-    val scoreOffsetPicker = { pm: PeptideMatch => if (pm != null) calcPepMatchScoreOffset(pm).toDouble else -13 } // -13 is for S=0 and IT=13
-    val valuePickerMap = Map("log_evalue" -> logEvaluePicker, "score_offset" -> scoreOffsetPicker)
-
-    // Create anonymous functions to compute the right threshold value
-    val thresholdComputerMap = Map("log_evalue" -> { prob: Double => -log10(prob) },
-      "score_offset" -> { prob: Double => -10 * log10(prob / 0.05) }
-    )
-
-    // Build log evalue joint table
-    val jointTable = this.buildJointTable(pmJointTable, valuePickerMap(pmScoringParam))
-
-    // Instantiate a target decoy computer
-    val tdComputer = TargetDecoyComputer
-
-    // Define some vars
-    var (probThreshold, fdr) = (1.0, 100.0f)
-    val rocPoints = new ArrayBuffer[ValidationResult]
-
-    while (fdr > 0) {
-      // Run target/decoy competition
-      val competitionThreshold = thresholdComputerMap(pmScoringParam)(probThreshold)
-      val competitionCount = tdComputer.computeTdCompetition(jointTable, competitionThreshold)
-      //print Dumper competitionCount
-
-      val (targetCount, decoyCount) = (competitionCount._1, competitionCount._2)
-      val (tB, tO, dB, dO) = (targetCount.better, targetCount.only, decoyCount.better, decoyCount.only)
-
-      // Compute FDR (note that FDR may be greater than 100%)
-      fdr = tdComputer.calcCompetitionFDR(tB, tO, dB, dO)
-
-      // Add ROC point to the list
-      val rocPoint = ValidationResult(
-        targetMatchesCount = tB + tO + dB,
-        decoyMatchesCount = Some(dB + dO + tB),
-        fdr = Some(fdr),
-        properties = Some(HashMap("p_value" -> probThreshold))
-      )
-
-      rocPoints += rocPoint
-
-      //print 'fdr:'.fdr."\n"
-
-      // Update probablity threshold
-      probThreshold *= 0.95 // has been arbitrary chosen
-    }
-
-    rocPoints.toArray
-  }
+//  // TODO: move to an other package
+//  def rocAnalysisOnPair(pmJointTable: Array[Pair[PeptideMatch, PeptideMatch]],
+//                        pmScoringParam: String = "log_evalue"): Array[ValidationResult] = { // pmScoringParam = log_evalue || score_offset
+//
+//    // Create anonymous functions to extract the right peptide match values
+//    val logEvaluePicker = { pm: PeptideMatch => if (pm != null) -log10(calcPepMatchEvalue(pm)) else 0 } // 0 is for S=0 and IT=13
+//    val scoreOffsetPicker = { pm: PeptideMatch => if (pm != null) calcPepMatchScoreOffset(pm).toDouble else -13 } // -13 is for S=0 and IT=13
+//    val valuePickerMap = Map("log_evalue" -> logEvaluePicker, "score_offset" -> scoreOffsetPicker)
+//
+//    // Create anonymous functions to compute the right threshold value
+//    val thresholdComputerMap = Map("log_evalue" -> { prob: Double => -log10(prob) },
+//      "score_offset" -> { prob: Double => -10 * log10(prob / 0.05) }
+//    )
+//
+//    // Build log evalue joint table
+//    val jointTable = this.buildJointTable(pmJointTable, valuePickerMap(pmScoringParam))
+//
+//    // Instantiate a target decoy computer
+//    val tdComputer = TargetDecoyComputer
+//
+//    // Define some vars
+//    var (probThreshold, fdr) = (1.0, 100.0f)
+//    val rocPoints = new ArrayBuffer[ValidationResult]
+//
+//    while (fdr > 0) {
+//      // Run target/decoy competition
+//      val competitionThreshold = thresholdComputerMap(pmScoringParam)(probThreshold)
+//      val competitionCount = tdComputer.computeTdCompetition(jointTable, competitionThreshold)
+//      //print Dumper competitionCount
+//
+//      val (targetCount, decoyCount) = (competitionCount._1, competitionCount._2)
+//      val (tB, tO, dB, dO) = (targetCount.better, targetCount.only, decoyCount.better, decoyCount.only)
+//
+//      // Compute FDR (note that FDR may be greater than 100%)
+//      fdr = tdComputer.calcCompetitionFDR(tB, tO, dB, dO)
+//
+//      // Add ROC point to the list
+//      val rocPoint = ValidationResult(
+//        targetMatchesCount = tB + tO + dB,
+//        decoyMatchesCount = Some(dB + dO + tB),
+//        fdr = Some(fdr),
+//        properties = Some(HashMap("p_value" -> probThreshold))
+//      )
+//
+//      rocPoints += rocPoint
+//
+//      //print 'fdr:'.fdr."\n"
+//
+//      // Update probablity threshold
+//      probThreshold *= 0.95 // has been arbitrary chosen
+//    }
+//
+//    rocPoints.toArray
+//  }
 
   // TODO: memoize
   def calcPepMatchEvalue(peptideMatch: PeptideMatch): Double = {

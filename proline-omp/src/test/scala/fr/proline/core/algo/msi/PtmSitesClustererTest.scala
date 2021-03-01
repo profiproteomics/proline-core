@@ -2,6 +2,7 @@ package fr.proline.core.algo.msi
 
 import com.typesafe.scalalogging.StrictLogging
 import fr.proline.core.algo.msi.inference.ParsimoniousProteinSetInferer
+import fr.proline.core.algo.msi.validation.pepinstance.BasicPepInstanceBuilder
 import fr.proline.core.om.model.msi.{IonTypes, LocatedPtm, PeptideMatch, PtmDefinition, PtmEvidence, PtmNames}
 import fr.proline.core.service.msi.RsmPtmSitesIdentifierV2
 import fr.proline.core.util.generator.msi.ResultSetFakeGenerator
@@ -115,7 +116,7 @@ class PtmSitesClustererTest extends StrictLogging {
 
     val rs = rsb.toResultSet()
 
-    val proteinSetInferer = new ParsimoniousProteinSetInferer()
+    val proteinSetInferer = new ParsimoniousProteinSetInferer(new BasicPepInstanceBuilder())
     val rsm = proteinSetInferer.computeResultSummary( resultSet = rs )
 
     val ptmSites = new PtmSitesIdentifier(rsm,rs.proteinMatches).identifyPtmSites()

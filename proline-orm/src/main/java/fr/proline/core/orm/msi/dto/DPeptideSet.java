@@ -1,6 +1,10 @@
 package fr.proline.core.orm.msi.dto;
 
 import fr.proline.core.orm.msi.PeptideSet;
+import fr.proline.core.orm.util.JsonSerializer;
+
+import java.io.IOException;
+import java.util.Map;
 
 public class DPeptideSet {
 
@@ -11,7 +15,8 @@ public class DPeptideSet {
 	private float m_score;
 	private long m_resultSummaryId;
 
-	private DPeptideInstance[] dpeptideInstances = null;
+	private Map<String, Object> m_properties = null;
+	private DPeptideInstance[] m_dPeptideInstances = null;
 
 	public DPeptideSet(long id, float score, int sequenceCount, int peptideCount, int peptideMatchCount, long resultSummaryId) {
 		super();
@@ -21,6 +26,12 @@ public class DPeptideSet {
 		this.m_peptideCount = peptideCount;
 		this.m_peptideMatchCount = peptideMatchCount;
 		this.m_resultSummaryId = resultSummaryId;
+	}
+
+	public DPeptideSet(long id, float score, int sequenceCount, int peptideCount, int peptideMatchCount, long resultSummaryId, String serializedProperties) throws IOException {
+		this(id, score, sequenceCount, peptideCount, peptideMatchCount, resultSummaryId);
+		if (serializedProperties != null)
+			m_properties = JsonSerializer.getMapper().readValue(serializedProperties, Map.class);
 	}
 
 	public DPeptideSet(PeptideSet ps) {
@@ -39,11 +50,11 @@ public class DPeptideSet {
 	  * @return
 	  */
 	public DPeptideInstance[] getPeptideInstances() {
-		return dpeptideInstances;
+		return m_dPeptideInstances;
 	}
 
 	public void setPeptideInstances(DPeptideInstance[] dpeptideInstances) {
-		this.dpeptideInstances = dpeptideInstances;
+		this.m_dPeptideInstances = dpeptideInstances;
 	}
 
 	public long getId() {
@@ -70,4 +81,7 @@ public class DPeptideSet {
 		return m_resultSummaryId;
 	}
 
+	public Map<String, Object> getPropertiesAsMap() {
+		return m_properties;
+	}
 }

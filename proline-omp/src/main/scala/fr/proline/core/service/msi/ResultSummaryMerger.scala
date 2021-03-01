@@ -10,7 +10,7 @@ import fr.proline.core.algo.msi.ResultSummaryAdder
 import fr.proline.core.algo.msi.filtering.PepMatchFilterParams
 import fr.proline.core.algo.msi.scoring.PepSetScoring
 import fr.proline.core.algo.msi.scoring.PeptideSetScoreUpdater
-import fr.proline.core.algo.msi.validation.{BuildTDAnalyzer, TargetDecoyComputer, TargetDecoyModes}
+import fr.proline.core.algo.msi.validation.{TargetDecoyComputer, TargetDecoyModes}
 import fr.proline.core.dal._
 import fr.proline.core.dal.context._
 import fr.proline.core.dal.helper.MsiDbHelper
@@ -263,7 +263,7 @@ class ResultSummaryMerger(
     //Define FDR strategie and calculate FDR
     //TODO Use TDAnalyser !!!
     val rankFilterAsStr = PepMatchFilterParams.PRETTY_RANK.toString
-    val rankFilter =  if(childRsmValPropsOpt.isDefined) childRsmValPropsOpt.get.params.peptideFilters.map(_.filter(_.parameter.contains(rankFilterAsStr))) else None
+    val rankFilter =  if(childRsmValPropsOpt.isDefined) childRsmValPropsOpt.get.params.psmFilters.map(_.filter(_.parameter.contains(rankFilterAsStr))) else None
     val decoyMode = if(mergedTargetRsm.resultSet.get.properties.isDefined && mergedTargetRsm.resultSet.get.properties.get.targetDecoyMode.isDefined)  mergedTargetRsm.resultSet.get.properties.get.targetDecoyMode.get else TargetDecoyModes.MIXED.toString
     val useCDMode = TargetDecoyModes.CONCATENATED.toString.equals(decoyMode) ||  rankFilter.isDefined
     var calculatedFDR : Option[Float] = None
@@ -276,9 +276,9 @@ class ResultSummaryMerger(
     logger.debug("calculated FDR for merged RSM : "+calculatedFDR)
     // Compute merged RSM properties
     val valProps = RsmValidationProperties(
-        params = if(childRsmValPropsOpt.isDefined) childRsmValPropsOpt.get.params else RsmValidationParamsProperties(),
+        params = RsmValidationParamsProperties(),
         results = RsmValidationResultsProperties(
-          peptideResults = Some(
+          psmResults = Some(
             RsmValidationResultProperties(
               targetMatchesCount = peptidesCount,
               decoyMatchesCount = decoyPeptidesCountOpt

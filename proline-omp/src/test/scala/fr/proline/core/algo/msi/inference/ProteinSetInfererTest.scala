@@ -1,22 +1,17 @@
 package fr.proline.core.algo.msi.inference
 
-import scala.collection.mutable.ListBuffer
-
-import org.junit.Assert._
-
-import org.junit.Test
-import org.scalatest.junit.JUnitSuite
-
 import com.typesafe.scalalogging.StrictLogging
-
-import fr.proline.core.om.model.msi.Peptide
-import fr.proline.core.om.model.msi.ProteinMatch
-import fr.proline.core.om.model.msi.ResultSet
+import fr.proline.core.algo.msi.validation.pepinstance.BasicPepInstanceBuilder
+import fr.proline.core.om.model.msi.{Peptide, ProteinMatch, ResultSet}
 import fr.proline.core.util.generator.msi.ResultSetFakeGenerator
+import org.junit.Assert._
+import org.junit.Test
+
+import scala.collection.mutable.ListBuffer
 
 class ParsimoniousProteinSetInfererTest extends StrictLogging {
 
-  val ppsi = new ParsimoniousProteinSetInferer()
+  val ppsi = new ParsimoniousProteinSetInferer(new BasicPepInstanceBuilder())
 
   /**
    * P1 = (pep1, pep2, pep3,pep4, pep5)
@@ -92,7 +87,7 @@ class ParsimoniousProteinSetInfererTest extends StrictLogging {
     rsb.printForDebug
 
     val rs: ResultSet = rsb.toResultSet()
-    val rsm = ppsi.computeResultSummary(resultSet = rs, keepSubsummableSubsets = true )
+    val rsm = ppsi.computeResultSummary(resultSet = rs, keepSubsummableSubsets = true)
     assert(rsm != null)
     assertEquals(4, rsm.peptideSets.length)
     assertEquals(4, rsm.proteinSets.length)

@@ -2,10 +2,10 @@ package fr.proline.core.service.msi
 
 import com.typesafe.scalalogging.StrictLogging
 import fr.proline.context.IExecutionContext
+import fr.proline.core.algo.msi.InferenceMethod
 import fr.proline.core.algo.msi.filtering.IPeptideMatchFilter
 import fr.proline.core.algo.msi.filtering.pepmatch.PrettyRankPSMFilter
-import fr.proline.core.algo.msi.validation.BasicTDAnalyzer
-import fr.proline.core.algo.msi.validation.TargetDecoyModes
+import fr.proline.core.algo.msi.validation._
 import fr.proline.core.dal._
 import fr.proline.core.dbunit._
 import fr.proline.core.om.model.msi.ResultSet
@@ -155,15 +155,16 @@ class ResultSummariesMergerTest extends StrictLogging {
     /* PeptideMatch pre-filter on Rank */
     val seqBuilder = Seq.newBuilder[IPeptideMatchFilter]
     seqBuilder += new PrettyRankPSMFilter(2) // Only 1, 2 ranks
+    val tdAnalyzerBuilder = new TDAnalyzerBuilder(TargetDecoyAnalyzers.BASIC, Some(TargetDecoyEstimators.GIGY_COMPUTER))
 
-    val rsValidator = new ResultSetValidator(
+    val rsValidator = ResultSetValidator(
       execContext = execContext,
       targetRs = rs,
-      tdAnalyzer = Some(new BasicTDAnalyzer(TargetDecoyModes.CONCATENATED)),
-      pepMatchPreFilters = Option(seqBuilder.result),
-      protSetFilters = None,
-      protSetValidator = None,
-      storeResultSummary = true // FIXME: storeResultSummary = false doesn't work
+      validationConfig = ValidationConfig(tdAnalyzerBuilder = Some(tdAnalyzerBuilder), pepMatchPreFilters = Option(seqBuilder.result)),
+      inferenceMethod = Some(InferenceMethod.PARSIMONIOUS),
+      storeResultSummary = true,
+      propagatePepMatchValidation = false,
+      propagateProtSetValidation = false
     )
 
     val result = rsValidator.runService

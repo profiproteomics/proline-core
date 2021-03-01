@@ -632,18 +632,20 @@ case class RsmValidationProperties(
 
 case class RsmValidationParamsProperties(
   @JsonDeserialize(contentAs = classOf[java.lang.Float] )
-  @BeanProperty var peptideExpectedFdr: Option[Float] = None,
-  
+  @BeanProperty var psmExpectedFdr: Option[Float] = None,
+  @BeanProperty var psmFilters: Option[Array[FilterDescriptor]] = None,
+  @BeanProperty var psmValidator: Option[ValidatorDescriptor] = None,
   @BeanProperty var peptideFilters: Option[Array[FilterDescriptor]] = None,
-  
+  @BeanProperty var peptideValidator: Option[ValidatorDescriptor] = None,
   @JsonDeserialize(contentAs = classOf[java.lang.Float] )
   @BeanProperty var proteinExpectedFdr: Option[Float] = None,
-  
-  @BeanProperty var proteinFilters: Option[Array[FilterDescriptor]] = None
+  @BeanProperty var proteinFilters: Option[Array[FilterDescriptor]] = None,
+  @BeanProperty var proteinScoring: Option[String] = None,
+  @BeanProperty var proteinValidator: Option[ValidatorDescriptor] = None
 )
 
 case class RsmValidationResultsProperties(
-  @BeanProperty var peptideResults: Option[RsmValidationResultProperties] = None,
+  @BeanProperty var psmResults: Option[RsmValidationResultProperties] = None,
   @BeanProperty var proteinResults: Option[RsmValidationResultProperties] = None
 )
 

@@ -2,10 +2,11 @@ package fr.proline.core.service.msi
 
 import com.typesafe.scalalogging.StrictLogging
 import fr.profi.util.primitives.toInt
+import fr.proline.core.algo.msi.InferenceMethod
 import fr.proline.core.algo.msi.filtering.pepmatch.ScorePSMFilter
 import fr.proline.core.algo.msi.filtering.proteinset.SpecificPeptidesPSFilter
 import fr.proline.core.algo.msi.filtering.{FilterPropertyKeys, ProtSetFilterParams}
-import fr.proline.core.algo.msi.validation.{BasicTDAnalyzer, TargetDecoyModes}
+import fr.proline.core.algo.msi.validation._
 import fr.proline.core.dal.AbstractDatastoreTestCase
 import fr.proline.core.dbunit.STR_F136482_CTD
 import fr.proline.core.om.model.msi.FilterDescriptor
@@ -40,21 +41,20 @@ class RsmProtSetFiltererTest extends StrictLogging {
 	
 	 msiDBCn.beginTransaction()
 	 val msiEM  = msiDBCn.getEntityManager()
-    val testTDAnalyzer = Some(new BasicTDAnalyzer(TargetDecoyModes.CONCATENATED))
     val scoreTh = 22.0f
     val nbrPepProteo = 1
     val pepFilters = Seq(new ScorePSMFilter(scoreThreshold = scoreTh))
     val protProteoTypiqueFilters = Seq(new SpecificPeptidesPSFilter(nbrPepProteo))
 
     logger.info(" RSMProtSetFilterer : step1. validate RS using score")
-    val rsValidation = new ResultSetValidator(
+    val rsValidation = ResultSetValidator(
       execContext = executionContext,
       targetRs = targetRS,
-      tdAnalyzer = Some(new BasicTDAnalyzer(TargetDecoyModes.CONCATENATED)),
-      pepMatchPreFilters = Some(pepFilters),
-      pepMatchValidator = None,
-      protSetFilters = None, //Some(protProteoTypiqueFilters),
-      storeResultSummary = true
+      validationConfig = ValidationConfig(tdAnalyzerBuilder = None, pepMatchPreFilters = Some(pepFilters)),
+      inferenceMethod = Some(InferenceMethod.PARSIMONIOUS),
+      storeResultSummary = true,
+      propagatePepMatchValidation = false,
+      propagateProtSetValidation = false
     )
 	 
     val result = rsValidation.runService

@@ -298,14 +298,12 @@ object PeptideMatch extends InMemoryIdGen with LazyLogging {
   }
 
   def getBestOnScoreDeltaMoZ(pepMatches: Array[PeptideMatch]): PeptideMatch = {
-
        var tmpBest = pepMatches(0)
       pepMatches.foreach( pepM => {
         if ((tmpBest.score < pepM.score) || ((tmpBest.score == pepM.score) && (tmpBest.deltaMoz < pepM.deltaMoz)))
           tmpBest = pepM
       })
       tmpBest
-
   }
   
 }
@@ -470,8 +468,11 @@ case class PeptideInstance(
   protected val unmodifiedPeptideId: Long = 0,
   
   @transient val unmodifiedPeptide: Option[Peptide] = null,
-  
-  // Mutable optional fields
+
+  @transient val isDecoy: Boolean = false, // Transient because the status is only used for validation purposes.
+  @transient var isValidated: Boolean = true,
+
+    // Mutable optional fields
   var proteinMatchesCount: Int = 0,
   var proteinSetsCount: Int = 0,
   var validatedProteinSetsCount: Int = 0,
@@ -486,7 +487,7 @@ case class PeptideInstance(
   
   var properties: Option[PeptideInstanceProperties] = None,
   var peptideMatchPropertiesById: Map[Long, PeptideMatchResultSummaryProperties ] = null
-  
+
   ) {
   
   // Requirements
@@ -495,7 +496,7 @@ case class PeptideInstance(
   
   @JsonProperty def peptideId = peptide.id
   @JsonProperty def peptideMatchesCount = getPeptideMatchIds.length
-  
+
   // Related objects ID getters
   def getPeptideMatchIds(): Array[Long] = { if(peptideMatches != null) peptideMatches.map(_.id)  else peptideMatchIds }
   
@@ -515,10 +516,18 @@ case class PeptideInstance(
   /** Returns true if the sequence is specific to a protein match. */
   def isProteinMatchSpecific(): Boolean = { proteinMatchesCount == 1 }
 
+  def scoringProperties =  {if (properties.isDefined) properties.get.score else None}
 }
 
 case class PeptideInstanceProperties(
-  //@BeanProperty var bestPeptideMatchId: Option[Int] = None
+  @BeanProperty var score: Option[ScoringProperties] = None
+)
+
+case class ScoringProperties(
+    @BeanProperty var pValue: Double,
+    @BeanProperty var score: Double,
+    //@TODO needed during alpha test cycles. To be removed or renamed
+    @BeanProperty var scoreType: Option[String] = None
 )
 
 case class PeptideSetItem (
@@ -621,8 +630,6 @@ case class PeptideSet ( // Required fields
 }
 
 case class PeptideSetProperties(
-  // TODO: remove me when database data are migrated
-  //@deprecated("use PeptideSet.sequencesCount instead","0.4.1")
-  //@BeanProperty var uniqueSequenceCount: Option[Int] = None
+    @BeanProperty var score: Option[ScoringProperties] = None
 )
 

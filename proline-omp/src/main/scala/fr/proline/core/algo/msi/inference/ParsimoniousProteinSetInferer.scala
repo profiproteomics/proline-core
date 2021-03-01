@@ -1,17 +1,20 @@
 package fr.proline.core.algo.msi.inference
 
-import scala.collection.immutable.LongMap
-import scala.collection.mutable.ArrayBuffer
-import scala.collection.mutable.HashMap
-import scala.collection.mutable.HashSet
 import com.typesafe.scalalogging.LazyLogging
-import fr.proline.context.IExecutionContext
+import fr.proline.core.algo.msi.IProteinSetInferer
+import fr.proline.core.algo.msi.filtering.IPeptideInstanceFilter
+import fr.proline.core.algo.msi.validation.IPeptideInstanceBuilder
 import fr.proline.core.om.model.msi._
-import fr.profi.util.primitives._
 
-class ParsimoniousProteinSetInferer() extends IProteinSetInferer with LazyLogging {
+import scala.collection.immutable.LongMap
+import scala.collection.mutable.{ArrayBuffer, HashMap}
 
-  def computeResultSummary( resultSet: ResultSet, keepSubsummableSubsets: Boolean = true ): ResultSummary = {
+class ParsimoniousProteinSetInferer(
+    val peptideInstanceBuilder: IPeptideInstanceBuilder
+) extends IProteinSetInferer with LazyLogging {
+
+
+  def computeResultSummary( resultSet: ResultSet, keepSubsummableSubsets: Boolean = true, peptideInstanceFilteringFunction: Option[(Seq[PeptideInstance]) => Unit] = None): ResultSummary = {
     
     // Retrieve some vars
     val proteinMatches = resultSet.proteinMatches
@@ -24,42 +27,27 @@ class ParsimoniousProteinSetInferer() extends IProteinSetInferer with LazyLoggin
     // Define some vars
     val resultSummaryId = ResultSummary.generateNewId()
     val peptideCount = peptideMatchesByPepId.size
-    val peptideInstances = new ArrayBuffer[PeptideInstance](peptideCount)
-    val pepInstanceByIdPairs = new ArrayBuffer[(Long,PeptideInstance)](peptideCount)
-    val pepInstanceByPepIdPairs = new ArrayBuffer[(Long,PeptideInstance)](peptideCount)
-    
+    var peptideInstances = new ArrayBuffer[PeptideInstance](peptideCount)
+
     // Build peptide instances and map them
     for( (peptideId, pepMatchGroup) <- (peptideMatchesByPepId) ) {
-      
-      val pepMatchIds = pepMatchGroup.map( _.id )
-      
-      // Build peptide instance
-      // VDS: in order to ensure always same  best Peptide math use score AND deltaMoz
-      val bestPepMatch = PeptideMatch.getBestOnScoreDeltaMoZ(pepMatchGroup)
-
-      val peptideInstance = new PeptideInstance(
-        id = PeptideInstance.generateNewId(),
-        peptide = bestPepMatch.peptide,
-        peptideMatchIds = pepMatchIds,
-        bestPeptideMatchId = bestPepMatch.id,
-        peptideMatches = pepMatchGroup,
-        totalLeavesMatchCount = -1,
-        //properties = Some(pepInstProps),
-        //peptideMatchPropertiesById = peptideMatchPropertiesById,
-        resultSummaryId = resultSummaryId
-      )
-      
-      pepInstanceByIdPairs += ( peptideInstance.id -> peptideInstance )
-      pepInstanceByPepIdPairs += ( peptideInstance.peptide.id -> peptideInstance )
-      peptideInstances += peptideInstance
+      peptideInstances += peptideInstanceBuilder.buildPeptideInstance(pepMatchGroup, resultSummaryId)
     }
-    
+
+    // filter Peptide instances
+    if (peptideInstanceFilteringFunction.isDefined) {
+      val filteringFunction = peptideInstanceFilteringFunction.get
+      filteringFunction(peptideInstances);
+    }
+
+    peptideInstances = peptideInstances.filter(_.isValidated)
+
     // Convert some ArrayBuffers into LongMaps
-    val pepInstanceById = LongMap( pepInstanceByIdPairs: _* )
-    val pepInstanceByPepId = LongMap( pepInstanceByPepIdPairs: _* )
+    val pepInstanceById = LongMap(peptideInstances.map(p => (p.id, p)): _*)
+    val pepInstanceByPepId = LongMap(peptideInstances.map(p => (p.peptide.id, p)): _*)
     
     // Map peptide instance ids by protein match id
-    val peptideIdSetByProtMatchIdPairs = new ArrayBuffer[(Long,Set[Long])](proteinMatches.length)//collection.immutable.Map.newBuilder[Long,Set[Long]]
+    val peptideIdSetByProtMatchIdPairs = new ArrayBuffer[(Long,Set[Long])](proteinMatches.length)
     val proteinCountByPepId = new HashMap[Long,Int]()
     peptideInstances.foreach( pepInst => proteinCountByPepId += pepInst.peptideId -> 0 )
     

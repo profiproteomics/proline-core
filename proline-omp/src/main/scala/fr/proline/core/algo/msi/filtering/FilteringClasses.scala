@@ -26,7 +26,13 @@ object PepMatchFilterParams extends Enumeration {
   val SCORE_HT_PVALUE = Value("SCORE_HT_P-VALUE")
   val SINGLE_PSM_PER_QUERY = Value("SINGLE_PSM_PER_QUERY")
   val SINGLE_PSM_PER_RANK = Value("SINGLE_PSM_PER_RANK")  // TODO: rename SINGLE_PSM_PER_PRETTY_RANK
-  val ISOTOPE_OFFSET= Value("ISOTOPE_OFFSET")
+  val ISOTOPE_OFFSET = Value("ISOTOPE_OFFSET")
+  val BH_AJUSTED_PVALUE = Value("BH_AJUSTED_PVALUE")
+}
+
+object PepInstanceFilterParams extends Enumeration {
+  type Param = Value
+  val BH_ADJUSTED_PVALUE = Value("BH_AJUSTED_PVALUE")
 }
 
 object ProtSetFilterParams extends Enumeration {
@@ -35,6 +41,7 @@ object ProtSetFilterParams extends Enumeration {
   val SPECIFIC_PEP = Value("SPECIFIC_PEP")
   val PEP_COUNT = Value("PEP_COUNT")
   val PEP_SEQ_COUNT = Value("PEP_SEQ_COUNT")
+  val BH_ADJUSTED_PVALUE = Value("BH_ADJUSTED_PVALUE")
 }
 
 trait IFilterConfig {
@@ -43,7 +50,7 @@ trait IFilterConfig {
   def filterDescription: String
 
   /**
-   * Return all properties that will be usefull to know wich kind iof filter have been applied
+   * Return all properties that will be useful to know which kind iof filter have been applied
    * and be able to reapply it.
    *
    */
@@ -150,24 +157,6 @@ trait IPeptideMatchFilter extends IFilter  {
    */
   def filterPeptideMatches(pepMatches: Seq[PeptideMatch], incrementalValidation: Boolean, traceability: Boolean): Unit
 
-  /**
-   * Returns the value that will be used to filter the peptide match.
-   */
-  def getPeptideMatchValueForFiltering(pepMatch: PeptideMatch): Any
-
-  
-  /**
-   * Specify if the filter should be excuted as a simple PreValidation Filter or after the validation process.
-   * In this last case, the FDR will be impacted !  
-   */
-  def postValidationFilter(): Boolean = {
-    _postValidation
-  }
-  
-  def setAsPostValidationFilter(postValidation: Boolean) {
-    _postValidation = postValidation
-  }
-  
 }
 
 /**
@@ -183,7 +172,12 @@ trait IFilterNeedingResultSet {
 trait IOptimizablePeptideMatchFilter extends IPeptideMatchFilter with IOptimizableFilter with IPeptideMatchSorter with Ordering[PeptideMatch] {
 
   def isPeptideMatchValid(pepMatch: PeptideMatch): Boolean
-  
+
+  /**
+   * Returns the value that will be used to filter the peptide match.
+   */
+  def getPeptideMatchValueForFiltering(pepMatch: PeptideMatch): Any
+
   /**
    * Compare peptide matches to produce an order corresponding to the filter parameter,
    * from the "best" peptide match to the "worst".
@@ -195,6 +189,13 @@ trait IOptimizablePeptideMatchFilter extends IPeptideMatchFilter with IOptimizab
    * from the "best" peptide match to the "worst".
    */
   def sortPeptideMatches(pepMatches: Seq[PeptideMatch]): Seq[PeptideMatch] = pepMatches.sorted( this )
+
+}
+
+
+trait IPeptideInstanceFilter extends IFilter {
+
+  def filterPeptideInstances(pepInstances: Seq[PeptideInstance])
 
 }
 
@@ -305,7 +306,7 @@ object ResultSummaryFilterBuilder {
   def getPeptideExpectedFDR(rsm: IResultSummaryLike) : Option[Float] = {
     require(rsm != null, "rsm is null")
     if (rsm.properties.isEmpty || rsm.properties.get.validationProperties.isEmpty ) return None
-    return if(rsm.properties.get.validationProperties.get.params.peptideExpectedFdr.isDefined) Some(rsm.properties.get.validationProperties.get.params.peptideExpectedFdr.get) else None
+    return if(rsm.properties.get.validationProperties.get.params.psmExpectedFdr.isDefined) Some(rsm.properties.get.validationProperties.get.params.psmExpectedFdr.get) else None
   }
 
   def getProteinSetExpectedFDR(rsm: IResultSummaryLike) : Option[Float] = {
@@ -328,7 +329,7 @@ object ResultSummaryFilterBuilder {
 
       val params = validationProperties.getParams
 
-      val optionalPepFilters = params.getPeptideFilters
+      val optionalPepFilters = params.getPsmFilters
       if (optionalPepFilters.isDefined) {
         val peptideFilters = optionalPepFilters.get
 

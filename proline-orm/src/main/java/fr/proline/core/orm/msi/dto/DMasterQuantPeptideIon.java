@@ -1,5 +1,6 @@
 package fr.proline.core.orm.msi.dto;
 
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -61,7 +62,7 @@ public class DMasterQuantPeptideIon {
 		updatePepIonStatus();
 	}
 
-	public DMasterQuantPeptideIon(PeptideInstance pi, MasterQuantPeptideIon mqpi, Peptide p, PeptideMatch bpm) {
+	public DMasterQuantPeptideIon(PeptideInstance pi, MasterQuantPeptideIon mqpi, Peptide p, PeptideMatch bpm) throws IOException  {
 		m_id = mqpi.getId();
 		m_resultSummary = mqpi.getResultSummary();
 		m_quantPeptideIonByQchIds = mqpi.getQuantPeptideIonByQchIds();
@@ -69,7 +70,7 @@ public class DMasterQuantPeptideIon {
 		m_charge = mqpi.getCharge();
 		m_moz = mqpi.getMoz();
 		m_elutionTime = mqpi.getElutionTime();
-		m_peptideInstance = new DPeptideInstance(pi.getId(), p.getId(), pi.getValidatedProteinSetCount(), pi.getElutionTime());
+		m_peptideInstance = new DPeptideInstance(pi);
 		m_peptideInstance.setPeptide(p);
 		m_bestPeptideMatch = new DPeptideMatch(bpm.getId(), bpm.getRank(), bpm.getCharge(), bpm.getDeltaMoz(), bpm.getExperimentalMoz(),
 			bpm.getMissedCleavage(), bpm.getScore(), bpm.getResultSet().getId(), bpm.getCDPrettyRank(), bpm.getSDPrettyRank(), bpm.getIsDecoy(),

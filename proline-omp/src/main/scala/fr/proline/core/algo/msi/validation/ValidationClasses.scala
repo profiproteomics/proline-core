@@ -1,17 +1,17 @@
 package fr.proline.core.algo.msi.validation
 
-import scala.collection.mutable.ArrayBuffer
-import scala.collection.mutable.HashMap
 import com.fasterxml.jackson.annotation.JsonInclude
 import com.fasterxml.jackson.annotation.JsonInclude.Include
+import fr.proline.core.algo.msi.filtering._
+import fr.proline.core.algo.msi.filtering.pepinstance.BHPepInstanceFilter
 import fr.proline.core.algo.msi.filtering.pepmatch._
 import fr.proline.core.algo.msi.filtering.proteinset._
-import fr.proline.core.algo.msi.filtering._
+import fr.proline.core.algo.msi.validation.pepinstance.BasicPepInstanceBuilder
 import fr.proline.core.algo.msi.validation.pepmatch._
 import fr.proline.core.algo.msi.validation.proteinset._
-import fr.proline.core.om.model.msi.{ResultSummary, ResultSet, ProteinSet, PeptideMatch}
-import fr.proline.core.om.model.msi.FilterDescriptor
-import fr.proline.core.om.model.msi.MsiRocCurve
+import fr.proline.core.om.model.msi._
+
+import scala.collection.mutable.{ArrayBuffer, HashMap}
 
 object TargetDecoyModes extends Enumeration {
   type Mode = Value
@@ -20,11 +20,41 @@ object TargetDecoyModes extends Enumeration {
   val MIXED = Value("MIXED") // for merged result sets having children in CONCATENATED and SEPARATED modes
 }
 
+object TargetDecoyEstimators extends Enumeration {
+  type Estimator = Value
+  val KALL_STOREY_COMPUTER = Value("KALL_STOREY")
+  val GIGY_COMPUTER = Value("GIGY")
+}
+
+object TargetDecoyAnalyzers extends Enumeration {
+  type Analyzer = Value
+  val BASIC = Value("BASIC")
+  val GORSHKOV = Value("GORSHKOV")
+}
+
+object FDRAnalyzerMethods extends Enumeration {
+  type MethodName = Value
+  val TARGET_DECOY = Value("TARGET_DECOY")
+  val BH = Value("BH")
+}
+
+object PeptideInstanceBuilders extends Enumeration {
+  type Builder = Value
+  val STANDARD = Value("STANDARD")
+}
+
+object PeptideInstanceValidationMethods extends Enumeration {
+  type MethodName = Value
+  val TARGET_DECOY = Value("TARGET_DECOY")
+  val BH = Value("BH")
+}
+
 object ProtSetValidationMethods extends Enumeration {
   type MethodName = Value
   val BASIC = Value("BASIC")
   val PEPTIDE_MATCH_RULES = Value("PEPTIDE_MATCH_RULES")
-  val PROTEIN_SET_RULES = Value("PROTEIN_SET_RULES")  
+  val PROTEIN_SET_RULES = Value("PROTEIN_SET_RULES")
+  val BH = Value("BH")
 }
 
 trait ValidationSharedKeys {
@@ -104,6 +134,7 @@ object BuildPeptideMatchFilter {
       case PepMatchFilterParams.SINGLE_PSM_PER_QUERY => new SinglePSMPerQueryFilter()
       case PepMatchFilterParams.SINGLE_PSM_PER_RANK=> new SinglePSMPerPrettyRankFilter()
       case PepMatchFilterParams.ISOTOPE_OFFSET => new IsotopeOffsetPSMFilter()
+      case PepMatchFilterParams.BH_AJUSTED_PVALUE => new BHPSMFilter()
     }
   }
 } 
@@ -132,26 +163,39 @@ object BuildOptimizablePeptideMatchFilter {
   
 }
 
-/** A factory to instantiate the appropriate peptide match validator */
-object BuildPeptideMatchValidator {
-  
-  def apply(
-    validationFilter: IPeptideMatchFilter,
-    expectedFdrOpt: Option[Float] = None,
-    tdAnalyzerOpt: Option[ITargetDecoyAnalyzer] = None
-  ): IPeptideMatchValidator = {
-    
-    if (expectedFdrOpt.isDefined) {
-      require( validationFilter.isInstanceOf[IOptimizablePeptideMatchFilter], "an optimizable filter must be provided" )
-      
-      val valFilter = validationFilter.asInstanceOf[IOptimizablePeptideMatchFilter]
-      
-      new TDPepMatchValidatorWithFDROptimization( valFilter, expectedFdrOpt, tdAnalyzerOpt )
-    }
-    else {
-      new BasicPepMatchValidator( validationFilter, tdAnalyzerOpt )
+
+object BuildPeptideInstanceBuilder {
+
+  def apply(builderParamsStr: String): IPeptideInstanceBuilder = {
+    this.apply(PeptideInstanceBuilders.withName(builderParamsStr))
+  }
+
+  def apply(builderParam: PeptideInstanceBuilders.Builder): IPeptideInstanceBuilder = {
+    builderParam match {
+      case PeptideInstanceBuilders.STANDARD => new BasicPepInstanceBuilder()
     }
   }
+
+}
+
+object BuildPeptideInstanceFilter {
+
+  def apply(filterParamStr: String): IPeptideInstanceFilter = {
+    this.apply( PepInstanceFilterParams.withName(filterParamStr) )
+  }
+
+  def apply(filterParamStr: String, thresholdValue: AnyVal): IPeptideInstanceFilter = {
+    val filter = this.apply( filterParamStr )
+    filter.setThresholdValue(thresholdValue)
+    filter
+  }
+
+  def apply(filterParam: PepInstanceFilterParams.Param): IPeptideInstanceFilter = {
+    filterParam match {
+      case PepInstanceFilterParams.BH_ADJUSTED_PVALUE => new BHPepInstanceFilter()
+    }
+  }
+
 }
 
 object BuildProteinSetFilter  {
@@ -172,6 +216,7 @@ object BuildProteinSetFilter  {
       case ProtSetFilterParams.PEP_COUNT => new PeptidesCountPSFilter()
       case ProtSetFilterParams.PEP_SEQ_COUNT => new PepSequencesCountPSFilter()
       case ProtSetFilterParams.SCORE => new ScoreProtSetFilter()
+      case ProtSetFilterParams.BH_ADJUSTED_PVALUE => new BHProtSetFilter()
     }
   }
 }
@@ -207,9 +252,7 @@ object BuildProteinSetValidator {
     
     validationMethod match {
       case ProtSetValidationMethods.BASIC => {
-        val protSetValidator = new BasicProtSetValidator(BuildProteinSetFilter(validationFilterParam))
-        protSetValidator.targetDecoyMode = targetDecoyModeOpt
-        protSetValidator
+        new BasicProtSetValidator(BuildProteinSetFilter(validationFilterParam))
       }
       case ProtSetValidationMethods.PEPTIDE_MATCH_RULES => {
 
@@ -230,7 +273,7 @@ object BuildProteinSetValidator {
           val filter1 = BuildOptimizablePeptideMatchFilter(validationFilterParam)
           val filter2 = BuildOptimizablePeptideMatchFilter(validationFilterParam)
         
-          new PepMatchRulesValidatorWithFDROptimization(filter1,filter2,expectedFdrOpt,targetDecoyModeOpt)
+          new PepMatchRulesValidatorWithFDROptimization(filter1,filter2,expectedFdrOpt)
         }
       }
       case ProtSetValidationMethods.PROTEIN_SET_RULES => {
@@ -252,69 +295,86 @@ object BuildProteinSetValidator {
           val filter1 = BuildOptimizableProteinSetFilter(validationFilterParam)
           val filter2 = BuildOptimizableProteinSetFilter(validationFilterParam)
           
-          new ProtSetRulesValidatorWithFDROptimization(filter1,filter2,expectedFdrOpt,targetDecoyModeOpt)
+          new ProtSetRulesValidatorWithFDROptimization(filter1,filter2,expectedFdrOpt)
         }
       }
     }
   }
 }
 
-trait IPeptideMatchValidator {
+trait IPeptideInstanceBuilder {
+  def buildPeptideInstance(pepMatchGroup: Array[PeptideMatch], resultSummaryId: Long): PeptideInstance
+}
+
+trait IValidatorConfig {
+  def validatorName: String
+  def validatorDescription: String
+
+  def getValidatorProperties(): Option[Map[String, Any]] = None
+
+  def toValidatorDescriptor(): ValidatorDescriptor = {
+    new ValidatorDescriptor(validatorName, Some(validatorDescription), getValidatorProperties)
+  }
+
+}
+trait IPeptideMatchValidator extends IValidatorConfig {
   
   val validationFilter: IPeptideMatchFilter
   val expectedFdr: Option[Float]
-  var tdAnalyzer: Option[ITargetDecoyAnalyzer]  
-  
+
   /**
    * Validates peptide matches.
    * @param pepMatches The list of peptide matches to validate
    * @param decoyPepMatches An optional list of decoy peptide matches to validate
    * @return An instance of the ValidationResults case class
    */
-  def validatePeptideMatches( pepMatches: Seq[PeptideMatch], decoyPepMatches: Option[Seq[PeptideMatch]] = None ): ValidationResults
+  def validatePeptideMatches( pepMatches: Seq[PeptideMatch], decoyPepMatches: Option[Seq[PeptideMatch]] = None, tdAnalyzer: Option[ITargetDecoyAnalyzer]): ValidationResults
   
-  def validatePeptideMatches( targetRs: ResultSet ): ValidationResults = {
+  def validatePeptideMatches( targetRs: ResultSet, tdAnalyzer: Option[ITargetDecoyAnalyzer]): ValidationResults = {
     
     val targetPepMatches: Seq[PeptideMatch] = targetRs.peptideMatches
-    
     val decoyRs = if( targetRs.decoyResultSet == null ) None else targetRs.decoyResultSet
     val decoyPepMatches: Option[Seq[PeptideMatch]] = decoyRs.map(_.peptideMatches)
     
-    this.validatePeptideMatches( targetPepMatches, decoyPepMatches )
+    this.validatePeptideMatches( targetPepMatches, decoyPepMatches, tdAnalyzer )
   }
  
 }
 
-trait IProteinSetValidator extends IFilterConfig {
+trait IPeptideInstanceValidator extends IValidatorConfig {
+
+  val validationFilter: IPeptideInstanceFilter
+  val expectedFdr: Option[Float]
+
+  def validatePeptideMatches(pepInstances: Seq[PeptideInstance], decoyPepInstances: Option[Seq[PeptideInstance]] = None, tdAnalyzer: Option[ITargetDecoyAnalyzer] = None): ValidationResults
+
+}
+
+trait IProteinSetValidator extends IFilterConfig with IValidatorConfig {
   
   val expectedFdr: Option[Float]
-  var targetDecoyMode: Option[TargetDecoyModes.Value]
 
-  /*def toFilterDescriptor(): FilterDescriptor = {
-    new FilterDescriptor( "protein set validator", None, Some( Map("expected_fdr"-> this.expectedFdr) ) )
-  }*/
-  
   /**
    * Validates protein sets.
    * @param targetRsm The target result summary
    * @param decoyRsm An optional decoy result summary
    * @return An instance of the ValidationResults case class
    */
-  def validateProteinSets( targetRsm: ResultSummary, decoyRsm: Option[ResultSummary] ): ValidationResults
+  def validateProteinSets(targetRsm: ResultSummary, decoyRsm: Option[ResultSummary], tdAnalyzer: Option[ITargetDecoyAnalyzer]): ValidationResults
     
-  def validateProteinSets( targetRsm: ResultSummary ): ValidationResults = {
+  def validateProteinSets(targetRsm: ResultSummary, tdAnalyzer: Option[ITargetDecoyAnalyzer]): ValidationResults = {
     val decoyRsm = if( targetRsm.decoyResultSummary == null ) None else targetRsm.decoyResultSummary
-    this.validateProteinSets( targetRsm, decoyRsm )
+    this.validateProteinSets( targetRsm, decoyRsm, tdAnalyzer)
   }
   
-  protected def computeValidationResult(targetRsm: ResultSummary, decoyRsm: Option[ResultSummary]): ValidationResult = {
+  protected def computeValidationResult(targetRsm: ResultSummary, decoyRsm: Option[ResultSummary], tdAnalyzer: Option[ITargetDecoyAnalyzer]): ValidationResult = {
     val targetProtSets = targetRsm.proteinSets
     val decoyProtSets = decoyRsm.map(_.proteinSets)
     
-    this.computeValidationResult(targetProtSets,decoyProtSets)
+    this.computeValidationResult(targetProtSets,decoyProtSets, tdAnalyzer)
   }
   
-  protected def computeValidationResult(targetProtSets: Array[ProteinSet], decoyProtSets: Option[Array[ProteinSet]]): ValidationResult = {
+  protected def computeValidationResult(targetProtSets: Array[ProteinSet], decoyProtSets: Option[Array[ProteinSet]], tdAnalyzer: Option[ITargetDecoyAnalyzer]): ValidationResult = {
     
     // Count validated target protein sets
     val targetValidProtSetsCount = targetProtSets.count( _.isValidated )
@@ -322,30 +382,20 @@ trait IProteinSetValidator extends IFilterConfig {
     // Count validated decoy protein sets
     val decoyValidProtSetsCount = decoyProtSets.map( _.count( _.isValidated ) )
       
-    this.computeValidationResult(targetValidProtSetsCount, decoyValidProtSetsCount)
+    this.computeValidationResult(targetValidProtSetsCount, decoyValidProtSetsCount, tdAnalyzer)
   }
   
-  protected def computeValidationResult(targetProtSetsCount: Int, decoyProtSetsCount: Option[Int]): ValidationResult = {
-    
-    val fdr = if (targetProtSetsCount == 0 || decoyProtSetsCount.isEmpty || targetDecoyMode.isEmpty ) Float.NaN
-    else {
-      
-      // Compute FDR => TODO: switch on TargetDecoyMode
-      //val fdr = (100 * decoyProtSetsCount.get).toFloat / targetProtSetsCount
-      
-      targetDecoyMode.get match {
-        case TargetDecoyModes.CONCATENATED => TargetDecoyComputer.calcCdFDR(targetProtSetsCount, decoyProtSetsCount.get)
-        case TargetDecoyModes.SEPARATED    => TargetDecoyComputer.calcSdFDR(targetProtSetsCount, decoyProtSetsCount.get)
-        case _                             => throw new Exception("unsupported target decoy mode: " + targetDecoyMode)
-      }
-    }
+  protected def computeValidationResult(targetProtSetsCount: Int, decoyProtSetsCount: Option[Int], tdAnalyzer: Option[ITargetDecoyAnalyzer]): ValidationResult = {
 
-    ValidationResult(
-      targetMatchesCount = targetProtSetsCount,
-      decoyMatchesCount = decoyProtSetsCount,
-      fdr = if (fdr.isNaN) None else Some(fdr)
-    )
-    
+    if (targetProtSetsCount == 0 || decoyProtSetsCount.isEmpty || !tdAnalyzer.isDefined ) {
+      ValidationResult(
+        targetMatchesCount = targetProtSetsCount,
+        decoyMatchesCount = decoyProtSetsCount,
+        fdr = None
+      )
+    } else {
+       tdAnalyzer.get.calcTDStatistics(targetProtSetsCount, decoyProtSetsCount.get)
+    }
   }
   
   
@@ -355,7 +405,7 @@ trait IProteinSetValidator extends IFilterConfig {
    * @param increaseDecoy A boolean which specifies if target or decoy count has to be increased.
    * @return A new ValidationResult with updated counts.
    */
-  protected def updateValidationResult( currentValResult: ValidationResult, increaseDecoy: Boolean ): ValidationResult = {
+  protected def updateValidationResult( currentValResult: ValidationResult, increaseDecoy: Boolean, tdAnalyzer: Option[ITargetDecoyAnalyzer]): ValidationResult = {
     
     // Retrieve old counts
     var( targetMatchesCount, decoyMatchesCount ) = (currentValResult.targetMatchesCount,currentValResult.decoyMatchesCount.get)
@@ -363,7 +413,7 @@ trait IProteinSetValidator extends IFilterConfig {
     if( increaseDecoy ) decoyMatchesCount += 1
     else targetMatchesCount += 1
     
-    this.computeValidationResult(targetMatchesCount, Some(decoyMatchesCount) )
+    this.computeValidationResult(targetMatchesCount, Some(decoyMatchesCount), tdAnalyzer)
   }
  
 }

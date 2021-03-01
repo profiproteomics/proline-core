@@ -13,6 +13,7 @@ class PepMatchRulesValidator(
   val pepMatchFilterRule1: IOptimizablePeptideMatchFilter,
   val pepMatchFilterRule2: IOptimizablePeptideMatchFilter
 ) extends AbstractPepMatchRulesValidator with LazyLogging {
+
   require( pepMatchFilterRule1.filterParameter == pepMatchFilterRule2.filterParameter )
   
   def filterParameter = pepMatchFilterRule1.filterParameter
@@ -25,9 +26,8 @@ class PepMatchRulesValidator(
   }
   
   val expectedFdr = Option.empty[Float]
-  var targetDecoyMode = Option.empty[TargetDecoyModes.Value]
-  
-  def validateProteinSets( targetRsm: ResultSummary, decoyRsm: Option[ResultSummary] ): ValidationResults = {
+
+  def validateProteinSets(targetRsm: ResultSummary, decoyRsm: Option[ResultSummary], tdAnalyzer: Option[ITargetDecoyAnalyzer]): ValidationResults = {
     
     // Retrieve some vars
     val targetProtSets = targetRsm.proteinSets
@@ -46,7 +46,7 @@ class PepMatchRulesValidator(
     decoyProtSets.map(ProteinSetFiltering.updateValidatedProteinSetsCount(_))
     
     // Compute validation result
-    val valResult = this.computeValidationResult(targetRsm, decoyRsm)
+    val valResult = this.computeValidationResult(targetRsm, decoyRsm, tdAnalyzer)
     
     // Return validation results
     ValidationResults( valResult )
