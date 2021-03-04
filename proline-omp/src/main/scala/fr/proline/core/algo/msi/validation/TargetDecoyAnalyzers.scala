@@ -50,8 +50,10 @@ class TDAnalyzerBuilder(
               case Some(TargetDecoyModes.CONCATENATED) => Some(new BasicTDAnalyzer(TargetDecoyComputer.calcCdFDR))
               case Some(TargetDecoyModes.SEPARATED) => Some(new BasicTDAnalyzer(TargetDecoyComputer.calcSdFDR))
               case None => None
+              case _ => None
             }
           }
+          case _ => None
         }
       }
     }
