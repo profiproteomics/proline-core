@@ -30,8 +30,7 @@ class Profilizer( expDesign: ExperimentalDesign, groupSetupNumber: Int = 1, mast
    * Computes MasterQuantPeptide profiles.
    */
   def computeMasterQuantPeptideProfiles( masterQuantPeptides: Seq[MasterQuantPeptide], config: PostProcessingConfig ) {
-    require( masterQuantPeptides.length >= 10, "at least 10 peptides are required for profile analysis")
-    
+
     logger.info("computing master quant peptide profiles...")
 
     // --- Reset some values ---
@@ -71,10 +70,10 @@ class Profilizer( expDesign: ExperimentalDesign, groupSetupNumber: Int = 1, mast
     // val( mqPepsAfterAllFilters, deselectedMqPeps ) = masterQuantPeptides.partition( _.selectionLevel >= 2 )
     //
     // FIXME: DBO => should we work only with filtered mqPeps ?
-    // WARN: CBy => selectionLevel < 2 are kept, this means that normalization & inference are also done on deselected masterQuantComponents
+    // FIXME: CBy => selectionLevel < 2 are kept, this means that normalization & inference are also done on deselected masterQuantComponents
     
      val mqPepsAfterAllFilters = {
-        if (config.peptideAbundanceSummarizerConfig.isDefined && config.peptideAbundanceSummarizerConfig.get.peptideSummarizingBasedOn.get == QuantComponentItem.QUANT_PEPTIDES.toString) {
+        if (config.isMqPeptideAbundanceSummarizerBasedOn(QuantComponentItem.QUANT_PEPTIDES)) {
           masterQuantPeptides.asInstanceOf[Seq[MasterQuantComponent[QuantComponent]]]
         } else {
           masterQuantPeptides.flatMap(_.masterQuantPeptideIons).asInstanceOf[Seq[MasterQuantComponent[QuantComponent]]]
@@ -239,8 +238,7 @@ class Profilizer( expDesign: ExperimentalDesign, groupSetupNumber: Int = 1, mast
   }
   
   def computeMasterQuantProtSetProfiles( masterQuantProtSets: Seq[MasterQuantProteinSet], config: PostProcessingConfig) {
-    require( masterQuantProtSets.length >= 10, "at least 10 protein sets are required for profile analysis")//VDS : depends on config ??
-    
+
     logger.info("computing master quant protein set profiles...")
     
     val qcsSampleNum = expDesignSetup.quantChannels.groupBy(_.sampleNumber)
