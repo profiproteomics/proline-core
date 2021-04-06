@@ -9,7 +9,7 @@ import scala.collection.mutable.ArrayBuffer
 
 case class PeptideInstancePtmTuple(peptideInstance: PeptideInstance, ptm: LocatedPtm)
 
-object PtmSitesIdentifier {
+object PtmSitesIdentifier extends LazyLogging {
 
   def allModificationsProbability(pm: PeptideMatch): Float = {
     val proba = if (pm.properties.isDefined &&
@@ -42,10 +42,14 @@ object PtmSitesIdentifier {
 
   def singleModificationProbability(pm: PeptideMatch, ptm: LocatedPtm): Float = {
     //	VDS Workaround test for issue #16643
+
     val f = if (pm.properties.get.ptmSiteProperties.get.getMascotProbabilityBySite.get.contains(ptm.toReadableString())) {
       pm.properties.get.ptmSiteProperties.get.getMascotProbabilityBySite.get(ptm.toReadableString())
-    } else {
+    } else if (pm.properties.get.ptmSiteProperties.get.getMascotProbabilityBySite.get.contains(PtmSitesIdentifier.toOtherReadableString(ptm))) {
       pm.properties.get.ptmSiteProperties.get.getMascotProbabilityBySite.get(PtmSitesIdentifier.toOtherReadableString(ptm))
+    } else {
+      logger.debug(" No Proba found for modification: "+ptm.toReadableString())
+      0.0f
     }
     f
     //VDS : Correct Code
