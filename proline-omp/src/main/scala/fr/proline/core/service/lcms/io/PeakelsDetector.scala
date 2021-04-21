@@ -301,7 +301,7 @@ class PeakelsDetector(
             val lcMsRunId = lcMsRun.id
     
             // Check if a feature corresponding to this peptide has been found in this run
-            if (featureTuplesByLcMsRun.contains(lcMsRun) == false) {
+            if (!featureTuplesByLcMsRun.contains(lcMsRun)) {
               runsWithMissingFt += lcMsRun
             } else {
               val runFeatureTuples = featureTuplesByLcMsRun(lcMsRun)
@@ -453,7 +453,7 @@ class PeakelsDetector(
                   masterQcExpDesign.groupSetup.biologicalGroups.length == 1
               ) {
                 sortedLcMsRuns.withFilter { lcMsRun =>
-                  childFtByProcMapId.contains(processedMapByRunId(lcMsRun.id).id) == false
+                  !childFtByProcMapId.contains(processedMapByRunId(lcMsRun.id).id)
                 } map { lcMsRun =>
                   (lcMsRun, bestFt)
                 }
@@ -477,7 +477,7 @@ class PeakelsDetector(
                     val refFt = detectedChildFtsInGroup.maxBy(_.intensity)//VDS Warning maxBy may return wrong value if NaN
 
                     lcMsRuns.withFilter { lcMsRun =>
-                      childFtByProcMapId.contains(processedMapByRunId(lcMsRun.id).id) == false
+                      !childFtByProcMapId.contains(processedMapByRunId(lcMsRun.id).id)
                     } map { lcMsRun =>
                       (lcMsRun, refFt)
                     }
@@ -625,7 +625,7 @@ class PeakelsDetector(
       // Convert the peakel queue into a lambda stream that will be passed to the peakel storer
       val forEachPeakel = { onEachPeakel: (Peakel => Unit) =>
         
-        while (isLastPublishedPeakel == false || !publishedPeakelQueue.isEmpty()) {
+        while (!isLastPublishedPeakel || !publishedPeakelQueue.isEmpty()) {
           val peakelOpt = publishedPeakelQueue.take()
           if (peakelOpt.isDefined) {
             onEachPeakel(peakelOpt.get)
@@ -940,8 +940,8 @@ class PeakelsDetector(
         entityCache.addPeakelFile(lcMsRunId, peakelFile)
 
         val resultPromise = Promise[(Observable[(Int,Array[MzDbPeakel])],Array[SpectrumHeader],LongMap[Array[SpectrumHeader]])]
-        
-        Future {
+
+        val peakelProducerFuture =  Future {
           this.logger.info(s"Detecting peakels in raw MS survey for run id=$lcMsRunId...")
           
           val mzDb = new MzDbReader(mzDbFile, true)
@@ -970,19 +970,22 @@ class PeakelsDetector(
             mzDb.close()
           }
           
-        } onFailure {
-          case t: Throwable => {
-            resultPromise.failure(t)
-          }
         }
 
         val futureResult = resultPromise.future.map { case (observableRunSlicePeakels, ms1SpecHeaders, ms2SpecHeadersByCycle) =>
 
+          this.logger.debug(" *************** START resultPromise.future map")
           // TODO: create/manage this scheduler differently ?
           val rxIOScheduler = schedulers.IOScheduler()
           
           val observablePeakels = Observable[Array[MzDbPeakel]] { subscriber =>
-            
+            //Verify peakel producer was successful or not
+            peakelProducerFuture.onFailure {
+              case t: Throwable => {
+                subscriber.onError( t )
+              }
+            }
+
             // Re-usable function that will be use to catch and propagate errors to the subscriber
             def tryOrPropagateError( block: => Unit ) = {
               try {
@@ -1213,7 +1216,7 @@ class PeakelsDetector(
               Some(rTree),
               identifiedPeakel,
               charge,
-              false,
+              isPredicted = false,
               sameChargePeakelMatches.map(_.spectrumHeader.getId).distinct.toArray
             )
             if (mzDbFt.getPeakelsCount == 1) runMetrics.incr("psm monoisotopic features")
