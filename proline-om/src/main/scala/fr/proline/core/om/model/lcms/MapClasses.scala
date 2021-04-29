@@ -4,13 +4,13 @@ import java.util.Date
 
 import scala.beans.BeanProperty
 import scala.collection.mutable.ArrayBuffer
-import scala.collection.mutable.HashMap
 import scala.collection.mutable.LongMap
 
 import com.typesafe.scalalogging.LazyLogging
 
 import fr.profi.util.collection._
 import fr.profi.util.misc.InMemoryIdGen
+import fr.profi.util.math.linearInterpolation
 
 // TODO:  move in Scala Commons ???
 trait IEntityReference[T] {
@@ -80,12 +80,18 @@ case class MapMozCalibration(
   require( mozList != null, "mozList is null" )
   require( deltaMozList != null, "deltaMozList is null" )
 
+  lazy val deltaMozVersusMoz = mozList.zip(deltaMozList)
+
+  protected def calcDeltaMoz( mass: Double ): Double = {
+    linearInterpolation(mass, deltaMozVersusMoz, fixOutOfRange = true)
+  }
+
 }
 
 case class MapMozCalibrationProperties()
 
 
-case class Landmark( time: Float, deltaTime: Float )
+case class Landmark(x: Double, dx: Double)
 
 case class MapAlignment(
 
@@ -133,7 +139,7 @@ case class MapAlignment(
 
     var landmarks = new ArrayBuffer[Landmark](timeList.length)
     deltaTimeVersusTime.foreach { case (time, deltaTime) =>
-      landmarks += Landmark( time , deltaTime )
+      landmarks += Landmark(time, deltaTime)
     }
 
     landmarks.toArray
@@ -160,9 +166,6 @@ case class MapAlignment(
   }
 
   protected def calcDeltaTime( elutionTime: Float ): Float = {
-
-    import fr.profi.util.math.linearInterpolation
-
     linearInterpolation(elutionTime, deltaTimeVersusTime, fixOutOfRange = true)
   }
 

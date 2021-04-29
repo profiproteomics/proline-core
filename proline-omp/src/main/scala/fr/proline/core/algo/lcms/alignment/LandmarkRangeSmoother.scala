@@ -16,14 +16,14 @@ class LandmarkRangeSmoother extends IAlnSmoother {
     
     // Create an array of landmarks
     val nbLandmarks = landmarks.length
-    val landmarksSortedByTime = landmarks.toList.sortBy( _.time )
+    val landmarksSortedByTime = landmarks.toList.sortBy( _.x)
     
     val newLandmarks = new ArrayBuffer[Landmark](nbLandmarks)
     
     // Define an anonymous function for landmark window processing
-    val processWindowFn = new Function2[Float, Float, Unit] {
+    val processWindowFn = new Function2[Double, Double, Unit] {
       
-      def apply(minVal: Float, maxVal: Float): Unit = {
+      def apply(minVal: Double, maxVal: Double): Unit = {
         
         val minIndex = minVal.toInt
         val maxIndex = if (maxVal < nbLandmarks) maxVal.toInt else nbLandmarks

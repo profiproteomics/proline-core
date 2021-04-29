@@ -1,6 +1,6 @@
 package fr.proline.core.service.lcms.io
 
-import java.io.File
+import java.io.{BufferedWriter, File, FileWriter}
 import java.util.concurrent.{Executors, LinkedBlockingQueue}
 import com.almworks.sqlite4java.SQLiteConnection
 import com.github.davidmoten.rtree._
@@ -18,6 +18,7 @@ import fr.profi.mzdb.peakeldb.io.{PeakelDbReader, PeakelDbWriter}
 import fr.profi.mzdb.util.ms.MsUtils
 import fr.profi.util.collection._
 import fr.profi.util.metrics.Metric
+import fr.profi.util.ms.massToMoz
 import fr.proline.context.LcMsDbConnectionContext
 import fr.proline.core.Settings
 import fr.proline.core.algo.lcms._
@@ -31,6 +32,7 @@ import fr.proline.core.service.lcms.CreateMapSet
 import rx.lang.scala.subjects.PublishSubject
 import rx.lang.scala.{Observable, Scheduler, Subject, schedulers}
 
+import scala.collection.mutable
 import scala.collection.mutable.{ArrayBuffer, HashMap, HashSet, LongMap}
 import scala.concurrent._
 import scala.concurrent.duration.Duration
@@ -188,12 +190,6 @@ class PeakelsDetector(
   ): (MapSet, AlignmentResult) = {
 
     assert(sortedLcMsRuns.length == this.masterQcExpDesign.runGroupNumbers.length)
-    val lcMsRunBioGroupNumPairs = this.sortedLcMsRuns.zip(this.masterQcExpDesign.runGroupNumbers)
-
-    val bioGroupNumAndLcMsRunsTuples = lcMsRunBioGroupNumPairs.groupByLong(_._2).toSeq.map { case (groupNum, lcmsRunsBioGroupTuples) =>
-      val bioGroupLcMsRuns = lcmsRunsBioGroupTuples.map(_._1)
-      (groupNum -> bioGroupLcMsRuns)
-    }
 
     val intensityComputationMethod = ClusterIntensityComputation.withName(
       clusteringParams.intensityComputation.toUpperCase()
@@ -359,75 +355,35 @@ class PeakelsDetector(
 
         } // ends (peptide, charge) loop
 
-        this.logger.info("Aligning maps and creating new map set...")
 
-        // Align maps
-        val alnResult = {
-          if (alignmentConfig.isDefined) {
-            alignmentConfig.get.ftMappingMethodName match {
-              case FeatureMappingMethod.FEATURE_COORDINATES => {
-                mapAligner.get.computeMapAlignments(processedMaps, alignmentConfig.get)
-              }
-              case FeatureMappingMethod.PEPTIDE_IDENTITY => {
+        this.logger.info("Aligning maps moz ...")
+        val featureTuplesByRuns = detectorEntityCache.featureTuples.groupBy { ft => (ft._3) }
+        val landmarkRangeSmoother = AlnSmoother(AlnSmoothing.LANDMARK_RANGE.toString)
+        val smoothingParams = new AlnSmoothingParams( windowSize = 200, windowOverlap = 20 )
 
-                // Map mftBuilder by the feature id
-                val mftBuilderByFtId = new LongMap[MasterFeatureBuilder](processedMaps.foldLeft(0)(_ + _.features.length))
-                for (
-                  mftBuilder <- mftBuilderByPeptideAndCharge.values;
-                  childFt <- mftBuilder.children
-                ) {
-                  if (childFt.isCluster) {
-                    val bestFt = childFt.subFeatures.maxBy(_.intensity)//VDS Warning maxBy may return wrong value if NaN
-                    mftBuilderByFtId.put(bestFt.id, mftBuilder)
-                  } else {
-                    mftBuilderByFtId.put(childFt.id, mftBuilder)
-                  }
-                }
-
-                logger.debug("peptide identity feature size = " + mftBuilderByFtId.size)
-
-                // Create a new map aligner algo starting from existing master features
-                mapAligner.get.computeMapAlignmentsUsingCustomFtMapper(processedMaps, alignmentConfig.get) { (map1Features, map2Features) =>
-
-                  val ftMapping = new LongMap[ArrayBuffer[LcMsFeature]](Math.max(map1Features.length, map2Features.length))
-
-                  val map2FtByMftBuilder = Map() ++ (for (
-                    map2Ft <- map2Features;
-                    mftBuilderOpt = mftBuilderByFtId.get(map2Ft.id);
-                    if mftBuilderOpt.isDefined
-                  ) yield (mftBuilderOpt.get, map2Ft))
-
-                  for (
-                    map1Ft <- map1Features;
-                    mftBuilderOpt = mftBuilderByFtId.get(map1Ft.id);
-                    if mftBuilderOpt.isDefined;
-                    map2FtOpt = map2FtByMftBuilder.get(mftBuilderOpt.get);
-                    if (map2FtOpt.isDefined && Math.abs(map1Ft.elutionTime - map2FtOpt.get.elutionTime) < alignmentConfig.get.ftMappingMethodParams.timeTol)
-                  ) {
-                    ftMapping.getOrElseUpdate(map1Ft.id, new ArrayBuffer[LcMsFeature]) += map2FtOpt.get
-                  }
-                  logger.debug("PEPTIDE_IDENTITY custom mapper found {} ft from {} map1 feat. and {} map2 Feat.  ", ftMapping.size, map1Features.size, map2Features.size)
-                  ftMapping
-                }
-
-              }
-              case _ => throw new Exception("Unsupported feature mapping method")
-            }
-          } else {
-            // Map Alignment was not requested: build an empty AlignmentResult using the first map as reference without any MapAlignmentSet
-            AlignmentResult(processedMaps(0).id, Array.empty[MapAlignmentSet])
+        for ( (lcMsRun, tuples) <- featureTuplesByRuns) {
+          val processedMap = processedMapByRunId(lcMsRun.id)
+          val landmarks = new ArrayBuffer[Landmark]
+          tuples.foreach{ t =>
+            val theoreticalMoz = massToMoz(t._2.calculatedMass, t._1.charge)
+            landmarks += Landmark(t._1.moz, 1e6*(theoreticalMoz - t._1.moz )/theoreticalMoz)
           }
+          val smoothedLandmarks = landmarkRangeSmoother.smoothLandmarks(landmarks, Some(smoothingParams))
+          val mozCalibration = MapMozCalibration(
+            id = -1L,
+            mozList = smoothedLandmarks.map(_.x).toArray,
+            deltaMozList = smoothedLandmarks.map(_.dx).toArray,
+            mapId = -1L,
+            scanId = -1L
+          )
+          processedMap.mozCalibrations = Some(Array(mozCalibration))
         }
 
-        // Create a temporary in-memory map set
-        var tmpMapSet = new MapSet(
-          id = mapSetId,
-          name = mapSetName,
-          creationTimestamp = new java.util.Date,
-          childMaps = processedMaps.toArray,
-          alnReferenceMapId = alnResult.alnRefMapId,
-          mapAlnSets = alnResult.mapAlnSets
-        )
+
+        this.logger.info("Aligning maps RT and creating new map set...")
+
+        // Align maps
+        var tmpMapSet = _computeMapAlignment(mapSetId, processedMaps, mftBuilderByPeptideAndCharge)
 
         // Define some data structures
         val putativeFtsByRunId = new LongMap[ArrayBuffer[PutativeFeature]]()
@@ -460,54 +416,12 @@ class PeakelsDetector(
                 metricsByRunId(bestFtLcMsRun.id).incr("unpredictable peptide elution time")
               } else {
                 val deltaRt = feature.elutionTime - predictedRtOpt.get
-                metricsByRunId(bestFtLcMsRun.id).storeValue("assigned peptides predicted retention time", (deltaRt))
+                metricsByRunId(bestFtLcMsRun.id).storeValue("matched feature vs predicted RT", (deltaRt))
               }
             }
           }
 
-          val childFtByProcMapId = masterFtChildren.mapByLong { ft => ft.relations.processedMapId }
-
-          val missingRunAndRefFtPairs = {
-            if (crossAssignmentConfig.isDefined) {
-              if (crossAssignmentConfig.get.methodName == CrossAssignMethod.BETWEEN_ALL_RULS ||
-                  masterQcExpDesign.groupSetup.biologicalGroups.length == 1
-              ) {
-                sortedLcMsRuns.withFilter { lcMsRun =>
-                  !childFtByProcMapId.contains(processedMapByRunId(lcMsRun.id).id)
-                } map { lcMsRun =>
-                  (lcMsRun, bestFt, masterFtChildren)
-                }
-              } else {
-
-                bioGroupNumAndLcMsRunsTuples.flatMap { case (bioGroupNum, lcMsRuns) =>
-
-                  // Retrieve detected child features in this group
-                  val detectedChildFtsInGroup = lcMsRuns.withFilter { lcMsRun =>
-                    childFtByProcMapId.contains(processedMapByRunId(lcMsRun.id).id)
-                  } map { lcMsRun =>
-                    childFtByProcMapId(processedMapByRunId(lcMsRun.id).id)
-                  }
-
-                  // Disable cross assignment if we have not detected features in this group
-                  if (detectedChildFtsInGroup.isEmpty) {
-                    logger.debug(s"No Ft found in group ${bioGroupNum}: will not perform cross assignment")
-                    Seq()
-                  } else {
-                    // Else determine a reference for this group
-                    val refFt = detectedChildFtsInGroup.maxBy(_.intensity) //VDS Warning maxBy may return wrong value if NaN
-
-                    lcMsRuns.withFilter { lcMsRun =>
-                      !childFtByProcMapId.contains(processedMapByRunId(lcMsRun.id).id)
-                    } map { lcMsRun =>
-                      (lcMsRun, refFt, detectedChildFtsInGroup)
-                    }
-                  }
-                }
-              }
-            } else {
-              Seq.empty[(LcMsRun, LcMsFeature, ArrayBuffer[LcMsFeature])]
-            }
-          }
+          val missingRunAndRefFtPairs = _buildMissingRunAndRefFtPairs(processedMapByRunId, masterFtChildren, bestFt)
 
           // Create a putative feature for each missing one
           for ((lcMsRun, refFt, childrenFt) <- missingRunAndRefFtPairs) {
@@ -516,26 +430,35 @@ class PeakelsDetector(
             val currentProcMapId = processedMapByRunId(lcMsRunId).id
 
 
+            val predictedTimes = childrenFt.map(ft => tmpMapSet.convertElutionTime(ft.elutionTime, ft.relations.processedMapId, currentProcMapId)).flatten
+            val meanPredictedRt = if (predictedTimes.isEmpty) {
+              None
+            } else {
+              Some(predictedTimes.sum / predictedTimes.size)
+            }
+
+            val predictedRT = tmpMapSet.convertElutionTime(
+              refFt.elutionTime,
+              refFt.relations.processedMapId,
+              currentProcMapId)
+
             val predictedTimeOpt = if (Settings.meanPredictedRetentionTime) {
-              val predictedTimes = childrenFt.map(ft => tmpMapSet.convertElutionTime(ft.elutionTime, ft.relations.processedMapId, currentProcMapId)).flatten
-              val meanRt = if (predictedTimes.isEmpty) {
-                None
-              } else {
-                Some(predictedTimes.sum / predictedTimes.size)
-              }
-              meanRt
-              } else {
-                tmpMapSet.convertElutionTime(
-                  refFt.elutionTime,
-                  refFt.relations.processedMapId,
-                  currentProcMapId
-                )
-              }
+              meanPredictedRt
+            } else {
+              predictedRT
+            }
+
+            if (predictedRT.isDefined && meanPredictedRt.isDefined)
+              metricsByRunId(lcMsRunId).storeValue("predicted vs mean predicted RT", (predictedRT.get - meanPredictedRt.get))
+
 
               // Fix negative predicted times and remove decimals. If elution cannot be
               // predicted, use the reference feature elution time instead
               val predictedTime = if (predictedTimeOpt.getOrElse(refFt.elutionTime) <= 0) 1f
               else math.round(predictedTimeOpt.getOrElse(refFt.elutionTime)).toFloat
+
+              // predict experimental mz of the putative feature
+
 
               val pf = new PutativeFeature(
                 id = PutativeFeature.generateNewId,
@@ -807,11 +730,133 @@ class PeakelsDetector(
 
   }
 
+  private def _computeMapAlignment(mapSetId: Long, processedMaps: Array[ProcessedMap], mftBuilderByPeptideAndCharge: mutable.HashMap[(Peptide, Int), MasterFeatureBuilder]): MapSet = {
+
+    val alnResult = if (alignmentConfig.isDefined) {
+      alignmentConfig.get.ftMappingMethodName match {
+        case FeatureMappingMethod.FEATURE_COORDINATES => {
+          mapAligner.get.computeMapAlignments(processedMaps, alignmentConfig.get)
+        }
+        case FeatureMappingMethod.PEPTIDE_IDENTITY => {
+
+          // Map mftBuilder by the feature id
+          val mftBuilderByFtId = new mutable.LongMap[MasterFeatureBuilder](processedMaps.foldLeft(0)(_ + _.features.length))
+          for (
+            mftBuilder <- mftBuilderByPeptideAndCharge.values;
+            childFt <- mftBuilder.children
+          ) {
+            if (childFt.isCluster) {
+              val bestFt = childFt.subFeatures.maxBy(_.intensity) //VDS Warning maxBy may return wrong value if NaN
+              mftBuilderByFtId.put(bestFt.id, mftBuilder)
+            } else {
+              mftBuilderByFtId.put(childFt.id, mftBuilder)
+            }
+          }
+
+          logger.debug("peptide identity feature size = " + mftBuilderByFtId.size)
+
+          // Create a new map aligner algo starting from existing master features
+          mapAligner.get.computeMapAlignmentsUsingCustomFtMapper(processedMaps, alignmentConfig.get) { (map1Features, map2Features) =>
+
+            val ftMapping = new mutable.LongMap[ArrayBuffer[LcMsFeature]](Math.max(map1Features.length, map2Features.length))
+
+            val map2FtByMftBuilder = Map() ++ (for (
+              map2Ft <- map2Features;
+              mftBuilderOpt = mftBuilderByFtId.get(map2Ft.id);
+              if mftBuilderOpt.isDefined
+            ) yield (mftBuilderOpt.get, map2Ft))
+
+            for (
+              map1Ft <- map1Features;
+              mftBuilderOpt = mftBuilderByFtId.get(map1Ft.id);
+              if mftBuilderOpt.isDefined;
+              map2FtOpt = map2FtByMftBuilder.get(mftBuilderOpt.get);
+              if (map2FtOpt.isDefined && Math.abs(map1Ft.elutionTime - map2FtOpt.get.elutionTime) < alignmentConfig.get.ftMappingMethodParams.timeTol)
+            ) {
+              ftMapping.getOrElseUpdate(map1Ft.id, new ArrayBuffer[LcMsFeature]) += map2FtOpt.get
+            }
+            logger.debug("PEPTIDE_IDENTITY custom mapper found {} ft from {} map1 feat. and {} map2 Feat.  ", ftMapping.size, map1Features.size, map2Features.size)
+            ftMapping
+          }
+
+        }
+        case _ => throw new Exception("Unsupported feature mapping method")
+      }
+    } else {
+      // Map Alignment was not requested: build an empty AlignmentResult using the first map as reference without any MapAlignmentSet
+      AlignmentResult(processedMaps(0).id, Array.empty[MapAlignmentSet])
+    }
+
+    new MapSet(
+      id = mapSetId,
+      name = mapSetName,
+      creationTimestamp = new java.util.Date,
+      childMaps = processedMaps.toArray,
+      alnReferenceMapId = alnResult.alnRefMapId,
+      mapAlnSets = alnResult.mapAlnSets
+    )
+  }
+
+  private def _buildMissingRunAndRefFtPairs(processedMapByRunId: LongMap[ProcessedMap], masterFtChildren: ArrayBuffer[LcMsFeature], bestFt: LcMsFeature) = {
+
+    val childFtByProcMapId = masterFtChildren.mapByLong { ft => ft.relations.processedMapId }
+
+    if (crossAssignmentConfig.isDefined) {
+
+      if (crossAssignmentConfig.get.methodName == CrossAssignMethod.BETWEEN_ALL_RULS ||
+        masterQcExpDesign.groupSetup.biologicalGroups.length == 1
+      ) {
+        sortedLcMsRuns.withFilter { lcMsRun =>
+          childFtByProcMapId.contains(processedMapByRunId(lcMsRun.id).id) == false
+        } map { lcMsRun =>
+          (lcMsRun, bestFt, masterFtChildren)
+        }
+      } else {
+
+        val lcMsRunBioGroupNumPairs = this.sortedLcMsRuns.zip(this.masterQcExpDesign.runGroupNumbers)
+
+        val bioGroupNumAndLcMsRunsTuples = lcMsRunBioGroupNumPairs.groupByLong(_._2).toSeq.map { case (groupNum, lcmsRunsBioGroupTuples) =>
+          val bioGroupLcMsRuns = lcmsRunsBioGroupTuples.map(_._1)
+          (groupNum -> bioGroupLcMsRuns)
+        }
+
+        bioGroupNumAndLcMsRunsTuples.flatMap { case (bioGroupNum, lcMsRuns) =>
+
+          // Retrieve detected child features in this group
+          val detectedChildFtsInGroup = lcMsRuns.withFilter { lcMsRun =>
+            childFtByProcMapId.contains(processedMapByRunId(lcMsRun.id).id)
+          } map { lcMsRun =>
+            childFtByProcMapId(processedMapByRunId(lcMsRun.id).id)
+          }
+
+          // Disable cross assignment if we have not detected features in this group
+          if (detectedChildFtsInGroup.isEmpty) {
+            logger.debug(s"No Ft found in group ${bioGroupNum}: will not perform cross assignment")
+            Seq()
+          } else {
+            // Else determine a reference for this group
+            val refFt = detectedChildFtsInGroup.maxBy(_.intensity) //VDS Warning maxBy may return wrong value if NaN
+
+            lcMsRuns.withFilter { lcMsRun =>
+              childFtByProcMapId.contains(processedMapByRunId(lcMsRun.id).id) == false
+            } map { lcMsRun =>
+              (lcMsRun, refFt, detectedChildFtsInGroup)
+            }
+          }
+        }
+      }
+    } else {
+      Seq.empty[(LcMsRun, LcMsFeature, ArrayBuffer[LcMsFeature])]
+    }
+
+  }
+
   case class PeakelMatch(
     peakel: MzDbPeakel,
     peptide: Peptide,
     spectrumHeader: SpectrumHeader,
-    charge: Int
+    charge: Int,
+    peptideMatch: PeptideMatch
   )
 
   private def _buildPeakelMatches(
@@ -869,7 +914,8 @@ class PeakelsDetector(
                         detectedPeakel,
                         psm.peptide,
                         ms2Sh,
-                        psm.charge
+                        psm.charge,
+                        psm
                       )
                     }
                     psmIdx += 1
@@ -1223,6 +1269,7 @@ class PeakelsDetector(
 
       // Synchronize all parallel computations that were previously performed
       // We are now returning to single thread execution
+
       val (peakelFile,rTree,peakelMatches) = Await.result(peakelRecordingFuture, Duration.Inf)
 
       this.logger.info(s"Total number of MS/MS matched peakels = ${peakelMatches.length} for run id=$lcMsRunId (map #$mapNumber)... ")
@@ -1687,12 +1734,10 @@ class PeakelsDetector(
     // Apply some filters to the found peakels: they must not be already assigned or included in a pool of peakels
     // that could be matched multiple times
     val multimatchedPeakelIdSet = multimatchedMzDbPeakelIds.toSet
-    val matchingPeakels = if (Settings.doNotFilterAssignedPeakels) {
-      foundPeakels
+    val matchingPeakels = if (Settings.filterAssignedPeakels) {
+      foundPeakels.filter { foundPeakel => multimatchedPeakelIdSet.contains(foundPeakel.id) || !assignedMzDbPeakelIdSet.contains(foundPeakel.id) }
     } else {
-      foundPeakels.filter { foundPeakel =>
-        multimatchedPeakelIdSet.contains(foundPeakel.id) || !assignedMzDbPeakelIdSet.contains(foundPeakel.id)
-      }
+      foundPeakels
     }
 
     if ((foundPeakels.size - matchingPeakels.size) > 0) {

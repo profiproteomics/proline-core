@@ -27,7 +27,7 @@ class AlnSmootherTest extends JUnitSuite with MustMatchers with StrictLogging {
     val fullDeltaTimeList = reducedDeltaTimeList ++ deltaTimeList ++ increasedDeltaTimeList
     
     fullTimeList.zip(fullDeltaTimeList).map { case (time,delta) =>
-      Landmark(time,delta)
+      Landmark(time, delta)
     }
     /*new MapAlignment(
       refMapId = 1L,
@@ -60,9 +60,9 @@ class AlnSmootherTest extends JUnitSuite with MustMatchers with StrictLogging {
     
     // Test requirements
     newLandmarks.length must equal (20)
-    newLandmarks(0).time must equal (1)    
-    newLandmarks(0).deltaTime must be ( 0.841f +- 1e-3f )
-    newLandmarks.map(_.deltaTime).toArray must equal (deltaTimeList)
+    newLandmarks(0).x must equal (1)
+    newLandmarks(0).dx must be ( 0.841 +- 1e-3 )
+    newLandmarks.map(_.dx).toArray must equal (deltaTimeList)
     
     ()
   }
@@ -76,8 +76,8 @@ class AlnSmootherTest extends JUnitSuite with MustMatchers with StrictLogging {
     
     // Test requirements
     newLandmarks.length must equal (39)
-    newLandmarks(0).time must equal (1)
-    newLandmarks(38).deltaTime must be ( 0.913f +- 1e-3f )
+    newLandmarks(0).x must equal (1)
+    newLandmarks(38).dx must be ( 0.913 +- 1e-3 )
     
     ()
   }
@@ -91,9 +91,9 @@ class AlnSmootherTest extends JUnitSuite with MustMatchers with StrictLogging {
     
     // Test requirements
     newLandmarks.length must equal (20)
-    newLandmarks(0).time must equal (1)
-    newLandmarks(0).deltaTime must be ( 0.841f +- 1e-3f )
-    newLandmarks.map(_.deltaTime).toArray must equal (deltaTimeList)
+    newLandmarks(0).x must equal (1)
+    newLandmarks(0).dx must be ( 0.841 +- 1e-3 )
+    newLandmarks.map(_.dx).toArray must equal (deltaTimeList)
   }
   
   @Test
@@ -105,8 +105,8 @@ class AlnSmootherTest extends JUnitSuite with MustMatchers with StrictLogging {
     
     // Test requirements
     newLandmarks.length must equal (40)
-    newLandmarks(0).time must equal (1)
-    newLandmarks(39).deltaTime must be ( 0.913f +- 1e-3f )
+    newLandmarks(0).x must equal (1)
+    newLandmarks(39).dx must be ( 0.913 +- 1e-3 )
     
   }
   
@@ -117,8 +117,8 @@ class AlnSmootherTest extends JUnitSuite with MustMatchers with StrictLogging {
     
     // Test requirements
     newLandmarks.length must equal (20)
-    newLandmarks(0).time must equal (1)    
-    newLandmarks(19).deltaTime must be ( 0.752f +- 1e-3f )
+    newLandmarks(0).x must equal (1)
+    newLandmarks(19).dx must be ( 0.752 +- 1e-3 )
     
   }
   

@@ -13,14 +13,14 @@ class LoessSmoother extends IAlnSmoother {
   def smoothLandmarks( landmarks: Seq[Landmark], smoothingParams: Option[AlnSmoothingParams]): Seq[Landmark] = {
 
     // Create an array of landmarks
-    val filteredLandmarks = landmarks.groupBy(_.time).map { lmg => computeMedianLandmark(lmg._2) } toArray
-    val landmarksSortedByTime = filteredLandmarks.sortBy(_.time)
+    val filteredLandmarks = landmarks.groupBy(_.x).map { lmg => computeMedianLandmark(lmg._2) } toArray
+    val landmarksSortedByTime = filteredLandmarks.sortBy(_.x)
 
     // Extract values into two vectors
     val( xVals, yVals ) = (new ArrayBuffer[Double],new ArrayBuffer[Double])
     landmarksSortedByTime.foreach { lm =>
-      xVals += lm.time.toDouble
-      yVals += lm.deltaTime.toDouble
+      xVals += lm.x
+      yVals += lm.dx
     }
 
     // Apply the loess smoothing
@@ -40,7 +40,7 @@ class LoessSmoother extends IAlnSmoother {
 
     // Fill buffers with smoothed values
     val newLandmarks = xVals.zip(smoothedYVals).map { xy =>
-      Landmark(xy._1.toFloat,xy._2.toFloat)
+      Landmark(xy._1.toFloat, xy._2.toFloat)
     }
 
     //mapAln.copy( timeList = newTimeList.toArray, deltaTimeList = newDeltaTimeList.toArray )

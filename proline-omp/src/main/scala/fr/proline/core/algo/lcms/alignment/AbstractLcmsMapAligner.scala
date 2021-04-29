@@ -69,7 +69,7 @@ abstract class AbstractLcmsMapAligner extends LazyLogging {
           val deltaTime = matchingFeatures(0).elutionTime - map1Ft.elutionTime
           val massRangePos = ( map1Ft.mass / massInterval ).toInt
 
-          landmarksByMassIdx.getOrElseUpdate(massRangePos, new ArrayBuffer[Landmark]) += Landmark( map1Ft.elutionTime, deltaTime)
+          landmarksByMassIdx.getOrElseUpdate(massRangePos, new ArrayBuffer[Landmark]) += Landmark(map1Ft.elutionTime, deltaTime)
         }
       }
 
@@ -83,7 +83,7 @@ abstract class AbstractLcmsMapAligner extends LazyLogging {
       for ((massRangeIdx,landmarks) <- landmarksByMassIdx) {
 
         if (!landmarks.isEmpty) {
-          val landmarksSortedByTime = landmarks.sortBy(_.time)
+          val landmarksSortedByTime = landmarks.sortBy(_.x)
           var smoothedLandmarks = alnSmoother.smoothLandmarks(landmarksSortedByTime, alnConfig.smoothingMethodParams)
           // FIXME: this should not be empty
           if (smoothedLandmarks.isEmpty) {
@@ -95,17 +95,17 @@ abstract class AbstractLcmsMapAligner extends LazyLogging {
         val deltaTimeList = landmarksSortedByTime.map { _.deltaTime }*/
 
           val (timeList, deltaTimeList) = (new ArrayBuffer[Float](smoothedLandmarks.length), new ArrayBuffer[Float](smoothedLandmarks.length))
-          var prevTimePlusDelta = smoothedLandmarks(0).time + smoothedLandmarks(0).deltaTime - 1
+          var prevTimePlusDelta = smoothedLandmarks(0).x + smoothedLandmarks(0).dx - 1
           var prevTime = -1f
-          smoothedLandmarks.sortBy(_.time).foreach { lm =>
+          smoothedLandmarks.sortBy(_.x).foreach { lm =>
 
-            val timePlusDelta = lm.time + lm.deltaTime
+            val timePlusDelta = lm.x + lm.dx
 
             // Filter time+delta values which are not greater than the previous one
-            if (lm.time > prevTime && timePlusDelta > prevTimePlusDelta) {
-              timeList += lm.time
-              deltaTimeList += lm.deltaTime
-              prevTime = lm.time
+            if (lm.x > prevTime && timePlusDelta > prevTimePlusDelta) {
+              timeList += lm.x.toFloat
+              deltaTimeList += lm.dx.toFloat
+              prevTime = lm.x.toFloat
               prevTimePlusDelta = timePlusDelta
             }
           }

@@ -24,7 +24,7 @@ object Settings {
   }
 
   val featureIntensity = config.getString("MapSetDetector.featureIntensity")
-  val doNotFilterAssignedPeakels = config.getBoolean("MapSetDetector.PeakelsDetector.doNotFilterAssignedPeakels")
+  val filterAssignedPeakels = config.getBoolean("MapSetDetector.PeakelsDetector.filterAssignedPeakels")
   val isomericPeptidesSharePeakels = config.getBoolean("MapSetDetector.PeakelsDetector.isomericPeptidesSharePeakels")
   val meanPredictedRetentionTime = config.getBoolean("MapSetDetector.PeakelsDetector.meanPredictedRetentionTime")
 
