@@ -6,6 +6,8 @@ import fr.proline.core.algo.msi.validation._
 import fr.proline.core.om.model.msi.PeptideMatch
 import fr.proline.core.algo.msi.filtering.{FilterPropertyKeys, IOptimizablePeptideMatchFilter, IPeptideMatchFilter, PepMatchFilterParams}
 
+import scala.util.Try
+
 
 /** Implementation of IPeptideMatchValidator performing a BH analysis. */
 
@@ -59,7 +61,7 @@ class TDPepMatchValidator(
     val valResult = if (decoyPepMatches.isDefined && tdAnalyzer.isDefined) {
       tdAnalyzer.get.calcTDStatistics(pepMatches, decoyPepMatches.get)
     } else {
-      ValidationResult( pepMatches.count(_.isValidated) )
+      ValidationResult( pepMatches.count(_.isValidated), Try(decoyPepMatches.get.count(_.isValidated)).toOption)
     }
     
     // Add validation filter properties to validation results
