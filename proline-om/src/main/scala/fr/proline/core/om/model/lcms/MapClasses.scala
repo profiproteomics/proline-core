@@ -82,7 +82,7 @@ case class MapMozCalibration(
 
   lazy val deltaMozVersusMoz = mozList.zip(deltaMozList)
 
-  protected def calcDeltaMoz( mass: Double ): Double = {
+   def calcDeltaMoz( mass: Double ): Double = {
     linearInterpolation(mass, deltaMozVersusMoz, fixOutOfRange = true)
   }
 

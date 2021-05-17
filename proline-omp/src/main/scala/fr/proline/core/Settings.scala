@@ -27,6 +27,7 @@ object Settings {
   val filterAssignedPeakels = config.getBoolean("MapSetDetector.PeakelsDetector.filterAssignedPeakels")
   val isomericPeptidesSharePeakels = config.getBoolean("MapSetDetector.PeakelsDetector.isomericPeptidesSharePeakels")
   val meanPredictedRetentionTime = config.getBoolean("MapSetDetector.PeakelsDetector.meanPredictedRetentionTime")
+  val correctedMoz = config.getBoolean("MapSetDetector.PeakelsDetector.correctedMoz")
 
   object LoessSmoother {
     val defaultBandwidth = config.getConfig("LoessSmoother").getDouble("defaultBandwidth")

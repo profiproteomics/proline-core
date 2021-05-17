@@ -29,6 +29,7 @@ import fr.proline.core.om.model.msi.{Peptide, PeptideMatch}
 import fr.proline.core.om.model.msq.ExperimentalDesignSetup
 import fr.proline.core.om.storer.lcms.impl.{PgPeakelWriter, SQLPeakelWriter}
 import fr.proline.core.service.lcms.CreateMapSet
+import javolution.util.stripped.FastMap
 import rx.lang.scala.subjects.PublishSubject
 import rx.lang.scala.{Observable, Scheduler, Subject, schedulers}
 
@@ -359,14 +360,16 @@ class PeakelsDetector(
         this.logger.info("Aligning maps moz ...")
         val featureTuplesByRuns = detectorEntityCache.featureTuples.groupBy { ft => (ft._3) }
         val landmarkRangeSmoother = AlnSmoother(AlnSmoothing.LANDMARK_RANGE.toString)
-        val smoothingParams = new AlnSmoothingParams( windowSize = 200, windowOverlap = 20 )
+        val smoothingParams = new AlnSmoothingParams( windowSize = 50, windowOverlap = 20 )
 
         for ( (lcMsRun, tuples) <- featureTuplesByRuns) {
           val processedMap = processedMapByRunId(lcMsRun.id)
           val landmarks = new ArrayBuffer[Landmark]
           tuples.foreach{ t =>
             val theoreticalMoz = massToMoz(t._2.calculatedMass, t._1.charge)
-            landmarks += Landmark(t._1.moz, 1e6*(theoreticalMoz - t._1.moz )/theoreticalMoz)
+            val rt = t._1.elutionTime
+//            landmarks += Landmark(t._1.moz, 1e6*(theoreticalMoz - t._1.moz )/theoreticalMoz)
+            landmarks += Landmark(rt.toDouble, 1e6*(theoreticalMoz - t._1.moz )/theoreticalMoz)
           }
           val smoothedLandmarks = landmarkRangeSmoother.smoothLandmarks(landmarks, Some(smoothingParams))
           val mozCalibration = MapMozCalibration(
@@ -401,7 +404,7 @@ class PeakelsDetector(
           val bestFtProcMapId = bestFt.relations.processedMapId
           val bestFtLcMsRun = lcmsRunByProcMapId(bestFtProcMapId)
 
-          // Compute RT prediction Stats
+          // Compute prediction Stats
           for (feature <- masterFtChildren) {
             if (feature != bestFt) {
               val bestFtProcMapId = bestFt.relations.processedMapId
@@ -418,6 +421,23 @@ class PeakelsDetector(
                 val deltaRt = feature.elutionTime - predictedRtOpt.get
                 metricsByRunId(bestFtLcMsRun.id).storeValue("matched feature vs predicted RT", (deltaRt))
               }
+
+            // Compute moz stats
+
+//              val targetProcMap = processedMapByRunId(lcmsRunByProcMapId(feature.relations.processedMapId).id)
+//
+//              val predictedRT = tmpMapSet.convertElutionTime(
+//                bestFt.elutionTime,
+//                bestFt.relations.processedMapId,
+//                feature.relations.processedMapId)
+//
+//              val dmass = targetProcMap.mozCalibrations.get.head.calcDeltaMoz(predictedRT.getOrElse(bestFt.elutionTime).toDouble)
+//              val predictedMoz = massToMoz(peptide.calculatedMass, charge) - MsUtils.ppmToDa(bestFt.moz, dmass)
+//              val predictedDeltaMass = MsUtils.DaToPPM(feature.moz, predictedMoz - feature.moz)
+//              val bestDeltaMass = MsUtils.DaToPPM(feature.moz, bestFt.moz - feature.moz)
+//              metricsByRunId(lcmsRunByProcMapId(ftProcMapId).id).addValue("predicted.moz delta", predictedDeltaMass)
+//              metricsByRunId(lcmsRunByProcMapId(ftProcMapId).id).addValue("best.moz delta", bestDeltaMass)
+
             }
           }
 
@@ -460,9 +480,18 @@ class PeakelsDetector(
               // predict experimental mz of the putative feature
 
 
+              val putativeMoz = if (Settings.correctedMoz) {
+                  val targetProcMap = processedMapByRunId(lcMsRunId)
+                  val theoreticalMoz = massToMoz(peptide.calculatedMass, charge)
+                  val dmass = targetProcMap.mozCalibrations.get.head.calcDeltaMoz(predictedTime)
+                  theoreticalMoz - MsUtils.ppmToDa(theoreticalMoz, dmass)
+                } else {
+                  refFt.moz
+                }
+
               val pf = new PutativeFeature(
                 id = PutativeFeature.generateNewId,
-                mz = refFt.moz,
+                mz = putativeMoz,
                 charge = refFt.charge,
                 elutionTime = predictedTime,
                 evidenceMsLevel = 2
@@ -1785,6 +1814,7 @@ class PeakelsDetector(
           math.abs(avgTime - peakel.calcWeightedAverageTime())
         }
         if (nearestFilteredPeakelInTime != nearestPeakelInTime) { metric.incr("nearestPeakelInTime.not.reliable") }
+        metric.addValue("missing peakel: delta moz", MsUtils.DaToPPM( peakelMz, peakelMz-nearestPeakelInTime._1.getApexMz()))
       }
 
       Some(nearestPeakelInTime)
