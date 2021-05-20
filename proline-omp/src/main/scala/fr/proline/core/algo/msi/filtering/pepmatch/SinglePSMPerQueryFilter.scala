@@ -88,8 +88,10 @@ class SinglePSMPerQueryFilter(var targetRs: IResultSetLike = null) extends IPept
               val bestPsmProtMatchesOpt = protMatchesByPepMatchId.get(bestQueryPsm.id)
               // filter using ProteinMatch nbrPeptideCount or deltaMass
               if (protMatchesOpt.isDefined &&
-                  (bestPsmProtMatchesOpt.isEmpty || (getMaxNbrPepForProtMatches(protMatchesOpt.get) > getMaxNbrPepForProtMatches(bestPsmProtMatchesOpt.get))
-                            || (getMaxNbrPepForProtMatches(protMatchesOpt.get) == getMaxNbrPepForProtMatches(bestPsmProtMatchesOpt.get) && currentPsm.deltaMoz<bestQueryPsm.deltaMoz) ))
+                  (bestPsmProtMatchesOpt.isEmpty
+                    || (getMaxNbrPepForProtMatches(protMatchesOpt.get) > getMaxNbrPepForProtMatches(bestPsmProtMatchesOpt.get))
+                    || (getMaxNbrPepForProtMatches(protMatchesOpt.get) == getMaxNbrPepForProtMatches(bestPsmProtMatchesOpt.get) && nearlyEqual(currentPsm.deltaMoz, bestQueryPsm.deltaMoz) && currentPsm.peptide.sequence < bestQueryPsm.peptide.sequence  )
+                    || (getMaxNbrPepForProtMatches(protMatchesOpt.get) == getMaxNbrPepForProtMatches(bestPsmProtMatchesOpt.get) && currentPsm.deltaMoz<bestQueryPsm.deltaMoz) ))
                 bestQueryPsm = currentPsm
             }
           }) //end go through all equals psms
