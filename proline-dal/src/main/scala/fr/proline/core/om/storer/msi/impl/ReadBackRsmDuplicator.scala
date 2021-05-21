@@ -438,7 +438,7 @@ class RsmDuplicator(rsmProvider: IResultSummaryProvider) extends IRsmDuplicator 
     if(sourceRS.getMSISearchId >0 ){
       val msiMsiSearch = msiEm.find(classOf[MsiSearch], sourceRS.getMSISearchId)
       emptyRS.setMsiSearch(msiMsiSearch)
-      msiEm.merge(emptyRS)
+      //msiEm.merge(emptyRS) #VDS generates an error (merge while maybe not all associated data are "persist" flush is after ) and information will be saved at the end of transaction any way
     }
 
     msiEm.flush()

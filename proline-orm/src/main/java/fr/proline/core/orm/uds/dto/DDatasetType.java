@@ -134,7 +134,7 @@ public class DDatasetType {
     if (m_quantitationMethod.getAbundanceUnit().equalsIgnoreCase("spectral_counts"))
       return QuantitationMethodInfo.SPECTRAL_COUNTING;
 
-    return QuantitationMethodInfo.valueOf(m_quantitationMethod.getType().toLowerCase());
+    return QuantitationMethodInfo.valueOf(m_quantitationMethod.getType().toUpperCase());
   }
 
 }

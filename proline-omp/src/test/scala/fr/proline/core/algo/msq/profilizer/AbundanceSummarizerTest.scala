@@ -58,6 +58,17 @@ class AbundanceSummarizerTest {
   }
 
   @Test
+  def summarizeUsingMedianProfile2: Unit = {
+    val matrix = Array(
+      Array(4E+08f, 4E+08f, 4.5E+08f, 3.5E+08f),
+      Array(3E+08f, 3E+08f, 3E+08f, 3E+08f),
+      Array(1.5E+08f, 1.5E+08f, 1.5E+08f, 1.5E+08f),
+      Array(5E+07f, 5E+07f, 5E+07f, 5E+07f)
+    )
+    val singleRow = summarizeAbundanceMatrix(matrix, MqPeptideAbundanceSummarizingMethod.MEDIAN_PROFILE)
+    singleRow
+  }
+  @Test
   def summarizeUsingSum {
     val singleRow = summarizeAbundanceMatrix(matrixWithMissingValues, MqPeptideAbundanceSummarizingMethod.SUM)
     assertArrayEquals(Array(8.98E+08f, Float.NaN, 5.21E+08f, 5.88E+08f), singleRow, 8.98E+08f * 0.01f)

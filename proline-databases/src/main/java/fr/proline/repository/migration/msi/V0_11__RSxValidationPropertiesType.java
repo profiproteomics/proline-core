@@ -31,13 +31,14 @@ public class V0_11__RSxValidationPropertiesType implements JdbcMigration  {
             // * For each merged RSM : test if nb peptide == nb psm (Aggregation) or not (Union)
             Long rsmId = rsms.getLong(1);
             String prop = rsms.getString(2);
+            if(prop != null &&  prop.contains("\"peptide_")) {
+                prop = prop.replaceAll("\"peptide_", "\"psm_");
 
-            prop = prop.replaceAll("\"peptide_", "\"psm_");
-
-            // * Store properties
-            updateResultSummaryPropsStmt.setString(1,prop);
-            updateResultSummaryPropsStmt.setLong(2,rsmId);
-            updateResultSummaryPropsStmt.executeUpdate();
+                // * Store properties
+                updateResultSummaryPropsStmt.setString(1, prop);
+                updateResultSummaryPropsStmt.setLong(2, rsmId);
+                updateResultSummaryPropsStmt.executeUpdate();
+            }
 
         }
 

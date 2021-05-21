@@ -19,7 +19,7 @@ import fr.proline.core.om.provider.PeptideCacheExecutionContext
 import fr.proline.core.om.provider.msi.IResultSetProvider
 import fr.proline.core.om.provider.msi.impl.{ORMResultSetProvider, SQLResultSetProvider}
 import fr.proline.core.om.storer.msi.RsmStorer
-import fr.proline.core.service.msi.ResultSetValidator.getResultSetProvider
+import fr.proline.core.service.msi.ResultSetValidator.{getResultSetProvider, loadDecoyRS}
 
 import scala.collection.immutable.HashMap
 import scala.collection.mutable.ArrayBuffer
@@ -50,11 +50,11 @@ object ResultSetValidator extends LazyLogging {
 
     val rsProvider = getResultSetProvider(execContext)
     val targetRs = rsProvider.getResultSet(targetRsId)
-
     if (targetRs.isEmpty) {
       throw new IllegalArgumentException("Unknown ResultSet Id: " + targetRsId)
     }
-    this.apply(execContext, targetRs.get, validationConfig, inferenceMethod, storeResultSummary, propagatePepMatchValidation, propagatePepMatchValidation)
+
+    this.apply(execContext, targetRs.get, validationConfig, inferenceMethod, storeResultSummary, propagatePepMatchValidation, propagateProtSetValidation)
   }
 
   def apply(
@@ -68,14 +68,7 @@ object ResultSetValidator extends LazyLogging {
   ): ResultSetValidator = {
 
 
-    // Load decoy result set if needed
-    if (!execContext.isJPA ) {
-      val decoyRsId = targetRs.getDecoyResultSetId
-      if ((decoyRsId > 0) && !targetRs.decoyResultSet.isDefined){
-        val rsProvider = getResultSetProvider(execContext)
-        targetRs.decoyResultSet = rsProvider.getResultSet(decoyRsId)
-      }
-    }
+    loadDecoyRS(execContext, targetRs)
 
     ResultSetValidator.fixTDComputer(validationConfig)
     val tdAnalyzer = if(validationConfig.tdAnalyzerBuilder.isDefined) { validationConfig.tdAnalyzerBuilder.get.build(Some(targetRs)) } else { None }
@@ -90,6 +83,17 @@ object ResultSetValidator extends LazyLogging {
       propagatePepMatchValidation,
       propagateProtSetValidation
     )
+  }
+
+  private def loadDecoyRS(execContext: IExecutionContext, targetRs: ResultSet) = {
+    // Load decoy result set if needed
+    if (!execContext.isJPA) {
+      val decoyRsId = targetRs.getDecoyResultSetId
+      if ((decoyRsId > 0) && !targetRs.decoyResultSet.isDefined) {
+        val rsProvider = getResultSetProvider(execContext)
+        targetRs.decoyResultSet = rsProvider.getResultSet(decoyRsId)
+      }
+    }
   }
 
   private def fixTDComputer( validationConfig: ValidationConfig ) = {
@@ -295,6 +299,7 @@ class ResultSetValidator protected(
     childRsId.foreach(rsId => {
 
       val targetRs = rsProvider.getResultSet(rsId)
+      loadDecoyRS(execContext, targetRs.get)
 
       val recursiveRSValidator = new ResultSetValidator(
           execContext,
