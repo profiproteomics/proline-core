@@ -67,18 +67,20 @@ class Profilizer( expDesign: ExperimentalDesign, groupSetupNumber: Int = 1, mast
 
     // Keep master quant peptides passing all filters (i.e. have a selection level higher than 1)
     //
-    // val( mqPepsAfterAllFilters, deselectedMqPeps ) = masterQuantPeptides.partition( _.selectionLevel >= 2 )
+    // val( mqPepIonsAfterAllFilters, deselectedMqPeps ) = masterQuantPeptides.partition( _.selectionLevel >= 2 )
     //
     // FIXME: DBO => should we work only with filtered mqPeps ?
     // FIXME: CBy => selectionLevel < 2 are kept, this means that normalization & inference are also done on deselected masterQuantComponents
-    
-     val mqPepsAfterAllFilters = {
-        if (config.isMqPeptideAbundanceSummarizerBasedOn(QuantComponentItem.QUANT_PEPTIDES)) {
-          masterQuantPeptides.asInstanceOf[Seq[MasterQuantComponent[QuantComponent]]]
-        } else {
-          masterQuantPeptides.flatMap(_.masterQuantPeptideIons).asInstanceOf[Seq[MasterQuantComponent[QuantComponent]]]
-        }
-      }  //was -> val mqPepsAfterAllFilters = masterQuantPeptides
+
+    //VDS: behaviour modification to be more like 2.1.0 version behaviour: mqPeptideIon used for normalisation etc. Values are then used for mqPeptides values.
+    val mqPepIonsAfterAllFilters = masterQuantPeptides.flatMap(_.masterQuantPeptideIons).asInstanceOf[Seq[MasterQuantComponent[QuantComponent]]]
+    //     val mqPepIonsAfterAllFilters = {
+//        if (config.isMqPeptideAbundanceSummarizerBasedOn(QuantComponentItem.QUANT_PEPTIDES)) {
+//          masterQuantPeptides.asInstanceOf[Seq[MasterQuantComponent[QuantComponent]]]
+//        } else {
+//          masterQuantPeptides.flatMap(_.masterQuantPeptideIons).asInstanceOf[Seq[MasterQuantComponent[QuantComponent]]]
+//        }
+//      }  //was -> val mqPepsAfterAllFilters = masterQuantPeptides
     
     
     //
@@ -91,10 +93,10 @@ class Profilizer( expDesign: ExperimentalDesign, groupSetupNumber: Int = 1, mast
     //
      
     // --- Compute the PSM count matrix ---
-    val psmCountMatrix = mqPepsAfterAllFilters.map( _.getPepMatchesCountsForQuantChannels(expDesignSetup.qcIds) ).toArray
+    val psmCountMatrix = mqPepIonsAfterAllFilters.map( _.getPepMatchesCountsForQuantChannels(expDesignSetup.qcIds) ).toArray
     
     // --- Compute the abundance matrix ---
-    val rawAbundanceMatrix: Array[Array[Float]] = mqPepsAfterAllFilters.map( _.getRawAbundancesForQuantChannels(expDesignSetup.qcIds) ).toArray
+    val rawAbundanceMatrix: Array[Array[Float]] = mqPepIonsAfterAllFilters.map( _.getRawAbundancesForQuantChannels(expDesignSetup.qcIds) ).toArray
     
     // --- Normalize the abundance matrix ---
     //
@@ -127,13 +129,13 @@ class Profilizer( expDesign: ExperimentalDesign, groupSetupNumber: Int = 1, mast
     // Update master quant component abundances after normalization and missing values inference
     //
     
-    for( (mqQuantComponent, abundances) <- mqPepsAfterAllFilters.zip(filledMatrix) ) {
+    for( (mqQuantComponent, abundances) <- mqPepIonsAfterAllFilters.zip(filledMatrix) ) {
       mqQuantComponent.setAbundancesForQuantChannels(abundances,expDesignSetup.qcIds)
     }
 
-     if (config.isMqPeptideAbundanceSummarizerBasedOn(QuantComponentItem.QUANT_PEPTIDE_IONS)) {
-      //
-      // if previous step is ION based, then update the associated mqPep Abundance values
+//     if (config.isMqPeptideAbundanceSummarizerBasedOn(QuantComponentItem.QUANT_PEPTIDE_IONS)) {
+       //VDS: behaviour modification to be more like 2.1.0 version behaviour: mqPeptideIon used for normalisation etc. Values are then used for mqPeptides values.
+       // Always update peptide values
       //
       for (mqPep <- masterQuantPeptides) {
         val mqPepIons = mqPep.masterQuantPeptideIons
@@ -148,7 +150,7 @@ class Profilizer( expDesign: ExperimentalDesign, groupSetupNumber: Int = 1, mast
           mqPepIon.masterQuantPeptideId = mqPep.id
         }
       }
-    }
+//    }
     
     //
     // Compute masterQuantPeptide ratios and profiles
