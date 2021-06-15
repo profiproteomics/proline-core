@@ -29,9 +29,12 @@ object BuildMasterQuantPeptide {
     // Generate and update master quant peptide id
     val mqPeptideIonSelLById = new mutable.HashMap[Long, Int]()
     val mqPeptideId = MasterQuantPeptide.generateNewId
+    var mqPepIonMaxSelectionLevel = SelectionLevel.DESELECTED_MANUAL // Search higher selectionLevel to copy to mqPep. Favour Selected status
     mqPepIons.foreach { mqPepIon =>
       mqPepIon.masterQuantPeptideId = mqPeptideId
       mqPeptideIonSelLById.put(mqPepIon.id,mqPepIon.selectionLevel)
+      if(mqPepIon.selectionLevel > mqPepIonMaxSelectionLevel)
+        mqPepIonMaxSelectionLevel = mqPepIon.selectionLevel
     }
 
     // Filter MQ peptide ions using the selection level
@@ -109,7 +112,7 @@ object BuildMasterQuantPeptide {
       peptideInstance = masterPepInstAsOpt,
       quantPeptideMap = quantPepByQcId,
       masterQuantPeptideIons = mqPepIons.toArray,
-      selectionLevel = mqPepIons.head.selectionLevel,
+      selectionLevel = mqPepIonMaxSelectionLevel,
       resultSummaryId = quantRsmId,
       properties = Some(mqPepProperties)
     )
