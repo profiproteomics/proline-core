@@ -10,7 +10,7 @@ import fr.profi.chemistry.model.MolecularConstants
 import fr.profi.ms.algo.IsotopePatternEstimator
 import fr.profi.ms.model.TheoreticalIsotopePattern
 import fr.profi.mzdb.{FeatureDetectorConfig, MzDbFeatureDetector, MzDbReader, SmartPeakelFinderConfig}
-import fr.profi.mzdb.algo.{IsotopicPatternScorer, PeakelsPatternPredictor}
+import fr.profi.mzdb.algo.{DotProductPatternScorer, LegacyIsotopicPatternScorer, PeakelsPatternPredictor}
 import fr.profi.mzdb.algo.PeakelsPatternPredictor.{isMatchReliable, slicePeakels}
 import fr.profi.mzdb.model.{PutativeFeature, SpectrumData, SpectrumHeader, Feature => MzDbFeature, Peakel => MzDbPeakel}
 import fr.profi.mzdb.peakeldb.PeakelDbHelper
@@ -970,16 +970,6 @@ class PeakelsDetector(
     peakelMatchesPromise.future
   }
 
-  def _selectBestPatternHypothese(putativePatterns: Array[(Double, TheoreticalIsotopePattern)], deltaScore: Double = 0.1): (Double, TheoreticalIsotopePattern) = {
-
-    val refScore = putativePatterns.head._1
-    val patterns = putativePatterns.filter(p => math.abs(p._1 - refScore) < deltaScore)
-    patterns.maxBy(p => p._2.charge)
-
-//    putativePatterns.head
-
-  }
-
   def _testIsotopicPatternPrediction(mzDbFt: MzDbFeature, charge: Int, spectrumId: Option[Long],retentionTime: Option[Float], inMemoryPeakelDb: SQLiteConnection, rTree: RTree[Integer, Point], runMetrics: Metric): Boolean = {
 
     val coelutingPeakels = PeakelDbHelper.findPeakelsInRange(
@@ -996,8 +986,8 @@ class PeakelsDetector(
     val (mzList, intensityList) = slicePeakels(coelutingPeakels, slicingSspectrumId)
     val spectrumData = new SpectrumData(mzList.toArray, intensityList.toArray)
     val ppmTol = mozTolPPM //math.max(mozTolPPM, MsUtils.DaToPPM(mzDbFt.getMz, mzDbFt.getBasePeakel().leftHwhmMean))
-    val putativePatterns = IsotopicPatternScorer.calcIsotopicPatternHypotheses(spectrumData, mzDbFt.mz, ppmTol)
-    val bestPattern = _selectBestPatternHypothese(putativePatterns)
+    val putativePatterns = DotProductPatternScorer.calcIsotopicPatternHypotheses(spectrumData, mzDbFt.mz, ppmTol)
+    val bestPattern = DotProductPatternScorer.selectBestPatternHypothese(putativePatterns)
 
     (bestPattern._2.charge == charge) && (math.abs(bestPattern._2.monoMz - mzDbFt.mz) <= mozTolInDa)
   }
@@ -1347,61 +1337,62 @@ class PeakelsDetector(
             runMetrics.incr("multi-matched peakels")
           }
 
+
           for ((charge, sameChargePeakelMatches) <- peakelMatchesByCharge) {
 
-            val mzDbFt = _createMzDbFeature(
-              inMemoryPeakelDb,
-              Some(rTree),
-              identifiedPeakel,
-              charge,
-              false,
-              sameChargePeakelMatches.map(_.spectrumHeader.getId).distinct.toArray
-            )
+            var peptides = sameChargePeakelMatches.map(_.peptide).distinct
+
+              val mzDbFt = _createMzDbFeature(
+                inMemoryPeakelDb,
+                Some(rTree),
+                identifiedPeakel,
+                charge,
+                false,
+                sameChargePeakelMatches.map(_.spectrumHeader.getId).distinct.toArray
+              )
 
 
-            // Convert mzDb feature into LC-MS one
-            val lcmsFt = this._mzDbFeatureToLcMsFeature(mzDbFt, None, rawMapId, lcMsRun.scanSequence.get, peakelIdByMzDbPeakelId)
+              // Convert mzDb feature into LC-MS one
+              val lcmsFt = this._mzDbFeatureToLcMsFeature(mzDbFt, None, rawMapId, lcMsRun.scanSequence.get, peakelIdByMzDbPeakelId)
 
-            // Store feature peakels
-            this._storeLcMsFeaturePeakels(lcmsFt,mzDbFt,rawMapId,peakelPublisher,mzDbPeakelIdByTmpPeakelId)
+              // Store feature peakels
+              this._storeLcMsFeaturePeakels(lcmsFt, mzDbFt, rawMapId, peakelPublisher, mzDbPeakelIdByTmpPeakelId)
 
-            // Add feature to the list of raw map features
-            rawMapFeatures += lcmsFt
+              // Add feature to the list of raw map features
+              rawMapFeatures += lcmsFt
 
-            // Update some mappings
-            val peptides = sameChargePeakelMatches.map(_.peptide).distinct
+              // Update some mappings
 
-
-            if (mzDbFt.getPeakelsCount == 1) {
-              runMetrics.incr("psm monoisotopic features")
-            }
-
-            runMetrics.incr("psm (ions)")
-
-            for (peptide <- peptides) {
-              entityCache.addFeatureTuple((lcmsFt, peptide, lcMsRun))
-
-              val peptideAndCharge = (peptide, charge)
-              mzDbPeakelIdsByPeptideAndCharge.getOrElseUpdate(peptideAndCharge, ArrayBuffer[Int]()) += identifiedPeakel.id
-
-              if (peptides.length > 1) {
-                entityCache.addConflictingPeptides(peptideAndCharge, peptides)
+              if (mzDbFt.getPeakelsCount == 1) {
+                runMetrics.incr("psm monoisotopic features")
               }
-            }
 
-//            val goodPrediction = _testIsotopicPatternPrediction(mzDbFt, charge, None, Some(mzDbFt.getElutionTime()), inMemoryPeakelDb, rTree, runMetrics)
-//
-//            if (!goodPrediction) {
-//              // try to predict monoisotope and charge state at the first MSMS rt
-//              val msmsTime = sameChargePeakelMatches.head.spectrumHeader.getElutionTime
-//              val predictionMSMSRt = _testIsotopicPatternPrediction(mzDbFt, charge, Some(mzDbFt.ms2SpectrumIds.head), Some(msmsTime), inMemoryPeakelDb, rTree, runMetrics)
-//              runMetrics.incr("wrong (monoisotope, charge) psm matching")
-//              logger.info("wrong psm peakel match for  {}, {}, {}, {}, {}, {}, {}", mzDbFt.getPeakelsCount(), mzDbFt.mz, mzDbFt.getElutionTime() / 60.0, mzDbFt.getBasePeakel().getApexIntensity(), charge,  peptides.head.sequence, predictionMSMSRt)
-//            }
-//
-//            if (goodPrediction && mzDbFt.getPeakelsCount() == 1) {
-//              logger.info("good psm monoisotopic peakel match for  ({}, {}, {}, {}, {}, {})", mzDbFt.getPeakelsCount(), mzDbFt.mz, mzDbFt.getElutionTime() / 60.0, mzDbFt.getBasePeakel().getApexIntensity(), charge,  peptides.head.sequence)
-//            }
+              runMetrics.incr("psm (ions)")
+
+              for (peptide <- peptides) {
+                entityCache.addFeatureTuple((lcmsFt, peptide, lcMsRun))
+
+                val peptideAndCharge = (peptide, charge)
+                mzDbPeakelIdsByPeptideAndCharge.getOrElseUpdate(peptideAndCharge, ArrayBuffer[Int]()) += identifiedPeakel.id
+
+                if (peptides.length > 1) {
+                  entityCache.addConflictingPeptides(peptideAndCharge, peptides)
+                }
+              }
+
+              //            val goodPrediction = _testIsotopicPatternPrediction(mzDbFt, charge, None, Some(mzDbFt.getElutionTime()), inMemoryPeakelDb, rTree, runMetrics)
+              //
+              //            if (!goodPrediction) {
+              //              // try to predict monoisotope and charge state at the first MSMS rt
+              //              val msmsTime = sameChargePeakelMatches.head.spectrumHeader.getElutionTime
+              //              val predictionMSMSRt = _testIsotopicPatternPrediction(mzDbFt, charge, Some(mzDbFt.ms2SpectrumIds.head), Some(msmsTime), inMemoryPeakelDb, rTree, runMetrics)
+              //              runMetrics.incr("wrong (monoisotope, charge) psm matching")
+              //              logger.info("wrong psm peakel match for  {}, {}, {}, {}, {}, {}, {}", mzDbFt.getPeakelsCount(), mzDbFt.mz, mzDbFt.getElutionTime() / 60.0, mzDbFt.getBasePeakel().getApexIntensity(), charge,  peptides.head.sequence, predictionMSMSRt)
+              //            }
+              //
+              //            if (goodPrediction && mzDbFt.getPeakelsCount() == 1) {
+              //              logger.info("good psm monoisotopic peakel match for  ({}, {}, {}, {}, {}, {})", mzDbFt.getPeakelsCount(), mzDbFt.mz, mzDbFt.getElutionTime() / 60.0, mzDbFt.getBasePeakel().getApexIntensity(), charge,  peptides.head.sequence)
+              //            }
 
           }
         } // ends for peakelMatchesByPeakelId
