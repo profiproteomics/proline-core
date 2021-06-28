@@ -970,28 +970,27 @@ class PeakelsDetector(
     peakelMatchesPromise.future
   }
 
-  def _testIsotopicPatternPrediction(mzDbFt: MzDbFeature, charge: Int, spectrumId: Option[Long],retentionTime: Option[Float], inMemoryPeakelDb: SQLiteConnection, rTree: RTree[Integer, Point], runMetrics: Metric): Boolean = {
-
-    val coelutingPeakels = PeakelDbHelper.findPeakelsInRange(
-      inMemoryPeakelDb,
-      Some(rTree),
-      mzDbFt.mz - PeakelsDetector.ISOTOPE_PATTERN_HALF_MZ_WINDOW,
-      mzDbFt.mz + PeakelsDetector.ISOTOPE_PATTERN_HALF_MZ_WINDOW,
-      if (retentionTime.isDefined) { retentionTime.get - crossAssignmentConfig.get.ftMappingParams.timeTol } else { mzDbFt.getBasePeakel().getFirstElutionTime() },
-      if (retentionTime.isDefined) { retentionTime.get + crossAssignmentConfig.get.ftMappingParams.timeTol } else { mzDbFt.getBasePeakel().getLastElutionTime() }   //mzDbFt.getElutionTime() + crossAssignmentConfig.get.ftMappingParams.timeTol
-    )
-
-    val mozTolInDa = MsUtils.ppmToDa(mzDbFt.mz, crossAssignmentConfig.get.ftMappingParams.mozTol.get) // crossAssignmentConfig.get.ftMappingParams.mozTol.get)
-    val slicingSspectrumId = if (spectrumId.isDefined) { spectrumId.get } else { mzDbFt.getBasePeakel().getApexSpectrumId() }
-    val (mzList, intensityList) = slicePeakels(coelutingPeakels, slicingSspectrumId)
-    val spectrumData = new SpectrumData(mzList.toArray, intensityList.toArray)
-    val ppmTol = mozTolPPM //math.max(mozTolPPM, MsUtils.DaToPPM(mzDbFt.getMz, mzDbFt.getBasePeakel().leftHwhmMean))
-    val putativePatterns = DotProductPatternScorer.calcIsotopicPatternHypotheses(spectrumData, mzDbFt.mz, ppmTol)
-    val bestPattern = DotProductPatternScorer.selectBestPatternHypothese(putativePatterns)
-
-    (bestPattern._2.charge == charge) && (math.abs(bestPattern._2.monoMz - mzDbFt.mz) <= mozTolInDa)
-  }
-
+//  def _testIsotopicPatternPrediction(mzDbFt: MzDbFeature, charge: Int, spectrumId: Option[Long],retentionTime: Option[Float], inMemoryPeakelDb: SQLiteConnection, rTree: RTree[Integer, Point], runMetrics: Metric): Boolean = {
+//
+//    val coelutingPeakels = PeakelDbHelper.findPeakelsInRange(
+//      inMemoryPeakelDb,
+//      Some(rTree),
+//      mzDbFt.mz - PeakelsDetector.ISOTOPE_PATTERN_HALF_MZ_WINDOW,
+//      mzDbFt.mz + PeakelsDetector.ISOTOPE_PATTERN_HALF_MZ_WINDOW,
+//      if (retentionTime.isDefined) { retentionTime.get - crossAssignmentConfig.get.ftMappingParams.timeTol } else { mzDbFt.getBasePeakel().getFirstElutionTime() },
+//      if (retentionTime.isDefined) { retentionTime.get + crossAssignmentConfig.get.ftMappingParams.timeTol } else { mzDbFt.getBasePeakel().getLastElutionTime() }   //mzDbFt.getElutionTime() + crossAssignmentConfig.get.ftMappingParams.timeTol
+//    )
+//
+//    val mozTolInDa = MsUtils.ppmToDa(mzDbFt.mz, crossAssignmentConfig.get.ftMappingParams.mozTol.get) // crossAssignmentConfig.get.ftMappingParams.mozTol.get)
+//    val slicingSspectrumId = if (spectrumId.isDefined) { spectrumId.get } else { mzDbFt.getBasePeakel().getApexSpectrumId() }
+//    val (mzList, intensityList) = slicePeakels(coelutingPeakels, slicingSspectrumId)
+//    val spectrumData = new SpectrumData(mzList.toArray, intensityList.toArray)
+//    val ppmTol = mozTolPPM //math.max(mozTolPPM, MsUtils.DaToPPM(mzDbFt.getMz, mzDbFt.getBasePeakel().leftHwhmMean))
+//    val putativePatterns = DotProductPatternScorer.calcIsotopicPatternHypotheses(spectrumData, mzDbFt.mz, ppmTol)
+//    val bestPattern = DotProductPatternScorer.selectBestPatternHypothese(putativePatterns)
+//
+//    (bestPattern._2.charge == charge) && (math.abs(bestPattern._2.monoMz - mzDbFt.mz) <= mozTolInDa)
+//  }
 
   private def _detectMapsFromPeakels(
     rawMaps: Seq[RawMap],
