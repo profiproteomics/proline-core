@@ -266,6 +266,7 @@ case class PostProcessingConfigV2(
 
 }
 
+// !!!  NORMALIZATION WARNING !!!  : Peptide config normalization config is currently used for Peptide IONS normalisation .... To be changed
 case class PostProcessingConfig(
     val configVersion: String = "3.0",
 
@@ -280,6 +281,7 @@ case class PostProcessingConfig(
     @(JsonScalaEnumeration @field)(classOf[MqPepIonAbundanceSummarizingMethodRef])
     var pepIonAbundanceSummarizingMethod : MqPepIonAbundanceSummarizingMethod.Value = MqPepIonAbundanceSummarizingMethod.BEST_ION,
 
+    // !!!  NORMALIZATION WARNING !!!  : Peptide config normalization config is currently used for Peptide IONS normalisation .... To be changed
     peptideStatConfig: ProfilizerStatConfig = new ProfilizerStatConfig(),
 
      //PROTEINS level

@@ -16,7 +16,7 @@ trait QuantComponent {
   val rawAbundance: Float
   var abundance: Float
   var selectionLevel: Int
-  def peptideMatchesCount: Int
+  var peptideMatchesCount: Int
   
   def hasRawAbundance = if( rawAbundance.isNaN ) false else true
   def hasAbundance = if( abundance.isNaN ) false else true
@@ -90,7 +90,7 @@ trait MasterQuantComponent[A <: QuantComponent] extends Item {
   
   
   def setAbundancesForQuantChannels(abundances: Seq[Float], quantChannelIds: Seq[Long])
-    
+
   protected def updateOrCreateComponentForQuantChannels(
     abundances: Seq[Float],
     quantChannelIds: Seq[Long],
@@ -104,6 +104,28 @@ trait MasterQuantComponent[A <: QuantComponent] extends Item {
         quantCompMap(qcId).abundance = ab
       } else {
         quantCompMap.put(qcId, buildQuantComponent(ab,qcId))
+      }
+    }
+  }
+
+  protected def updateOrCreateComponentForQuantChannels(
+     abundances: Seq[Float],
+     psmCounts: Seq[Int],
+     quantChannelIds: Seq[Long],
+     buildQuantComponent: (Float,Int, Long) => A
+   ) {
+
+    val quantCompMap = this.getQuantComponentMap()
+
+    for (index <- 0 until quantChannelIds.length) {
+      val qcId = quantChannelIds(index)
+      val ab = abundances(index)
+      val psmCount = psmCounts(index)
+      if( quantCompMap.contains(qcId) ) {
+        quantCompMap(qcId).abundance = ab
+        quantCompMap(qcId).peptideMatchesCount =  psmCount
+      } else {
+        quantCompMap.put(qcId, buildQuantComponent(ab,psmCount,qcId))
       }
     }
   }
@@ -139,9 +161,10 @@ case class QuantReporterIon(
   val moz: Double,
   val rawAbundance: Float,
   var abundance: Float,
-  var selectionLevel: Int
+  var selectionLevel: Int,
+  var peptideMatchesCount: Int = 1
 ) extends QuantComponent {
-  def peptideMatchesCount: Int = 1
+
 }
 
 object MasterQuantReporterIon extends InMemoryIdGen
@@ -363,7 +386,7 @@ case class QuantPeptide(
   val rawAbundance: Float,
   var abundance: Float,
   val elutionTime: Float,
-  val peptideMatchesCount: Int,
+  var peptideMatchesCount: Int,
   var selectionLevel: Int,
   
   val quantChannelId: Long,
@@ -463,7 +486,25 @@ case class MasterQuantPeptide(
       )
     )
   }
-  
+
+  def setAbundancesAndPsmCountForQuantChannels( abundances: Seq[Float], psmCounts: Seq[Int], quantChannelIds: Seq[Long] ) {
+    assert(abundances.size.equals(quantChannelIds.size) && psmCounts.size.equals(quantChannelIds.size))
+
+    this.updateOrCreateComponentForQuantChannels(
+      abundances,
+      psmCounts,
+      quantChannelIds,
+      (abundance,psmCount, qcId) => QuantPeptide(
+        rawAbundance = Float.NaN,
+        abundance = abundance,
+        elutionTime = Float.NaN,
+        peptideMatchesCount = psmCount,
+        selectionLevel = 2,
+        quantChannelId = qcId
+      )
+    )
+  }
+
   def getRatios( groupSetupNumber: Int ): List[Option[ComputedRatio]] = {
     this.properties.flatMap { mqPepProps =>
       val profileByGSNumberOpt = mqPepProps.getMqPepProfileByGroupSetupNumber
