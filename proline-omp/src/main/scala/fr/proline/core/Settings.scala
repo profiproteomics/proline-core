@@ -28,6 +28,8 @@ object Settings {
   val isomericPeptidesSharePeakels = config.getBoolean("MapSetDetector.PeakelsDetector.isomericPeptidesSharePeakels")
   val meanPredictedRetentionTime = config.getBoolean("MapSetDetector.PeakelsDetector.meanPredictedRetentionTime")
   val correctedMoz = config.getBoolean("MapSetDetector.PeakelsDetector.correctedMoz")
+  val maxAdaptativeRTTolerance = config.getDouble("MapSetDetector.PeakelsDetector.maxAdaptativeRTTolerance").toFloat
+  val useAdaptativeRTTolerance = config.getBoolean("MapSetDetector.PeakelsDetector.useAdaptativeRTTolerance")
 
   object LoessSmoother {
     val defaultBandwidth = config.getConfig("LoessSmoother").getDouble("defaultBandwidth")
@@ -36,5 +38,9 @@ object Settings {
 
   private val _smartPeakelFinderConfig = config.getConfig("MapSetDetector.PeakelsDetector.SmartPeakelFinderConfig")
   private val _featureDetectorConfig = config.getConfig("MapSetDetector.PeakelsDetector.FeatureDetectorConfig")
+
+  def renderConfigAsString(): String = {
+    config.root().render()
+  }
 
 }

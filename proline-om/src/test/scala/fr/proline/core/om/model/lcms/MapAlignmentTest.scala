@@ -21,7 +21,7 @@ class MapAlignmentTest {
   @Test
   def testCalcTargetMapElutionTime {
     
-    val calcTarTimeList = refTimeList.map { refTime => mapAlignment.calcTargetMapElutionTime(refTime) }
+    val calcTarTimeList = refTimeList.map { refTime => mapAlignment.calcTargetMapElutionTime(refTime)._1 }
     //calcTarTimeList.foreach { println(_) }
     assertArrayEquals(tarTimeList, calcTarTimeList, 0f)
 
@@ -31,7 +31,7 @@ class MapAlignmentTest {
   def testGetReversedAlignment {
     
     val revMapAln = mapAlignment.getReversedAlignment
-    val calcRefTimeList = tarTimeList.map( revMapAln.calcTargetMapElutionTime(_) )
+    val calcRefTimeList = tarTimeList.map( revMapAln.calcTargetMapElutionTime(_)._1 )
     
     assertArrayEquals(refTimeList, calcRefTimeList, 0f)
   }

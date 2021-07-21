@@ -1,6 +1,7 @@
 package fr.proline.core.algo.lcms.alignment
 
 import fr.proline.core.algo.lcms.AlnSmoothingParams
+import fr.proline.core.algo.msq.profilizer.CommonsStatHelper
 
 class LandmarkRangeSmoother extends IAlnSmoother {
 
@@ -35,8 +36,10 @@ class LandmarkRangeSmoother extends IAlnSmoother {
 
         // If the landmark group is completely filled
         if (landmarkGroup.length == smoothingWindowSize) {
+          val lmStats = CommonsStatHelper.calcExtendedStatSummary(landmarkGroup.map(_.dx).toArray)
           val medianLm = computeMedianLandmark(landmarkGroup)
-          newLandmarks += medianLm
+          val newLandmark = medianLm.copy(tx = math.abs(3*lmStats.getInterQuartileRange()))
+          newLandmarks += newLandmark
         }
         
         ()

@@ -53,11 +53,11 @@ class LcMsMapSetFakeGenerator(
         val newMoz = LcMsRandomator.fluctuateValue(ft.moz, mozErrorInDa, mozErrorInDa * 3)
         
         var newTime = mapAlnSet.calcTargetMapElutionTime(ft.elutionTime, Some(ft.mass) )
-        newTime = LcMsRandomator.fluctuateValue(newTime, timeError, timeError * 3)
+        newTime = (LcMsRandomator.fluctuateValue(newTime._1, timeError, timeError * 3), newTime._2)
         
-        val corrTime = reversedAlnSet.calcTargetMapElutionTime(newTime, Some(ft.mass))
+        val corrTime = reversedAlnSet.calcTargetMapElutionTime(newTime._1, Some(ft.mass))
         //println(ft.elutionTime+" "+corrTime)
-        ft.copy( moz = newMoz, elutionTime = newTime, correctedElutionTime = Some(corrTime) )
+        ft.copy( moz = newMoz, elutionTime = newTime._1, correctedElutionTime = Some(corrTime._1) )
       }
       
       fixedProcessedMaps += processedMap.copy( features = updatedFeatures )

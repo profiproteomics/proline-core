@@ -437,8 +437,8 @@ class FeaturesDetector (
           
           if (predictedTimeOpt.isDefined) {
             // Fix negative predicted times and remove decimals
-            val predictedTime = if (predictedTimeOpt.get <= 0) 1f
-            else math.round(predictedTimeOpt.get).toFloat
+            val predictedTime = if (predictedTimeOpt.get._1 <= 0) 1f
+            else math.round(predictedTimeOpt.get._1).toFloat
             
             // Note: we can have multiple missing features for a given MFT
             // However we assume there a single missing feature for a given map
@@ -450,11 +450,10 @@ class FeaturesDetector (
               mz = mft.moz,
               charge = mft.charge,
               elutionTime = predictedTime,
-              evidenceMsLevel = 2
+              evidenceMsLevel = 2,
+              isPredicted = true
             )
   
-            pf.isPredicted = true
-            
             // TODO: check the usage of these values
             pf.durations = mft.children.map(_.duration)
             pf.areas = mft.children.map(_.intensity)

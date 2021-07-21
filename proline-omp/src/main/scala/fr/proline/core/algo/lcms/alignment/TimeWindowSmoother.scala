@@ -1,6 +1,7 @@
 package fr.proline.core.algo.lcms.alignment
 
 import fr.proline.core.algo.lcms.AlnSmoothingParams
+import fr.proline.core.algo.msq.profilizer.CommonsStatHelper
 
 class TimeWindowSmoother extends IAlnSmoother {
 
@@ -37,14 +38,15 @@ class TimeWindowSmoother extends IAlnSmoother {
         while (landmarkIdx < nbLandmarks && landmarksSortedByTime(landmarkIdx).x < maxVal) {
 
           landmarkGroup += landmarksSortedByTime(landmarkIdx)
-
           landmarkIdx += 1
         }
 
         // If the landmark group is filled enough
         if (landmarkGroup.length >= minWindowLandmarks) {
+          val lmStats = CommonsStatHelper.calcExtendedStatSummary(landmarkGroup.map(_.dx).toArray)
           val medianLm = computeMedianLandmark(landmarkGroup)
-          newLandmarks += medianLm
+          val newLandmark = medianLm.copy(tx = math.abs(3*lmStats.getInterQuartileRange()))
+          newLandmarks += newLandmark
         }
       }
     }

@@ -1,9 +1,10 @@
 package fr.proline.core.om.storer.lcms.impl
 
 import fr.profi.jdbc.easy._
+import fr.profi.util.serialization.ProfiJson
 import fr.proline.context.LcMsDbConnectionContext
 import fr.proline.core.dal.DoJDBCWork
-import fr.proline.core.dal.tables.lcms.{ LcmsDbMapAlignmentTable }
+import fr.proline.core.dal.tables.lcms.LcmsDbMapAlignmentTable
 import fr.proline.core.om.storer.lcms.IMapAlnSetStorer
 import fr.proline.core.om.model.lcms.MapAlignmentSet
   
@@ -30,7 +31,7 @@ class SQLMapAlnSetStorer( val lcmsDbCtx: LcMsDbConnectionContext ) extends IMapA
               mapAln.massRange._2,
               mapAln.timeList.mkString(" "),
               mapAln.deltaTimeList.mkString(" "),
-              Option.empty[String],
+              mapAln.properties.map( ProfiJson.serialize(_) ),
               mapSetId
             )
           }

@@ -47,8 +47,9 @@ class AlnSmootherTest extends JUnitSuite with MustMatchers with StrictLogging {
     
     val lmRangeMapLandmarks = landmarkRangeSmoother.smoothLandmarks(landmarks, Some(lmRangeSmoothingParams))
     val timeWindowMaplandmarks = timeWindowSmoother.smoothLandmarks(landmarks, Some(timeWindowSmoothingParams))
-    
-    lmRangeMapLandmarks must equal (timeWindowMaplandmarks)
+
+    lmRangeMapLandmarks.map(_.x) must equal (timeWindowMaplandmarks.map(_.x))
+    lmRangeMapLandmarks.map(_.dx) must equal (timeWindowMaplandmarks.map(_.dx))
   }
   
   @Test
@@ -118,8 +119,17 @@ class AlnSmootherTest extends JUnitSuite with MustMatchers with StrictLogging {
     // Test requirements
     newLandmarks.length must equal (20)
     newLandmarks(0).x must equal (1)
-    newLandmarks(19).dx must be ( 0.752 +- 1e-3 )
-    
+    newLandmarks(19).dx must be ( 0.9129 +- 1e-3 )
+  }
+
+  @Test
+  def smoothWithLoessFewPoints(): Unit = {
+    val shortTimeList = Array(1,2,3,4,5,6).map(_.toFloat)
+    val shortDeltaTimeList = shortTimeList.map( math.sin(_).toFloat )
+    val shortLandmarks = shortTimeList.zip(shortDeltaTimeList).map { case(t, dt) =>  Landmark(t, dt) }
+    val smoothedLandmarks = loessSmoother.smoothLandmarks(shortLandmarks, null)
+
+    smoothedLandmarks.size must equal (6)
   }
   
 }
