@@ -27,7 +27,7 @@ object Settings {
   val filterAssignedPeakels = config.getBoolean("MapSetDetector.PeakelsDetector.filterAssignedPeakels")
   val isomericPeptidesSharePeakels = config.getBoolean("MapSetDetector.PeakelsDetector.isomericPeptidesSharePeakels")
   val meanPredictedRetentionTime = config.getBoolean("MapSetDetector.PeakelsDetector.meanPredictedRetentionTime")
-  val correctedMoz = config.getBoolean("MapSetDetector.PeakelsDetector.correctedMoz")
+  val useMozCalibration = config.getBoolean("MapSetDetector.PeakelsDetector.useMozCalibration")
   val maxAdaptativeRTTolerance = config.getDouble("MapSetDetector.PeakelsDetector.maxAdaptativeRTTolerance").toFloat
   val useAdaptativeRTTolerance = config.getBoolean("MapSetDetector.PeakelsDetector.useAdaptativeRTTolerance")
 

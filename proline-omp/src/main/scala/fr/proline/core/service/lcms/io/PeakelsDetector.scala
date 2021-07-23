@@ -473,7 +473,7 @@ class PeakelsDetector(
 
             // predict experimental mz of the putative feature
 
-            val putativeMoz = if (Settings.correctedMoz) {
+            val putativeMoz = if (Settings.useMozCalibration) {
                   val targetProcMap = processedMapByRunId(lcMsRunId)
                   val theoreticalMoz = massToMoz(peptide.calculatedMass, charge)
                   val dmass = targetProcMap.mozCalibrations.get.head.calcDeltaMoz(predictedTime)
