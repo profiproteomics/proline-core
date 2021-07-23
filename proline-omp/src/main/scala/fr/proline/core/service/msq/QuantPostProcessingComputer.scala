@@ -3,28 +3,24 @@ package fr.proline.core.service.msq
 import com.typesafe.scalalogging.LazyLogging
 import fr.profi.api.service.IService
 import fr.profi.jdbc.easy._
-import fr.profi.util.collection._
 import fr.profi.util.serialization.ProfiJson
 import fr.proline.context.IExecutionContext
-import fr.proline.core.algo.lcms.summarizing._
-import fr.proline.core.algo.lcms.{FeatureSummarizer, FeatureSummarizingMethod}
 import fr.proline.core.algo.msq.Profilizer
 import fr.proline.core.algo.msq.config.profilizer.PostProcessingConfig
 import fr.proline.core.algo.msq.summarizing.BuildMasterQuantPeptide
-import fr.proline.core.dal.{BuildLazyExecutionContext, DoJDBCWork}
 import fr.proline.core.dal.helper.UdsDbHelper
-import fr.proline.core.om.model.lcms.Feature
+import fr.proline.core.dal.{BuildLazyExecutionContext, DoJDBCWork}
 import fr.proline.core.om.model.SelectionLevel
+import fr.proline.core.om.model.lcms.Feature
 import fr.proline.core.om.model.msq.{ExperimentalDesign, MasterQuantPeptideProperties}
 import fr.proline.core.om.provider.PeptideCacheExecutionContext
 import fr.proline.core.om.provider.lcms.impl.SQLMapSetProvider
 import fr.proline.core.om.provider.msq.impl.{SQLExperimentalDesignProvider, SQLQuantResultSummaryProvider}
-import fr.proline.core.orm.uds.{MasterQuantitationChannel, ObjectTree, ObjectTreeSchema}
 import fr.proline.core.orm.uds.repository.ObjectTreeSchemaRepository
+import fr.proline.core.orm.uds.{MasterQuantitationChannel, ObjectTree, ObjectTreeSchema}
 import fr.proline.repository.IDataStoreConnectorFactory
 
 import scala.collection.mutable
-import scala.collection.mutable.ArrayBuffer
 
 // Factory for Proline-Cortex
 object QuantPostProcessingComputer {
@@ -106,104 +102,6 @@ class QuantPostProcessingComputer(
     // Note that it is important to load the Result Set to have all required information
     val quantRSM = quantRsmProvider.getQuantResultSummary(quantRsmId, qcIds, loadResultSet = true).get
     logger.info("Before Feature summarizer mqPep with selection level == 1 : "+quantRSM.masterQuantPeptides.count(_.selectionLevel == 1))
-
-    // !!! STILL EXPERIMENTAL !!!
-    val summarizeFeatures = false
-    if( summarizeFeatures ) {
-      
-      logger.warn("!!! STILL EXPERIMENTAL CODE FEATURE SUMMARIZER !!! ")
-      // --- 1.2 Load the peakels --- //
-      val qcByLcMsMapId = experimentalDesign.masterQuantChannels.head.quantChannels.map { qc =>
-        qc.lcmsMapId.get -> qc
-      }.toMap
-      val lcmsDbCtx = executionContext.getLCMSDbConnectionContext
-      val mapSetProvider = new SQLMapSetProvider(lcmsDbCtx = lcmsDbCtx)
-      val mapSet = mapSetProvider.getMapSet(udsMasterQuantChannel.getLcmsMapSetId, loadPeakels = true)
-      val masterFtById = mapSet.masterMap.features.toSeq.view.map( ft => ft.id -> ft ).toMap
-      
-      // --- 1.3 Apply some corrections to the MQ peptide ions --- //
-      logger.info("Applying some corrections to the master quant peptide ions...")
-      
-      val ftSummarizer = new FeatureSummarizer(
-        peakelPreProcessingMethod = PeakelPreProcessingMethod.NONE,
-        peakelSummarizingMethod = PeakelSummarizingMethod.APEX_INTENSITY,
-        featureSummarizingMethod = FeatureSummarizingMethod.HIGHEST_THEORETICAL_ISOTOPE
-      )
-      
-      for( mqPep <- quantRSM.masterQuantPeptides ) {
-        val mqPepIons = mqPep.masterQuantPeptideIons
-        
-        // Update master quant peptides ions
-        for( mqPepIon <- mqPepIons) {
-          
-          val qPepIonMap = mqPepIon.quantPeptideIonMap
-          val masterFt = masterFtById(mqPepIon.lcmsMasterFeatureId.get)
-          
-          // Index features by their sample number
-          val ftQcIds = new ArrayBuffer[Long](masterFt.children.length)
-          val indexedFts = masterFt.children.map{ft:Feature =>
-            val qc = qcByLcMsMapId(ft.relations.processedMapId)
-            val qcId = qc.id
-            ftQcIds += qcId
-            
-            val qPepIon = qPepIonMap(qcId)
-            val qPepIonFtId = qPepIon.lcmsFeatureId.getOrElse(0)
-            
-            // Retrieve the feature to use as a reference for this cluster
-            val mainClusterFt = if(!ft.isCluster) ft
-            else {
-              val ftOpt = ft.subFeatures.find(_.id == qPepIonFtId)
-              if( ftOpt.isDefined) ftOpt.get
-              else {
-                ft.subFeatures.maxBy(_.intensity)//VDS Warning maxBy may return wrong value if NaN
-              }
-            }
-            /*if(mainClusterFt.relations.peakelItems.isEmpty) {
-              println(mainClusterFt)
-            }*/
-            
-            mainClusterFt -> qc.sampleNumber
-          }
-          
-          // Re-compute the features intensities
-          val ftIntensities = ftSummarizer.computeFeaturesIntensities(indexedFts)
-          if( ftIntensities.count(_.isNaN == false) == 0) {
-            /*println(indexedFts.map(_._1.intensity).toList)
-            println(ftIntensities.toList)*/
-          }
-          
-          val nonReliableFtsCount =  masterFt.children.count( _.properties.flatMap(_.getIsReliable()).getOrElse(true) == false )
-            if (nonReliableFtsCount > 0) {
-              masterFt.selectionLevel = 0
-          }
-            
-          val newQPepIonMap = for( (ftIntensity,qcId) <- ftIntensities.zip(ftQcIds) ) yield {
-//            val qPepIon = qPepIonMap(qcId).copy( rawAbundance = ftIntensity, abundance = ftIntensity )
-            val qPepIon = qPepIonMap(qcId).copy()
-            qcId -> qPepIon
-          }
-          
-          mqPepIon.quantPeptideIonMap = newQPepIonMap.toLongMap
-          mqPepIon.selectionLevel = masterFt.selectionLevel
-        }
-        
-        // Re-build the master quant peptides
-        val newMqPep = BuildMasterQuantPeptide(mqPepIons, mqPep.peptideInstance, mqPep.resultSummaryId,config.pepIonAbundanceSummarizingMethod)
-        //WARNING: If this code is activated, verify previous selectionlevel to allow or not its modification
-        mqPep.selectionLevel = newMqPep.selectionLevel
-        // the next step is mandatory since BuildMasterQuantPeptide updates mqPepIons.masterQuantPeptideId to the new MasterQuantPeptide
-        mqPepIons.foreach { mqPepIon =>
-            mqPepIon.masterQuantPeptideId = mqPep.id
-        }
-        //Get properties back
-        mqPep.properties.getOrElse(MasterQuantPeptideProperties()).mqPepIonAbundanceSummarizingConfig= newMqPep.properties.getOrElse(MasterQuantPeptideProperties()).mqPepIonAbundanceSummarizingConfig
-        mqPep.quantPeptideMap = newMqPep.quantPeptideMap
-      }
-      
-      logger.info("After Feature summarizer mqPep with selection level == 0 : "+quantRSM.masterQuantPeptides.withFilter(_.selectionLevel == 0).map(_.id).length)
-      quantRSM.masterQuantPeptides
-      
-    } // end of summarizeFeatures
 
     //
     // Reset mq peptide selection level, only for AUTO values
@@ -414,17 +312,17 @@ class QuantPostProcessingComputer(
 
     udsDbCtx.beginTransaction()
     
-    // Save profilizerConfigSchema as an ObjectTree
-    val profilizerConfigSchemaName = ObjectTreeSchema.SchemaName.POST_QUANT_PROCESSING_CONFIG.getKeyName
-    val profilizerConfigSchema = ObjectTreeSchemaRepository.loadOrCreateObjectTreeSchema(udsEM,profilizerConfigSchemaName)
-    val profilizerConfigObjectTree = new ObjectTree()
-    profilizerConfigObjectTree.setSchema(profilizerConfigSchema)
-    profilizerConfigObjectTree.setClobData(ProfiJson.serialize(config))
-    udsEM.persist(profilizerConfigObjectTree)
+    // Save PostProcessConfigSchema as an ObjectTree
+    val postProcessConfigSchemaName = ObjectTreeSchema.SchemaName.POST_QUANT_PROCESSING_CONFIG.getKeyName
+    val ppstProcessConfigSchema = ObjectTreeSchemaRepository.loadOrCreateObjectTreeSchema(udsEM,postProcessConfigSchemaName)
+    val postProcessConfigObjectTree = new ObjectTree()
+    postProcessConfigObjectTree.setSchema(ppstProcessConfigSchema)
+    postProcessConfigObjectTree.setClobData(ProfiJson.serialize(config))
+    udsEM.persist(postProcessConfigObjectTree)
 
     // Link the ObjectTree to the quantitation dataset
     val udsQuantitation = udsMasterQuantChannel.getDataset
-    udsQuantitation.putObject(profilizerConfigSchemaName, profilizerConfigObjectTree.getId())
+    udsQuantitation.putObject(postProcessConfigSchemaName, postProcessConfigObjectTree.getId())
     udsEM.merge(udsQuantitation)
     
     udsDbCtx.commitTransaction()

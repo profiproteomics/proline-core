@@ -1,19 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<architect-project version="1.0" appversion="1.0.7">
+<architect-project version="1.0" appversion="1.0.8">
  <project-name>MSI-DB</project-name>
  <print-settings numCopies="1" zoom="1.0" pageNumbersPrinted="true" orientation="1" paperWidth="612.0" paperHeight="792.0" leftBorder="50.0" rightBorder="50.0" topBorder="50.0" bottomBorder="50.0" />
  <project-data-sources>
   <data-source id="DS0">
-   <property key="Connection Type" value="PostgreSQL" />
    <property key="Logical" value="PlayPen Database" />
-   <property key="JDBC URL" value="jdbc:postgresql://localhost:5432/msi_db-2_project_6" />
-   <property key="UID" value="proline" />
-   <property key="PWD" value="proline" />
-   <property key="ca.sqlpower.architect.etl.kettle.database" value="" />
-   <property key="ca.sqlpower.architect.etl.kettle.port" value="" />
-   <property key="ca.sqlpower.architect.etl.kettle.hostname" value="" />
-   <property key="ca.sqlpower.architect.etl.kettle.repos.login" value="" />
-   <property key="ca.sqlpower.architect.etl.kettle.repos.password" value="" />
   </data-source>
  </project-data-sources>
  <source-databases>
@@ -2370,7 +2361,7 @@ Allowed values:
    </relationship>
   </relationships>
  </target-database>
- <ddl-generator type="ca.sqlpower.architect.ddl.PostgresDDLGenerator" allow-connection="false" target-schema="public"> </ddl-generator>
+ <ddl-generator type="ca.sqlpower.architect.ddl.PostgresDDLGenerator" allow-connection="true" target-schema="public"> </ddl-generator>
  <liquibase-settings useSeparateChangeSets="false" generateId="false" idStart="1"/>
  <compare-dm-settings  ddlGenerator="ca.sqlpower.architect.ddl.H2DDLGenerator"  outputFormatAsString="SQL"  saveFlag="true" >
   <source-stuff   datastoreTypeAsString="FILE"   filePath="E:\eclipse\workspace\proline-core-psdb\Proline-Databases\diagrams\MSI-DB.architect"  />
@@ -2378,60 +2369,60 @@ Allowed values:
   <liquibase-settings useSeparateChangeSets="false" generateId="false" idStart="1"/>
  </compare-dm-settings>
  <create-kettle-job-settings filePath="" jobName="" schemaName="" kettleJoinType="0" savingToFile="true" />
- <play-pen zoom="0.8465468252641615" viewportX="468" viewportY="0" relationship-style="rectilinear" names-displayLogicalNames="true" showPrimaryTag="true" showForeignTag="true" showAlternateTag="true" columnVisibility="ALL" relationshipLabelVisibility="true">
-  <table-pane table-ref="TAB539" x="20" y="908" bgColor="0xc8dccc" fgColor="0x000000" rounded="true" dashed="false"/>
-  <table-pane table-ref="TAB1" x="1785" y="923" bgColor="0xc8dccc" fgColor="0x000000" rounded="true" dashed="false"/>
-  <table-pane table-ref="TAB14" x="2080" y="1082" bgColor="0xc8dccc" fgColor="0x000000" rounded="true" dashed="false"/>
-  <table-pane table-ref="TAB21" x="1895" y="443" bgColor="0xe6d794" fgColor="0x000000" rounded="true" dashed="false"/>
-  <table-pane table-ref="TAB37" x="2401" y="64" bgColor="0xeec994" fgColor="0x000000" rounded="true" dashed="false"/>
-  <table-pane table-ref="TAB48" x="1559" y="220" bgColor="0xe6d794" fgColor="0x000000" rounded="true" dashed="false"/>
-  <table-pane table-ref="TAB58" x="2034" y="767" bgColor="0xc7d0df" fgColor="0x000000" rounded="true" dashed="false"/>
-  <table-pane table-ref="TAB69" x="2227" y="533" bgColor="0xe6d794" fgColor="0x000000" rounded="true" dashed="false"/>
-  <table-pane table-ref="TAB76" x="1869" y="53" bgColor="0xe6d794" fgColor="0x000000" rounded="true" dashed="false"/>
-  <table-pane table-ref="TAB83" x="269" y="821" bgColor="0xc8dccc" fgColor="0x000000" rounded="true" dashed="false"/>
-  <table-pane table-ref="TAB107" x="1559" y="50" bgColor="0xe6d794" fgColor="0x000000" rounded="true" dashed="false"/>
-  <table-pane table-ref="TAB114" x="752" y="318" bgColor="0xc8dccc" fgColor="0x000000" rounded="true" dashed="false"/>
-  <table-pane table-ref="TAB127" x="695" y="1148" bgColor="0xdfedce" fgColor="0x000000" rounded="true" dashed="false"/>
-  <table-pane table-ref="TAB142" x="2233" y="1545" bgColor="0xe4e4b8" fgColor="0x000000" rounded="true" dashed="false"/>
-  <table-pane table-ref="TAB152" x="62" y="1421" bgColor="0xc8b7ea" fgColor="0x000000" rounded="true" dashed="false"/>
-  <table-pane table-ref="TAB163" x="941" y="1508" bgColor="0xdfedce" fgColor="0x000000" rounded="true" dashed="false"/>
-  <table-pane table-ref="TAB178" x="316" y="1373" bgColor="0xc8dccc" fgColor="0x000000" rounded="true" dashed="false"/>
-  <table-pane table-ref="TAB201" x="1311" y="527" bgColor="0xe6d794" fgColor="0x000000" rounded="true" dashed="false"/>
-  <table-pane table-ref="TAB215" x="1901" y="170" bgColor="0xe6d794" fgColor="0x000000" rounded="true" dashed="false"/>
-  <table-pane table-ref="TAB230" x="1605" y="574" bgColor="0xc7d0df" fgColor="0x000000" rounded="true" dashed="false"/>
-  <table-pane table-ref="TAB254" x="2120" y="54" bgColor="0xe6d794" fgColor="0x000000" rounded="true" dashed="false"/>
-  <table-pane table-ref="TAB260" x="1219" y="399" bgColor="0xeeeeee" fgColor="0x000000" rounded="true" dashed="false"/>
-  <table-pane table-ref="TAB274" x="935" y="449" bgColor="0xc8dccc" fgColor="0x000000" rounded="true" dashed="false"/>
-  <table-pane table-ref="TAB302" x="1542" y="360" bgColor="0xeeeeee" fgColor="0x000000" rounded="true" dashed="false"/>
-  <table-pane table-ref="TAB314" x="1154" y="41" bgColor="0xc8b7ea" fgColor="0x000000" rounded="true" dashed="false"/>
-  <table-pane table-ref="TAB327" x="223" y="632" bgColor="0xeec994" fgColor="0x000000" rounded="true" dashed="false"/>
-  <table-pane table-ref="TAB339" x="2044" y="985" bgColor="0xc7d0df" fgColor="0x000000" rounded="true" dashed="false"/>
-  <table-pane table-ref="TAB345" x="2256" y="378" bgColor="0xeec994" fgColor="0x000000" rounded="true" dashed="false"/>
-  <table-pane table-ref="TAB355" x="2356" y="1345" bgColor="0xe4e4b8" fgColor="0x000000" rounded="true" dashed="false"/>
-  <table-pane table-ref="TAB365" x="673" y="1368" bgColor="0xdfedce" fgColor="0x000000" rounded="true" dashed="false"/>
-  <table-pane table-ref="TAB375" x="2149" y="625" bgColor="0xeec994" fgColor="0x000000" rounded="true" dashed="false"/>
-  <table-pane table-ref="TAB385" x="391" y="182" bgColor="0xe6d794" fgColor="0x000000" rounded="true" dashed="false"/>
-  <table-pane table-ref="TAB393" x="1867" y="1160" bgColor="0xc8dccc" fgColor="0x000000" rounded="true" dashed="false"/>
-  <table-pane table-ref="TAB399" x="564" y="636" bgColor="0xdfedce" fgColor="0x000000" rounded="true" dashed="false"/>
-  <table-pane table-ref="TAB424" x="975" y="1099" bgColor="0xf6bcbc" fgColor="0x000000" rounded="true" dashed="false"/>
-  <table-pane table-ref="TAB435" x="968" y="762" bgColor="0xf6bcbc" fgColor="0x000000" rounded="true" dashed="false"/>
-  <table-pane table-ref="TAB461" x="578" y="1010" bgColor="0xdfedce" fgColor="0x000000" rounded="true" dashed="false"/>
-  <table-pane table-ref="TAB475" x="1643" y="1270" bgColor="0xdfedce" fgColor="0x000000" rounded="true" dashed="false"/>
-  <table-pane table-ref="TAB486" x="1758" y="1471" bgColor="0xdfedce" fgColor="0x000000" rounded="true" dashed="false"/>
-  <table-pane table-ref="TAB492" x="1963" y="1357" bgColor="0xdfedce" fgColor="0x000000" rounded="true" dashed="false"/>
-  <table-pane table-ref="TAB499" x="627" y="1474" bgColor="0xdfedce" fgColor="0x000000" rounded="true" dashed="false"/>
-  <table-pane table-ref="TAB511" x="510" y="500" bgColor="0xdfedce" fgColor="0x000000" rounded="true" dashed="false"/>
-  <table-pane table-ref="TAB523" x="425" y="1177" bgColor="0xdfedce" fgColor="0x000000" rounded="true" dashed="false"/>
-  <table-pane table-ref="TAB532" x="1344" y="1506" bgColor="0xdfedce" fgColor="0x000000" rounded="true" dashed="false"/>
-  <table-pane table-ref="TAB548" x="1942" y="1268" bgColor="0xc8dccc" fgColor="0x000000" rounded="true" dashed="false"/>
-  <table-pane table-ref="TAB555" x="190" y="470" bgColor="0xeec994" fgColor="0x000000" rounded="true" dashed="false"/>
-  <table-pane table-ref="TAB566" x="1320" y="1077" bgColor="0xf6bcbc" fgColor="0x000000" rounded="true" dashed="false"/>
-  <table-pane table-ref="TAB577" x="1269" y="784" bgColor="0xc8dccc" fgColor="0x000000" rounded="true" dashed="false"/>
-  <table-pane table-ref="TAB586" x="1366" y="46" bgColor="0xc8b7ea" fgColor="0x000000" rounded="true" dashed="false"/>
-  <table-pane table-ref="TAB593" x="1007" y="209" bgColor="0xc8b7ea" fgColor="0x000000" rounded="true" dashed="false"/>
-  <table-pane table-ref="TAB602" x="921" y="28" bgColor="0xc8b7ea" fgColor="0x000000" rounded="true" dashed="false"/>
-  <table-pane table-ref="TAB614" x="676" y="20" bgColor="0xc8b7ea" fgColor="0x000000" rounded="true" dashed="false"/>
-  <table-pane table-ref="TAB626" x="1214" y="206" bgColor="0xf0f0f0" fgColor="0x000000" rounded="true" dashed="false"/>
+ <play-pen zoom="0.8465468252641615" viewportX="0" viewportY="0" relationship-style="rectilinear" names-displayLogicalNames="true" showPrimaryTag="true" showForeignTag="true" showAlternateTag="true" columnVisibility="ALL" relationshipLabelVisibility="true">
+  <table-pane table-ref="TAB539" x="20" y="929" bgColor="0xc8dccc" fgColor="0x000000" rounded="true" dashed="false"/>
+  <table-pane table-ref="TAB1" x="1785" y="944" bgColor="0xc8dccc" fgColor="0x000000" rounded="true" dashed="false"/>
+  <table-pane table-ref="TAB14" x="2080" y="1103" bgColor="0xc8dccc" fgColor="0x000000" rounded="true" dashed="false"/>
+  <table-pane table-ref="TAB21" x="1895" y="464" bgColor="0xe6d794" fgColor="0x000000" rounded="true" dashed="false"/>
+  <table-pane table-ref="TAB37" x="2401" y="85" bgColor="0xeec994" fgColor="0x000000" rounded="true" dashed="false"/>
+  <table-pane table-ref="TAB48" x="1559" y="241" bgColor="0xe6d794" fgColor="0x000000" rounded="true" dashed="false"/>
+  <table-pane table-ref="TAB58" x="2034" y="788" bgColor="0xc7d0df" fgColor="0x000000" rounded="true" dashed="false"/>
+  <table-pane table-ref="TAB69" x="2227" y="554" bgColor="0xe6d794" fgColor="0x000000" rounded="true" dashed="false"/>
+  <table-pane table-ref="TAB76" x="1869" y="74" bgColor="0xe6d794" fgColor="0x000000" rounded="true" dashed="false"/>
+  <table-pane table-ref="TAB83" x="269" y="842" bgColor="0xc8dccc" fgColor="0x000000" rounded="true" dashed="false"/>
+  <table-pane table-ref="TAB107" x="1559" y="71" bgColor="0xe6d794" fgColor="0x000000" rounded="true" dashed="false"/>
+  <table-pane table-ref="TAB114" x="752" y="339" bgColor="0xc8dccc" fgColor="0x000000" rounded="true" dashed="false"/>
+  <table-pane table-ref="TAB127" x="695" y="1169" bgColor="0xdfedce" fgColor="0x000000" rounded="true" dashed="false"/>
+  <table-pane table-ref="TAB142" x="2233" y="1566" bgColor="0xe4e4b8" fgColor="0x000000" rounded="true" dashed="false"/>
+  <table-pane table-ref="TAB152" x="62" y="1442" bgColor="0xc8b7ea" fgColor="0x000000" rounded="true" dashed="false"/>
+  <table-pane table-ref="TAB163" x="941" y="1529" bgColor="0xdfedce" fgColor="0x000000" rounded="true" dashed="false"/>
+  <table-pane table-ref="TAB178" x="316" y="1394" bgColor="0xc8dccc" fgColor="0x000000" rounded="true" dashed="false"/>
+  <table-pane table-ref="TAB201" x="1311" y="548" bgColor="0xe6d794" fgColor="0x000000" rounded="true" dashed="false"/>
+  <table-pane table-ref="TAB215" x="1901" y="191" bgColor="0xe6d794" fgColor="0x000000" rounded="true" dashed="false"/>
+  <table-pane table-ref="TAB230" x="1605" y="595" bgColor="0xc7d0df" fgColor="0x000000" rounded="true" dashed="false"/>
+  <table-pane table-ref="TAB254" x="2120" y="75" bgColor="0xe6d794" fgColor="0x000000" rounded="true" dashed="false"/>
+  <table-pane table-ref="TAB260" x="1219" y="420" bgColor="0xeeeeee" fgColor="0x000000" rounded="true" dashed="false"/>
+  <table-pane table-ref="TAB274" x="935" y="470" bgColor="0xc8dccc" fgColor="0x000000" rounded="true" dashed="false"/>
+  <table-pane table-ref="TAB302" x="1542" y="381" bgColor="0xeeeeee" fgColor="0x000000" rounded="true" dashed="false"/>
+  <table-pane table-ref="TAB314" x="1080" y="58" bgColor="0xc8b7ea" fgColor="0x000000" rounded="true" dashed="false"/>
+  <table-pane table-ref="TAB327" x="223" y="653" bgColor="0xeec994" fgColor="0x000000" rounded="true" dashed="false"/>
+  <table-pane table-ref="TAB339" x="2044" y="1006" bgColor="0xc7d0df" fgColor="0x000000" rounded="true" dashed="false"/>
+  <table-pane table-ref="TAB345" x="2256" y="399" bgColor="0xeec994" fgColor="0x000000" rounded="true" dashed="false"/>
+  <table-pane table-ref="TAB355" x="2356" y="1366" bgColor="0xe4e4b8" fgColor="0x000000" rounded="true" dashed="false"/>
+  <table-pane table-ref="TAB365" x="673" y="1389" bgColor="0xdfedce" fgColor="0x000000" rounded="true" dashed="false"/>
+  <table-pane table-ref="TAB375" x="2149" y="646" bgColor="0xeec994" fgColor="0x000000" rounded="true" dashed="false"/>
+  <table-pane table-ref="TAB385" x="391" y="203" bgColor="0xe6d794" fgColor="0x000000" rounded="true" dashed="false"/>
+  <table-pane table-ref="TAB393" x="1867" y="1181" bgColor="0xc8dccc" fgColor="0x000000" rounded="true" dashed="false"/>
+  <table-pane table-ref="TAB399" x="564" y="657" bgColor="0xdfedce" fgColor="0x000000" rounded="true" dashed="false"/>
+  <table-pane table-ref="TAB424" x="975" y="1120" bgColor="0xf6bcbc" fgColor="0x000000" rounded="true" dashed="false"/>
+  <table-pane table-ref="TAB435" x="968" y="783" bgColor="0xf6bcbc" fgColor="0x000000" rounded="true" dashed="false"/>
+  <table-pane table-ref="TAB461" x="578" y="1031" bgColor="0xdfedce" fgColor="0x000000" rounded="true" dashed="false"/>
+  <table-pane table-ref="TAB475" x="1643" y="1291" bgColor="0xdfedce" fgColor="0x000000" rounded="true" dashed="false"/>
+  <table-pane table-ref="TAB486" x="1758" y="1492" bgColor="0xdfedce" fgColor="0x000000" rounded="true" dashed="false"/>
+  <table-pane table-ref="TAB492" x="1963" y="1378" bgColor="0xdfedce" fgColor="0x000000" rounded="true" dashed="false"/>
+  <table-pane table-ref="TAB499" x="627" y="1495" bgColor="0xdfedce" fgColor="0x000000" rounded="true" dashed="false"/>
+  <table-pane table-ref="TAB511" x="510" y="521" bgColor="0xdfedce" fgColor="0x000000" rounded="true" dashed="false"/>
+  <table-pane table-ref="TAB523" x="425" y="1198" bgColor="0xdfedce" fgColor="0x000000" rounded="true" dashed="false"/>
+  <table-pane table-ref="TAB532" x="1344" y="1527" bgColor="0xdfedce" fgColor="0x000000" rounded="true" dashed="false"/>
+  <table-pane table-ref="TAB548" x="1942" y="1289" bgColor="0xc8dccc" fgColor="0x000000" rounded="true" dashed="false"/>
+  <table-pane table-ref="TAB555" x="190" y="491" bgColor="0xeec994" fgColor="0x000000" rounded="true" dashed="false"/>
+  <table-pane table-ref="TAB566" x="1320" y="1098" bgColor="0xf6bcbc" fgColor="0x000000" rounded="true" dashed="false"/>
+  <table-pane table-ref="TAB577" x="1269" y="805" bgColor="0xc8dccc" fgColor="0x000000" rounded="true" dashed="false"/>
+  <table-pane table-ref="TAB586" x="1327" y="20" bgColor="0xc8b7ea" fgColor="0x000000" rounded="true" dashed="false"/>
+  <table-pane table-ref="TAB593" x="1007" y="230" bgColor="0xc8b7ea" fgColor="0x000000" rounded="true" dashed="false"/>
+  <table-pane table-ref="TAB602" x="796" y="32" bgColor="0xc8b7ea" fgColor="0x000000" rounded="true" dashed="false"/>
+  <table-pane table-ref="TAB614" x="494" y="29" bgColor="0xc8b7ea" fgColor="0x000000" rounded="true" dashed="false"/>
+  <table-pane table-ref="TAB626" x="1214" y="227" bgColor="0xf0f0f0" fgColor="0x000000" rounded="true" dashed="false"/>
   <table-link relationship-ref="REL715" pkConnection="0.10196078431372549" fkConnection="0.3333333333333333" rLineColor="0x000000" pkLabelText="" fkLabelText="" orientation="66"/>
   <table-link relationship-ref="REL777" pkConnection="0.27972027972027974" fkConnection="0.33760683760683763" rLineColor="0x000000" pkLabelText="" fkLabelText="" orientation="130"/>
   <table-link relationship-ref="REL727" pkConnection="0.06091370558375635" fkConnection="0.6928104575163399" rLineColor="0x000000" pkLabelText="" fkLabelText="" orientation="66"/>
