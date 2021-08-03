@@ -2,8 +2,8 @@ package fr.proline.core.om.msi
 
 import org.junit._
 import org.junit.Assert._
-import org.scalatest.junit.JUnitRunner
-import org.scalatest.junit.JUnitSuite
+import org.scalatestplus.junit.JUnitRunner
+import org.scalatestplus.junit.JUnitSuite
 
 import com.typesafe.scalalogging.StrictLogging
 

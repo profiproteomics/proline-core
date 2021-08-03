@@ -7,7 +7,7 @@ import fr.proline.core.algo.lcms.filtering.{Filter, FilterOperator}
 import fr.proline.core.algo.msq.config.{ExtractionParams, LabelFreeQuantConfig, LabelFreeQuantConfigConverter, MzToleranceParams}
 import fr.proline.core.om.msi.{AbstractSerializationSpec, SerializationSpecif}
 import org.junit.runner.RunWith
-import org.scalatest.junit.JUnitRunner
+import org.scalatestplus.junit.JUnitRunner
 
 @RunWith(classOf[JUnitRunner])
 class SerializationSpec extends AbstractSerializationSpec {

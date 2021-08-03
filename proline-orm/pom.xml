@@ -31,7 +31,7 @@
     <dependency>
       <groupId>org.hibernate.javax.persistence</groupId>
       <artifactId>hibernate-jpa-2.1-api</artifactId>
-      <version>1.0.0.Final</version>
+      <version>1.0.2.Final</version>
     </dependency>
 
 <!--    <dependency>-->
@@ -67,18 +67,18 @@
     </dependency>
 
     <!-- xml binding -->
-    <dependency>
-      <groupId>jakarta.xml.bind</groupId>
-      <artifactId>jakarta.xml.bind-api</artifactId>
-      <version>2.3.3</version>
-    </dependency>
+<!--    <dependency>-->
+<!--      <groupId>jakarta.xml.bind</groupId>-->
+<!--      <artifactId>jakarta.xml.bind-api</artifactId>-->
+<!--      <version>2.3.3</version>-->
+<!--    </dependency>-->
 
-    <dependency>
-      <groupId>com.sun.xml.bind</groupId>
-      <artifactId>jaxb-impl</artifactId>
-      <version>2.3.3</version>
-      <scope>runtime</scope>
-    </dependency>
+<!--    <dependency>-->
+<!--      <groupId>com.sun.xml.bind</groupId>-->
+<!--      <artifactId>jaxb-impl</artifactId>-->
+<!--      <version>2.3.3</version>-->
+<!--      <scope>runtime</scope>-->
+<!--    </dependency>-->
 
     <!-- Serialization -->
     <dependency>
@@ -111,10 +111,18 @@
       <!-- Version inherited from ProFI-Pom -->
       <scope>test</scope>
     </dependency>
+
     <dependency>
       <groupId>org.hamcrest</groupId>
+      <artifactId>hamcrest</artifactId>
+      <version>2.2</version>
+      <scope>test</scope>
+    </dependency>
+
+    <dependency> <!-- Should  be specified to be in same version as hamcrest elsewhere 1.3 version will be used  -->
+      <groupId>org.hamcrest</groupId>
       <artifactId>hamcrest-core</artifactId>
-      <version>1.3</version>
+      <version>2.2</version>
       <scope>test</scope>
     </dependency>
 

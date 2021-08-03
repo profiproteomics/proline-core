@@ -1,16 +1,13 @@
 package fr.proline.core.algo.lcms
 
-import scala.collection.mutable.ArrayBuffer
-import org.junit.Before
-import org.junit.Test
-import org.junit.Assert._
-import org.scalatest.junit.JUnitSuite
-import org.scalatest.MustMatchers
 import com.typesafe.scalalogging.StrictLogging
-import fr.proline.core.om.model.lcms._
 import fr.proline.core.util.generator.lcms._
+import org.junit.Assert._
+import org.junit.Test
+import org.scalatest.matchers.must.Matchers
+import org.scalatestplus.junit.JUnitSuite
 
-class FeatureMapperTest extends JUnitSuite with MustMatchers with StrictLogging {
+class FeatureMapperTest extends JUnitSuite with Matchers with StrictLogging {
   
   @Test
   def testComputePairwiseFtMapping() {
