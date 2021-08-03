@@ -1,12 +1,11 @@
 package fr.proline.core.algo.msi.scoring
 
 import com.typesafe.scalalogging.StrictLogging
-import fr.proline.core.algo.msi.inference.ParsimoniousProteinSetInferer
 import fr.proline.core.algo.msi.validation.pepinstance.BasicPepInstanceBuilder
 import org.apache.commons.math3.distribution.ChiSquaredDistribution
 import org.apfloat.{Apfloat, ApfloatMath}
 import org.junit.Test
-import org.scalatest.junit.JUnitSuite
+import org.scalatestplus.junit.JUnitSuite
 
 import scala.collection.mutable.ArrayBuffer
 

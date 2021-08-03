@@ -3,12 +3,12 @@ package fr.proline.core.algo.lcms
 import scala.collection.mutable.ArrayBuffer
 import org.junit.Before
 import org.junit.Test
-import org.scalatest.junit.JUnitSuite
-import org.scalatest.MustMatchers
+import org.scalatestplus.junit.JUnitSuite
+import org.scalatest.matchers.must.Matchers
 import com.typesafe.scalalogging.StrictLogging
 import fr.proline.core.om.model.lcms._
 
-class AlnSmootherTest extends JUnitSuite with MustMatchers with StrictLogging {
+class AlnSmootherTest extends JUnitSuite with Matchers with StrictLogging {
   
   val landmarkRangeSmoother = AlnSmoother(AlnSmoothing.LANDMARK_RANGE.toString)
   val loessSmoother = AlnSmoother(AlnSmoothing.LOESS.toString)

@@ -1,17 +1,17 @@
 package fr.proline.core.om.msi
 
 import org.junit.runner.RunWith
-import org.scalatest.junit.JUnitRunner
+import org.scalatestplus.junit.JUnitRunner
 import org.scalatest.GivenWhenThen
-import org.scalatest.FunSpec
-import org.scalatest.Matchers
+import org.scalatest.funspec.AnyFunSpec
+import org.scalatest.matchers.should.Matchers
 import fr.proline.core.om.model.msi.SpectrumTitleParsingRule
 import fr.proline.core.om.model.msi.SpectrumTitleFields
 import fr.proline.core.orm.uds.PeaklistSoftware.SoftwareRelease
 import fr.proline.core.orm.uds.SpectrumTitleParsingRule.ParsingRule
 
 @RunWith(classOf[JUnitRunner])
-class SpectrumTitleSpec extends FunSpec with GivenWhenThen with Matchers {
+class SpectrumTitleSpec extends AnyFunSpec with GivenWhenThen with Matchers {
   
   val specTitleRuleBySoftName = ParsingRule.values().map { parsingRule =>
     parsingRule.getPeaklistSoftware -> SpectrumTitleParsingRule(

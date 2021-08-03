@@ -1,11 +1,10 @@
 package fr.proline.core.om.msi
 
 import org.junit.runner.RunWith
-//import org.scalatest.junit.AssertionsForJUnit
-import org.scalatest.junit.JUnitRunner
+import org.scalatestplus.junit.JUnitRunner
 import org.scalatest.GivenWhenThen
-import org.scalatest.FunSpec
-import org.scalatest.Matchers
+import org.scalatest.funspec.AnyFunSpec
+import org.scalatest.matchers.should.Matchers
 
 import com.typesafe.scalalogging.StrictLogging
 
@@ -19,7 +18,7 @@ case class SerializationSpecif(
   jsonData: String
 )
 
-abstract class AbstractSerializationSpec extends FunSpec with GivenWhenThen with Matchers with StrictLogging {
+abstract class AbstractSerializationSpec extends AnyFunSpec with GivenWhenThen with Matchers with StrictLogging {
 
   def checkJsonSpecifs( jsonSpecifs: List[SerializationSpecif] ) {
     
