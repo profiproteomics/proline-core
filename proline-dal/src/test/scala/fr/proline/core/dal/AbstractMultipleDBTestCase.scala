@@ -1,10 +1,8 @@
 package fr.proline.core.dal
 
 import com.typesafe.scalalogging.StrictLogging
-import fr.proline.repository.DriverType
-import fr.proline.repository.ProlineDatabaseType
+import fr.proline.repository.{DriverType, ProlineDatabaseType}
 import fr.proline.repository.util.DatabaseTestCase
-import fr.proline.core.om.provider.msi.cache.PeptideCache
 
 class AbstractMultipleDBTestCase extends StrictLogging {
 
