@@ -21,7 +21,7 @@ import fr.proline.core.om.provider.msi.impl.{ORMResultSetProvider, SQLResultSetP
 import fr.proline.core.om.storer.msi.RsmStorer
 import fr.proline.core.service.msi.ResultSetValidator.{getResultSetProvider, loadDecoyRS}
 
-import scala.collection.immutable.HashMap
+import scala.collection.mutable
 import scala.collection.mutable.ArrayBuffer
 
 case class ValidationConfig(
@@ -148,7 +148,7 @@ class ResultSetValidator protected(
   var validatedTargetRsm: ResultSummary = _
   var validatedDecoyRsm: Option[ResultSummary] = _
 
-  var targetRSMIdPerRsId : HashMap[Long, Long] = new HashMap[Long, Long]()
+  var targetRSMIdPerRsId : mutable.HashMap[Long, Long] = new mutable.HashMap[Long, Long]()
 
 
   override protected def beforeInterruption: Unit = {}
@@ -285,6 +285,7 @@ class ResultSetValidator protected(
 
   private def _propagateToChilds(propagatedPSMFilters: Option[Seq[IPeptideMatchFilter]], propagatedProtSetFilters: Option[Seq[IProteinSetFilter]], parentId: Long) {
     val childRsId = _getChildRS(targetRs.id)
+    logger.debug(  " --  _propagateToChilds for parentId " + parentId+"; nbr child "+childRsId.length)
 
     val rsProvider = getResultSetProvider(execContext)
 
@@ -297,7 +298,7 @@ class ResultSetValidator protected(
       protSetValidator = None)
 
     childRsId.foreach(rsId => {
-
+      logger.debug(  " ---- propagateToChild RS Id  "+rsId)
       val targetRs = rsProvider.getResultSet(rsId)
       loadDecoyRS(execContext, targetRs.get)
 

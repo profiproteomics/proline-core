@@ -2,8 +2,12 @@ package fr.proline.core.service.msi
 
 import com.typesafe.scalalogging.StrictLogging
 import fr.proline.context.IExecutionContext
+import fr.proline.core.algo.msi.InferenceMethod
+import fr.proline.core.algo.msi.filtering.IPeptideMatchFilter
+import fr.proline.core.algo.msi.filtering.pepmatch.PrettyRankPSMFilter
+import fr.proline.core.algo.msi.validation.{TDAnalyzerBuilder, TargetDecoyAnalyzers, TargetDecoyEstimators}
 import fr.proline.core.dal._
-import fr.proline.core.dbunit.{DbUnitResultFileUtils, STR_F136482_CTD, TLS_F027737_MTD_no_varmod}
+import fr.proline.core.dbunit.{DbUnitResultFileUtils, GRE_F068213_M2_4_TD_EColi, STR_F063442_Mascot_v2_2, STR_F122817_Mascot_v2_3, STR_F136482_CTD, TLS_F027737_MTD_no_varmod}
 import fr.proline.core.om.model.msi.ResultSet
 import fr.proline.core.om.provider.msi.impl.ORMResultSetProvider
 import fr.proline.repository.DriverType
@@ -31,6 +35,11 @@ class ResultSetsMergerTest extends StrictLogging {
   
   val rs1: ResultSet = DbUnitResultFileUtils.importDbUnitResultFile(STR_F136482_CTD, sqlExecutionContext)
   val rs2: ResultSet = DbUnitResultFileUtils.importDbUnitResultFile(TLS_F027737_MTD_no_varmod, sqlExecutionContext)
+
+  val rs3: ResultSet = DbUnitResultFileUtils.importDbUnitResultFile(GRE_F068213_M2_4_TD_EColi, sqlExecutionContext)
+  val rs4: ResultSet = DbUnitResultFileUtils.importDbUnitResultFile(STR_F122817_Mascot_v2_3, sqlExecutionContext)
+
+
 
   @Test
   def testMergeOneRS() {
@@ -123,6 +132,66 @@ class ResultSetsMergerTest extends StrictLogging {
 
     }
 
+  }
+
+  @Test
+  def testMergeTwoRSAndValidate(){
+    var localJPAExecutionContext: IExecutionContext = null
+
+    try {
+
+      var rsMerger = new ResultSetMerger(sqlExecutionContext, Some( Seq(rs1.id,rs2.id) ), None, None, ResultSetsMergerTest.useJPA )
+      val result = rsMerger.runService()
+      assertTrue("ResultSet merger result", result)
+      logger.info("End First Run ResultSetMerger Service")
+      val tRS1 = rsMerger.mergedResultSet
+
+      rsMerger = new ResultSetMerger(sqlExecutionContext, Some( Seq(rs3.id,rs4.id) ), None, None, ResultSetsMergerTest.useJPA )
+      val result2 = rsMerger.runService()
+      assertTrue("ResultSet merger result", result2)
+      logger.info("End Second Run ResultSetMerger Service")
+      val tRS2 = rsMerger.mergedResultSet
+
+      rsMerger = new ResultSetMerger(sqlExecutionContext, Some( Seq(tRS1.id,tRS2.id) ), None, None, ResultSetsMergerTest.useJPA )
+      val resultRoot = rsMerger.runService()
+      assertTrue("ResultSet merger result", resultRoot)
+      logger.info("End Root Run ResultSetMerger Service")
+      val tRSRoot = rsMerger.mergedResultSet
+
+      val seqBuilder = Seq.newBuilder[IPeptideMatchFilter]
+      seqBuilder += new PrettyRankPSMFilter(maxPrettyRank = 1)
+      val tdAnalyzerBuilder = new TDAnalyzerBuilder(TargetDecoyAnalyzers.BASIC, estimator = Some(TargetDecoyEstimators.GIGY_COMPUTER))
+
+      val rsValidation = ResultSetValidator(
+        execContext = sqlExecutionContext,
+        targetRs = tRSRoot,
+        validationConfig = ValidationConfig(tdAnalyzerBuilder = Some(tdAnalyzerBuilder), pepMatchPreFilters = Some(seqBuilder.result())),
+        inferenceMethod = Some(InferenceMethod.PARSIMONIOUS),
+        storeResultSummary = false,
+        propagatePepMatchValidation = true,
+        propagateProtSetValidation = false
+      )
+
+      val valResult = rsValidation.runService
+      assertTrue(valResult)
+      logger.info(" End Run ResultSetValidator Service with Rank filter, in Test ")
+
+      val tRSM = rsValidation.validatedTargetRsm
+      val dRSM = rsValidation.validatedDecoyRsm
+      assertNotNull(tRSM)
+      assertTrue(dRSM.isDefined)
+
+    } finally {
+
+      if (localJPAExecutionContext != null) {
+        try {
+          localJPAExecutionContext.closeAll()
+        } catch {
+          case exClose: Exception => logger.error("Error closing local JPA ExecutionContext", exClose)
+        }
+      }
+
+    }
   }
 
 }
