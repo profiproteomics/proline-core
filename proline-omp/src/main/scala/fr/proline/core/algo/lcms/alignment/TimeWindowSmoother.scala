@@ -6,6 +6,7 @@ import fr.proline.core.algo.msq.profilizer.CommonsStatHelper
 class TimeWindowSmoother extends IAlnSmoother {
 
   import fr.proline.core.om.model.lcms._
+
   import scala.collection.mutable.ArrayBuffer
   
   def smoothLandmarks( landmarks: Seq[Landmark], smoothingParams: Option[AlnSmoothingParams]): Seq[Landmark] = {
@@ -45,7 +46,9 @@ class TimeWindowSmoother extends IAlnSmoother {
         if (landmarkGroup.length >= minWindowLandmarks) {
           val lmStats = CommonsStatHelper.calcExtendedStatSummary(landmarkGroup.map(_.dx).toArray)
           val medianLm = computeMedianLandmark(landmarkGroup)
-          val newLandmark = medianLm.copy(tx = math.abs(3*lmStats.getInterQuartileRange()))
+          val t = Math.max(math.abs(lmStats.getMedian() - lmStats.getQ1() - 1.5*lmStats.getInterQuartileRange()),
+            math.abs(lmStats.getQ3() + 1.5*lmStats.getInterQuartileRange() - lmStats.getMedian()))
+          val newLandmark = medianLm.copy(tx = t)
           newLandmarks += newLandmark
         }
       }

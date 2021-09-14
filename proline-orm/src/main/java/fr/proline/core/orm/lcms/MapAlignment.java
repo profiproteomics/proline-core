@@ -1,13 +1,14 @@
 package fr.proline.core.orm.lcms;
 
+import fr.proline.core.orm.util.JsonSerializer;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import javax.persistence.*;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
-
-import javax.persistence.*;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import java.util.Map;
 
 /**
  * The persistent class for the map_alignment database table.
@@ -52,6 +53,8 @@ public class MapAlignment implements Serializable {
 
 	@Transient
 	private List<MapTime> mapTimeList;
+	@Transient
+	private Map<String, Object> serializedPropertiesMap = null;
 
 	public MapAlignment() {
 	}
@@ -78,6 +81,7 @@ public class MapAlignment implements Serializable {
 
 	public void setSerializedProperties(String serializedProperties) {
 		this.serializedProperties = serializedProperties;
+		this.serializedPropertiesMap = null;
 	}
 
 	public String getTimeList() {
@@ -138,5 +142,13 @@ public class MapAlignment implements Serializable {
 			}
 		}
 		return this.mapTimeList;
+	}
+
+	public java.util.Map<String, Object> getSerializedPropertiesAsMap() throws Exception {
+		if ((serializedPropertiesMap == null) && (serializedProperties != null)) {
+			serializedPropertiesMap = JsonSerializer.getMapper().readValue(getSerializedProperties(),
+							Map.class);
+		}
+		return serializedPropertiesMap;
 	}
 }

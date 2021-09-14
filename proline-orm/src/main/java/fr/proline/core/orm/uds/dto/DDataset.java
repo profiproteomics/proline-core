@@ -1,9 +1,5 @@
 package fr.proline.core.orm.uds.dto;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-
 import fr.proline.core.orm.lcms.MapAlignment;
 import fr.proline.core.orm.lcms.MapAlignmentPK;
 import fr.proline.core.orm.lcms.MapTime;
@@ -12,9 +8,13 @@ import fr.proline.core.orm.msi.ResultSet;
 import fr.proline.core.orm.msi.ResultSummary;
 import fr.proline.core.orm.uds.*;
 import fr.proline.core.orm.uds.Dataset.DatasetType;
-import fr.proline.core.orm.util.JsonSerializer;
 import fr.proline.core.orm.uds.dto.DDatasetType.AggregationInformation;
 import fr.proline.core.orm.uds.dto.DDatasetType.QuantitationMethodInfo;
+import fr.proline.core.orm.util.JsonSerializer;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 
 /**
  * @author JM235353
@@ -297,6 +297,7 @@ public class DDataset {
       reversedMap.setMapTimeList(revMapTimeList);
       reversedMap.setDeltaTimeList(deltaS);
       reversedMap.setTimeList(timeS);
+      reversedMap.setSerializedProperties(ma.getSerializedProperties());
 
       m_mapReversedAlignments.add(reversedMap);
     }

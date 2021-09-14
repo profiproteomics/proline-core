@@ -7,8 +7,7 @@ import fr.proline.core.algo.msq.profilizer.CommonsStatHelper
 import fr.proline.core.om.model.lcms._
 
 import scala.annotation.tailrec
-import scala.collection.mutable.ArrayBuffer
-import scala.collection.mutable.LongMap
+import scala.collection.mutable.{ArrayBuffer, LongMap}
 
 case class AlignmentResult( alnRefMapId: Long, mapAlnSets: Array[MapAlignmentSet] )
 
@@ -42,6 +41,8 @@ abstract class AbstractLcmsMapAligner extends LazyLogging {
   ): Option[MapAlignmentSet] = {
 
     try {
+
+      logger.info("Aligning map {} to map {} ", map1.name, map2.name)
 
       val massInterval = if (alnConfig.methodParams.isDefined) alnConfig.methodParams.get.massInterval.getOrElse(20000) else 20000
       //val timeInterval = alnParams.timeInterval

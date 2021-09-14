@@ -797,6 +797,7 @@ class PeakelsDetector(
               ftMapping.getOrElseUpdate(map1Ft.id, new ArrayBuffer[LcMsFeature]) += map2FtOpt.get
             }
             logger.debug("PEPTIDE_IDENTITY custom mapper found {} ft from {} map1 feat. and {} map2 Feat.  ", ftMapping.size, map1Features.size, map2Features.size)
+
             ftMapping
           }
 
@@ -1559,7 +1560,6 @@ class PeakelsDetector(
             val effectiveRTtolerance = {
               if (Settings.useAdaptativeRTTolerance) {
                 val rtTolerance = math.min(math.max(putativeFt.elutionTimeTolerance, crossAssignmentConfig.get.ftMappingParams.timeTol), Settings.maxAdaptativeRTTolerance)
-                // logger.info("effective tolerance used to find peakel at {} = {} (auto was {})", putativeFt.elutionTime, rttolerance, putativeFt.elutionTimeTolerance)
                 rtTolerance
               } else {
                 crossAssignmentConfig.get.ftMappingParams.timeTol
