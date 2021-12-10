@@ -3,10 +3,13 @@ package fr.proline.core.orm.msi.dto;
 import fr.proline.core.orm.msi.PtmSpecificity;
 
 import java.util.HashMap;
+import java.util.List;
+import java.util.stream.Collectors;
 
 public class DInfoPTM {
 
 	private long m_idPtmSpecificity;
+	private long m_idPtm;
 	private Character m_residueAASpecificity;
 	private String m_locationSpecificity;
 	private String m_ptmShortName;
@@ -17,12 +20,14 @@ public class DInfoPTM {
 
 	public DInfoPTM(
 		long idPtmSpecificity,
+		long idPtm,
 		Character residueAASpecificity,
 		String locationSpecificity,
 		String ptmShortName,
 		String composition,
 		double monoMass) {
 		m_idPtmSpecificity = idPtmSpecificity;
+		m_idPtm = idPtm;
 		m_residueAASpecificity = residueAASpecificity;
 		m_locationSpecificity = locationSpecificity;
 		m_ptmShortName = ptmShortName;
@@ -32,6 +37,10 @@ public class DInfoPTM {
 
 	public long getIdPtmSpecificity() {
 		return m_idPtmSpecificity;
+	}
+
+	public  long getIdPtm(){
+		return m_idPtm;
 	}
 
 	public String getLocationSpecificity() {
@@ -66,6 +75,10 @@ public class DInfoPTM {
 			m_infoPTMMap = new HashMap<>();
 		}
 		m_infoPTMMap.put(infoPTM.getIdPtmSpecificity(), infoPTM);
+	}
+
+	public static List<DInfoPTM> getInfoPTMForPTM(Long ptmId){
+		return getInfoPTMMap().values().stream().filter(dInfoPTM -> ptmId.equals(dInfoPTM.m_idPtm)).collect(Collectors.toList());
 	}
 
 	public String toReadablePtmString(int position) {
