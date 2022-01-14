@@ -352,7 +352,7 @@ class PtmSiteExactClusterer(
           peptideIds = clusterizedPeptides.flatten(_._2).map(_.id).toArray.distinct,
           isomericPeptideIds = Array.empty[Long],
           selectionLevel = SelectionLevel.SELECTED_AUTO,
-          selectionConfidence = 0,
+          selectionConfidence = null,
           selectionInformation = if(clusterizePartiallyIsomorphicPep) "Exact Position Matching" else "Isomorphic Matching"
         )
 
