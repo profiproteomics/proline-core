@@ -2,6 +2,7 @@ package fr.proline.core.algo.msi
 
 import com.typesafe.scalalogging.LazyLogging
 import fr.profi.util.misc.InMemoryIdGen
+import fr.proline.core.om.model.SelectionLevel
 import fr.proline.core.om.model.msi._
 
 import scala.collection.mutable
@@ -349,7 +350,11 @@ class PtmSiteExactClusterer(
           bestPeptideMatchId = bestPeptideMatch.id,
           localizationConfidence = PtmSitesIdentifier.allModificationsProbability(bestPeptideMatch),
           peptideIds = clusterizedPeptides.flatten(_._2).map(_.id).toArray.distinct,
-          isomericPeptideIds = Array.empty[Long])
+          isomericPeptideIds = Array.empty[Long],
+          selectionLevel = SelectionLevel.SELECTED_AUTO,
+          selectionConfidence = null,
+          selectionInformation = if(clusterizePartiallyIsomorphicPep) "Exact Position Matching" else "Isomorphic Matching"
+        )
 
         createdClusterIds += nextCluster.id //save id used for cluster of current proteinMatch
         //Associate current cluster to lower site position

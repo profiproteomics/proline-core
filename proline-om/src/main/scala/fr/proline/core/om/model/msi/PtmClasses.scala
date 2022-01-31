@@ -422,7 +422,14 @@ case class PtmCluster(
     val peptideIds: Array[Long],
     // array of peptide having the same sequence and modification of a matching peptide, but with their ptm located at another position
     // those peptide did not match the ptm site, but they can confuse the quantification process
-    val isomericPeptideIds: Array[Long]
+    val isomericPeptideIds: Array[Long],
+    // Annotation properties
+    //  Idem as for Quanti/Ident: DESELECTED_MANUAL(0) DESELECTED_AUTO(1) SELECTED_AUTO(2) SELECTED_MANUAL(3)
+    val  selectionLevel: Integer,
+    //Notation for selection_level confidence
+    val  selectionConfidence: Integer,
+    //Description for selection_level reason or precision
+    val  selectionInformation: String                      
 )
 
 case class PtmSite2(
