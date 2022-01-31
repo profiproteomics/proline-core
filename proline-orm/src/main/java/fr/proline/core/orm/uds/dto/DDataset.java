@@ -284,7 +284,7 @@ public class DDataset {
       List<MapTime> revMapTimeList = new ArrayList<>();
       for (int i = 0; i < nbLandmarks; i++) {
         MapTime mapTime = ma.getMapTimeList().get(i);
-        Double deltaTime = mapTime.getDeltaTime();
+        Double deltaTime = mapTime.getDeltaValue();
         Double targetMapTime = mapTime.getTime() + deltaTime;
         revTimeList[i] = targetMapTime;
         revDeltaTimeList[i] = -deltaTime;

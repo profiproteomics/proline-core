@@ -65,7 +65,6 @@ case class PeakelFittingModelProperties()
 case class MapMozCalibration(
 
   // Required fields
-  val id: Long,
   val mozList: Array[Double],
   val deltaMozList: Array[Double],
 

@@ -374,13 +374,12 @@ class PeakelsDetector(
             val smoothedLandmarks = landmarkRangeSmoother.smoothLandmarks(landmarks, alignmentConfig.get.smoothingMethodParams)
 
             val mozCalibration = MapMozCalibration(
-              id = -1L,
-              mozList = smoothedLandmarks.map(_.x).toArray,
-              deltaMozList = smoothedLandmarks.map(_.dx).toArray,
-              mapId = -1L,
-              scanId = -1L
-            )
-            processedMap.mozCalibrations = Some(Array(mozCalibration))
+                mozList = smoothedLandmarks.map(_.x).toArray,
+                deltaMozList = smoothedLandmarks.map(_.dx).toArray,
+                mapId = -1L,
+                scanId = -1L
+              )
+              processedMap.mozCalibrations = Some(Array(mozCalibration))
           }
         }
 
@@ -665,19 +664,35 @@ class PeakelsDetector(
       }
 
       // Storing features of each detected raw map
+      // VDS: create Map RawMapId-> a ScanId for mapMozCalibration (scanId not used but require  !)
+      val scanIdByRawMapId = new mutable.HashMap[Long, Long]()
+
       for ((x2RawMap,idx) <- x2RawMaps.zipWithIndex) {
         logger.info(s"Storing features of raw map #${idx+1} (id=${x2RawMap.id}, name=${x2RawMap.name})...")
 
         rawMapStorer.featureWriter.insertFeatures(x2RawMap.features, x2RawMap.id, linkToPeakels = true)
-
+        if(x2RawMap.features.length>0){
+          scanIdByRawMapId.put(x2RawMap.id, x2RawMap.features(0).relations.apexScanId)
+        }
         // Log some raw map information
         val rawMapPeakelsCount = peakelIdByTmpIdByRawMapId(x2RawMap.id).size
         logger.info("Raw map peakels count = "+rawMapPeakelsCount)
         logger.info(detectorEntityCache.metricsByRunId(x2RawMap.runId).toString)
       }
 
-      // Memorize processed maps temporary ID
+      // Memorize processed maps temporary ID and upadte MozCalib if necessary
       val procMapTmpIdByRawMapId = tmpMapSet.childMaps.toLongMapWith { processedMap =>
+
+        if(processedMap.mozCalibrations.isDefined && scanIdByRawMapId.contains(processedMap.getRawMapIds.head)){
+          val currentMozArr  = processedMap.mozCalibrations.get
+          val newMozArr = new Array[MapMozCalibration](currentMozArr.length)
+
+          for(i <- 0 until currentMozArr.length ) {
+            newMozArr(i) = currentMozArr(i).copy(scanId = scanIdByRawMapId(processedMap.getRawMapIds.head))
+          }
+          processedMap.mozCalibrations = Some(newMozArr) //update mozCalibration with a valid scan id
+        }
+
         (processedMap.getRawMapIds.head, processedMap.id)
       }
 
