@@ -360,7 +360,7 @@ class PeakelsDetector(
 
         if (alignmentConfig.isDefined) {
 
-          val landmarkRangeSmoother = AlnSmoother(method = alignmentConfig.get.smoothingMethodName)
+          val alignmentSmoother = AlnSmoother(method = alignmentConfig.get.smoothingMethodName)
 
           for ((lcMsRun, tuples) <- featureTuplesByRuns) {
             val processedMap = processedMapByRunId(lcMsRun.id)
@@ -371,7 +371,7 @@ class PeakelsDetector(
               landmarks += Landmark(rt.toDouble, 1e6 * (theoreticalMoz - t._1.moz) / theoreticalMoz)
             }
 
-            val smoothedLandmarks = landmarkRangeSmoother.smoothLandmarks(landmarks, alignmentConfig.get.smoothingMethodParams)
+            val smoothedLandmarks = alignmentSmoother.smoothLandmarks(landmarks, alignmentConfig.get.smoothingMethodParams)
 
             val mozCalibration = MapMozCalibration(
                 mozList = smoothedLandmarks.map(_.x).toArray,

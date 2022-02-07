@@ -81,6 +81,7 @@ case class MapMozCalibration(
 
   lazy val deltaMozVersusMoz = mozList.zip(deltaMozList)
 
+  //VDS Warning, currently it's RT as parameter and mozList
    def calcDeltaMoz( mass: Double ): Double = {
     linearInterpolation(mass, deltaMozVersusMoz, fixOutOfRange = true)
   }
