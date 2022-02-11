@@ -1,7 +1,9 @@
 package fr.proline.core.om.provider.lcms.impl
 
 import fr.profi.jdbc.ResultSetRow
+import fr.profi.util.misc.MapIfNotNull
 import fr.profi.util.primitives._
+import fr.profi.util.serialization.ProfiJson
 import fr.proline.context.LcMsDbConnectionContext
 import fr.proline.core.dal.DoJDBCReturningWork
 import fr.proline.core.dal.tables.SelectQueryBuilder._
@@ -71,13 +73,16 @@ class SQLMapAlignmentSetProvider( val lcmsDbCtx: LcMsDbConnectionContext ) exten
     val massEnd = mapAlnRecord.getFloat(MapAlnCols.MASS_END)
     val timeList = mapAlnRecord.getString(MapAlnCols.TIME_LIST).split(" ").filter(!_.isEmpty) map { _.toFloat }
     val deltaTimeList = mapAlnRecord.getString(MapAlnCols.DELTA_TIME_LIST).split(" ").filter(!_.isEmpty) map { _.toFloat }
-    
+    val propertiesAsJSON = mapAlnRecord.getString(MapAlnCols.SERIALIZED_PROPERTIES)
+    val properties = MapIfNotNull(propertiesAsJSON) { ProfiJson.deserialize[MapAlignmentProperties](_) }
+
     new MapAlignment(
       refMapId = toLong(mapAlnRecord.getAny(MapAlnCols.FROM_MAP_ID)),
       targetMapId = toLong(mapAlnRecord.getAny(MapAlnCols.TO_MAP_ID)),
       massRange = (massStart,massEnd),
       timeList = timeList,
-      deltaTimeList = deltaTimeList
+      deltaTimeList = deltaTimeList,
+      properties = properties
     )
   }
   

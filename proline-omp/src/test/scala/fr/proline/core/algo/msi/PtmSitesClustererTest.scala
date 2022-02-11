@@ -21,6 +21,63 @@ class PtmSitesClustererTest extends StrictLogging {
     "Y" -> new PtmDefinition(id= 50, location = "Anywhere", names = PtmNames("Phospho", "Phosphorylation"), ptmEvidences = Array(pEvidence), residue ='Y', ptmId = 16L, unimodId = 21)
   )
 
+  @Test
+  def identifyRedondantFromFakeRs(): Unit = {
+
+    val pp150_seq =
+      "MCLSFDSNYCRNILKHAVEMSPARMSPARMSPARMSPARMSAHTFLGARSPSLEFDERNA" +
+      "DDANLLSLGGGSAFSSVPKKHVPTQPLDGWSWIASPWKGHKPFRFEAHGSLAPAAEAHAA" +
+      "RSAAVGYYDEEEKRRERQKRVDDEVVQREKQQLKAWEERQQNLQQRQQQPPPPARKPSAS" +
+      "RRLFGSSADEDDDDDDDEKNIFTPIKKPGTSGKGAASGGGVSSIFSGLLSSGSQKPTSGP" +
+      "LNIPQQQQRHAAFSLVSPQVTKASPGRVRRDSAWDVRPLTETRGDLFSGDEDSDSSDGYP" +
+      "PNRQDPRFTDTLVCVAVARRGYKPPVTTAYKFEQPTLTFGAGVNVPAGAGAAILTPTPVN" ;
+
+
+    val rsb = new ResultSetFakeGenerator(proteinSequence = pp150_seq)
+    val proteinMatch = rsb.allProtMatches(0)
+
+    rsb.addPeptide( pepSeq = "GGGSAFSSVPKKHVPT", proteinMatch = proteinMatch)
+    rsb.addPeptide(pepSeq = "CVAVAR", proteinMatch = proteinMatch)
+    rsb.addPeptide(pepSeq = "CVAVARR", proteinMatch = proteinMatch)
+
+    rsb.addPeptide(
+      pepSeq = "MSPARMSPAR",
+      ptms = _buildLocatedPtms(Array("S(7)")),
+      probabilities = Array(0.98f),
+      proteinMatch = proteinMatch
+    )
+
+
+    val rs = rsb.toResultSet()
+
+    val proteinSetInferer = new ParsimoniousProteinSetInferer(new BasicPepInstanceBuilder())
+    val rsm = proteinSetInferer.computeResultSummary( resultSet = rs )
+
+    val ptmSites = new PtmSitesIdentifier(rsm,rs.proteinMatches).identifyPtmSites()
+    val ptmSites2 = RsmPtmSitesIdentifierV2.toPtmSites2(ptmSites)
+
+    val ptmIds = Array(50L, 51L, 52L)
+    val sitesByProteinMatchIds = ptmSites2.filter{ s =>  ptmIds.contains(s.ptmDefinitionId) }.groupBy(_.proteinMatchId)
+
+    def _getPeptideMatchesByPeptideIds(peptideIds: Array[Long]): Map[Long, PeptideMatch] = {
+      val peptideMatches = rsm.peptideInstances.filter{ pi => peptideIds.contains(pi.peptide.id) }.flatMap(_.peptideMatches)
+      peptideMatches.map( pm => (pm.id -> pm)).toMap
+    }
+
+    val clusterizer = new PtmSiteExactClusterer(rsm,rs.proteinMatches)
+    val clusters = sitesByProteinMatchIds.flatMap{ case(protMatchId, sites) => clusterizer.clusterize(protMatchId, sites, _getPeptideMatchesByPeptideIds, IdGenerator) }
+
+    assert(clusters.size == 3)
+    clusters.foreach{c=>{
+      c.ptmSiteLocations.foreach{ sl => logger.info(s"Next location ${c.id}=> "+sl)}
+    }}
+
+    ptmSites2.foreach{ s =>{
+      logger.info("Site "+s.id+" : seqPos "+s.seqPosition+"; ")
+    } }
+
+  }
+
 
   @Test
   def identifyFromFakeRs(): Unit = {

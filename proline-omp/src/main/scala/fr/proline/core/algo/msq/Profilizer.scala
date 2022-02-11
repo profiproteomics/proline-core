@@ -58,7 +58,7 @@ class Profilizer( expDesign: ExperimentalDesign, groupSetupNumber: Int = 1, mast
       MissCleavedPeptideFilterer.discardPeptides(masterQuantPeptides, config.missCleavedPeptideFilteringMethod.get)
     }
     
-    // --- Apply Oxidation filter if requested ---
+    // --- Apply PTMs filter if requested ---
     if(config.discardModifiedPeptides) {
       require( config.modifiedPeptideFilteringMethod.isDefined , "config.modifiedPeptideFilteringMethod is empty")
       require( config.modifiedPeptideFilterConfig.isDefined && !(config.modifiedPeptideFilterConfig.get.ptmDefinitionIdsToDiscard.isEmpty && !config.modifiedPeptideFilterConfig.get.ptmPattern.isDefined), "No modifications specified for discard Modified peptide")
@@ -72,17 +72,10 @@ class Profilizer( expDesign: ExperimentalDesign, groupSetupNumber: Int = 1, mast
     // FIXME: DBO => should we work only with filtered mqPeps ?
     // FIXME: CBy => selectionLevel < 2 are kept, this means that normalization & inference are also done on deselected masterQuantComponents
 
-    //VDS: behaviour modification to be more like 2.1.0 version behaviour: mqPeptideIon used for normalisation etc. Values are then used for mqPeptides values.
+    //VDS: Changed behaviour: mqPeptideIon are used for normalisation etc. Values are then used for mqPeptides values.
+    // NORMALIZATION WARNING : Peptide config normalization is currently done on all Peptide IONS .... To be changed
     val mqPepIonsAfterAllFilters = masterQuantPeptides.flatMap(_.masterQuantPeptideIons).asInstanceOf[Seq[MasterQuantComponent[QuantComponent]]]
-    //     val mqPepIonsAfterAllFilters = {
-//        if (config.isMqPeptideAbundanceSummarizerBasedOn(QuantComponentItem.QUANT_PEPTIDES)) {
-//          masterQuantPeptides.asInstanceOf[Seq[MasterQuantComponent[QuantComponent]]]
-//        } else {
-//          masterQuantPeptides.flatMap(_.masterQuantPeptideIons).asInstanceOf[Seq[MasterQuantComponent[QuantComponent]]]
-//        }
-//      }  //was -> val mqPepsAfterAllFilters = masterQuantPeptides
-    
-    
+
     //
     // Reset quant peptide abundance of deselected master quant peptides
     // DBO: is this useful ???
@@ -102,17 +95,17 @@ class Profilizer( expDesign: ExperimentalDesign, groupSetupNumber: Int = 1, mast
     //
     // TODO modify this to take into account PEPTIDE or ION
     //
-    //
-    val normalizedMatrix = if( !config.peptideStatConfig.applyNormalization ) rawAbundanceMatrix else AbundanceNormalizer.normalizeAbundances(rawAbundanceMatrix)
+    // NORMALIZATION WARNING : Peptide config normalization is currently done on all Peptide IONS .... To be changed
+    val normalizedRawAbundMatrix = if( !config.peptideStatConfig.applyNormalization ) rawAbundanceMatrix else AbundanceNormalizer.normalizeAbundances(rawAbundanceMatrix)
     
-    require( normalizedMatrix.length == rawAbundanceMatrix.length, "error during normalization, some peptides were lost...")
+    require( normalizedRawAbundMatrix.length == rawAbundanceMatrix.length, "error during normalization, some peptides were lost...")
  
     // Compute absolute error model and the filled matrix (only if config.peptideStatConfig.applyMissValInference == true)
     //
-    val absoluteErrorModelOpt = this.computeAbsoluteErrorModel(normalizedMatrix)
+    val absoluteErrorModelOpt = this.computeAbsoluteErrorModel(normalizedRawAbundMatrix)
     
     val filledMatrix = this.inferMissingValues(
-      normalizedMatrix,
+      normalizedRawAbundMatrix,
       psmCountMatrix,
       absoluteErrorModelOpt,
       config.peptideStatConfig
@@ -133,24 +126,26 @@ class Profilizer( expDesign: ExperimentalDesign, groupSetupNumber: Int = 1, mast
       mqQuantComponent.setAbundancesForQuantChannels(abundances,expDesignSetup.qcIds)
     }
 
-//     if (config.isMqPeptideAbundanceSummarizerBasedOn(QuantComponentItem.QUANT_PEPTIDE_IONS)) {
-       //VDS: behaviour modification to be more like 2.1.0 version behaviour: mqPeptideIon used for normalisation etc. Values are then used for mqPeptides values.
-       // Always update peptide values
-      //
-      for (mqPep <- masterQuantPeptides) {
-        val mqPepIons = mqPep.masterQuantPeptideIons
-        // Re-build the master quant peptides
-        val newMqPep = BuildMasterQuantPeptide(mqPepIons, mqPep.peptideInstance, mqPep.resultSummaryId, config.pepIonAbundanceSummarizingMethod)
-        val abundances = newMqPep.getAbundancesForQuantChannels(expDesignSetup.qcIds)
-        mqPep.setAbundancesForQuantChannels(abundances, expDesignSetup.qcIds)
-        //Get properties back
-        mqPep.properties.getOrElse(MasterQuantPeptideProperties()).mqPepIonAbundanceSummarizingConfig= newMqPep.properties.getOrElse(MasterQuantPeptideProperties()).mqPepIonAbundanceSummarizingConfig
-        // the next step is mandatory since BuildMasterQuantPeptide updates mqPepIons.masterQuantPeptideId to the new MasterQuantPeptide
-        mqPepIons.foreach { mqPepIon =>
-          mqPepIon.masterQuantPeptideId = mqPep.id
-        }
+    //VDS: Changed behaviour: mqPeptideIon are used for normalisation etc. Values are then used for mqPeptides values.
+    for (mqPep <- masterQuantPeptides) {
+      val mqPepIons = mqPep.masterQuantPeptideIons
+
+      // Re-build the master quant peptides
+      val newMqPep = BuildMasterQuantPeptide(mqPepIons, mqPep.peptideInstance, mqPep.resultSummaryId, config.pepIonAbundanceSummarizingMethod)
+
+      val abundances = newMqPep.getAbundancesForQuantChannels(expDesignSetup.qcIds)
+      val psmCounts = newMqPep.getPepMatchesCountsForQuantChannels(expDesignSetup.qcIds)
+
+      mqPep.setAbundancesAndPsmCountForQuantChannels(abundances, psmCounts, expDesignSetup.qcIds)
+
+      //Get properties back
+      mqPep.properties.getOrElse(MasterQuantPeptideProperties()).mqPepIonAbundanceSummarizingConfig= newMqPep.properties.getOrElse(MasterQuantPeptideProperties()).mqPepIonAbundanceSummarizingConfig
+      // the next step is mandatory since BuildMasterQuantPeptide updates mqPepIons.masterQuantPeptideId to the new MasterQuantPeptide
+      mqPepIons.foreach { mqPepIon =>
+        mqPepIon.masterQuantPeptideId = mqPep.id
       }
-//    }
+    }
+
     
     //
     // Compute masterQuantPeptide ratios and profiles

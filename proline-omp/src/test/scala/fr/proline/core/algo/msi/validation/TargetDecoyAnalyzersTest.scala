@@ -70,10 +70,10 @@ class TargetDecoyAnalyzersTest extends JUnitSuite with StrictLogging {
 
     val gtdAnalyzer = new GorshkovTDAnalyzer()
     val gRocPoints = gtdAnalyzer.performROCAnalysis(targetPSM, decoyPSM , new ScorePSMFilter())//.sortBy(_.fdr)
-    for (i <- 0 to 999) {
-      val p = gRocPoints(i)
-      println("gorshkov ; " + p.targetMatchesCount + ";" + p.decoyMatchesCount.get + ";" + p.fdr.get)
-    }
+//    for (i <- 0 to 999) {
+//      val p = gRocPoints(i)
+//      println("gorshkov ; " + p.targetMatchesCount + ";" + p.decoyMatchesCount.get + ";" + p.fdr.get)
+//    }
 
     ()
   }
@@ -82,9 +82,9 @@ class TargetDecoyAnalyzersTest extends JUnitSuite with StrictLogging {
   def adjustP() = {
     val pValue = Array(0.027213734, 0.002130990, 0.008984681, 0.011239151, 0.001358925, 0.003836214, 0.000345691, 0.078700302, 0.042893526, 0.000472456f)
     val adjustedPValues = BHFilter.adjustPValues(pValue)
-    for (i <- 0 to pValue.length-1) {
-      println(pValue(i) + ";" + adjustedPValues(i))
-    }
+//    for (i <- 0 to pValue.length-1) {
+//      println(pValue(i) + ";" + adjustedPValues(i))
+//    }
   }
 
 
@@ -110,12 +110,12 @@ class TargetDecoyAnalyzersTest extends JUnitSuite with StrictLogging {
                           new ValidationResult(6, Some(6), Some(TargetDecoyComputer.calcCdFDR(6,6)))
     )
 
-    rocPoints.foreach(println(_))
+//    rocPoints.foreach(println(_))
 
     val filteredRocPoints = RocPointsFilter.byTargetDecoyEdges(rocPoints)
     val l = filteredRocPoints.length
-    println("---------------------")
-    filteredRocPoints.foreach(println(_))
+ //   println("---------------------")
+//    filteredRocPoints.foreach(println(_))
     ()
   }
 

@@ -1,63 +1,27 @@
 package fr.proline.core.service.lcms.io
 
 import java.io.File
-import java.util.concurrent.Executors
-import java.util.concurrent.LinkedBlockingQueue
-import scala.collection.mutable.ArrayBuffer
-import scala.collection.mutable.HashMap
-import scala.collection.mutable.HashSet
-import scala.collection.mutable.LongMap
-import scala.concurrent._
-import scala.concurrent.duration.Duration
-import scala.util.control.Breaks._
 
-import com.almworks.sqlite4java.SQLiteConnection
 import com.github.davidmoten.rtree._
 import com.typesafe.scalalogging.LazyLogging
-import org.apache.commons.math3.stat.descriptive.rank.Percentile
-
-import fr.profi.chemistry.model.MolecularConstants
 import fr.profi.jdbc.easy._
-import fr.profi.ms.algo.IsotopePatternEstimator
-import fr.profi.ms.algo.IsotopePatternInterpolator
 import fr.profi.mzdb._
-import fr.profi.mzdb.algo.feature.extraction.FeatureExtractorConfig
-import fr.profi.mzdb.algo.PeakelsPatternPredictor
-import fr.profi.mzdb.io.reader.provider.RunSliceDataProvider
-import fr.profi.mzdb.peakeldb.PeakelDbHelper
-import fr.profi.mzdb.peakeldb.io.PeakelDbReader
-import fr.profi.mzdb.peakeldb.io.PeakelDbWriter
-import fr.profi.mzdb.model.{ Feature => MzDbFeature, Peakel => MzDbPeakel, SpectrumHeader }
-import fr.profi.mzdb.model.PeakelDataMatrix
-import fr.profi.mzdb.model.PutativeFeature
-import fr.profi.mzdb.util.ms.MsUtils
-import fr.profi.util.collection._
+import fr.profi.mzdb.model.{SpectrumHeader, Peakel => MzDbPeakel}
 import fr.profi.util.metrics.Metric
-
 import fr.proline.context.LcMsDbConnectionContext
 import fr.proline.core.algo.lcms._
-import fr.proline.core.algo.lcms.alignment.AlignmentResult
 import fr.proline.core.algo.msq.config._
 import fr.proline.core.dal.DoJDBCWork
-import fr.proline.core.dal.helper.LcmsDbHelper
-import fr.proline.core.om.model.msq.ExperimentalDesignSetup
 import fr.proline.core.om.model.lcms._
-import fr.proline.core.om.model.lcms.{ Feature => LcMsFeature }
-import fr.proline.core.om.model.msi.{ Peptide, PeptideMatch }
+import fr.proline.core.om.model.msi.{Peptide, PeptideMatch}
+import fr.proline.core.om.model.msq.ExperimentalDesignSetup
 import fr.proline.core.om.provider.lcms.impl.SQLScanSequenceProvider
 import fr.proline.core.om.storer.lcms._
-import fr.proline.core.om.storer.lcms.impl.PgPeakelWriter
-import fr.proline.core.om.storer.lcms.impl.SQLPeakelWriter
 import fr.proline.core.om.storer.lcms.impl.SQLScanSequenceStorer
-import fr.proline.core.service.lcms.AlignMapSet
-import fr.proline.core.service.lcms.CreateMapSet
-import fr.proline.core.service.lcms.ILcMsService
+import fr.proline.core.service.lcms.{AlignMapSet, ILcMsService}
 
-import rx.lang.scala.Observable
-import rx.lang.scala.Scheduler
-import rx.lang.scala.schedulers
-import rx.lang.scala.Subject
-import rx.lang.scala.subjects.PublishSubject
+import scala.collection.mutable
+import scala.collection.mutable.{ArrayBuffer, HashMap, LongMap}
 
 
 /**

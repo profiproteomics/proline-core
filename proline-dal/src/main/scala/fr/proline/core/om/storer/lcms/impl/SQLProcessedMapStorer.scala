@@ -1,21 +1,12 @@
 package fr.proline.core.om.storer.lcms.impl
 
-import scala.collection.mutable.ArrayBuffer
 import com.typesafe.scalalogging.LazyLogging
-
 import fr.profi.jdbc.easy._
-import fr.profi.jdbc.StatementWrapper
-
+import fr.profi.util.serialization.ProfiJson
 import fr.proline.context.LcMsDbConnectionContext
-import fr.proline.core.dal.{DoJDBCWork,DoJDBCReturningWork}
-import fr.proline.core.dal.tables.lcms.LcmsDbFeatureTable
-import fr.proline.core.dal.tables.lcms.LcmsDbFeatureClusterItemTable
-import fr.proline.core.dal.tables.lcms.LcmsDbMapTable
-import fr.proline.core.dal.tables.lcms.LcmsDbProcessedMapTable
-import fr.proline.core.dal.tables.lcms.LcmsDbProcessedMapFeatureItemTable
-import fr.proline.core.dal.tables.lcms.LcmsDbProcessedMapRawMapMappingTable
-import fr.proline.core.om.model.lcms.Feature
-import fr.proline.core.om.model.lcms.ProcessedMap
+import fr.proline.core.dal.tables.lcms.{LcmsDbProcessedMapMozCalibrationTable, LcmsDbProcessedMapRawMapMappingTable, LcmsDbProcessedMapTable}
+import fr.proline.core.dal.{DoJDBCReturningWork, DoJDBCWork}
+import fr.proline.core.om.model.lcms.{Feature, ProcessedMap}
 import fr.proline.core.om.storer.lcms._
 
 class SQLProcessedMapStorer(
@@ -74,9 +65,32 @@ class SQLProcessedMapStorer(
     
     // Link the processed map to the corresponding run maps
     this.linkProcessedMapToRunMaps( ezDBC, processedMap )
-    
+    if(processedMap.mozCalibrations.isDefined)
+      _insertProcessedMapMozCalib(ezDBC, processedMap)
+
     newMapId
- 
+  }
+
+  // Insert processed map mozCalibration data
+  private def _insertProcessedMapMozCalib( ezDBC: EasyDBC, processedMap: ProcessedMap): Unit ={
+    if(processedMap.mozCalibrations.isEmpty)
+      return
+
+    ezDBC.executeInBatch(LcmsDbProcessedMapMozCalibrationTable.mkInsertQuery) { statement =>
+      processedMap.mozCalibrations.get.foreach { mozCal =>
+        if (mozCal.scanId < 0 || processedMap.id < 0 ){//Still no scan Id !
+          this.logger.warn("!!!! Unable to get a Scan Id / Processed Map Id for processedMap "+processedMap.name+". No MoZCalibrationMap was saved !!!! ")
+        } else {
+          statement.executeWith(
+            processedMap.id,
+            mozCal.scanId,
+            mozCal.mozList.mkString(" "),
+            mozCal.deltaMozList.mkString(" "),
+            mozCal.properties.map(ProfiJson.serialize(_))
+          )
+        }
+      }
+    }
   }
   
   protected def _updateProcessedMap( ezDBC: EasyDBC, processedMap: ProcessedMap ): Unit = {

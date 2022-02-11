@@ -3,6 +3,7 @@ package fr.proline.core.service.lcms.io
 import com.typesafe.scalalogging.LazyLogging
 import fr.profi.mzdb.model.{PeakelDataMatrix, PutativeFeature, Feature => MzDbFeature, Peakel => MzDbPeakel}
 import fr.proline.context.LcMsDbConnectionContext
+import fr.proline.core.Settings
 import fr.proline.core.algo.lcms._
 import fr.proline.core.algo.msq.config._
 import fr.proline.core.om.model.lcms.{Feature => LcMsFeature, _}
@@ -83,7 +84,7 @@ abstract class AbstractMapSetDetector (
     val scanInitialIds = mzDbFt.getSpectrumIds
     
     // WARNING: we assume here that these methods returns the initial ID but it may change in the future
-    val apexScanInitialId = mzDbFt.getApexSpectrumId.toInt
+    val apexScanInitialId = mzDbFt.getApexSpectrumId.toInt //FIXME: mzDbFt.getApexSpectrumId and basePeakel apex could be different
     val (firstScanInitialId, lastScanInitialId) = (scanInitialIds.head.toInt, scanInitialIds.last.toInt)
     val firstLcMsScanId = lcmsScanIdByInitialId(firstScanInitialId)
     val lastLcMsScanId = lcmsScanIdByInitialId(lastScanInitialId)
@@ -136,12 +137,21 @@ abstract class AbstractMapSetDetector (
       val predictedTime = putativeFeature.get.elutionTime
       ftProps.setPredictedElutionTime(Some(predictedTime))
     }
-    
+
+    val intensity = {
+      Settings.featureIntensity match {
+        case "basePeakel.apex" => basePeakel.getApexIntensity()
+        case "basePeakel.area" => basePeakel.area
+        case "feature.area" => mzDbFt.area
+        case "feature.sumIsotopeApexes" => mzDbFt.getPeakels().foldLeft(0.0f){ (sum, p) => sum + p.getApexIntensity()}
+      }
+    }
+
     new LcMsFeature(
       id = ftId,
       moz = mzDbFt.mz,
       apexIntensity = basePeakel.getApexIntensity(),
-      intensity = basePeakel.getApexIntensity(),
+      intensity = intensity,
       charge = mzDbFt.charge,
       elutionTime = mzDbFt.getElutionTime,
       duration = mzDbFt.calcDuration(),

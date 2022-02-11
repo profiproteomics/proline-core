@@ -7,6 +7,7 @@ import fr.profi.util.serialization.ProfiJson.deserialize
 import fr.profi.util.serialization.ProfiJson.serialize
 import fr.profi.api.service.IService
 import fr.proline.context.IExecutionContext
+import fr.proline.core.Settings
 import fr.proline.core.algo.msq.config._
 import fr.proline.core.dal.BuildLazyExecutionContext
 import fr.proline.core.dal.context.execCtxToTxExecCtx
@@ -16,7 +17,7 @@ import fr.proline.core.orm.uds.{Dataset => UdsDataset}
 import fr.proline.core.orm.uds.{MasterQuantitationChannel => UdsMasterQuantChannel}
 import fr.proline.core.orm.uds.{QuantitationMethod => UdsQuantMethod}
 import fr.proline.core.orm.uds.ObjectTree
-import fr.proline.core.orm.uds.ObjectTreeSchema.{ SchemaName => UdsSchemaName }
+import fr.proline.core.orm.uds.ObjectTreeSchema.{SchemaName => UdsSchemaName}
 import fr.proline.core.orm.uds.repository.ObjectTreeSchemaRepository
 import fr.proline.core.service.msq.quantify.BuildMasterQuantChannelQuantifier
 import fr.proline.repository.IDataStoreConnectorFactory
@@ -107,10 +108,17 @@ class Quantifier(
       logger.info("Storing quantitation configuration with schema named: " + quantConfigSchemaName.toString())
       val qtConfigObjectTree = Quantifier.storeQuantConfig(quantConfigAsStr, quantConfigSchemaName, udsEM)
 
-      // Link QUANT CONFIG to quantitation DS
+      val lowlevelConfigSchemaName = UdsSchemaName.PROLINE_LOW_LEVEL_CONFIG
+      logger.info("Storing proline low level configuration with schema named: " + lowlevelConfigSchemaName.toString())
+      val lowLevelConfigObjectTree = Quantifier.storeQuantConfig(Settings.renderConfigAsString(), lowlevelConfigSchemaName, udsEM)
+
+      // Link QUANT and LOW LEVEL config to quantitation DS
       udsQuantitation.putObject(quantConfigSchemaName.toString(), qtConfigObjectTree.getId())
+      udsQuantitation.putObject(lowlevelConfigSchemaName.toString(), lowLevelConfigObjectTree.getId())
+
       udsEM.merge(udsQuantitation)
-      
+
+
       // Perform the quantitation
       // TODO: implement missing cases
       methodType match {

@@ -1,10 +1,12 @@
 package fr.proline.core.algo.lcms.alignment
 
 import fr.proline.core.algo.lcms.AlnSmoothingParams
+import fr.proline.core.algo.msq.profilizer.CommonsStatHelper
 
 class TimeWindowSmoother extends IAlnSmoother {
 
   import fr.proline.core.om.model.lcms._
+
   import scala.collection.mutable.ArrayBuffer
   
   def smoothLandmarks( landmarks: Seq[Landmark], smoothingParams: Option[AlnSmoothingParams]): Seq[Landmark] = {
@@ -18,33 +20,36 @@ class TimeWindowSmoother extends IAlnSmoother {
     
     // Create an array of landmarks
     val nbLandmarks = landmarks.length
-    val landmarksSortedByTime = landmarks.sortBy( _.time )
+    val landmarksSortedByTime = landmarks.sortBy( _.x)
     
     // last landmark time
-    val totalTime = landmarksSortedByTime(nbLandmarks-1).time
+    val totalTime = landmarksSortedByTime(nbLandmarks-1).x
     
     val newLandmarks = new ArrayBuffer[Landmark](nbLandmarks)
     
     // Define an anonymous function for time window processing
-    val processWindowFn = new Function2[Float, Float, Unit] {
+    val processWindowFn = new Function2[Double, Double, Unit] {
       
-      def apply(minVal: Float, maxVal: Float): Unit = {
+      def apply(minVal: Double, maxVal: Double): Unit = {
         
         var nextLandmarkTime = minVal
-        var landmarkIdx = landmarksSortedByTime.indexWhere(_.time >= minVal)
+        var landmarkIdx = landmarksSortedByTime.indexWhere(_.x >= minVal)
         
         val landmarkGroup = new ArrayBuffer[Landmark](100)
-        while (landmarkIdx < nbLandmarks && landmarksSortedByTime(landmarkIdx).time < maxVal) {
+        while (landmarkIdx < nbLandmarks && landmarksSortedByTime(landmarkIdx).x < maxVal) {
 
           landmarkGroup += landmarksSortedByTime(landmarkIdx)
-
           landmarkIdx += 1
         }
 
         // If the landmark group is filled enough
         if (landmarkGroup.length >= minWindowLandmarks) {
+          val lmStats = CommonsStatHelper.calcExtendedStatSummary(landmarkGroup.map(_.dx).toArray)
           val medianLm = computeMedianLandmark(landmarkGroup)
-          newLandmarks += medianLm
+          val t = Math.max(math.abs(lmStats.getMedian() - lmStats.getQ1() - 1.5*lmStats.getInterQuartileRange()),
+            math.abs(lmStats.getQ3() + 1.5*lmStats.getInterQuartileRange() - lmStats.getMedian()))
+          val newLandmark = medianLm.copy(tx = t)
+          newLandmarks += newLandmark
         }
       }
     }

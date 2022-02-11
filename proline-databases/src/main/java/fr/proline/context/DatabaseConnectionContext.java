@@ -3,6 +3,7 @@ package fr.proline.context;
 import java.io.Closeable;
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.sql.Statement;
 
 import javax.persistence.EntityManager;
 import javax.persistence.EntityTransaction;
@@ -398,6 +399,31 @@ public class DatabaseConnectionContext implements Closeable {
 
 		return result;
 	}
+
+	/**
+	 *  ALTER specified TABLE by enabling or disabling "TRIGGER ALL"
+	 *  This will be done according to the Driver type.
+	 *
+	 * @param tableName : name of the Table to alter
+	 * @param alterAction : alter action, should be ENABLE or DISABLE
+	 */
+	public void doTableTriggerAlter(String tableName, String  alterAction) throws SQLException{
+
+		if( tableName == null || tableName.isEmpty() ||  !( "DISABLE".equals(alterAction.toUpperCase()) || "ENABLE".equals(alterAction.toUpperCase()) )){
+			throw new IllegalArgumentException("TableName is not specicied or action is not ENABLE or DISABLE.");
+		}
+
+		if(getDriverType().equals(DriverType.POSTGRESQL)){
+			JDBCWork triggerAction = new JDBCWork() {
+				@Override
+				public void execute(Connection connection) throws SQLException {
+					Statement s = connection.createStatement();
+					s.execute(" ALTER TABLE "+tableName+" "+alterAction+" TRIGGER ALL;");
+				}};
+			doWork(triggerAction, false);
+		}
+	}
+
 
 	/**
 	 * Executes an SQL JDBC work on raw current SQL Connection or current

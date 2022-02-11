@@ -56,6 +56,7 @@ class RsmPtmSitesIdentifier(
   val peptideMatchProvider = new SQLPeptideMatchProvider(msiDbContext, peptideProvider)
 
   val schemaName = SchemaName.PTM_SITES
+  val annotatedSchemaName: SchemaName = null
 
   def runService(): Boolean = {
 
@@ -75,8 +76,13 @@ class RsmPtmSitesIdentifier(
       false
     } else {
       if (existingObjectTreeId.isDefined) {
-        logger.info("already defined Ptm sites for this ResultSummary will be deleted")
-        _deletePtmSites(existingObjectTreeId.get)
+        logger.info("already defined Ptm sites data for this ResultSummary will be deleted")
+        _deleteRsmObjectTree(existingObjectTreeId.get)
+        val annotatedObjTreeId = _getAnnotatedPtmDatasetObjectTreeID(resultSummaryId)
+        if(annotatedObjTreeId.isDefined) {
+          logger.info("already defined annotated Ptm sites data for this ResultSummary will be deleted")
+          _deleteRsmObjectTree(annotatedObjTreeId.get)
+        }
       }
 
       logger.info("Start identifying Ptm sites for ResultSummary #"+resultSummaryId)
@@ -101,14 +107,19 @@ class RsmPtmSitesIdentifier(
 
     val existingObjectTreeId = _getPtmSitesObjectTreeID(resultSummary.id)
     var ptmSites = Array.empty[PtmSite].toIterable
-    
+
     if (existingObjectTreeId.isDefined && !force) {
       logger.info(s"Read already defined PtmSites for ResultSummary #${resultSummary.id} ")
       PtmResult(resultSummary, Array(resultSummary.id), _getPtmSites(existingObjectTreeId.get))
     } else {
       if (existingObjectTreeId.isDefined) {
-        logger.info(s"already defined Ptm sites for ResultSummary #${resultSummary.id} will be deleted")
-        _deletePtmSites(existingObjectTreeId.get)
+        logger.info(s"already defined Ptm sites data for ResultSummary #${resultSummary.id} will be deleted")
+        _deleteRsmObjectTree(existingObjectTreeId.get)
+        val annotatedObjTreeId = _getAnnotatedPtmDatasetObjectTreeID(resultSummary.id)
+        if(annotatedObjTreeId.isDefined) {
+          logger.info(s"already defined annotated Ptm sites data for for ResultSummary #${resultSummary.id} will be deleted")
+          _deleteRsmObjectTree(annotatedObjTreeId.get)
+        }
       }
 
       // this resultSummary is a merged RSM
@@ -167,6 +178,17 @@ class RsmPtmSitesIdentifier(
     }.headOption
   }
 
+  private def _getAnnotatedPtmDatasetObjectTreeID(rsmId: Long): Option[Long] = {
+    DoJDBCReturningWork.withEzDBC(execContext.getMSIDbConnectionContext) { msiEzDBC =>
+      val ptmDSAnnotatedQuery = new SelectQueryBuilder1(MsiDbResultSummaryObjectTreeMapTable).mkSelectQuery((t, c) =>
+        List(t.*) -> "WHERE " ~ t.RESULT_SUMMARY_ID ~ s" = '${rsmId}'" ~ " AND " ~ t.SCHEMA_NAME ~ s" = '${annotatedSchemaName.toString}'"
+      )
+      msiEzDBC.select(ptmDSAnnotatedQuery) { r =>
+        toLong(r.getAny(MsiDbResultSummaryObjectTreeMapTable.columns.OBJECT_TREE_ID))
+      }
+    }.headOption
+  }
+
   def _getPtmSites(objectTreeId: Long): Iterable[PtmSite] = {
     DoJDBCReturningWork.withEzDBC(execContext.getMSIDbConnectionContext) { msiEzDBC =>
 
@@ -187,7 +209,7 @@ class RsmPtmSitesIdentifier(
       peptideMatchProvider.getPeptideMatches(peptideMatchIds).map( pm => (pm.id -> pm)).toMap
   }
 
-  private def _deletePtmSites(objectTreeID: Long) {
+  private def _deleteRsmObjectTree(objectTreeID: Long) {
     DoJDBCWork.withEzDBC(execContext.getMSIDbConnectionContext) { msiEzDBC =>
       msiEzDBC.execute(s"DELETE FROM ${MsiDbResultSummaryObjectTreeMapTable.name} WHERE ${MsiDbResultSummaryObjectTreeMapTable.columns.OBJECT_TREE_ID} = ${objectTreeID}")
       msiEzDBC.execute(s"DELETE FROM ${MsiDbObjectTreeTable.name} WHERE ${MsiDbObjectTreeTable.columns.ID} = ${objectTreeID}")
@@ -221,6 +243,7 @@ class RsmPtmSitesIdentifierV2(
     force: Boolean) extends RsmPtmSitesIdentifier(execContext, resultSummaryId, force) with InMemoryIdGen {
 
   override val schemaName = SchemaName.PTM_DATASET
+  override val annotatedSchemaName = SchemaName.PTM_DATASET_ANNOTATED
   val ptmDefinitionById = new SQLPTMProvider(msiDbContext).ptmDefinitionById
 
   override def onIdentifyPtmSites(identifier: PtmSitesIdentifier, result: PtmResult): Unit = {

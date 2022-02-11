@@ -15,7 +15,7 @@ import fr.profi.chemistry.model.EnzymeCleavage
 
 @Test
 class PeptidesTest extends JUnitSuite with StrictLogging {
-  
+
 	@Test
     def testGetPeptideMatchIDs() = {
 	  

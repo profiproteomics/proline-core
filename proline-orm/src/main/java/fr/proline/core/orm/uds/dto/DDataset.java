@@ -1,9 +1,8 @@
 package fr.proline.core.orm.uds.dto;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-
+import com.typesafe.config.Config;
+import com.typesafe.config.ConfigFactory;
+import com.typesafe.config.ConfigRenderOptions;
 import fr.proline.core.orm.lcms.MapAlignment;
 import fr.proline.core.orm.lcms.MapAlignmentPK;
 import fr.proline.core.orm.lcms.MapTime;
@@ -12,9 +11,13 @@ import fr.proline.core.orm.msi.ResultSet;
 import fr.proline.core.orm.msi.ResultSummary;
 import fr.proline.core.orm.uds.*;
 import fr.proline.core.orm.uds.Dataset.DatasetType;
-import fr.proline.core.orm.util.JsonSerializer;
 import fr.proline.core.orm.uds.dto.DDatasetType.AggregationInformation;
 import fr.proline.core.orm.uds.dto.DDatasetType.QuantitationMethodInfo;
+import fr.proline.core.orm.util.JsonSerializer;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 
 /**
  * @author JM235353
@@ -42,8 +45,10 @@ public class DDataset {
 
   private ObjectTree m_postQuantProcessingConfig;
   private ObjectTree m_quantProcessingConfig;
+  private ObjectTree m_lowlevelConfig;
   private Map<String, Object> postQuantProcessingConfigMap;
   private Map<String, Object> quantProcessingConfigMap;
+  private Map<String, Object> m_lowlevelConfigMap;
 
   private GroupSetup groupSetup;
 
@@ -191,6 +196,9 @@ public class DDataset {
       if (ot.getSchema().getName().equalsIgnoreCase(ObjectTreeSchema.SchemaName.POST_QUANT_PROCESSING_CONFIG.getKeyName())) {
         this.m_postQuantProcessingConfig = ot;
         this.postQuantProcessingConfigMap = null;//should reinit map with new object tree
+      } else if (ot.getSchema().getName().equalsIgnoreCase(ObjectTreeSchema.SchemaName.PROLINE_LOW_LEVEL_CONFIG.getKeyName())) {
+        this.m_lowlevelConfig = ot;
+        this.m_lowlevelConfigMap = null;//should reinit map with new object tree
       } else if (ot.getSchema().getName().startsWith("quantitation")) {
         this.m_quantProcessingConfig = ot;
         this.quantProcessingConfigMap = null;//should reinit map with new object tree
@@ -207,12 +215,37 @@ public class DDataset {
     return m_quantProcessingConfig;
   }
 
+  public ObjectTree getQuantLowLevelConfig() {
+    return m_lowlevelConfig;
+  }
+
   // deserialize because the post quant processing config could have changed
   public Map<String, Object> getPostQuantProcessingConfigAsMap() throws Exception {
     if ((postQuantProcessingConfigMap == null) && (m_postQuantProcessingConfig != null)) {
       postQuantProcessingConfigMap = JsonSerializer.getMapper().readValue(getPostQuantProcessingConfig().getClobData(), Map.class);
     }
     return postQuantProcessingConfigMap;
+  }
+
+  public String  getQuantLowLevelConfigAsString() throws Exception {
+    if ((m_lowlevelConfigMap == null) && (m_lowlevelConfig != null)) {
+      Config c = ConfigFactory.parseString(m_lowlevelConfig.getClobData());
+      return  c.root().render( ConfigRenderOptions.concise());
+
+    }
+    return "";
+  }
+
+  public Map<String, Object> getQuantLowLevelConfigAsMap() throws Exception {
+    if ((m_lowlevelConfigMap == null) && (m_lowlevelConfig != null)) {
+      Config c = ConfigFactory.parseString(m_lowlevelConfig.getClobData());
+      String conciseStr =  c.root().render( ConfigRenderOptions.concise());
+      m_lowlevelConfigMap = JsonSerializer.getMapper().readValue(conciseStr, Map.class);
+
+      //clean up data
+
+    }
+    return m_lowlevelConfigMap;
   }
 
   public Map<String, Object> getQuantProcessingConfigAsMap() throws Exception {
@@ -284,7 +317,7 @@ public class DDataset {
       List<MapTime> revMapTimeList = new ArrayList<>();
       for (int i = 0; i < nbLandmarks; i++) {
         MapTime mapTime = ma.getMapTimeList().get(i);
-        Double deltaTime = mapTime.getDeltaTime();
+        Double deltaTime = mapTime.getDeltaValue();
         Double targetMapTime = mapTime.getTime() + deltaTime;
         revTimeList[i] = targetMapTime;
         revDeltaTimeList[i] = -deltaTime;
@@ -297,6 +330,7 @@ public class DDataset {
       reversedMap.setMapTimeList(revMapTimeList);
       reversedMap.setDeltaTimeList(deltaS);
       reversedMap.setTimeList(timeS);
+      reversedMap.setSerializedProperties(ma.getSerializedProperties());
 
       m_mapReversedAlignments.add(reversedMap);
     }

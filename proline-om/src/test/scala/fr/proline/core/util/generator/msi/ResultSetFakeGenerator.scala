@@ -153,14 +153,15 @@ class ResultSetFakeGenerator(
       ))))
     }
     // Link this peptide to the protein
-    val pattern = pepSeq.r
+    val patternString = """(?=("""+pepSeq+"))"
+    val pattern = patternString.r
     val protSeq = proteinMatch.protein.get.sequence
-    val matches = pattern.findAllMatchIn(protSeq)
+    val matches = pattern.findAllMatchIn(protSeq).toSeq.reverse
     matches.foreach{ m =>
 
       // For each Peptide of the group, create a PeptideMatch
       val startIdx = m.start + 1
-      val endIdx = m.end
+      val endIdx = startIdx+pepSeq.length-1
       val resBefore = if ((m.start-1)> 0) protSeq.charAt(m.start-1) else '-'
       val resAfter = if (endIdx < protSeq.length) protSeq.charAt(endIdx) else '-'
 
