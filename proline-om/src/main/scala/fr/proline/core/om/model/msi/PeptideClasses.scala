@@ -267,7 +267,11 @@ object PeptideMatch extends InMemoryIdGen with LazyLogging {
   ): Int = {
     
     require( sequence != null, "sequence is null" )
-    
+
+    //If no enzyme, no missed cleavage
+    if(enzymes == null || enzymes.isEmpty)
+      return 0
+
     // Only consider first enzyme
     require(enzymes.length == 1, "Unexpected number of enzymes")
     
