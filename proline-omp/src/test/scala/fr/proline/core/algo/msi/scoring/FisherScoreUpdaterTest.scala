@@ -1,14 +1,15 @@
 package fr.proline.core.algo.msi.scoring
 
 import com.typesafe.scalalogging.StrictLogging
-import fr.proline.core.algo.msi.inference.ParsimoniousProteinSetInferer
 import fr.proline.core.algo.msi.validation.pepinstance.BasicPepInstanceBuilder
 import org.apache.commons.math3.distribution.ChiSquaredDistribution
 import org.apfloat.{Apfloat, ApfloatMath}
 import org.junit.Test
 import org.scalatest.junit.JUnitSuite
 
+import java.math.MathContext
 import scala.collection.mutable.ArrayBuffer
+
 
 @Test
 class FisherScoreUpdaterTest extends JUnitSuite with StrictLogging {
@@ -76,6 +77,32 @@ class FisherScoreUpdaterTest extends JUnitSuite with StrictLogging {
 
     logger.info("bigdecimal log10 = "+logBd.toString())
     logger.info("math.log10 = "+math.log10(bd.doubleValue()))
+
+  }
+
+  @Test
+  def precision2() = {
+    val bestPepMatchScore = 300
+    val q = 119
+
+
+
+    var start = System.currentTimeMillis()
+
+    val pvalue = 1.0d - (1.0d - BigDecimal(math.pow(10, -bestPepMatchScore / 10.0))).pow(q)
+    val score = (-10.0 * BasicPepInstanceBuilder.log10(pvalue, pvalue.scale)).doubleValue()
+
+    logger.info("Score calculated in {} ms ", (System.currentTimeMillis() - start))
+    logger.info("pepScore = "+score)
+
+    start = System.currentTimeMillis()
+
+    val pvalueBD = BigDecimal(1.0, MathContext.UNLIMITED) - (BigDecimal(1.0, MathContext.UNLIMITED) - BigDecimal(math.pow(10, -bestPepMatchScore / 10.0), MathContext.UNLIMITED)).pow(q)
+    val scoreBD = (-10.0 * BasicPepInstanceBuilder.log10(pvalueBD, pvalueBD.scale)).doubleValue()
+
+    logger.info("Score calculated in {} ms ",(System.currentTimeMillis() - start))
+    logger.info("pepScore = "+scoreBD)
+
 
   }
 
