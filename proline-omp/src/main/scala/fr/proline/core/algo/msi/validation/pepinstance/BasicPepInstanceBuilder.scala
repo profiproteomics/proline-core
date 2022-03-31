@@ -1,10 +1,10 @@
 package fr.proline.core.algo.msi.validation.pepinstance
 
-import java.math.{MathContext, RoundingMode}
 import com.typesafe.scalalogging.LazyLogging
-import fr.proline.core.algo.msi.inference.ParsimoniousProteinSetInferer
 import fr.proline.core.algo.msi.validation.IPeptideInstanceBuilder
-import fr.proline.core.om.model.msi.{PeptideInstance, PeptideInstanceProperties, PeptideMatch, PeptideMatchScoreType, ScoringProperties}
+import fr.proline.core.om.model.msi._
+
+import java.math.{MathContext, RoundingMode}
 
 
 object BasicPepInstanceBuilder {
@@ -57,7 +57,12 @@ class BasicPepInstanceBuilder extends IPeptideInstanceBuilder with LazyLogging {
 
     val pepInstProps = if (pepMatchGroup.filter(_.scoreType != PeptideMatchScoreType.MASCOT_IONS_SCORE).size == 0) {
 
-      val pvalue = 1.0d - (1.0d - BigDecimal(math.pow(10, -bestPepMatch.score / 10.0))).pow(pepMatchGroup.length)
+      val pvalue = if (bestPepMatch.score <= 300) {
+        1.0d - (1.0d - BigDecimal(math.pow(10, -bestPepMatch.score / 10.0))).pow(pepMatchGroup.length)
+      } else {
+        BigDecimal(1.0, MathContext.UNLIMITED) - (BigDecimal(1.0, MathContext.UNLIMITED) - BigDecimal(math.pow(10, -bestPepMatch.score / 10.0), MathContext.UNLIMITED)).pow(pepMatchGroup.length)
+      }
+
       val score = (-10.0 * BasicPepInstanceBuilder.log10(pvalue, pvalue.scale)).doubleValue()
 
       Some(PeptideInstanceProperties(
