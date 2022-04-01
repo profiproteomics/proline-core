@@ -371,6 +371,8 @@ class PeakelsDetector(
               landmarks += Landmark(rt.toDouble, 1e6 * (theoreticalMoz - t._1.moz) / theoreticalMoz)
             }
 
+//            Landmark._toCSVFile(List("moz", lcMsRun.getRawFileName).mkString("_") + ".csv", landmarks)
+
             val smoothedLandmarks = alignmentSmoother.smoothLandmarks(landmarks, alignmentConfig.get.smoothingMethodParams)
 
             val mozCalibration = MapMozCalibration(

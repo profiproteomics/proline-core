@@ -52,6 +52,7 @@ abstract class AbstractLcmsMapAligner extends LazyLogging {
 
       val map1FtById = map1Features.mapByLong(_.id)
 
+
       /*
       println("*****")
       for ((map1FtId,matchingFts) <- ftMapping; val map1Ft = map1FtById(map1FtId); matchingFt <- matchingFts) {
@@ -84,16 +85,16 @@ abstract class AbstractLcmsMapAligner extends LazyLogging {
       for ((massRangeIdx,landmarks) <- landmarksByMassIdx) {
 
         if (!landmarks.isEmpty) {
-          val landmarksSortedByTime = landmarks.sortBy(_.x)
+          val landmarksSortedByTime = landmarks.sortBy(l => (l.x,l.dx))
+
+          //Landmark._toCSVFile(List("RT", map1.name, map2.name, massRangeIdx).mkString("_") + ".csv", landmarksSortedByTime)
+
           var smoothedLandmarks = alnSmoother.smoothLandmarks(landmarksSortedByTime, alnConfig.smoothingMethodParams)
           // FIXME: this should not be empty
           if (smoothedLandmarks.isEmpty) {
             logger.warn("Empty array of smoothed Landmarks, use the original landmarks instead")
             smoothedLandmarks = landmarksSortedByTime
           }
-
-          /*val timeList = landmarksSortedByTime.map { _.time }
-        val deltaTimeList = landmarksSortedByTime.map { _.deltaTime }*/
 
           val (timeList, deltaTimeList, toleranceTimeList) = (new ArrayBuffer[Float](smoothedLandmarks.length), new ArrayBuffer[Float](smoothedLandmarks.length), new ArrayBuffer[Float](smoothedLandmarks.length))
           var prevTimePlusDelta = smoothedLandmarks(0).x.toFloat + smoothedLandmarks(0).dx.toFloat - 1

@@ -1,12 +1,11 @@
 package fr.proline.core.algo.lcms.alignment
 
-import scala.collection.mutable.ArrayBuffer
-import scala.collection.mutable.HashMap
-import scala.collection.mutable.LongMap
 import fr.profi.util.collection._
 import fr.profi.util.math.combinations
-import fr.proline.core.algo.lcms.{AlignmentConfig, AlignmentParams}
+import fr.proline.core.algo.lcms.AlignmentConfig
 import fr.proline.core.om.model.lcms._
+
+import scala.collection.mutable.{ArrayBuffer, HashMap, LongMap}
 
 class ComprehensiveMapAligner extends AbstractLcmsMapAligner {
 
@@ -19,7 +18,7 @@ class ComprehensiveMapAligner extends AbstractLcmsMapAligner {
     
     // Compute map pairs
     val mapById = lcmsMaps.mapByLong(_.id)
-    val mapIds = mapById.keys.toList
+    val mapIds = mapById.keys.toList.sorted
     val nrMapIdPairs = combinations( 2, mapIds )
     
     val mapAlnSets = new ArrayBuffer[MapAlignmentSet](nrMapIdPairs.length)
