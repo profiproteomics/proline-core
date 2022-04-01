@@ -1,16 +1,14 @@
 package fr.proline.core.om.model.lcms
 
-import java.util.Date
-
-import scala.beans.BeanProperty
-import scala.collection.mutable.ArrayBuffer
-import scala.collection.mutable.LongMap
-
 import com.typesafe.scalalogging.LazyLogging
-
 import fr.profi.util.collection._
-import fr.profi.util.misc.InMemoryIdGen
 import fr.profi.util.math.linearInterpolation
+import fr.profi.util.misc.InMemoryIdGen
+
+import java.io.PrintWriter
+import java.util.Date
+import scala.beans.BeanProperty
+import scala.collection.mutable.{ArrayBuffer, LongMap}
 
 // TODO:  move in Scala Commons ???
 trait IEntityReference[T] {
@@ -89,6 +87,28 @@ case class MapMozCalibration(
 }
 
 case class MapMozCalibrationProperties()
+
+object Landmark {
+
+  def _toCSVFile(filePath: String, landmarks : ArrayBuffer[Landmark]) = {
+    val file = new java.io.File(filePath)
+    val writer = new PrintWriter(file)
+
+    val header = "x dx"
+    writer.println(header.replaceAll(" ", ";"))
+
+    for( lm <- landmarks ) {
+      val row: List[Any] = List(
+        lm.x, lm.dx
+      )
+      writer.println( row.mkString(";"))
+      writer.flush()
+    }
+
+    writer.close()
+  }
+
+}
 
 case class Landmark(x: Double, dx: Double, tx: Double = 0)
 
@@ -450,7 +470,6 @@ case class MapSet(
 
   // Debug purpose
   def toTsvFile( filePath: String ) {
-    import java.io.FileOutputStream
     import java.io.PrintWriter
     val file = new java.io.File(filePath)
     val writer = new PrintWriter(file)
@@ -668,7 +687,6 @@ abstract class ILcMsMap {
 
   // Debug purpose
   def toTsvFile( filePath: String ) {
-    import java.io.FileOutputStream
     import java.io.PrintWriter
     val file = new java.io.File(filePath)
     val writer = new PrintWriter(file)
