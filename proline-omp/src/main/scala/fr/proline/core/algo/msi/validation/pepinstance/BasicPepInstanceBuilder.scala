@@ -9,6 +9,8 @@ import java.math.{MathContext, RoundingMode}
 
 object BasicPepInstanceBuilder {
 
+  val DECIMAL256 = new MathContext(256)
+
   def log10(bd: BigDecimal, dp: Int): BigDecimal = {
     var b = bd
     val NUM_OF_DIGITS = dp + 2 // need to add one to get the right number of dp
@@ -60,7 +62,7 @@ class BasicPepInstanceBuilder extends IPeptideInstanceBuilder with LazyLogging {
       val pvalue = if (bestPepMatch.score <= 300) {
         1.0d - (1.0d - BigDecimal(math.pow(10, -bestPepMatch.score / 10.0))).pow(pepMatchGroup.length)
       } else {
-        BigDecimal(1.0, MathContext.UNLIMITED) - (BigDecimal(1.0, MathContext.UNLIMITED) - BigDecimal(math.pow(10, -bestPepMatch.score / 10.0), MathContext.UNLIMITED)).pow(pepMatchGroup.length)
+        BigDecimal(1.0, BasicPepInstanceBuilder.DECIMAL256) - (BigDecimal(1.0, BasicPepInstanceBuilder.DECIMAL256) - BigDecimal(math.pow(10, -bestPepMatch.score / 10.0), BasicPepInstanceBuilder.DECIMAL256)).pow(pepMatchGroup.length)
       }
 
       val score = (-10.0 * BasicPepInstanceBuilder.log10(pvalue, pvalue.scale)).doubleValue()
