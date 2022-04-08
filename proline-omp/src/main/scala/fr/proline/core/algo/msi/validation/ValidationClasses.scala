@@ -135,6 +135,7 @@ object BuildPeptideMatchFilter {
       case PepMatchFilterParams.SINGLE_PSM_PER_RANK=> new SinglePSMPerPrettyRankFilter()
       case PepMatchFilterParams.ISOTOPE_OFFSET => new IsotopeOffsetPSMFilter()
       case PepMatchFilterParams.BH_AJUSTED_PVALUE => new BHPSMFilter()
+      case PepMatchFilterParams.SINGLE_SEQ_PER_RANK => new SingleSequencePerPrettyRankFilter()
     }
   }
 } 
