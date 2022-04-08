@@ -259,10 +259,12 @@ object MsiSearchBuilder {
     }
 
     //val seqDbById = Map() ++ this.getSeqDatabases(seqDbIds.distinct).map(s => s.id -> s)
-    val enzById = EnzymeBuilder.buildEnzymes(
-      eachEnzymeRecordSelector(enzIds.distinct.toArray),
-      eachEnzymeCleavageRecordSelector
-    ).map(s => s.id -> s).toMap
+    val enzById = if(!enzIds.isEmpty) {
+      EnzymeBuilder.buildEnzymes(
+        eachEnzymeRecordSelector(enzIds.distinct.toArray),
+        eachEnzymeCleavageRecordSelector
+      ).map(s => s.id -> s).toMap
+    } else Map.empty[Long, Enzyme]
     
     // TODO: override the short name with the MsiDb one
     val ptmSpecById = Map() ++ ptmProvider.getPtmDefinitions(ptmSpecIds.distinct).map(s => s.id -> s)
