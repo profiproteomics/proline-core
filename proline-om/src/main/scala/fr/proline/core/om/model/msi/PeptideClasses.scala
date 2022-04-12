@@ -105,7 +105,7 @@ object Peptide extends InMemoryIdGen with LazyLogging {
     }
     
     // Sort located PTMs
-    val sortedLocatedPtms = locatedPtms.sortWith { (a,b) => a.seqPosition <= b.seqPosition }
+    val sortedLocatedPtms = locatedPtms.sortWith { (a,b) => a.seqPosition < b.seqPosition }
     
     // Define data structure which will contain located PTM strings mapped by sequence position
     // TODO: do we allow more than one PTM at a given position ???
