@@ -242,6 +242,10 @@ CREATE INDEX peptide_mass_idx
  ON public.peptide
  ( calculated_mass );
 
+CREATE UNIQUE INDEX peptide_seq_ptm_idx
+    ON public.peptide
+        ( sequence, ptm_string );
+
 CREATE SEQUENCE public.ptm_id_seq;
 
 CREATE TABLE public.ptm (
@@ -326,6 +330,9 @@ COMMENT ON COLUMN public.bio_sequence.pi IS 'The isoelectric point of the protei
 COMMENT ON COLUMN public.bio_sequence.crc64 IS 'A numerical signature of the protein sequence built by a CRC64 algorithm.';
 COMMENT ON COLUMN public.bio_sequence.serialized_properties IS 'A JSON string which stores optional properties (see corresponding JSON schema for more details).';
 
+CREATE INDEX bio_sequence_crc_idx
+    ON public.bio_sequence
+        ( crc64 );
 
 CREATE TABLE public.object_tree_schema (
                 name VARCHAR(1000) NOT NULL,
