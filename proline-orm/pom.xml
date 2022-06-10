@@ -55,11 +55,16 @@
       <artifactId>jaxb-impl</artifactId>
       <version>2.3.1</version>
     </dependency>
+<!--    <dependency>-->
+<!--      <groupId>javax.activation</groupId>-->
+<!--      <artifactId>activation</artifactId>-->
+<!--      <version>1.1.1</version>-->
+<!--    </dependency>-->
     <dependency>
-      <groupId>javax.activation</groupId>
-      <artifactId>activation</artifactId>
-      <version>1.1.1</version>
+      <groupId>com.typesafe</groupId>
+      <artifactId>config</artifactId>
     </dependency>
+
     <dependency>
       <groupId>org.apache.commons</groupId>
       <artifactId>commons-lang3</artifactId>
@@ -86,20 +91,7 @@
     <artifactId>postgresql</artifactId>
     </dependency>
 
-    <!-- xml binding -->
-    <!-- To comment ?? -->
-    <dependency>
-      <groupId>jakarta.xml.bind</groupId>
-      <artifactId>jakarta.xml.bind-api</artifactId>
-      <version>2.3.3</version>
-    </dependency>
 
-    <dependency>
-      <groupId>com.sun.xml.bind</groupId>
-      <artifactId>jaxb-impl</artifactId>
-      <version>2.3.3</version>
-      <scope>runtime</scope>
-    </dependency>
 
     <!-- Serialization -->
     <dependency>

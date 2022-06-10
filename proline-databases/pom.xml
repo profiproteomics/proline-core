@@ -41,7 +41,7 @@
     <dependency>
       <groupId>com.google.code.gson</groupId>
       <artifactId>gson</artifactId>
-      <version>2.8.7</version>
+      <version>2.9.0</version>
     </dependency>
 
     <!-- Logging -->
@@ -78,7 +78,7 @@
     <dependency>
       <groupId>com.zaxxer</groupId>
       <artifactId>HikariCP</artifactId>
-      <version>5.0.0</version> <!-- TODO: inherit from ProFI-Pom ? -->
+      <version>5.0.1</version> <!-- TODO: inherit from ProFI-Pom ? -->
     </dependency>
     
        <!-- C3p0 Pool for Hibernate (runtime scope) -->
