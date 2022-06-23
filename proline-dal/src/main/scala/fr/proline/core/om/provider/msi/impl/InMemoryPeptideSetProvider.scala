@@ -10,7 +10,7 @@ class InMemoryPeptideSetProvider( peptideSets: Seq[PeptideSet] ) extends IPeptid
   lazy val peptideSetsByRsmId = peptideSets.groupBy( _.resultSummaryId )
 
   def getPeptideSetsAsOptions( pepSetIds: Seq[Long] ): Array[Option[PeptideSet]] = {
-    pepSetIds.map { this.peptideSetById.get(_) } toArray
+    pepSetIds.map { this.peptideSetById.get(_) }.toArray
   }
   
   def getPeptideSets( pepSetIds: Seq[Long] ): Array[PeptideSet] = {
@@ -18,7 +18,7 @@ class InMemoryPeptideSetProvider( peptideSets: Seq[PeptideSet] ) extends IPeptid
   }
   
   def getResultSummariesPeptideSets( rsmIds: Seq[Long] ): Array[PeptideSet] = {
-    rsmIds.flatMap { i => this.peptideSetsByRsmId.getOrElse( i, Seq.empty[PeptideSet] ) } toArray
+    rsmIds.flatMap { i => this.peptideSetsByRsmId.getOrElse( i, Seq.empty[PeptideSet] ) }.toArray
   }
   
 }

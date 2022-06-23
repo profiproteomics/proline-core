@@ -556,7 +556,7 @@ class PeakelsDetector(
           require(mft.children.length <= sortedLcMsRuns.length, "master feature contains more child features than maps")
 
           mft
-        } toArray
+        }.toArray
 
         val alnRefMap = tmpMapSet.getAlnReferenceMap.get
         val curTime = new java.util.Date()
@@ -1219,12 +1219,12 @@ class PeakelsDetector(
 
           val entriesBuffer = new ArrayBuffer[Entry[java.lang.Integer,geometry.Point]]
           for (peakel <- peakels) {
-            val peakelId = new java.lang.Integer(peakel.id)
+            val peakelId = java.lang.Integer.valueOf(peakel.id)
             val geom = geometry.Geometries.point(peakel.getMz,peakel.getElutionTime())
             entriesBuffer += Entries.entry(peakelId, geom)
           }
 
-          val entriesIterable = collection.JavaConversions.asJavaIterable(entriesBuffer)
+          val entriesIterable = collection.JavaConverters.asJavaIterable(entriesBuffer)
 
           rTree_lock.synchronized {
             rTree = rTree.add(entriesIterable)
@@ -1541,7 +1541,7 @@ class PeakelsDetector(
             )
 
             (putativeFt.id.toLong, peakelIds)
-          } toArray
+          }.toArray
 
           val coelutingPeakelIdsByMissingFtId = missingFtIdAndCoelutingPeakelIds.toLongMap
           val coelutingPeakelIdMap = missingFtIdAndCoelutingPeakelIds.flatMap(_._2).mapByLong(id => id)

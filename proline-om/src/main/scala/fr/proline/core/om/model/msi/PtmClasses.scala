@@ -130,7 +130,7 @@ case class PtmSpecificity(
   val location: String,
 
   // Immutable optional fields
-  val residue: Char = '\0',
+  val residue: Char = '\u0000',
   val classification: String = null, //PtmClassification.Value = PtmClassification.UNKNOWN,
   val id: Long = 0,
   val ptmId: Long = 0
@@ -158,7 +158,7 @@ case class PtmDefinition(
   val ptmEvidences: Array[PtmEvidence], // TODO: remove and replace by corresponding lazy attributes ???
 
   // Immutable optional fields
-  val residue: Char = '\0',
+  val residue: Char = '\u0000',
   val classification: String = null, //PtmClassification.Value = PtmClassification.UNKNOWN,
   val ptmId: Long = 0,
   val unimodId: Int = 0
@@ -201,7 +201,7 @@ case class PtmDefinition(
    */
   def toReadableString() = {
     val loc = if( location == PtmLocation.ANYWHERE.toString() ) "" else location
-    val resAsStr = if( residue != '\0' ) residue.toString else ""
+    val resAsStr = if( residue != '\u0000' ) residue.toString else ""
     val locWithRes = Seq( loc, resAsStr ).filter( isNotEmpty(_) ).mkString(" ")
 
     "%s (%s)".format(this.names.shortName,locWithRes)

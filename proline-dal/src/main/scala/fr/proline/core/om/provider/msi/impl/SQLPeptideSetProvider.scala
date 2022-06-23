@@ -35,9 +35,9 @@ class SQLPeptideSetProvider(
     if (pepSetIds.isEmpty) return Array()
 
     val pepSets = this.getPeptideSets(pepSetIds)
-    val pepSetById = pepSets.map { p => p.id -> p } toMap
+    val pepSetById = pepSets.map { p => p.id -> p }.toMap
 
-    pepSetIds.map { pepSetById.get(_) } toArray
+    pepSetIds.map { pepSetById.get(_) }.toArray
 
   }
 
@@ -47,7 +47,7 @@ class SQLPeptideSetProvider(
     DoJDBCReturningWork.withEzDBC(msiDbCtx) { msiEzDBC =>
     
       val pepSetItemRecords = this._getPepSetItemRecords(msiEzDBC,pepSetIds)
-      val pepInstIds = pepSetItemRecords.map { v => toLong(v(PepSetItemCols.PEPTIDE_INSTANCE_ID)) } distinct
+      val pepInstIds = pepSetItemRecords.map { v => toLong(v(PepSetItemCols.PEPTIDE_INSTANCE_ID)) }.distinct
   
       PeptideSetBuilder.buildPeptideSets(
         this._getPepSetRecords(msiEzDBC,pepSetIds),

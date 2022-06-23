@@ -271,7 +271,7 @@ private[msi] object PgRsWriter extends AbstractSQLRsWriter() {
       // Get PepMatch MS_QUERY_ID, RANK, PEPTIDE_ID, ID for RS
       val pepMatchIdByKey = msiEzDBC.select( pepMatchUniqueFKsQueryRank, rsId) { r =>
         (_formatPeptideMatchKey(r.nextLong, r.nextInt, r.nextLong) -> r.nextLong)
-      } toMap
+      }.toMap
         
       // Iterate over peptide matches to update them
       peptideMatches.foreach {

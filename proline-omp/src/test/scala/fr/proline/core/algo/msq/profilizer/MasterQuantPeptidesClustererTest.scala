@@ -83,7 +83,7 @@ class MasterQuantPeptidesClustererTest {
       SequenceMatch(
         start = 1,
         end = peptides(0).sequence.length,
-        residueBefore = '\0',
+        residueBefore = '\u0000',
         residueAfter = 'T',
         peptide = Some(peptides(0))
       ),

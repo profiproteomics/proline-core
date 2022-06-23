@@ -1,24 +1,17 @@
 package fr.proline.core.service.uds
 
+import java.util
+
 import scala.collection.mutable.HashMap
 import fr.profi.api.service.IService
 import fr.proline.context.IExecutionContext
 import fr.proline.core.om.model.msq.ExperimentalDesign
-import fr.proline.core.orm.uds.{
-  BiologicalGroup => UdsBiologicalGroup,
-  BiologicalSample => UdsBiologicalSample,
-  Dataset => UdsDataset,
-  MasterQuantitationChannel => UdsMasterQuantitationChannel,
-  Project => UdsProject,
-  QuantitationChannel => UdsQuantChannel,
-  QuantitationLabel => UdsQuantLabel,
-  QuantitationMethod => UdsQuantMethod,
-  SampleAnalysis => UdsSampleAnalysis
-}
+import fr.proline.core.orm.uds.{BiologicalGroup => UdsBiologicalGroup, BiologicalSample => UdsBiologicalSample, Dataset => UdsDataset, MasterQuantitationChannel => UdsMasterQuantitationChannel, Project => UdsProject, QuantitationChannel => UdsQuantChannel, QuantitationLabel => UdsQuantLabel, QuantitationMethod => UdsQuantMethod, SampleAnalysis => UdsSampleAnalysis}
 import fr.proline.core.orm.uds.Dataset.DatasetType
 import fr.profi.util.sql.getTimeAsSQLTimestamp
 import javax.persistence.NoResultException
-import scala.collection.JavaConversions._
+
+import scala.collection.JavaConverters._
 import java.util.ArrayList
 import java.util.HashSet
 
@@ -218,7 +211,7 @@ class CreateSCQuantitation(
       udsEM.merge(udsQf)//VDS TO ADD in CreateQuanti ?
     }
     
-    udsQuantitation.setSampleReplicates(new HashSet(udsSampleReplicateByKey.values))
+    udsQuantitation.setSampleReplicates(new util.HashSet(udsSampleReplicateByKey.values.asJavaCollection))
     udsQuantitation.setQuantitationChannels(udsQuantChannelsList)
     udsQuantitation.setMasterQuantitationChannels(udsMasterQuantChannelsList)
         

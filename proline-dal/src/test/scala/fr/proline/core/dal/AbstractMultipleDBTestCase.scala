@@ -6,7 +6,7 @@ import fr.proline.repository.util.DatabaseTestCase
 
 class AbstractMultipleDBTestCase extends StrictLogging {
 
-  protected val m_fakeException = new RuntimeException("_FakeException_ AbstractMultipleDBTestCase instance creation")
+  protected val m_fakeException = new RuntimeException("_FakeException_ AbstractMultipleDBTestCase instance creation : SHOULD NOT OCCUR")
   protected val m_testCaseLock = new AnyRef()
   protected var m_toreDown = false
 
@@ -68,6 +68,7 @@ class AbstractMultipleDBTestCase extends StrictLogging {
 
         if (fromFinalize) {
           logger.warn("Tearing down MultipleDBTestCase from finalize !", m_fakeException)
+          throw  m_fakeException
         }
 
         if (msiDBTestCase != null) {

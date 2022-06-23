@@ -1,7 +1,7 @@
 package fr.proline.core.om.storer.msi.impl
 
 import java.sql.Timestamp
-import scala.collection.JavaConversions.asScalaBuffer
+import scala.collection.JavaConverters._
 import scala.collection.mutable
 import com.typesafe.scalalogging.LazyLogging
 import fr.profi.util.serialization.ProfiJson
@@ -18,11 +18,10 @@ import fr.proline.core.orm.msi.repository.{
   MsiEnzymeRepository => msiEnzymeRepo,
   MsiInstrumentConfigRepository => msiInstrumentConfigRepo,
   MsiPeaklistSoftwareRepository => msiPeaklistSoftwareRepo,
-  MsiPeptideRepository => msiPeptideRepo,
   MsiSeqDatabaseRepository => msiSeqDatabaseRepo,
   ScoringRepository => msiScoringRepo
 }
-import fr.proline.core.orm.msi.repository.{ MsiPeptideRepository => msiPeptideRepo, MsiPtmRepository => msiPtmRepo }
+import fr.proline.core.orm.msi.repository.{ MsiPeptideRepository => msiPeptideRepo }
 import fr.proline.core.orm.uds.repository.{
   UdsEnzymeRepository => udsEnzymeRepo,
   UdsInstrumentConfigurationRepository => udsInstrumentConfigRepo,
@@ -91,7 +90,7 @@ class JPARsStorer(override val pklWriter: Option[IPeaklistWriter] = None) extend
    * This create method '''flush''' Msi {{{EntityManager}}}.
    *
    * @param resultSet ResultSet object, must not be {{{null}}}.
-   * @param msiEm Msi EntityManager must have a valid transaction started.
+   * @param storerContext Msi EntityManager must have a valid transaction started.
    */
   def createResultSet(resultSet: ResultSet, storerContext: StorerContext): Long = {
 
@@ -460,7 +459,7 @@ class JPARsStorer(override val pklWriter: Option[IPeaklistWriter] = None) extend
 
   }
 
-  /**
+  /*
    * Persists a Peaklist object into Msi Db. (already persisted Peaklist are cached into {{{storerContext}}} object
    * and can be retrieved via retrieveStoredPeaklist() method).
    *
@@ -951,7 +950,7 @@ class JPARsStorer(override val pklWriter: Option[IPeaklistWriter] = None) extend
     for (peptide <- peptides) {
       val peptIdent = new PeptideIdent(peptide.sequence, peptide.ptmString)
 
-      if (msiPeptides.contains(peptIdent) == false) {
+      if (!msiPeptides.contains(peptIdent)) {
         remainingPeptides += peptIdent -> peptide
 
         val peptideId = peptide.id
@@ -966,7 +965,7 @@ class JPARsStorer(override val pklWriter: Option[IPeaklistWriter] = None) extend
     if (persistedPeptidesIdSet.nonEmpty) {
       logger.debug(s"Trying to retrieve ${persistedPeptidesIdSet.size} Peptides from MSIdb by Ids")
 
-      val foundMsiPeptides = msiPeptideRepo.findPeptidesForIds(msiEm, buildIdsList(persistedPeptidesIdSet))
+      val foundMsiPeptides = msiPeptideRepo.findPeptidesForIds(msiEm, buildIdsList(persistedPeptidesIdSet)).asScala
 
       if ((foundMsiPeptides != null) && foundMsiPeptides.nonEmpty) {
 
@@ -1093,7 +1092,6 @@ class JPARsStorer(override val pklWriter: Option[IPeaklistWriter] = None) extend
    * Retrieves a known PeptideMatch or persists a new PeptideMatch entity into Msi Db.
    *
    * @param peptideMatch PeptideMatch object, must not be {{{null}}}.
-   * @param msiPeptides Map of already fetched Msi Peptide entities accessed by PeptideIdent, must not be {{{null}}}.
    * @param msiResultSet Associated Msi ResultSet entity, must be attached to {{{msiEm}}} persistence context before calling this method.
    * @param msiSearch Associated MsiSearch entity, must be attached to {{{msiEm}}} persistence context before calling this method.
    */
@@ -1382,7 +1380,7 @@ class JPARsStorer(override val pklWriter: Option[IPeaklistWriter] = None) extend
     val msiProteinMatch = new MsiProteinMatch()
     msiProteinMatch.setAccession(proteinMatch.accession)
 
-    val omProteinId = proteinMatch.getProteinId
+    val omProteinId = proteinMatch.getProteinId()
 
     if (omProteinId > 0L) {
 
@@ -1483,10 +1481,6 @@ class JPARsStorer(override val pklWriter: Option[IPeaklistWriter] = None) extend
    *
    * @param sequenceMatch SequenceMatch object, must not be {{{null}}}.
    * @param msiProteinMatchId ProteinMatch Primary key, must be > 0 and denote an existing ProteinMatch entity in Msi Db (Msi transaction committed).
-   * @param msiPeptides Map of already fetched Msi Peptide entities accessed by PeptideIdent, must not be {{{null}}}.
-   * Peptide ids must be effective Msi Db Primary keys (Msi transaction committed).
-   * @param knownPeptideMatches Map of already created Msi PeptideMatch entities accessed by OM Ids, must not be {{{null}}}.
-   * PeptideMatch ids must be effective Msi Db Primary keys (Msi transaction committed).
    * @param msiResultSetId ResultSet Primary key, must be > 0 and denote an existing ResultSet entity in Msi Db (Msi transaction committed).
    */
   def createSequenceMatch(
@@ -1557,7 +1551,7 @@ class JPARsStorer(override val pklWriter: Option[IPeaklistWriter] = None) extend
     msiSequenceMatchPK.setProteinMatchId(msiProteinMatchId)
 
     /* Retrieve Peptide Id from Msi */
-    val msiPeptideId = retrieveMsiPeptideId(sequenceMatch.getPeptideId, sequenceMatch.peptide)
+    val msiPeptideId = retrieveMsiPeptideId(sequenceMatch.getPeptideId(), sequenceMatch.peptide)
 
     require(msiPeptideId > 0L, "Unknown MSIdb Peptide Id: " + msiPeptideId)
 
@@ -1569,7 +1563,7 @@ class JPARsStorer(override val pklWriter: Option[IPeaklistWriter] = None) extend
     msiSequenceMatch.setId(msiSequenceMatchPK)
 
     /* Retrieve best PeptideMatch Id from Msi */
-    val msiPeptideMatchId = retrieveMsiPeptideMatchId(sequenceMatch.getBestPeptideMatchId)
+    val msiPeptideMatchId = retrieveMsiPeptideMatchId(sequenceMatch.getBestPeptideMatchId())
 
     require(msiPeptideMatchId > 0L, "Unknown MSIdb best PeptideMatch Id: " + msiPeptideMatchId)
 
@@ -1590,7 +1584,7 @@ class JPARsStorer(override val pklWriter: Option[IPeaklistWriter] = None) extend
   /* Private methods */
   def checkStorerContext(storerContext: StorerContext) {
 
-    if ((storerContext == null) || storerContext.isJPA == false) { // TODO add a check on EntityManagers ?
+    if ((storerContext == null) || !storerContext.isJPA) { // TODO add a check on EntityManagers ?
       throw new IllegalArgumentException("Invalid StorerContext")
     }
 

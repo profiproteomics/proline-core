@@ -8,6 +8,7 @@ import java.util.Set;
 import javax.persistence.EntityManager;
 
 import org.hamcrest.CoreMatchers;
+import org.hamcrest.MatcherAssert;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -66,11 +67,11 @@ public class DatasetTest extends DatabaseTestCase {
 				} else if (nextDSId == 2L) {
 					assertEquals(nextDS.getName(), "CB_342_1");
 					assertEquals(nextDS.getNumber(), 1);
-					assertThat(nextDS.getParentDataset(), CoreMatchers.sameInstance(rootDS));
+					MatcherAssert.assertThat(nextDS.getParentDataset(), CoreMatchers.sameInstance(rootDS));
 				} else if (nextDSId == 3L) {
 					assertEquals(nextDS.getName(), "CB_342_2");
 					assertEquals(nextDS.getNumber(), 1);
-					assertThat(nextDS.getParentDataset(), CoreMatchers.sameInstance(rootDS));
+					MatcherAssert.assertThat(nextDS.getParentDataset(), CoreMatchers.sameInstance(rootDS));
 				}
 
 			}

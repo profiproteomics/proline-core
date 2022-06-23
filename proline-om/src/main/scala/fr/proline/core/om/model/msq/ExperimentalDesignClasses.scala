@@ -67,7 +67,7 @@ case class ExperimentalDesignSetup(
     // Map quant channel indices by the sample number
   val qcIndicesBySampleNum = ( allSampleNumbers ).map { sampleNum =>
       sampleNum -> quantChannelsBySampleNumber(sampleNum).map( qc => qcIdxById(qc.id) )
-    } toMap
+    }.toMap
     
 }
 

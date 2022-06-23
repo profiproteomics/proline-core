@@ -25,16 +25,6 @@ import org.hibernate.dialect.PostgreSQL94Dialect;
  */
 public class TableNameSequencePostgresDialect extends PostgreSQL94Dialect {
 
-	/**
-	 * Get the native identifier generator class.
-	 * 
-	 * @return TableNameSequenceGenerator.
-	 */
-//	@Override
-//	public Class<?> getNativeIdentifierGeneratorClass() {
-//		return TableNameSequenceGenerator.class;
-//	}
-
 
 	@Override
 	public String getNativeIdentifierGeneratorStrategy() {

@@ -168,7 +168,7 @@ object ProviderFactory extends IProviderFactory with LazyLogging {
           val targetClass = Class.forName(className)
 
           /* For now : only handle default (no arg) constructor */
-          result = targetClass.newInstance().asInstanceOf[T]
+          result = targetClass.getDeclaredConstructor().newInstance().asInstanceOf[T]
         } catch {
           case ex: Exception => logger.error("Cannot instantiate [" + className + ']', ex)
         }

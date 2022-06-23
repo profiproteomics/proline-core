@@ -1,7 +1,7 @@
 package fr.proline.core.service.uds
 
 import java.util.HashSet
-import scala.collection.JavaConversions.collectionAsScalaIterable
+import scala.collection.JavaConverters._
 import java.util.HashMap
 import com.typesafe.scalalogging.LazyLogging
 import fr.profi.api.service.IService
@@ -26,11 +26,10 @@ import fr.proline.core.orm.uds.{
 import fr.proline.core.orm.uds.Dataset.DatasetType
 import fr.proline.repository.IDataStoreConnectorFactory
 import fr.profi.util.sql.getTimeAsSQLTimestamp
-import scala.collection.JavaConversions._
 import java.util.ArrayList
 import javax.persistence.NoResultException
-import fr.proline.core.orm.uds.BiologicalSplSplAnalysisMap
-import fr.proline.core.orm.uds.BiologicalSplSplAnalysisMapPK
+
+
 
 class CreateQuantitation(
   executionContext: IExecutionContext,
@@ -136,7 +135,7 @@ class CreateQuantitation(
         // Update persisted bioSample id
         bioSample.id = udsBioSample.getId
   
-        udsBioSampleByNum(udsBioSample.getNumber()) = udsBioSample
+        udsBioSampleByNum.put(udsBioSample.getNumber(), udsBioSample)
       }
   
       // Store group setups
@@ -197,7 +196,7 @@ class CreateQuantitation(
           biologicalGroup.id = udsBioGroup.getId
   
           // Map the group id by the group number
-          udsBioGroupByNum(udsBioGroup.getNumber()) = udsBioGroup
+          udsBioGroupByNum.put(udsBioGroup.getNumber(), udsBioGroup)
   
           // Retrieve the list of biological samples belonging to this biological group
           val sampleNumbers = biologicalGroup.sampleNumbers
@@ -205,11 +204,11 @@ class CreateQuantitation(
           val udsBioSampleSet = new java.util.ArrayList[UdsBiologicalSample]
           for (sampleNumber <- sampleNumbers) {
   
-            if (udsBioSampleByNum.contains(sampleNumber) == false) {
+            if (!udsBioSampleByNum.containsKey(sampleNumber)) {
               throw new Exception(s"Can't map the biological group named '${biologicalGroup.name}' with the sample #$sampleNumber")
             }
   
-            udsBioSampleSet.add(udsBioSampleByNum(sampleNumber))
+            udsBioSampleSet.add(udsBioSampleByNum.get(sampleNumber))
           }
   
           // Link biological group to corresponding biological samples
@@ -227,8 +226,8 @@ class CreateQuantitation(
   
           val udsRatioDef = new UdsRatioDefinition()
           udsRatioDef.setNumber(ratioDefNumber)
-          udsRatioDef.setNumerator(udsBioGroupByNum(ratioDefinition.numeratorGroupNumber))
-          udsRatioDef.setDenominator(udsBioGroupByNum(ratioDefinition.denominatorGroupNumber))
+          udsRatioDef.setNumerator(udsBioGroupByNum.get(ratioDefinition.numeratorGroupNumber))
+          udsRatioDef.setDenominator(udsBioGroupByNum.get(ratioDefinition.denominatorGroupNumber))
           udsRatioDef.setGroupSetup(udsGroupSetup)
           udsEM.persist(udsRatioDef)
           
@@ -294,16 +293,16 @@ class CreateQuantitation(
           
           // Retrieve some vars
           val sampleNum = quantChannel.sampleNumber
-          val udsBioSample = udsBioSampleByNum(sampleNum)
+          val udsBioSample = udsBioSampleByNum.get(sampleNum)
           
           // Retrieve replicate number and increment it
-          val replicateNum = replicateNumBySampleNum.getOrElseUpdate(sampleNum, 0) + 1
-          replicateNumBySampleNum(sampleNum) = replicateNum
+          val replicateNum = replicateNumBySampleNum.asScala.getOrElseUpdate(sampleNum, 0) + 1
+          replicateNumBySampleNum.put(sampleNum, replicateNum)
   
           // Retrieve analysis replicate if it already exists
           val contextKey = sampleNum + "." + replicateNum
   
-          if (udsSampleReplicateByKey.contains(contextKey) == false) {
+          if (!udsSampleReplicateByKey.containsKey(contextKey)) {
   
             //val rdbReplicate = udsAnalysisReplicateByKey(contextKey)
             // Store sample replicate
@@ -314,7 +313,7 @@ class CreateQuantitation(
             udsEM.persist(udsReplicate)     
             udsEM.merge(udsBioSample)
   
-            udsSampleReplicateByKey(contextKey) = udsReplicate
+            udsSampleReplicateByKey.put(contextKey, udsReplicate)
           } else {
             
             val existingSplReplicate = udsSampleReplicateByKey.get(contextKey)
@@ -329,7 +328,7 @@ class CreateQuantitation(
           udsQuantChannel.setName(quantChannel.name)
           udsQuantChannel.setContextKey(contextKey)
           udsQuantChannel.setIdentResultSummaryId(quantChannel.identResultSummaryId)
-          udsQuantChannel.setSampleReplicate(udsSampleReplicateByKey(contextKey))
+          udsQuantChannel.setSampleReplicate(udsSampleReplicateByKey.get(contextKey))
           udsQuantChannel.setBiologicalSample(udsBioSample)
           udsQuantChannel.setMasterQuantitationChannel(udsMqc)
           udsQuantChannel.setQuantitationDataset(udsQuantitation)

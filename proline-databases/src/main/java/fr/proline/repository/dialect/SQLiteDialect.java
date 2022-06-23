@@ -17,6 +17,10 @@ import org.hibernate.dialect.function.SQLFunction;
 import org.hibernate.dialect.function.SQLFunctionTemplate;
 import org.hibernate.dialect.function.StandardSQLFunction;
 import org.hibernate.dialect.function.VarArgsSQLFunction;
+import org.hibernate.dialect.pagination.AbstractLimitHandler;
+import org.hibernate.dialect.pagination.LimitHandler;
+import org.hibernate.dialect.pagination.LimitHelper;
+import org.hibernate.engine.spi.RowSelection;
 import org.hibernate.type.StandardBasicTypes;
 
 public class SQLiteDialect extends org.hibernate.dialect.Dialect {
@@ -122,16 +126,24 @@ public class SQLiteDialect extends org.hibernate.dialect.Dialect {
 		return "select last_insert_rowid()";
 	}
 
-	public boolean supportsLimit() {
-		return true;
-	}
+	public LimitHandler getLimitHandler(){
+		return new AbstractLimitHandler() {
+			@Override
+			public boolean supportsLimit() {
+				return true;
+			}
 
-	public boolean bindLimitParametersInReverseOrder() {
-		return true;
-	}
+			@Override
+			public boolean bindLimitParametersInReverseOrder() {
+				return true;
+			}
 
-	protected String getLimitString(String query, boolean hasOffset) {
-		return new StringBuffer(query.length() + 20).append(query).append(hasOffset ? " limit ? offset ?" : " limit ?").toString();
+			@Override
+			public String processSql(String sql, RowSelection selection) {
+				boolean hasOffset = LimitHelper.hasFirstRow(selection);
+				return sql + (hasOffset ? " limit ? offset ?" : " limit ?");
+			}
+		};
 	}
 
 	public boolean supportsTemporaryTables() {

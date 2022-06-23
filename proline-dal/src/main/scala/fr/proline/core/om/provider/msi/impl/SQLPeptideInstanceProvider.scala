@@ -28,9 +28,9 @@ class SQLPeptideInstanceProvider(
     if( pepInstIds.isEmpty ) return Array()
     
     val pepInsts = this.getPeptideInstances(pepInstIds)
-    val pepInstById = pepInsts.map { p => p.id -> p } toMap
+    val pepInstById = pepInsts.map { p => p.id -> p }.toMap
 
-    pepInstIds.map { pepInstById.get(_) } toArray
+    pepInstIds.map { pepInstById.get(_) }.toArray
   }
 
   def getPeptideInstances(pepInstIds: Seq[Long]): Array[PeptideInstance] = {

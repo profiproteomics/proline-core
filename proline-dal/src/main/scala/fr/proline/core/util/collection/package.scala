@@ -2,8 +2,9 @@ package fr.proline.core.util
 
 import scala.collection.mutable.ArrayBuffer
 import scala.collection.TraversableLike
-
 import fr.profi.util.collection._
+
+import scala.language.implicitConversions
 
 /**
  * @author David Bouyssie

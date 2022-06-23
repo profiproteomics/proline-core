@@ -23,7 +23,7 @@ class SpectrumTitleSpec extends AnyFunSpec with GivenWhenThen with Matchers {
       firstTimeRegex = Option(parsingRule.getFirstTimeRegex),
       lastTimeRegex  = Option(parsingRule.getLastTimeRegex)
     )
-  } toMap
+  }.toMap
   
   case class SpectrumTitleSpecif(
     softRelease: SoftwareRelease,

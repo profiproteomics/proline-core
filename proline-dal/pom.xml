@@ -5,7 +5,7 @@
   <parent>
     <artifactId>proline-core</artifactId>
     <groupId>fr.proline</groupId>
-    <version>2.2.0_jdk11-SNAPSHOT</version>
+    <version>2.2.0_jdk17-SNAPSHOT</version>
   </parent>
 
   <artifactId>proline-dal_${scala.compat.version}</artifactId>
@@ -100,10 +100,14 @@
     <dependency>
       <groupId>org.msgpack</groupId>
       <artifactId>msgpack</artifactId>
-      <!-- Version should be inherited from ProFI-Pom but the scala module is not available yet -->
       <version>0.6.12</version>
+      <exclusions>
+        <exclusion><!-- for conflict with 3.27.0 from proline-database -->
+          <groupId>org.javassist</groupId>
+          <artifactId>javassist</artifactId>
+        </exclusion>
+      </exclusions>
     </dependency>
-
     <dependency>
       <groupId>com.google.code.gson</groupId>
       <artifactId>gson</artifactId>
@@ -243,9 +247,14 @@
       <plugin>
         <groupId>net.alchim31.maven</groupId>
         <artifactId>scala-maven-plugin</artifactId>
-        <!-- Version inherited from ProFI-Pom -->
+        <configuration>
+          <args>
+            <arg>-deprecation</arg>
+            <arg>-feature</arg>
+          </args>
+        </configuration>
       </plugin>
-
+    
     </plugins>
   </build>
 

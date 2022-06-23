@@ -179,7 +179,7 @@ class ResultSetAdder(
           mergedPeptideMatchesBuffer ++= pepMatchAccumulator.toPeptideMatches()
         }
       }
-    } toArray
+    }.toArray
     
     val mergedPeptideMatches = mergedPeptideMatchesBuffer.toArray
 

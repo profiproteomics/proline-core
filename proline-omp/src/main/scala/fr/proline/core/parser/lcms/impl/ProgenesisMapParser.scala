@@ -42,7 +42,7 @@ class ProgenesisMapParser extends ILcmsMapFileParser {
     for( line <- lines ) {
 
       val l = line.stripLineEnd.split(";")
-      val rowValueMap = columnNames.zip(l) toMap
+      val rowValueMap = columnNames.zip(l).toMap
 
       val time = rowValueMap("Retention time (min)").toFloat * 60f
       val timeSpan = rowValueMap("Retention time window (min)").toFloat * 60f
@@ -65,7 +65,7 @@ class ProgenesisMapParser extends ILcmsMapFileParser {
       )
 
       val ftRelations = FeatureRelations(
-        ms2EventIds = ms2IdEvents toArray,
+        ms2EventIds = ms2IdEvents.toArray,
         firstScanInitialId = firstScanInitialId,
         lastScanInitialId = lastScanInitialId,
         apexScanInitialId = scanms1.initialId
@@ -93,7 +93,7 @@ class ProgenesisMapParser extends ILcmsMapFileParser {
         name = lcmsScanSeq.rawFileIdentifier,
         isProcessed = false,
         creationTimestamp = new Date(),
-        features = features toArray,
+        features = features.toArray,
         runId = lcmsScanSeq.runId,
         peakPickingSoftware = new PeakPickingSoftware(
           1,

@@ -112,7 +112,7 @@ object PgPeaklistWriter extends AbstractSQLPeaklistWriter with LazyLogging {
       // Retrieve generated spectrum ids
       val spectrumIdByTitle = msiEzDBC.select(
         "SELECT title, id FROM spectrum WHERE peaklist_id = " + peaklistId
-      ) { r => ( r.nextString -> r.nextLong ) } toMap
+      ) { r => ( r.nextString -> r.nextLong ) }.toMap
 
       context.spectrumIdByTitle = spectrumIdByTitle
 

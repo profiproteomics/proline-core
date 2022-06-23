@@ -42,7 +42,7 @@ class SQLProcessedMapProvider(
     else {
       featuresByProcMapId.view.map { case(procMapId,features) =>
         procMapId -> features.flatMap( _.relations.peakelItems.map(_.getPeakel().get) )
-      } toMap
+      }.toMap
     }
     
     val processedMaps = new Array[ProcessedMap](processedMapIds.length)

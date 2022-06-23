@@ -52,7 +52,7 @@ class ResidueLabelingEntitiesSummarizer(
     
     val identRsmIdByRunId = quantChannels.map { qc =>
       qc.runId.get -> qc.identResultSummaryId
-    } toMap
+    }.toMap
     
     // Build fake quant channels to perform label-free entities summarizing
     val identRsmIdByFakeQcId = new LongMap[Long](childMapsCount)

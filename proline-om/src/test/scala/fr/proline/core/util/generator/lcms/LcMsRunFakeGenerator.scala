@@ -12,7 +12,6 @@ import fr.profi.util.random._
  * @param ms1RelativeLandmarks Relative MS landmarks as an array of data points [time,intensity]
  * @param minMoz Minimum feature m/z
  * @param maxMoz Maximum feature m/z
- * @param minTime Minimum feature elution time
  * @param maxTime Maximum feature elution time
  */
 class LcMsRunFakeGenerator(
@@ -22,7 +21,7 @@ class LcMsRunFakeGenerator(
   maxTime: Int,
   ms1MaxIntensity: Int,
   ms2MaxIntensity: Int,
-  ms1RelativeLandmarks: Array[Pair[Float,Float]],
+  ms1RelativeLandmarks: Array[Tuple2[Float,Float]],
   intensityRelativeVariability: Float = 0.2f,
   ms1Duration: Float = 2,
   maxMs2PerCycle: Int = 20
@@ -68,14 +67,15 @@ class LcMsRunFakeGenerator(
     )
   }
   
-  private def _generateRelativeTIC(): Array[Pair[Float,Float]] = {
+  private def _generateRelativeTIC(): Array[Tuple2[Float,Float]] = {
     
     var prevLandmark = (0f,0f)
-    val tic = new ArrayBuffer[Pair[Float,Float]]
+    val tic = new ArrayBuffer[Tuple2[Float,Float]]
     
     // Loop over landmarks in order to generate the TIC
     for( landmark <- ms1RelativeLandmarks ) {
-      val( landmarkTime, landmarkIntensity ) = landmark
+      val landmarkTime = landmark._1
+      val landmarkIntensity = landmark._2
       require(landmarkIntensity >= MS1_MIN_RELATIVE_INTENSITY && landmarkIntensity <= 1)
       
       val lineParams = calcLineParams(prevLandmark._1,prevLandmark._2,landmarkTime,landmarkIntensity)
@@ -101,7 +101,7 @@ class LcMsRunFakeGenerator(
   }
   
   
-  private def _generateScanSequence(tic: Array[Pair[Float,Float]], runId: Long): LcMsScanSequence = {
+  private def _generateScanSequence(tic: Array[Tuple2[Float,Float]], runId: Long): LcMsScanSequence = {
     
     var initialId, cycle, ms2ScansCount = 0
     val scans = new ArrayBuffer[LcMsScan](tic.length)

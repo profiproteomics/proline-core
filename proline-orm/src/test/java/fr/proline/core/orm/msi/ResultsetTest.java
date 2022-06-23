@@ -1,6 +1,7 @@
 package fr.proline.core.orm.msi;
 
 import static org.hamcrest.CoreMatchers.*;
+import org.hamcrest.MatcherAssert;
 import static org.junit.Assert.*;
 
 import java.util.Collection;
@@ -8,7 +9,6 @@ import java.util.List;
 
 import javax.persistence.EntityManager;
 import javax.persistence.EntityTransaction;
-import javax.persistence.Transient;
 
 import fr.proline.core.orm.MergeMode;
 import org.junit.After;
@@ -85,7 +85,7 @@ public class ResultsetTest extends DatabaseTestCase {
 			assertNotNull(msiSearch);
 			assertEquals(msiSearch.getPeaklist().getId(), 1L);
 			Enzyme enzyme = msiEm.find(Enzyme.class, Long.valueOf(1L));
-			assertThat(msiSearch.getSearchSetting().getEnzymes(), hasItems(enzyme));
+			MatcherAssert.assertThat(msiSearch.getSearchSetting().getEnzymes(), hasItems(enzyme));
 			msiSearch.getSearchSetting().getSearchSettingsSeqDatabaseMaps();
 			assertEquals(msiSearch.getSearchSetting().getSearchSettingsSeqDatabaseMaps().size(), 1);
 			SearchSettingsSeqDatabaseMap map = msiSearch.getSearchSetting()
@@ -263,8 +263,8 @@ public class ResultsetTest extends DatabaseTestCase {
 			assertEquals(rs.getChildren().size(), 2);
 			ResultSet rs1 = msiEm.find(ResultSet.class, Long.valueOf(1L));
 			ResultSet rs2 = msiEm.find(ResultSet.class, Long.valueOf(2L));
-			assertThat(rs.getChildren(), hasItems(rs1, rs2));
-			assertThat(rs.getChildren(), not(hasItems(rs)));
+			MatcherAssert.assertThat(rs.getChildren(), hasItems(rs1, rs2));
+			MatcherAssert.assertThat(rs.getChildren(), not(hasItems(rs)));
 		} finally {
 
 			if (msiEm != null) {
@@ -287,7 +287,7 @@ public class ResultsetTest extends DatabaseTestCase {
 			MsmsSearch msmsSearch = msiEm.find(MsmsSearch.class, Long.valueOf(1L));
 			assertNotNull(msmsSearch);
 			Enzyme enzyme = msiEm.find(Enzyme.class, Long.valueOf(1L));
-			assertThat(msmsSearch.getEnzymes(), hasItems(enzyme));
+			MatcherAssert.assertThat(msmsSearch.getEnzymes(), hasItems(enzyme));
 			assertEquals(msmsSearch.getFragmentMassErrorTolerance(), 0.8, MathUtils.EPSILON_LOW_PRECISION);
 		} finally {
 
@@ -363,7 +363,7 @@ public class ResultsetTest extends DatabaseTestCase {
 
 			List<PeptideMatch> matches = PeptideMatchRepository.findPeptideMatchByPeptide(msiEm,
 				match.getPeptideId());
-			assertThat(matches, hasItems(match));
+			MatcherAssert.assertThat(matches, hasItems(match));
 		} finally {
 
 			if (msiEm != null) {

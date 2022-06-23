@@ -2,8 +2,7 @@ package fr.proline.core.om.util
 
 import javax.persistence.EntityManager
 
-import scala.collection.JavaConversions.asScalaSet
-import scala.collection.JavaConversions.collectionAsScalaIterable
+import scala.collection.JavaConverters._
 import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.HashMap
 
@@ -81,7 +80,7 @@ class PeptidesOMConverterUtil(useCachedObject: Boolean = true) {
     val pepInstChildById = new HashMap[Long, PeptideInstance]()
 
     //---- Peptide Matches Arrays 
-    val msiPepMatches = msiPepInst.getPeptideInstancePeptideMatchMaps.map { _.getPeptideMatch } //ORM PeptideMatches
+    val msiPepMatches = msiPepInst.getPeptideInstancePeptideMatchMaps. asScala.map { _.getPeptideMatch } //ORM PeptideMatches
 
     var pepMatches: Array[PeptideMatch] = null //OM PeptideMatches. Get only if asked for 
     if (loadPepMatches) pepMatches = new Array[PeptideMatch](msiPepMatches.size)
@@ -332,8 +331,6 @@ class PeptidesOMConverterUtil(useCachedObject: Boolean = true) {
    * @return created PtmDefinition (with associated objects)
    */
   def convertPtmSpecificityORM2OM(msiPtmSpecificity: MsiPtmSpecificity): PtmDefinition = {
-
-    import collection.JavaConversions.collectionAsScalaIterable
 
     //Verify PtmDefinition exist in cache
     if (useCachedObject && ptmDefinitionsCache.contains(msiPtmSpecificity.getId))

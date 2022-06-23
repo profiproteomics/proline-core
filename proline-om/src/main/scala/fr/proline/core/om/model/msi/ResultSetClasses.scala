@@ -218,7 +218,7 @@ case class ResultSet(
   }
 
   def getUniquePeptideSequences(): Array[String] = {
-    this.peptides map { _.sequence } distinct
+    this.peptides.map { _.sequence }.distinct
   }
 
   def getProteins(): Option[Array[Protein]] = {

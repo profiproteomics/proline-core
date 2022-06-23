@@ -115,7 +115,9 @@ object ResultFileStorer extends LazyLogging {
       logger.info("ResultFile contains decoy data, using regex to extract it")
 
       // Then split the result set into a target and a decoy one
-      val (tRs, dRs) = rsSplitter.get.split(targetRs, acDecoyRegex.get)
+      val resultsets = rsSplitter.get.split(targetRs, acDecoyRegex.get)
+      val tRs = resultsets._1
+      val dRs = resultsets._2
 
       checkResultSet(tRs, false)
       checkResultSet(dRs, true)

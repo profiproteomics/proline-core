@@ -1,13 +1,12 @@
 package fr.proline.core.service.msq.quantify
 
 import fr.proline.context.IExecutionContext
-import fr.proline.core.algo.msq.config.ILabelFreeQuantConfig
 import fr.proline.core.om.model.lcms.MapSet
 import fr.proline.core.om.model.msq.ExperimentalDesign
 import fr.proline.core.orm.uds.MasterQuantitationChannel
 import fr.proline.core.service.lcms.io.IMapSetBuilder
 
-import scala.collection.JavaConversions.collectionAsScalaIterable
+import scala.collection.JavaConverters._
 
 class ThirdPartyLabelFreeFeatureQuantifier(
   val executionContext: IExecutionContext,
@@ -26,7 +25,7 @@ class ThirdPartyLabelFreeFeatureQuantifier(
     val lcMsMapIdByRunId = Map() ++ lcmsMapSet.childMaps.map( lcmsMap => lcmsMap.runId.get -> lcmsMap.id )
     
     // Update the LC-MS map id of each master quant channel
-    val udsQuantChannels = udsMasterQuantChannel.getQuantitationChannels
+    val udsQuantChannels = udsMasterQuantChannel.getQuantitationChannels.asScala
     for( (udsQc,qc) <- udsQuantChannels.zip(this.masterQc.quantChannels) ) {
       val lcMsMapIdOpt = lcMsMapIdByRunId.get( qc.runId.get )
       require( lcMsMapIdOpt.isDefined, "Can't retrieve the LC-MS map id for the run #"+ qc.runId.get)

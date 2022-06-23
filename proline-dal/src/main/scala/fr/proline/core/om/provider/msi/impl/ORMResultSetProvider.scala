@@ -7,7 +7,6 @@ import fr.profi.chemistry.model.Enzyme
 import fr.profi.util.StringUtils
 import fr.profi.util.primitives._
 import fr.profi.util.serialization.ProfiJson
-import fr.proline.context.DatabaseConnectionContext
 import fr.proline.context.MsiDbConnectionContext
 import fr.proline.core.dal.DoJDBCReturningWork
 import fr.proline.core.dal.tables.SelectQueryBuilder._
@@ -25,8 +24,7 @@ import fr.proline.core.orm.msi.repository.{SequenceMatchRepository => sequenceMa
 import fr.proline.core.util.ResidueUtils._
 import fr.proline.repository.util.JPAUtils
 
-import scala.collection.JavaConversions.asScalaBuffer
-import scala.collection.JavaConversions.asScalaSet
+import scala.collection.JavaConverters._
 import scala.collection.mutable
 import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.HashMap
@@ -135,7 +133,7 @@ class ORMResultSetProvider(
       val msiPeptideMatches = peptideMatchRepo.findPeptideMatchByResultSet(msiEM, msiResultSetId)
 
       val omPeptideMatches =
-        for (msiPeptideMatch <- msiPeptideMatches) yield {
+        for (msiPeptideMatch <- msiPeptideMatches.asScala) yield {
           buildPeptideMatch(msiPeptideMatch, msiResultSetId, msiEM)
         }
 
@@ -150,7 +148,7 @@ class ORMResultSetProvider(
       
       
       val seqDatabasesIdsByProtMatchId  = new HashMap[Long, ArrayBuffer[Long]]()
-	  DoJDBCReturningWork.withEzDBC(msiDbCtx, { msiEzDBC =>
+	  DoJDBCReturningWork.withEzDBC(msiDbCtx) { msiEzDBC =>
       
       	val sqIDProtMatchIDQuery = new SelectQueryBuilder1(MsiDbProteinMatchSeqDatabaseMapTable).mkSelectQuery( (t,c) =>
       		List(t.PROTEIN_MATCH_ID, t.SEQ_DATABASE_ID) -> "WHERE "~ t.RESULT_SET_ID ~" = "~ msiResultSetId ~" "
@@ -163,11 +161,11 @@ class ORMResultSetProvider(
         	seqDatabasesIdsByProtMatchId.put(protMatchId, seqDbs)
 	 	} 
 	 
-	  })
- 
-	 	  
+	  }//end DoJDBCReturningWork
+
+
 	  val msiSequenceMatchesByProtMatchID = new HashMap[Long, ArrayBuffer[MsiSequenceMatch]]()
-      sequenceMatchRepo.findSequenceMatchForResultSet(msiEM, msiResultSetId).foreach(msiSM => {
+      sequenceMatchRepo.findSequenceMatchForResultSet(msiEM, msiResultSetId).asScala.foreach(msiSM => {
          val seqMatches  = msiSequenceMatchesByProtMatchID.getOrElseUpdate(msiSM.getId.getProteinMatchId, new ArrayBuffer[MsiSequenceMatch]())
          seqMatches += msiSM
 		  msiSequenceMatchesByProtMatchID.put(msiSM.getId.getProteinMatchId,seqMatches)
@@ -175,7 +173,7 @@ class ORMResultSetProvider(
 	  
 	  
       val omProteinMatches = new ArrayBuffer[ProteinMatch]()
-      for (msiProteinMatch <- msiProteinMatches)  {
+      for (msiProteinMatch <- msiProteinMatches.asScala)  {
          omProteinMatches += buildProteinMatch(msiProteinMatch, msiResultSetId, seqDatabasesIdsByProtMatchId, msiSequenceMatchesByProtMatchID, msiEM)
       }
       
@@ -220,7 +218,7 @@ class ORMResultSetProvider(
       val msiChildResultSets = msiResultSet.getChildren
       if( msiChildResultSets != null ) {
         
-        for( msiChildResultSet <- msiChildResultSets ) {
+        for( msiChildResultSet <- msiChildResultSets.asScala ) {
           val msiChildMsiSearch = msiChildResultSet.getMsiSearch
           
           if (msiChildMsiSearch != null) {
@@ -526,7 +524,7 @@ class ORMResultSetProvider(
       new Array[Enzyme](0) // An empty array
     } else {
 
-      (for (msiEnzyme <- msiEnzymes) yield {
+      (for (msiEnzyme <- msiEnzymes.asScala) yield {
         new Enzyme(msiEnzyme.getName)
       }).toArray
 
@@ -539,7 +537,7 @@ class ORMResultSetProvider(
     val msiUsedPtms = msiSearchSetting.getUsedPtms
     if ((msiUsedPtms != null) && !msiUsedPtms.isEmpty) {
 
-      for (msiUsedPtm <- msiUsedPtms) {
+      for (msiUsedPtm <- msiUsedPtms.asScala) {
         val ptmDef = buildPtmDefinition(msiUsedPtm)
 
         if (msiUsedPtm.getIsFixed) {
@@ -558,7 +556,7 @@ class ORMResultSetProvider(
     val searchSettingsSeqDatabaseMaps = msiSearchSetting.getSearchSettingsSeqDatabaseMaps
     if ((searchSettingsSeqDatabaseMaps != null) && !searchSettingsSeqDatabaseMaps.isEmpty) {
 
-      for (entry <- searchSettingsSeqDatabaseMaps) {
+      for (entry <- searchSettingsSeqDatabaseMaps.asScala) {
         val msiSeqDatabase = entry.getSeqDatabase
 
         if (msiSeqDatabase != null) {

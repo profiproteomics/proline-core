@@ -1,11 +1,13 @@
 package fr.proline.core.algo.msi.validation
 
-import scala.collection.mutable.{ HashMap, ArrayBuffer }
-import scala.math.{ pow, log10 }
-import fr.proline.core.om.model.msi.{ MsQuery, PeptideMatch }
+import scala.collection.mutable.{ArrayBuffer, HashMap}
+import scala.math.{log10, pow}
+import fr.proline.core.om.model.msi.{MsQuery, PeptideMatch}
 import fr.proline.core.om.model.msi.MsQueryDbSearchProperties
 import fr.proline.core.om.model.msi.MsQueryProperties
 import com.typesafe.scalalogging.LazyLogging
+
+import scala.language.implicitConversions
 
 object MascotThresholdTypes extends Enumeration {
   val IDENTITY_THRESHOLD = Value("IDENTITY_THRESHOLD")
@@ -142,7 +144,7 @@ object MascotValidationHelper extends LazyLogging {
     pmThresholdsMapBuilder.result()
   }
 
-  def calcPeptideMatchTDThresholds(peptideMatch: PeptideMatch, pValue: Float): Pair[MascotIonsScoreThresholds,MascotIonsScoreThresholds] = {
+  def calcPeptideMatchTDThresholds(peptideMatch: PeptideMatch, pValue: Float): Tuple2[MascotIonsScoreThresholds,MascotIonsScoreThresholds] = {
 
     val msQProp = peptideMatch.msQuery.properties.get
 
@@ -157,7 +159,7 @@ object MascotValidationHelper extends LazyLogging {
     //Infer HT 
     if (!msQProp.getTargetDbSearch.get.getMascotHomologyThreshold.isDefined) {
       logger.warn(" ------ UNABLE TO CALCULATE P VALUE  getMascotHomologyThreshold !!" + peptideMatch.msQueryId)
-      Pair(MascotIonsScoreThresholds(0.0, 0.0), MascotIonsScoreThresholds(0.0, 0.0))
+      Tuple2(MascotIonsScoreThresholds(0.0, 0.0), MascotIonsScoreThresholds(0.0, 0.0))
     } else {
 
       val tRs_ht0_05: Float = msQProp.getTargetDbSearch.get.getMascotHomologyThreshold.get
@@ -172,7 +174,7 @@ object MascotValidationHelper extends LazyLogging {
       if ((targetHTh > targetITh) || (targetHTh < 13) || (tRSCandPSM <= 100)) { targetHTh = 0.0 }
       if ((decoyHTh > decoyITh) || (decoyHTh < 13) || (dRSCandPSM <= 100)) { decoyHTh = 0.0 }
 
-      Pair(MascotIonsScoreThresholds(targetITh, targetHTh), MascotIonsScoreThresholds(decoyITh, decoyHTh))
+      Tuple2(MascotIonsScoreThresholds(targetITh, targetHTh), MascotIonsScoreThresholds(decoyITh, decoyHTh))
     }
 
   }
@@ -181,7 +183,8 @@ object MascotValidationHelper extends LazyLogging {
     
     val thresholds = MascotValidationHelper.calcPeptideMatchTDThresholds(peptideMatch, pValue)
     
-    val( targetThresholds, decoyThresholds ) = thresholds
+    val targetThresholds = thresholds._1
+    val decoyThresholds = thresholds._2
     
     val HT = if (decoyThresholds.homologyThreshold > 0) decoyThresholds.homologyThreshold else targetThresholds.homologyThreshold
     val( targetIT, decoyIT ) = (targetThresholds.identityThreshold,decoyThresholds.identityThreshold)
@@ -242,11 +245,11 @@ object MascotValidationHelper extends LazyLogging {
     msQuery.properties.get.getDecoyDbSearch
   }
 
-  def buildJointTable(pepMatchJointTable: Array[Pair[PeptideMatch, PeptideMatch]],
-                      valuePicker: (PeptideMatch) => Double): Array[Pair[Double, Double]] = {
+  def buildJointTable(pepMatchJointTable: Array[Tuple2[PeptideMatch, PeptideMatch]],
+                      valuePicker: (PeptideMatch) => Double): Array[Tuple2[Double, Double]] = {
 
     val jointTable = pepMatchJointTable.map { pmPair =>
-      Pair(valuePicker(pmPair._1),
+      Tuple2(valuePicker(pmPair._1),
         valuePicker(pmPair._2))
     }
 
