@@ -1478,15 +1478,12 @@ class PeakelsDetector(
     val runsCount = entityCache.runsCount
     val lcMsRuns = entityCache.lcMsRuns
     val metricsByRunId = entityCache.metricsByRunId
-    val mzDbFileByLcMsRunId = entityCache.mzDbFileByLcMsRunId
 
     // Iterate lcMsRuns to create raw maps
     for (lcMsRun <- lcMsRuns) yield {
 
       val lcMsRunId = lcMsRun.id
       val runMetrics = metricsByRunId(lcMsRunId)
-      val mzDbFile = mzDbFileByLcMsRunId(lcMsRunId)
-      val mzDb = new MzDbReader(mzDbFile, true)
 
       // Retrieve processed an raw maps
       val processedMap = processedMapByRunId(lcMsRunId)
@@ -1584,7 +1581,6 @@ class PeakelsDetector(
             }
 
             Tuple3(putativeFt, mftBuilder, _findUnidentifiedPeakel(
-              mzDb,
               coelutingPeakels,
               putativeFt.mz,
               putativeFt.charge,
@@ -1745,7 +1741,6 @@ class PeakelsDetector(
 
   
   private def _findUnidentifiedPeakel(
-    reader: MzDbReader,
     coelutingPeakels: Seq[MzDbPeakel],
     peakelMz: Double,
     charge: Int,
@@ -1790,13 +1785,6 @@ class PeakelsDetector(
       charge,
       mozTolInDa
     )
-
-    // Switch to mzdb based implementation by commenting previous line and uncommenting the next one
-    //
-    // val filteredPeakels = mzDbPatternPredictor.assessReliability(reader, sqliteConn, matchingPeakels, charge, mozTolInDa)
-    
-    // Fake filteredPeakels
-    //val filteredPeakels = matchingPeakels.map( p => (p,true) )
 
     if (filteredPeakels.isEmpty) {
       metric.incr("missing peakel: no peakel matching")
