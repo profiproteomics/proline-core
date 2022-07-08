@@ -119,6 +119,19 @@ class ResultSetAdder(
       }
     }
 
+    val commonFragmentationRuleSet = {
+      val fragRuleSets = msiSearches.map(_.searchSettings.fragmentationRuleSet).filter(_.isDefined).map(_.get)
+      if (fragRuleSets.isEmpty) {
+        None
+      } else {
+        val sameRuleSetid  = fragRuleSets.map(_.id).reduceOption((m1, m2) => if (m1.equals(m2)) m1 else -1l).getOrElse(-1l);
+        if(sameRuleSetid.equals(-1l))
+          None
+        else
+          Some(fragRuleSets.head)
+      }
+    }
+
     val mergedMsiSearch = new MSISearch(
       id = MSISearch.generateNewId(),
       resultFileName = msiSearches.map(_.resultFileName).reduceOption((s1, s2) => if (s1 == s2) s1 else "").getOrElse(""),
@@ -137,6 +150,7 @@ class ResultSetAdder(
         fixedPtmDefs =  msiSearches.map(_.searchSettings.fixedPtmDefs).reduceOption((l1, l2) => if (l1.map(_.id).sameElements(l2.map(_.id))) l1 else Array.empty[PtmDefinition]).getOrElse(Array.empty[PtmDefinition]),
         seqDatabases =  msiSearches.map(_.searchSettings.seqDatabases).reduceOption((l1, l2) => if (l1.toIndexedSeq.sameElements(l2.toIndexedSeq)) l1 else Array.empty[SeqDatabase]).getOrElse(Array.empty[SeqDatabase]),
         instrumentConfig = msiSearches.map(_.searchSettings.instrumentConfig).headOption.orNull,
+        fragmentationRuleSet = commonFragmentationRuleSet,
         msmsSearchSettings = msmsSearchSettings
       ),
       peakList = new Peaklist(
