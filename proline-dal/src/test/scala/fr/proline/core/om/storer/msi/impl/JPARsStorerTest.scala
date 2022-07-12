@@ -31,7 +31,7 @@ class JPARsStorerTest extends AbstractMultipleDBTestCase with StrictLogging {
     logger.info("Initializing Dbs")
     super.initDBsDBManagement(DriverType.H2)
     msiDBTestCase.loadCompositeDataSet(Array("/dbunit/Init/msi-db.xml","/dbunit/datasets/msi/Peaklist_Dataset.xml"))
-    udsDBTestCase.loadCompositeDataSet(Array("/dbunit/Init/uds-db.xml", "/fr/proline/core/om/uds/UDS_Simple_Dataset.xml"))
+    udsDBTestCase.loadCompositeDataSet(Array("/dbunit/Init/uds-db.xml", "/dbunit/datasets/uds/UDS_Simple_Dataset.xml"))
     logger.info("Dbs successfully initialized")
   }
 
