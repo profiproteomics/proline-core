@@ -76,12 +76,6 @@
       <artifactId>msgpack</artifactId>
        <!-- Version should be inherited from ProFI-Pom but the scala module is not available yet -->
       <version>0.6.12</version>
-      <exclusions>
-        <exclusion><!-- for conflict with 3.27.0 from proline-database -->
-          <groupId>org.javassist</groupId>
-          <artifactId>javassist</artifactId>
-        </exclusion>
-      </exclusions>
     </dependency>
 
 
