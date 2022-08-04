@@ -1077,9 +1077,9 @@ class PeakelsDetector(
         val peakelProducerFuture =  Future {
           this.logger.info(s"Detecting peakels in raw MS survey for run id=$lcMsRunId...")
 
-          val mzDb = new MzDbReader(mzDbFile, true)
-
+          var mzDb : MzDbReader = null
           try {
+            mzDb = new MzDbReader(mzDbFile, true)
             // Instantiate the feature detector
             val mzdbFtDetector = new MzDbFeatureDetector(
               mzDb,
@@ -1111,10 +1111,20 @@ class PeakelsDetector(
             mzdbFtDetector.detectPeakelsAsync( mzDb.getLcMsRunSliceIterator(), onDetectedPeakels, nParRunSlices )
 
           } finally {
-            mzDb.close()
+            //this.logger.debug(" *************** CALLED finally will close "+mzDb+" ==> "+resultPromise.isCompleted)
+            if(mzDb != null)
+              mzDb.close()
           }
-
         }
+
+        peakelProducerFuture.onFailure {
+          case t: Throwable => {
+            this.logger.trace(" *************** peakelProducerFuture.onFailure ==> resultPromise.failure")
+            resultPromise.failure(t)
+          }
+        }
+
+//        this.logger.debug(" *************** BEFORE  resultPromise.future def ")
 
         val futureResult = resultPromise.future.map { case (observableRunSlicePeakels, ms1SpecHeaders, ms2SpecHeadersByCycle) =>
 
@@ -1126,6 +1136,7 @@ class PeakelsDetector(
             //Verify peakel producer was successful or not
             peakelProducerFuture.onFailure {
               case t: Throwable => {
+                this.logger.trace(" *************** peakelProducerFuture.onFailure ==> subscriber.onError")
                 subscriber.onError( t )
               }
             }
@@ -1172,6 +1183,7 @@ class PeakelsDetector(
           (peakelFile,observablePeakels,ms2SpecHeadersByCycle)
         } // end resultPromise.future.map
 
+//        this.logger.debug(" *************** AFTER  resultPromise.future def  ")
         futureResult
 
       } else {
@@ -1199,8 +1211,9 @@ class PeakelsDetector(
       }
 
       // Entering the same thread than the Future created above (detection or loading of peakels)
+//      this.logger.debug(" *************** Entering  futurePeakelDetectionResult.flatMap  ")
       val peakelRecordingFuture = futurePeakelDetectionResult.flatMap { case (peakelFile, peakelFlow, ms2SpecHeadersByCycle) =>
-
+        this.logger.trace(" ***************  futurePeakelDetectionResult.flatMap  EXEC ")
         //val rxCompScheduler = schedulers.ComputationScheduler() // TODO: remove me => we use now our own thread pool
         val publishedPeakelFlow = peakelFlow.onBackpressureBuffer(PeakelsDetector.BACK_PRESSURE_BUFFER_SIZE).observeOn(rxCompScheduler).publish
 
@@ -1294,10 +1307,10 @@ class PeakelsDetector(
 
         combinedFuture
       }
-
+//      this.logger.debug(" *************** END  futurePeakelDetectionResult.flatMap def ")
       // Synchronize all parallel computations that were previously performed
       // We are now returning to single thread execution
-
+//      this.logger.debug(" *************** Await.result ")
       val (peakelFile,rTree,peakelMatches) = Await.result(peakelRecordingFuture, Duration.Inf)
 
       this.logger.info(s"Total number of MS/MS matched peakels = ${peakelMatches.length} for run id=$lcMsRunId (map #$mapNumber)... ")
