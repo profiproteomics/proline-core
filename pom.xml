@@ -129,18 +129,9 @@
       <scope>test</scope>
     </dependency>
 
-    <dependency>
-      <groupId>ch.qos.logback</groupId>
-      <artifactId>logback-core</artifactId>
-      <!-- Version inherited from ProFI-Pom -->
-      <scope>compile</scope>
-    </dependency>
-
-    <dependency>
+    <dependency> <!-- includes logback-core and slf4j-->
       <groupId>ch.qos.logback</groupId>
       <artifactId>logback-classic</artifactId>
-      <!-- Version inherited from ProFI-Pom -->
-      <scope>compile</scope>
     </dependency>
 
   </dependencies>

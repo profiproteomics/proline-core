@@ -8,8 +8,6 @@ import fr.proline.core.om.provider.PeptideCacheExecutionContext
 import fr.proline.core.om.provider.msi.cache.IPeptideCache
 import fr.proline.repository.ProlineDatabaseType
 import fr.proline.repository.util.DatabaseTestCase
-import org.hamcrest.CoreMatchers
-import org.hamcrest.MatcherAssert
 import org.junit.After
 import org.junit.Assert._
 import org.junit.Before
@@ -41,12 +39,12 @@ class SQLPeptideProviderTest extends DatabaseTestCase {
     
   @Test
   def getSinglePeptide() = {
-      val sqlPepProvider = new SQLPeptideProvider(PeptideCacheExecutionContext(exeContext))
+    val sqlPepProvider = new SQLPeptideProvider(PeptideCacheExecutionContext(exeContext))
 
-      val pep: Option[Peptide] = sqlPepProvider.getPeptide(4)
-    MatcherAssert.assertThat(pep, CoreMatchers.notNullValue())
-      assertNotSame(pep, None)
-    MatcherAssert.assertThat(pep.get.calculatedMass, CoreMatchers.equalTo(810.405807))
+    val pep: Option[Peptide] = sqlPepProvider.getPeptide(4)
+    assertNotNull(pep)
+    assertNotSame(pep, None)
+    assertEquals(pep.get.calculatedMass, 810.405807,0.0001)
   }
 
   @Test
@@ -60,11 +58,10 @@ class SQLPeptideProviderTest extends DatabaseTestCase {
     val sqlPepProvider = new SQLPeptideProvider(PeptideCacheExecutionContext(exeContext))
 
     val peps: Array[Option[Peptide]] = sqlPepProvider.getPeptidesAsOptions(ids)
-    MatcherAssert.assertThat(peps, CoreMatchers.notNullValue())
-    MatcherAssert.assertThat(peps.length, CoreMatchers.equalTo(3))
+    assertNotNull(peps)
+    assertEquals(peps.length, 3)
     assertEquals(peps.apply(2).get.id, 4L)
-    MatcherAssert.assertThat(peps(2).get.calculatedMass, CoreMatchers.equalTo(810.405807))
-
+    assertEquals(peps(2).get.calculatedMass, 810.405807, 0.0001)
   }
 
   @Test
@@ -72,12 +69,12 @@ class SQLPeptideProviderTest extends DatabaseTestCase {
      val sqlPepProvider = new SQLPeptideProvider(PeptideCacheExecutionContext(exeContext))
 
     val pep: Option[Peptide] = sqlPepProvider.getPeptide(6)
-    MatcherAssert.assertThat(pep, CoreMatchers.notNullValue())
+    assertNotNull(pep)
     assertNotSame(pep, None)
 
     assertEquals(pep.get.id, 6L)
-    MatcherAssert.assertThat(pep.get.ptms.length, CoreMatchers.equalTo(1))
-    MatcherAssert.assertThat(pep.get.ptms(0).definition.names.shortName, CoreMatchers.equalTo("Acetyl"))
+    assertEquals(pep.get.ptms.length, 1)
+    assertEquals(pep.get.ptms(0).definition.names.shortName, "Acetyl")
     assertTrue(pep.get.ptms(0).isNTerm)
 
   }
@@ -89,7 +86,7 @@ class SQLPeptideProviderTest extends DatabaseTestCase {
 
     val ptms = new Array[LocatedPtm](0)
     val pep: Option[Peptide] = sqlPepProvider.getPeptide(SEQ_TO_FOUND, ptms)
-    MatcherAssert.assertThat(pep, CoreMatchers.notNullValue())
+    assertNotNull(pep)
     assertNotSame(pep, None)
     assertTrue(pep.get.ptms == null || pep.get.ptms.length == 0)
 
@@ -112,10 +109,10 @@ class SQLPeptideProviderTest extends DatabaseTestCase {
 	  ptmDefs.foreach { ptm => println(ptm.get.names.shortName ) }*/
 
     val pep: Option[Peptide] = sqlPepProvider.getPeptide(SEQ_TO_FOUND, ptmsBuilder.result())
-    MatcherAssert.assertThat(pep, CoreMatchers.notNullValue())
+    assertNotNull(pep)
     assertNotSame(pep, None)
-    MatcherAssert.assertThat(pep.get.ptms.length, CoreMatchers.equalTo(1))
-    MatcherAssert.assertThat(pep.get.ptms(0).seqPosition, CoreMatchers.equalTo(3))
+    assertEquals(pep.get.ptms.length, 1)
+    assertEquals(pep.get.ptms(0).seqPosition, 3)
 
   }
 
@@ -125,11 +122,11 @@ class SQLPeptideProviderTest extends DatabaseTestCase {
     val sqlPepProvider = new SQLPeptideProvider(PeptideCacheExecutionContext(exeContext))
 
     val pep: Option[Peptide] = sqlPepProvider.getPeptide(7)
-    MatcherAssert.assertThat(pep, CoreMatchers.notNullValue())
+    assertNotNull(pep)
     assertNotSame(pep, None)
-    MatcherAssert.assertThat(pep.get.ptms.head.definition.neutralLosses.size, CoreMatchers.equalTo(2))
-    MatcherAssert.assertThat(pep.get.ptms.head.definition.ptmEvidences.size, CoreMatchers.equalTo(3))
-    MatcherAssert.assertThat(pep.get.ptms.head.definition.classification, CoreMatchers.equalTo("Post-translational"))
+    assertEquals(pep.get.ptms.head.definition.neutralLosses.size, 2)
+    assertEquals(pep.get.ptms.head.definition.ptmEvidences.size,3)
+    assertEquals(pep.get.ptms.head.definition.classification, "Post-translational")
   }
 
   @After

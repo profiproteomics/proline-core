@@ -1,8 +1,6 @@
 package fr.proline.core.om.provider.msi.impl
 
 import scala.collection.mutable.ArrayBuffer
-import org.hamcrest.CoreMatchers
-import org.hamcrest.MatcherAssert
 import org.junit.Assert._
 import org.junit.After
 import org.junit.Before
@@ -41,19 +39,19 @@ class ORMPtmProviderTest extends DatabaseTestCase {
 
       val ptmDefs = ormPtmProvider.getPtmDefinitions(ids)
 
-      MatcherAssert.assertThat(ptmDefs, CoreMatchers.notNullValue())
-      MatcherAssert.assertThat(ptmDefs.length, CoreMatchers.equalTo(ids.length))
+      assertNotNull(ptmDefs)
+      assertEquals(ptmDefs.length, ids.length)
 
-      MatcherAssert.assertThat(ptmDefs(0).location, CoreMatchers.equalTo(PtmLocation.PROT_N_TERM.toString))
-      MatcherAssert.assertThat(ptmDefs(0).names.fullName, CoreMatchers.equalTo("Acetylation"))
-      MatcherAssert.assertThat(ptmDefs(0).classification, CoreMatchers.equalTo("Post-translational"))
+      assertEquals(ptmDefs(0).location, PtmLocation.PROT_N_TERM.toString)
+      assertEquals(ptmDefs(0).names.fullName, "Acetylation")
+      assertEquals(ptmDefs(0).classification, "Post-translational")
 
-      MatcherAssert.assertThat(ptmDefs(1).location, CoreMatchers.equalTo(PtmLocation.ANY_N_TERM.toString))
-      MatcherAssert.assertThat(ptmDefs(1).residue, CoreMatchers.equalTo('\u0000'))
-      MatcherAssert.assertThat(ptmDefs(1).names.shortName, CoreMatchers.equalTo("Biotin"))
+      assertEquals(ptmDefs(1).location, PtmLocation.ANY_N_TERM.toString)
+      assertEquals(ptmDefs(1).residue,'\u0000')
+      assertEquals(ptmDefs(1).names.shortName,"Biotin")
 
-      MatcherAssert.assertThat(ptmDefs(2).location, CoreMatchers.equalTo(PtmLocation.ANYWHERE.toString))
-      MatcherAssert.assertThat(ptmDefs(2).residue, CoreMatchers.equalTo('H'))
+      assertEquals(ptmDefs(2).location, PtmLocation.ANYWHERE.toString)
+      assertEquals(ptmDefs(2).residue, 'H')
     } finally {
       msiDb.close()
     }
@@ -72,10 +70,10 @@ class ORMPtmProviderTest extends DatabaseTestCase {
 
       val ptmDefs = ormPtmProvider.getPtmDefinitions(ids)
 
-      MatcherAssert.assertThat(ptmDefs, CoreMatchers.notNullValue())
-      MatcherAssert.assertThat(ptmDefs.length, CoreMatchers.equalTo(ids.length - 1))
+      assertNotNull(ptmDefs)
+      assertEquals(ptmDefs.length, (ids.length - 1))
 
-      MatcherAssert.assertThat(ptmDefs(0).names.fullName, CoreMatchers.equalTo("Acetylation"))
+      assertEquals(ptmDefs(0).names.fullName,"Acetylation")
     } finally {
       msiDb.close()
     }
@@ -94,10 +92,10 @@ class ORMPtmProviderTest extends DatabaseTestCase {
       val ormPtmProvider = new ORMPTMProvider(msiDb)
 
       val ptmDefs = ormPtmProvider.getPtmDefinitions(ids)
-      MatcherAssert.assertThat(ptmDefs, CoreMatchers.notNullValue())
-      MatcherAssert.assertThat(ptmDefs.length, CoreMatchers.equalTo(ids.length - 1))
+      assertNotNull(ptmDefs)
+      assertEquals(ptmDefs.length, (ids.length - 1))
 
-      MatcherAssert.assertThat(ptmDefs(0).names.fullName, CoreMatchers.equalTo("Acetylation"))
+      assertEquals(ptmDefs(0).names.fullName, "Acetylation")
     } finally {
       msiDb.close()
     }
@@ -112,12 +110,12 @@ class ORMPtmProviderTest extends DatabaseTestCase {
       val ormPtmProvider = new ORMPTMProvider(msiDb)
 
       val ptmDef: Option[PtmDefinition] = ormPtmProvider.getPtmDefinition(11)
-      MatcherAssert.assertThat(ptmDef, CoreMatchers.notNullValue())
+      assertNotNull(ptmDef)
       assertNotSame(ptmDef, None)
 
-      MatcherAssert.assertThat(ptmDef.get.location, CoreMatchers.equalTo(PtmLocation.ANY_N_TERM.toString))
-      MatcherAssert.assertThat(ptmDef.get.residue, CoreMatchers.equalTo('\u0000'))
-      MatcherAssert.assertThat(ptmDef.get.names.shortName, CoreMatchers.equalTo("Biotin"))
+      assertEquals(ptmDef.get.location, PtmLocation.ANY_N_TERM.toString)
+      assertEquals(ptmDef.get.residue, '\u0000')
+      assertEquals(ptmDef.get.names.shortName, "Biotin")
     } finally {
       msiDb.close()
     }
@@ -132,7 +130,7 @@ class ORMPtmProviderTest extends DatabaseTestCase {
       val ormPtmProvider = new ORMPTMProvider(msiDb)
 
       val ptmDef: Option[PtmDefinition] = ormPtmProvider.getPtmDefinition(9879)
-      MatcherAssert.assertThat(ptmDef, CoreMatchers.notNullValue())
+      assertNotNull(ptmDef)
 
       assertSame(ptmDef, None)
     } finally {
@@ -151,7 +149,7 @@ class ORMPtmProviderTest extends DatabaseTestCase {
       //Param for PtmSpecificity ID 877 in Unimod_Dataset
       val ptmDef: Option[PtmDefinition] = ormPtmProvider.getPtmDefinition("Phospho", 'S', PtmLocation.ANYWHERE)
 
-      MatcherAssert.assertThat(ptmDef, CoreMatchers.notNullValue())
+      assertNotNull(ptmDef)
       assertNotSame(ptmDef, None)
       assertEquals(ptmDef.get.id,52L)
     } finally {
@@ -169,7 +167,7 @@ class ORMPtmProviderTest extends DatabaseTestCase {
 
       //Param corresponding to No PtmSpecificity in Unimod_Dataset
       val ptmDef: Option[PtmDefinition] = ormPtmProvider.getPtmDefinition("iTRAQ8plexA", '\u0000', PtmLocation.ANYWHERE)
-      MatcherAssert.assertThat(ptmDef, CoreMatchers.notNullValue())
+      assertNotNull(ptmDef)
       assertSame(ptmDef, None)
     } finally {
       msiDb.close()
