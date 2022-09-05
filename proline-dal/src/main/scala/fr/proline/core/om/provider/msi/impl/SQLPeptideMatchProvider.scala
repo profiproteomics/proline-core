@@ -58,9 +58,9 @@ class SQLPeptideMatchProvider(
     if( pepMatchIds.isEmpty ) return Array()
 
     val pepMatches = this.getPeptideMatches(pepMatchIds)
-    val pepMatchById = pepMatches.map { pepMatch => pepMatch.id -> pepMatch } toMap
+    val pepMatchById = pepMatches.map { pepMatch => pepMatch.id -> pepMatch }.toMap
 
-    pepMatchIds.map { pepMatchById.get(_) } toArray
+    pepMatchIds.map { pepMatchById.get(_) }.toArray
   }
 
   def getPeptideMatchesByMsQueryIds(msQueriesIds: Seq[Long]): Array[PeptideMatch] = {

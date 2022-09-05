@@ -1,7 +1,7 @@
 package fr.proline.core.util.generator.lcms
 
 import org.junit.Test
-import org.scalatest.junit.JUnitSuite
+import org.scalatestplus.junit.JUnitSuite
 
 import com.typesafe.scalalogging.StrictLogging
 

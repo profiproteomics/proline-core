@@ -32,18 +32,18 @@ class MFPaQMapParser extends ILcmsMapFileParser {
 
       val l = lines.next.stripLineEnd.split(MFPaQMapParser.sepChar)
 
-      val data = columnNames.zip(l.slice(startingPoint, startingPoint + MFPaQMapParser.nbColumns + 1)) toMap
+      val data = columnNames.zip(l.slice(startingPoint, startingPoint + MFPaQMapParser.nbColumns + 1)).toMap
 
       if (data("Score") != "") {
 
-        val charge = l(0).replace("+", "") toInt
-        val moz = data("m/z") toDouble
-        val intensity = data("Area") toFloat
-        val firstRt = data("First RT") toFloat
+        val charge = l(0).replace("+", "").toInt
+        val moz = data("m/z").toDouble
+        val intensity = data("Area").toFloat
+        val firstRt = data("First RT").toFloat
         val firstScan = lcmsScanSeq.getScanAtTime(firstRt, 1)
-        val lastRt = data("Last RT") toFloat
+        val lastRt = data("Last RT").toFloat
         val lastScan = lcmsScanSeq.getScanAtTime(lastRt, 1)
-        val apexRt = data("Apex RT") toFloat
+        val apexRt = data("Apex RT").toFloat
         val apexScan = lcmsScanSeq.getScanAtTime(apexRt, 1)
 
         val ip = new IsotopicPattern(
@@ -85,7 +85,7 @@ class MFPaQMapParser extends ILcmsMapFileParser {
         name = lcmsScanSeq.rawFileIdentifier,
         isProcessed = false,
         creationTimestamp = new Date(),
-        features = features toArray,
+        features = features.toArray,
         runId = lcmsScanSeq.runId,
         peakPickingSoftware = new PeakPickingSoftware(
           1,

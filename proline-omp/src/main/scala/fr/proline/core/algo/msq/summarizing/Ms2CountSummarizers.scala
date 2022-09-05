@@ -35,7 +35,7 @@ object Ms2CountEntitiesSummarizer extends IMqPepAndProtEntitiesSummarizer with L
     // Map quant channel id by result set id
     val qcIdByRsId = masterQuantChannel.quantChannels.map {
       qc => rsIdByRsmId(qc.identResultSummaryId) -> qc.id
-    } toMap
+    }.toMap
     
     // Retrieve all peptide matches
     val peptideMatchById = new HashMap[Long,PeptideMatch]()
@@ -213,7 +213,7 @@ object Ms2CountEntitiesSummarizer extends IMqPepAndProtEntitiesSummarizer with L
     resultSummaries: Seq[ResultSummary]
   ): Array[MasterQuantProteinSet] = {
     
-    val mqPepByPepInstId = masterQuantPeptides.map { mqp => mqp.peptideInstance.get.id -> mqp } toMap
+    val mqPepByPepInstId = masterQuantPeptides.map { mqp => mqp.peptideInstance.get.id -> mqp }.toMap
     val mqProtSets = new ArrayBuffer[MasterQuantProteinSet]
     
     for( mergedProtSet <- mergedRSM.proteinSets ) {

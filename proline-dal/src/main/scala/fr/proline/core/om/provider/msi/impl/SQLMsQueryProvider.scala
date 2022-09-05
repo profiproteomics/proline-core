@@ -72,7 +72,7 @@ class SQLMsQueryProvider(val msiDbCtx: MsiDbConnectionContext) extends IMsQueryP
       )
   
       // Retrieve parent peaklist ids corresponding to the provided MSI search ids
-      val spectrumTitleById = msiEzDBC.select(specTitleQuery) { r => (toLong(r.nextAny), r.nextString) } toMap
+      val spectrumTitleById = msiEzDBC.select(specTitleQuery) { r => (toLong(r.nextAny), r.nextString) }.toMap
   
       val msqQuery = new SelectQueryBuilder1(MsiDbMsQueryTable).mkSelectQuery( (t,c) =>
         List(t.*) -> "WHERE "~ msiSearchIds.map(id => t.MSI_SEARCH_ID + "=" + id).mkString(" OR ")
@@ -118,7 +118,7 @@ class SQLMsQueryProvider(val msiDbCtx: MsiDbConnectionContext) extends IMsQueryP
       )
       
       // Retrieve parent peaklist ids corresponding to the provided MSI search ids
-      val spectrumTitleById = msiEzDBC.select(specTitleQuery) { r => (toLong(r.nextAny), r.nextString) } toMap
+      val spectrumTitleById = msiEzDBC.select(specTitleQuery) { r => (toLong(r.nextAny), r.nextString) }.toMap
       
       // Load MS queries corresponding to the provided MSI search ids
       val msQueries = msiEzDBC.select(msqQuery) { r =>

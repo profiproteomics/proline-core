@@ -16,7 +16,7 @@ class LcmsDbHelper( lcmsDbCtx: DatabaseConnectionContext ) {
     
     val scoringCols = LcmsDbFeatureScoringColumns
     
-    DoJDBCReturningWork.withEzDBC( lcmsDbCtx, { ezDBC =>
+    DoJDBCReturningWork.withEzDBC( lcmsDbCtx) { ezDBC =>
     
       val mapBuilder = scala.collection.immutable.Map.newBuilder[Long,FeatureScoring]
       
@@ -37,14 +37,14 @@ class LcmsDbHelper( lcmsDbCtx: DatabaseConnectionContext ) {
       
       mapBuilder.result()
     
-    })
+    }//end DoJDBCReturningWork
   }
   
   def getPeakPickingSoftwareById(): Map[Long,PeakPickingSoftware] = {
     
     val ppsCols = LcmsDbPeakPickingSoftwareColumns
     
-    DoJDBCReturningWork.withEzDBC( lcmsDbCtx, { ezDBC =>
+    DoJDBCReturningWork.withEzDBC( lcmsDbCtx) { ezDBC =>
     
       val mapBuilder = scala.collection.immutable.Map.newBuilder[Long,PeakPickingSoftware]
       
@@ -66,14 +66,14 @@ class LcmsDbHelper( lcmsDbCtx: DatabaseConnectionContext ) {
       
       mapBuilder.result()
     
-    })
+    }//end doWork
   }
   
   def getPeakelFittingModelById(): Map[Long,PeakelFittingModel] = {
     
     val fittingModelCols = LcmsDbPeakelFittingModelColumns
     
-    DoJDBCReturningWork.withEzDBC( lcmsDbCtx, { ezDBC =>
+    DoJDBCReturningWork.withEzDBC( lcmsDbCtx) { ezDBC =>
     
       val mapBuilder = scala.collection.immutable.Map.newBuilder[Long,PeakelFittingModel]
       
@@ -92,7 +92,7 @@ class LcmsDbHelper( lcmsDbCtx: DatabaseConnectionContext ) {
       }
       
       mapBuilder.result()
-    })
+    } // end DoJDBCReturningWork
   }
 
   def findScanSequenceIdForRawFileIdentifier(rawFileIdent: String): Option[Long] = {
@@ -102,16 +102,16 @@ class LcmsDbHelper( lcmsDbCtx: DatabaseConnectionContext ) {
       List(t.ID) -> "WHERE " ~ t.RAW_FILE_IDENTIFIER ~ "= ?"
     )
 
-    DoJDBCReturningWork.withEzDBC(lcmsDbCtx, { ezDBC =>
+    DoJDBCReturningWork.withEzDBC(lcmsDbCtx) { ezDBC =>
       ezDBC.selectHeadOption(scanIdQuery, rawFileIdent) { v => toLong(v.nextAny) }
-    })
+    }// end DoJDBCReturningWork
   }
 
   def getScanInitialIdById( scanSeqIds: Seq[Long] ): Map[Long,Int] = {
     require( scanSeqIds != null, "scanSeqIds is null" )
     if( scanSeqIds.isEmpty ) return Map()
     
-    DoJDBCReturningWork.withEzDBC( lcmsDbCtx, { ezDBC =>
+    DoJDBCReturningWork.withEzDBC( lcmsDbCtx) { ezDBC =>
     
       val mapBuilder = scala.collection.immutable.Map.newBuilder[Long,Int]
       
@@ -127,14 +127,14 @@ class LcmsDbHelper( lcmsDbCtx: DatabaseConnectionContext ) {
           
       mapBuilder.result()
     
-    })
+    }// end DoJDBCReturningWork
   }
 
   def getMs2EventIdsByFtId( rawMapIds: Seq[Long] ): Map[Long,Array[Long]] = {
     require( rawMapIds != null, "rawMapIds is null" )
     if( rawMapIds.isEmpty ) return Map()
     
-    DoJDBCReturningWork.withEzDBC( lcmsDbCtx, { ezDBC =>
+    DoJDBCReturningWork.withEzDBC( lcmsDbCtx) { ezDBC =>
     	
       val featureMs2EventsByFtId = new java.util.HashMap[Long,ArrayBuffer[Long]]
       
@@ -159,7 +159,7 @@ class LcmsDbHelper( lcmsDbCtx: DatabaseConnectionContext ) {
       }
       
       mapBuilder.result()    
-    })
+    } // end DoJDBCReturningWork
 
   }
   

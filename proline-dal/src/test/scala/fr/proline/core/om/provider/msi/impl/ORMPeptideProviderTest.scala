@@ -1,24 +1,14 @@
 package fr.proline.core.om.provider.msi.impl
 
-import scala.collection.mutable.ArrayBuffer
-import org.hamcrest.CoreMatchers
-import org.junit.Assert._
-import org.junit.After
-import org.junit.Before
-import org.junit.Ignore
-import org.junit.Test
 import com.typesafe.scalalogging.StrictLogging
 import fr.proline.context.MsiDbConnectionContext
-import fr.proline.core.om.model.msi.IonTypes
-import fr.proline.core.om.model.msi.LocatedPtm
-import fr.proline.core.om.model.msi.Peptide
-import fr.proline.core.om.model.msi.PtmDefinition
-import fr.proline.core.om.model.msi.PtmEvidence
-import fr.proline.core.om.model.msi.PtmNames
+import fr.proline.core.om.model.msi._
 import fr.proline.repository.ProlineDatabaseType
-import fr.proline.repository.util.JPAUtils
-import fr.proline.repository.util.DatabaseUtils
 import fr.proline.repository.util.DatabaseTestCase
+import org.junit.Assert._
+import org.junit.{After, Before, Test}
+
+import scala.collection.mutable.ArrayBuffer
 
 @Test
 class ORMPeptideProviderTest extends DatabaseTestCase with StrictLogging {
@@ -46,9 +36,9 @@ class ORMPeptideProviderTest extends DatabaseTestCase with StrictLogging {
       val ormPepProvider = new ORMPeptideProvider(msiDb)
 
       val pepOpt = ormPepProvider.getPeptide(4)
-      assertThat(pepOpt, CoreMatchers.notNullValue())
+      assertNotNull(pepOpt)
       assertNotSame(pepOpt, None)
-      assertThat(pepOpt.get.calculatedMass, CoreMatchers.equalTo(810.405807))
+      assertEquals(pepOpt.get.calculatedMass, 810.405807, 0.0001)
     } finally {
       msiDb.close()
     }
@@ -63,11 +53,11 @@ class ORMPeptideProviderTest extends DatabaseTestCase with StrictLogging {
       val ormPepProvider = new ORMPeptideProvider(msiDb)
 
       val pep: Option[Peptide] = ormPepProvider.getPeptide(7);
-      assertThat(pep, CoreMatchers.notNullValue());
+      assertNotNull(pep);
       assertNotSame(pep, None);
-      assertThat(pep.get.ptms.head.definition.neutralLosses.size, CoreMatchers.equalTo(2))
-      assertThat(pep.get.ptms.head.definition.classification, CoreMatchers.equalTo("Post-translational"))
-    } finally {     
+      assertEquals(pep.get.ptms.head.definition.neutralLosses.size,2)
+      assertEquals(pep.get.ptms.head.definition.classification, "Post-translational")
+    } finally {
       msiDb.close()
     }
 
@@ -86,10 +76,10 @@ class ORMPeptideProviderTest extends DatabaseTestCase with StrictLogging {
       val ormPepProvider = new ORMPeptideProvider(msiDb)
 
       val peps: Array[Option[Peptide]] = ormPepProvider.getPeptidesAsOptions(ids)
-      assertThat(peps, CoreMatchers.notNullValue())
-      assertThat(peps.length, CoreMatchers.equalTo(3))
+      assertNotNull(peps)
+      assertEquals(peps.length,3)
       assertEquals(peps.apply(2).get.id, 4L)
-      assertThat(peps(2).get.calculatedMass, CoreMatchers.equalTo(810.405807))
+      assertEquals(peps(2).get.calculatedMass, 810.405807,0.0001)
     } finally {
       msiDb.close()
     }
@@ -104,12 +94,12 @@ class ORMPeptideProviderTest extends DatabaseTestCase with StrictLogging {
       val ormPepProvider = new ORMPeptideProvider(msiDb)
 
       val pep: Option[Peptide] = ormPepProvider.getPeptide(6)
-      assertThat(pep, CoreMatchers.notNullValue())
+      assertNotNull(pep)
       assertNotSame(pep, None)
 
       assertEquals(pep.get.id, 6L)
-      assertThat(pep.get.ptms.length, CoreMatchers.equalTo(1))
-      assertThat(pep.get.ptms(0).definition.names.shortName, CoreMatchers.equalTo("Acetyl"))
+      assertEquals(pep.get.ptms.length, 1)
+      assertEquals(pep.get.ptms(0).definition.names.shortName, "Acetyl")
       assertTrue(pep.get.ptms(0).isNTerm)
     } finally {      
       msiDb.close()
@@ -126,7 +116,7 @@ class ORMPeptideProviderTest extends DatabaseTestCase with StrictLogging {
 
       val ptms = new Array[LocatedPtm](0)
       val pep: Option[Peptide] = ormPepProvider.getPeptide(SEQ_TO_FOUND, ptms)
-      assertThat(pep, CoreMatchers.notNullValue())
+      assertNotNull(pep)
       assertNotSame(pep, None)
       assertTrue(pep.get.ptms == null || pep.get.ptms.length == 0)
     } finally {     
@@ -155,10 +145,10 @@ class ORMPeptideProviderTest extends DatabaseTestCase with StrictLogging {
 	  ptmDefs.foreach { ptm => println(ptm.get.names.shortName ) }*/
 
       val pep: Option[Peptide] = ormPepProvider.getPeptide(SEQ_TO_FOUND, ptmsBuilder.result())
-      assertThat(pep, CoreMatchers.notNullValue())
+      assertNotNull(pep)
       assertNotSame(pep, None)
-      assertThat(pep.get.ptms.length, CoreMatchers.equalTo(1))
-      assertThat(pep.get.ptms(0).seqPosition, CoreMatchers.equalTo(3))
+      assertEquals(pep.get.ptms.length,1)
+      assertEquals(pep.get.ptms(0).seqPosition, 3)
     } finally {
       msiDb.close()
     }

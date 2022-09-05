@@ -1,6 +1,6 @@
 package fr.proline.core.algo.msi
 
-import scala.collection.JavaConversions.collectionAsScalaIterable
+import scala.collection.JavaConverters._
 import fr.profi.util.regex.RegexUtils._
 import fr.proline.core.orm.msi.{ProteinMatch, ProteinSet}
 import com.typesafe.scalalogging.LazyLogging
@@ -29,13 +29,13 @@ class TypicalProteinChooser () extends LazyLogging {
    
 	logger.info(" Load data for Typical Protein Chooser multi rules")
     val ormProtSetRSM = msiEM.createQuery("FROM fr.proline.core.orm.msi.ProteinSet protSet WHERE resultSummary.id = :rsmId",
-			classOf[fr.proline.core.orm.msi.ProteinSet]).setParameter("rsmId", rsmId).getResultList.toList
+			classOf[fr.proline.core.orm.msi.ProteinSet]).setParameter("rsmId", rsmId).getResultList.asScala.toList
     
     		  	
     var modifiedProtSet = Seq.newBuilder[fr.proline.core.orm.msi.ProteinSet]
     ormProtSetRSM.foreach(protSet => {
       
-			val sameSetProts =  protSet.getProteinSetProteinMatchItems.filter(!_.getIsInSubset).map(pspmi => { pspmi.getProteinMatch}).toSeq.sortBy(_.getAccession())
+			val sameSetProts =  protSet.getProteinSetProteinMatchItems.asScala.filter(!_.getIsInSubset).map(pspmi => { pspmi.getProteinMatch}).toSeq.sortBy(_.getAccession())
 			val currentTypical = sameSetProts.filter(_.getId == protSet.getProteinMatchId)(0)
     	    	
     	var foundNewTypical = false

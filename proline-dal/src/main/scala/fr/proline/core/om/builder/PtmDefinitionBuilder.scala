@@ -46,7 +46,7 @@ object PtmDefinitionBuilder {
     }
     
     val residueStrOpt = ptmSpecifRecord.getStringOption(PtmSpecifCols.RESIDUE)
-    val resChar = if( residueStrOpt.isDefined && residueStrOpt.get != null ) residueStrOpt.get.charAt(0) else '\0'
+    val resChar = if( residueStrOpt.isDefined && residueStrOpt.get != null ) residueStrOpt.get.charAt(0) else '\u0000'
     
     val ptmDefId = ptmSpecifRecord.getLongOrElse(PtmSpecifCols.ID,PtmDefinition.generateNewId)
     require(ptmDefId != 0, "ptmDefId must be different than zero")

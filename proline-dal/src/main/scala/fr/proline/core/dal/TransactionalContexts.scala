@@ -4,6 +4,7 @@ import scala.collection.mutable.HashMap
 import com.typesafe.scalalogging.LazyLogging
 import fr.proline.context.IExecutionContext
 import fr.proline.context.DatabaseConnectionContext
+import scala.language.implicitConversions
 
 package object context {
   

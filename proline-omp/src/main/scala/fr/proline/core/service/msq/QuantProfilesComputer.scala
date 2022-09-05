@@ -30,7 +30,7 @@ import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.LongMap
 
 // Factory for Proline-Cortex
-@deprecated
+@deprecated (message = "Will be removed in next version. Use QuantPostProcessingComputer", since = "ProlineSuite 2.0")
 object QuantProfilesComputer {
   
   def apply(
@@ -57,7 +57,7 @@ object QuantProfilesComputer {
   
 }
 
-@deprecated
+@deprecated  (message = "Will be removed in next version. Use QuantPostProcessingComputer", since = "ProlineSuite 2.0")
 class QuantProfilesComputer(
   executionContext: IExecutionContext,
   experimentalDesign: ExperimentalDesign,
@@ -120,7 +120,7 @@ class QuantProfilesComputer(
       // --- 1.2 Load the peakels --- //
       val qcByLcMsMapId = experimentalDesign.masterQuantChannels.head.quantChannels.map { qc =>
         qc.lcmsMapId.get -> qc
-      } toMap
+      }.toMap
       val lcmsDbCtx = executionContext.getLCMSDbConnectionContext
       val mapSetProvider = new SQLMapSetProvider(lcmsDbCtx = lcmsDbCtx)
       val mapSet = mapSetProvider.getMapSet(udsMasterQuantChannel.getLcmsMapSetId, loadPeakels = true)
@@ -220,7 +220,7 @@ class QuantProfilesComputer(
     //
     if (config.discardPeptidesSharingPeakels) {
       
-      val qcByLcMsMapId = experimentalDesign.masterQuantChannels.head.quantChannels.map { qc => qc.lcmsMapId.get -> qc } toMap
+      val qcByLcMsMapId = experimentalDesign.masterQuantChannels.head.quantChannels.map { qc => qc.lcmsMapId.get -> qc }.toMap
       val lcmsDbCtx = executionContext.getLCMSDbConnectionContext
       val mapSetProvider = new SQLMapSetProvider(lcmsDbCtx = lcmsDbCtx)
       val mapSet = mapSetProvider.getMapSet(udsMasterQuantChannel.getLcmsMapSetId, loadPeakels = true)

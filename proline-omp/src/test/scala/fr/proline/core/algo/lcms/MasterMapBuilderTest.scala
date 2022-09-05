@@ -1,14 +1,11 @@
 package fr.proline.core.algo.lcms
 
-import scala.collection.mutable.ArrayBuffer
-import org.junit.Before
-import org.junit.Test
-import org.junit.Assert._
-import org.scalatest.junit.JUnitSuite
 import com.typesafe.scalalogging.StrictLogging
-import fr.proline.core.om.model.lcms._
+import fr.proline.core.algo.lcms.filtering.Filter
 import fr.proline.core.util.generator.lcms._
-import filtering.Filter
+import org.junit.Assert._
+import org.junit.Test
+import org.scalatestplus.junit.JUnitSuite
 
 class MasterMapBuilderTest extends JUnitSuite  with StrictLogging {
   

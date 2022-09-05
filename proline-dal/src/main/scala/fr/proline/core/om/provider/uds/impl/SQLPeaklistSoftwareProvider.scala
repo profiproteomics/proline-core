@@ -32,7 +32,7 @@ class SQLPeaklistSoftwareProvider(val udsDbCtx: UdsDbConnectionContext) extends 
 
       ezDBC.select("SELECT * FROM peaklist_software WHERE id IN(" + pklSoftIds.mkString(",") +")") { r =>
         _buildNewPeaklistSoftware( r, specRuleById )
-      } toArray
+      }.toArray
       
     }
 
@@ -88,7 +88,7 @@ class SQLPeaklistSoftwareProvider(val udsDbCtx: UdsDbConnectionContext) extends 
           lastTimeRegex = r.getStringOption(SpecTitleCols.LAST_TIME)
         )
         
-      } toArray
+      }.toArray
       
     }
     

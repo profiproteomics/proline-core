@@ -1,8 +1,8 @@
 package fr.proline.core.om.util
 
-import scala.collection.mutable.HashSet
 import fr.proline.core.om.model.msi.LocatedPtm
 import fr.proline.core.orm.msi.PeptidePtm
+import  scala.collection.JavaConverters._
 
 object OMComparatorUtil {
 
@@ -33,9 +33,7 @@ object OMComparatorUtil {
    * 
    */
   def comparePeptidePtmSet( omPepPtmSet: Set[LocatedPtm], ormPepPtmSet: java.util.Set[PeptidePtm] ): Boolean = {
-    
-    import collection.JavaConversions.asScalaSet
-    
+
     if( (omPepPtmSet == null || omPepPtmSet.isEmpty ) && (ormPepPtmSet == null || ormPepPtmSet.isEmpty ))
       return true
     
@@ -46,7 +44,7 @@ object OMComparatorUtil {
       return false;
     
     val remainingORMPepPtmSetBuilder = scala.collection.mutable.Set.newBuilder[fr.proline.core.orm.msi.PeptidePtm] 
-    remainingORMPepPtmSetBuilder ++=(ormPepPtmSet)
+    remainingORMPepPtmSetBuilder ++=(ormPepPtmSet.asScala)
     val remainingORMPepPtmSet = remainingORMPepPtmSetBuilder.result
     val omPepPtmIt = omPepPtmSet.toIterator
     var omPtmFound = true

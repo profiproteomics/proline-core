@@ -86,7 +86,7 @@ public class PeakelDataMatrix implements IPeakelData {
 	public static PeakelDataMatrix getPeaks(byte[] blob) throws Exception {
 		MessagePack msgpack = new MessagePack();
 		// the return object is not a PeakelDataMatrix: ArrayValueImpl object => rebuild the different list with Java objects
-		Object o = msgpack.read((byte[]) blob);
+		Object o = msgpack.read(blob);
 		PeakelDataMatrix peakelDataMatrix = new PeakelDataMatrix();
 		// same here, it's not a List of Float or Double, etc. msgPack object to be transform as Float, Double, etc...
 		List so = (List) ((List) o).get(0);
@@ -94,25 +94,25 @@ public class PeakelDataMatrix implements IPeakelData {
 		List mo = (List) ((List) o).get(2);
 		List io = (List) ((List) o).get(3);
 
-		List<Long> scanIds = new ArrayList<Long>();
+		List<Long> scanIds = new ArrayList<>();
 		int nb = so.size();
 		for (int i = 0; i < nb; i++) {
-			scanIds.add(new Long(so.get(i).toString()));
+			scanIds.add(Long.valueOf(so.get(i).toString()));
 		}
-		List<Float> elutionTimes = new ArrayList<Float>();
+		List<Float> elutionTimes = new ArrayList<>();
 		nb = eo.size();
 		for (int i = 0; i < nb; i++) {
-			elutionTimes.add(new Float(eo.get(i).toString()));
+			elutionTimes.add(Float.valueOf(eo.get(i).toString()));
 		}
-		List<Double> mzValues = new ArrayList<Double>();
+		List<Double> mzValues = new ArrayList<>();
 		nb = mo.size();
 		for (int i = 0; i < nb; i++) {
-			mzValues.add(new Double(mo.get(i).toString()));
+			mzValues.add( Double.valueOf(mo.get(i).toString()));
 		}
-		List<Float> intensities = new ArrayList<Float>();
+		List<Float> intensities = new ArrayList<>();
 		nb = io.size();
 		for (int i = 0; i < nb; i++) {
-			intensities.add(new Float(io.get(i).toString()));
+			intensities.add( Float.valueOf(io.get(i).toString()));
 		}
 
 		peakelDataMatrix.setScanIds(scanIds);

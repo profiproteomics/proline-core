@@ -195,7 +195,7 @@ class PtmPatternBasedClusterer(val clustererConfig: MqPeptidesClustererConfig) e
     val otherMqPeps = mqPepsByPtmPattern.find(_._1.isEmpty).map(_._2).getOrElse(Array())
     val otherMqPepBySeq = otherMqPeps.view.map { otherMqPep =>
       otherMqPep.peptideInstance.get.peptide.sequence -> otherMqPep
-    } toMap
+    }.toMap
     
     val unmodifiedMqPeps = new ArrayBuffer[MasterQuantPeptide](otherMqPeps.length)
     

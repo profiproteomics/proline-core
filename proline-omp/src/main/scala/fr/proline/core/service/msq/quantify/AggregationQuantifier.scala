@@ -15,7 +15,7 @@ import fr.proline.core.orm.msi.repository.ObjectTreeSchemaRepository
 import fr.proline.core.orm.msi.{ResultSummary => MsiResultSummary}
 import fr.proline.core.orm.uds.{MasterQuantitationChannel, Dataset => UdsDataset}
 
-import scala.collection.JavaConversions.asScalaSet
+import scala.collection.JavaConverters._
 import scala.collection.mutable
 import scala.collection.mutable.ArrayBuffer
 
@@ -50,7 +50,7 @@ class AggregationQuantifier(
         (identRsms.map(_.getResultSetId), identRsms.map(_.id))
       } else {
         val identRSM = msiEm.find(classOf[MsiResultSummary], masterQc.identResultSummaryId.get)
-        (identRSM.getResultSet.getChildren().map(_.getId).toArray, identRSM.getChildren().map(_.getId).toArray)
+        (identRSM.getResultSet.getChildren().asScala.map(_.getId).toArray, identRSM.getChildren().asScala.map(_.getId).toArray)
       }
     }
 

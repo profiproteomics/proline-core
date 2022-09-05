@@ -1,12 +1,4 @@
+**/target/
 /.idea/
-/proline-dal/target/
-/proline-databases/target/
-/proline-om/target/
-/proline-omp/target/
-/proline-orm/target/
-/proline-core.iml
-/proline-dal/proline-dal_2.11.iml
-/proline-databases/proline-databases.iml
-/proline-om/proline-om_2.11.iml
-/proline-omp/proline-omp_2.11.iml
-/proline-orm/proline-orm.iml
+*.iml
+.flattened-pom.xml

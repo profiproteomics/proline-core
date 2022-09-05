@@ -128,10 +128,10 @@ object ProteinMatchBuilder extends LazyLogging {
     
     // Retrieve sequence match attributes
     val resBeforeStr = seqMatchRecord.getString(SeqMatchCols.RESIDUE_BEFORE)
-    val resBeforeChar = if (resBeforeStr != null) resBeforeStr.charAt(0) else '\0'
+    val resBeforeChar = if (resBeforeStr != null) resBeforeStr.charAt(0) else '\u0000'
   
     val resAfterStr = seqMatchRecord.getString(SeqMatchCols.RESIDUE_AFTER)
-    val resAfterChar = if (resAfterStr != null) resAfterStr.charAt(0) else '\0'
+    val resAfterChar = if (resAfterStr != null) resAfterStr.charAt(0) else '\u0000'
   
     // Decode JSON properties
     val propertiesAsJsonOpt = seqMatchRecord.getStringOption(SeqMatchCols.SERIALIZED_PROPERTIES)

@@ -40,7 +40,7 @@ trait IPTMProvider {
   /**
    * Search for a PtmDefinition with specified features
    * - ptmShortName : Associated PtmNames have ptmShortName as short name
-   * - ptmResidue : residue on which ptm is applied : could be '\0' if no specific residue
+   * - ptmResidue : residue on which ptm is applied : could be '\u0000' if no specific residue
    * - ptmLocation : Location of the Ptm. Could be one of PtmLocation.Value 
    * 
    */
@@ -50,7 +50,7 @@ trait IPTMProvider {
    * Search for a PtmDefinition with specified features
    * - ptmMonoMass : Associated PtmEvidences have ptmMonoMass as mono_mass
    * - ptmMonoMassMargin : Margin beetween input mono_mass and ProlineDB mono_mass values
-   * - ptmResidue : residue on which ptm is applied : could be '\0' if no specific residue
+   * - ptmResidue : residue on which ptm is applied : could be '\u0000' if no specific residue
    * - ptmLocation : Location of the Ptm. Could be one of PtmLocation.Value 
    * 
    */

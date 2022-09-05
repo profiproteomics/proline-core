@@ -177,7 +177,7 @@ abstract class AbstractLcmsMapAligner extends LazyLogging {
 
     val deltaTimeDiffs = deltaTimeList.sliding(2).map { deltaTimePair =>
       (deltaTimePair(1) - deltaTimePair(0)).toDouble
-    } toArray
+    }.toArray
 
     // Compute delta time difference statistics and determine outlier threshold
     val deltaTimeStatSummary = CommonsStatHelper.calcExtendedStatSummary(deltaTimeDiffs)

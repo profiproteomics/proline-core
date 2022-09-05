@@ -48,13 +48,13 @@ object Peptide extends InMemoryIdGen with LazyLogging {
     
     // N-term locations are: Any N-term or Protein N-term
     if( ptmDefinition.location matches """.+N-term""" ) {
-      if( searchedResidue == '\0' || searchedResidue == residues(0) ) {
+      if( searchedResidue == '\u0000' || searchedResidue == residues(0) ) {
         tmpLocatedPtms += new LocatedPtm( ptmDefinition, 0, precursorDelta, isNTerm = true )
       }
     }
     // C-term locations are: Any C-term, Protein C-term
     else if( ptmDefinition.location matches """.+C-term""" ) {
-      if( searchedResidue == '\0' || searchedResidue == residues.last ) {
+      if( searchedResidue == '\u0000' || searchedResidue == residues.last ) {
         tmpLocatedPtms += new LocatedPtm( ptmDefinition, -1, precursorDelta, isCTerm = true )
       }
     }
@@ -390,6 +390,41 @@ case class PeptideMatch(
     else {
       deltaMoz + massToMoz( peptide.calculatedMass, charge )
     }
+  }
+
+  /**
+   * Return Peptide Sequence with ambiguous AA replaced.
+   * If there is no ambiguous AA or Peptide is not specified in this object, an empty String will be returned
+   *
+   * @return
+   */
+  def getDisambiguatedSeq(): String ={
+    var resultSeq = ""
+    if (peptide != null) {
+      val ambiguityStringOpt = properties.flatMap(_.getMascotProperties).flatMap(_.ambiguityString)
+      if (ambiguityStringOpt.isDefined) {
+        val seq = peptide.sequence.toCharArray
+        val seqB = new StringBuilder()
+        val indexAmbiguity = Seq.newBuilder[Int]
+        val charAmbiguity = Seq.newBuilder[Char]
+        ambiguityStringOpt.get.split(',').sliding(3, 3).foreach(tuple => {
+          charAmbiguity += tuple(2).charAt(0)
+          indexAmbiguity += (tuple(0).toInt)
+        })
+
+        val indSeq = indexAmbiguity.result()
+        val charsSeq = charAmbiguity.result()
+
+        for( i <- 0 until (seq.size)){
+          if(indSeq.contains(i+1)) {
+            seqB.append(charsSeq(indSeq.indexOf(i + 1)))
+          } else
+            seqB.append(seq(i))
+        }
+        resultSeq = seqB.mkString("")
+      }
+    }
+    resultSeq
   }
   
 }

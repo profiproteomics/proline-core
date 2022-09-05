@@ -152,9 +152,9 @@ class SQLResultSetProvider(
     if (resultSetIds.isEmpty) return Array()
     
     val resultSets = this.getResultSets(resultSetIds, resultSetFilter)
-    val resultSetById = resultSets.map { rs => rs.id -> rs } toMap
+    val resultSetById = resultSets.map { rs => rs.id -> rs }.toMap
 
-    resultSetIds.map { resultSetById.get(_) } toArray
+    resultSetIds.map { resultSetById.get(_) }.toArray
   }
 
 }

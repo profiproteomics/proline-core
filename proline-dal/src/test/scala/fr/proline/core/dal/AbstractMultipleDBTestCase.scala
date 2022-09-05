@@ -1,14 +1,12 @@
 package fr.proline.core.dal
 
 import com.typesafe.scalalogging.StrictLogging
-import fr.proline.repository.DriverType
-import fr.proline.repository.ProlineDatabaseType
+import fr.proline.repository.{DriverType, ProlineDatabaseType}
 import fr.proline.repository.util.DatabaseTestCase
-import fr.proline.core.om.provider.msi.cache.PeptideCache
 
 class AbstractMultipleDBTestCase extends StrictLogging {
 
-  protected val m_fakeException = new RuntimeException("_FakeException_ AbstractMultipleDBTestCase instance creation")
+  protected val m_fakeException = new RuntimeException("_FakeException_ AbstractMultipleDBTestCase instance creation : SHOULD NOT OCCUR")
   protected val m_testCaseLock = new AnyRef()
   protected var m_toreDown = false
 
@@ -70,6 +68,7 @@ class AbstractMultipleDBTestCase extends StrictLogging {
 
         if (fromFinalize) {
           logger.warn("Tearing down MultipleDBTestCase from finalize !", m_fakeException)
+          throw  m_fakeException
         }
 
         if (msiDBTestCase != null) {

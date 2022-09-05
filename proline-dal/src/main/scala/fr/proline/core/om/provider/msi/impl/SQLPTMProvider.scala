@@ -81,18 +81,18 @@ class SQLPTMProvider(val msiDbCtx: MsiDbConnectionContext) extends IPTMProvider 
   }
 
   lazy val ptmDefByNameAndLocation: Map[Tuple3[String, Char, PtmLocation.Location], PtmDefinition] = {
-    this.ptmDefinitionById.values.map { p => (p.names.shortName, p.residue, PtmLocation.withName(p.location)) -> p } toMap
+    this.ptmDefinitionById.values.map { p => (p.names.shortName, p.residue, PtmLocation.withName(p.location)) -> p }.toMap
   }
 
   lazy val ptmIdByName: Map[String, Long] = {
-    this.ptmDefinitionById.values.map { p => p.names.shortName -> p.id } toMap
+    this.ptmDefinitionById.values.map { p => p.names.shortName -> p.id }.toMap
   }
 
   def getPtmDefinitionsAsOptions(ptmDefIds: Seq[Long]): Array[Option[PtmDefinition]] = {
     if (ptmDefIds.isEmpty) return Array()
     
     val ptmDefById = this.ptmDefinitionById
-    ptmDefIds.map { ptmDefById.get(_) } toArray
+    ptmDefIds.map { ptmDefById.get(_) }.toArray
   }
 
   def getPtmDefinitions(ptmDefIds: Seq[Long]): Array[PtmDefinition] = {

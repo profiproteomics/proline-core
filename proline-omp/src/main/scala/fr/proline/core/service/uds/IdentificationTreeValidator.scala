@@ -2,7 +2,7 @@ package fr.proline.core.service.uds
 
 import javax.persistence.EntityManager
 
-import scala.collection.JavaConversions.collectionAsScalaIterable
+import scala.collection.JavaConverters._
 import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.LongMap
 import scala.collection.mutable.HashMap
@@ -94,7 +94,7 @@ class IdentificationTreeValidator(
     val udsIdentTreeDS = udsEM.find(classOf[UdsDataset], identTreeId)
     //println("udsIdentTreeDS.getChildren",udsIdentTreeDS.getChildren)
     val projectId = udsIdentTreeDS.getProject.getId
-    val udsIdentDatasets = udsIdentTreeDS.getIdentificationDatasets
+    val udsIdentDatasets = udsIdentTreeDS.getIdentificationDatasets.asScala
 
     // Retrieve target result sets ids
     val targetRsIds: Array[Long] = udsIdentDatasets.map(_.getResultSetId.longValue).toArray

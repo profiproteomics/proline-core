@@ -5,7 +5,7 @@ import fr.proline.core.algo.msi.validation.pepinstance.BasicPepInstanceBuilder
 import org.apache.commons.math3.distribution.ChiSquaredDistribution
 import org.apfloat.{Apfloat, ApfloatMath}
 import org.junit.Test
-import org.scalatest.junit.JUnitSuite
+import org.scalatestplus.junit.JUnitSuite
 
 import java.math.MathContext
 import scala.collection.mutable.ArrayBuffer

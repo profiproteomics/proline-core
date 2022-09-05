@@ -1,7 +1,7 @@
 package fr.proline.core.service.uds
 
 import javax.persistence.EntityManager
-import scala.collection.JavaConversions.asScalaBuffer
+import scala.collection.JavaConverters._
 import com.typesafe.scalalogging.LazyLogging
 import fr.profi.util.serialization.ProfiJson.deserialize
 import fr.profi.util.serialization.ProfiJson.serialize
@@ -94,7 +94,7 @@ class Quantifier(
       val udsQuantitation = udsEM.find(classOf[UdsDataset], quantiCreator.getUdsQuantitation.getId)
 
       // Retrieve master quant channels (they should be sorted by their number)
-      val udsMasterQuantChannels = udsQuantitation.getMasterQuantitationChannels.toList
+      val udsMasterQuantChannels = udsQuantitation.getMasterQuantitationChannels.asScala.toList
       val udsQuantMethod = udsMasterQuantChannels.head.getDataset.getMethod
       val methodType = QuantMethodType.withName(udsQuantMethod.getType)
       val abundanceUnit = AbundanceUnit.withName(udsQuantMethod.getAbundanceUnit)
@@ -153,7 +153,7 @@ class Quantifier(
     isobaricQuantConfig: IsobaricTaggingQuantConfig
   ) {
     
-    val isobaricTags = udsQuantMethod.getLabels.toList.map { udsQuantLabel =>
+    val isobaricTags = udsQuantMethod.getLabels.asScala.toList.map { udsQuantLabel =>
       
       IsobaricTag(
         id = udsQuantLabel.getId,
@@ -193,7 +193,7 @@ class Quantifier(
     residueLabelingQuantConfig: ResidueLabelingQuantConfig
   ) {
 
-    val tags = udsQuantMethod.getLabels.toList.map { udsQuantLabel =>
+    val tags = udsQuantMethod.getLabels.asScala.toList.map { udsQuantLabel =>
       ResidueTag(
         id = udsQuantLabel.getId,
         name = udsQuantLabel.getName,

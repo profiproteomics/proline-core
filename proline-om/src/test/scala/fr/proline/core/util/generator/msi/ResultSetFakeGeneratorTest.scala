@@ -1,7 +1,7 @@
 package fr.proline.core.util.generator.msi
 
 import org.junit.Test
-import org.scalatest.junit.JUnitSuite
+import org.scalatestplus.junit.JUnitSuite
 import com.typesafe.scalalogging.StrictLogging
 import fr.proline.core.om.model.msi.{IonTypes, LocatedPtm, PtmDefinition, PtmEvidence, PtmNames, ResultSet}
 

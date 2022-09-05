@@ -9,8 +9,7 @@ import fr.proline.core.om.util.PeptidesOMConverterUtil
 import fr.proline.core.orm.msi.repository.{MsiPtmRepository => MsiPtmRepo}
 import fr.proline.core.util.ResidueUtils._
 
-import scala.collection.JavaConversions.collectionAsScalaIterable
-import scala.collection.JavaConverters.asJavaCollectionConverter
+import scala.collection.JavaConverters._
 import scala.collection.mutable.HashMap
 
 class ORMPTMProvider(val msiDbCtx: MsiDbConnectionContext) extends IPTMProvider with LazyLogging {
@@ -24,7 +23,7 @@ class ORMPTMProvider(val msiDbCtx: MsiDbConnectionContext) extends IPTMProvider 
     val ptmSpecificityORMs = msiDbCtx.getEntityManager.createQuery(
       "FROM fr.proline.core.orm.msi.PtmSpecificity ptm_specificity WHERE id IN (:ids)",
       classOf[fr.proline.core.orm.msi.PtmSpecificity]
-    ).setParameter("ids", ptmDefIds.asJavaCollection).getResultList.toList
+    ).setParameter("ids", ptmDefIds.asJavaCollection).getResultList.asScala.toList
 
     var resultIndex = 0
     ptmDefIds.foreach(ptmDefId => {
@@ -68,7 +67,7 @@ class ORMPTMProvider(val msiDbCtx: MsiDbConnectionContext) extends IPTMProvider 
     msiDbCtx.getEntityManager.createQuery(
       "FROM fr.proline.core.orm.msi.PtmSpecificity ptm_specificity",
       classOf[fr.proline.core.orm.msi.PtmSpecificity]
-    ).getResultList.foreach(ptmSpec => {
+    ).getResultList.asScala.foreach(ptmSpec => {
       val ptm = converter.convertPtmSpecificityORM2OM(ptmSpec)
       foundPtmDefBuilder.put(ptm.id, ptm)
     })

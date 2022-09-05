@@ -28,7 +28,7 @@ class SQLPeakelProvider(val lcmsDbCtx: LcMsDbConnectionContext) {
       )
       
       // Load peakels
-      ezDBC.select( peakelQuery ) { this.buildPeakel(_) } toArray
+      ezDBC.select( peakelQuery ) { this.buildPeakel(_) }.toArray
     }
 
   }
@@ -50,7 +50,7 @@ class SQLPeakelProvider(val lcmsDbCtx: LcMsDbConnectionContext) {
       )
       
       // Load peakels
-      ezDBC.select( peakelQuery ) { this.buildPeakel(_) } toArray
+      ezDBC.select( peakelQuery ) { this.buildPeakel(_) }.toArray
     }
 
   }
@@ -99,7 +99,7 @@ class SQLPeakelProvider(val lcmsDbCtx: LcMsDbConnectionContext) {
       )
       
       // Load peakel items
-      val peakelItems = ezDBC.select( peakelItemQuery ) { this.buildFeaturePeakelItem(_) } toArray
+      val peakelItems = ezDBC.select( peakelItemQuery ) { this.buildFeaturePeakelItem(_) }.toArray
       
       if( loadPeakels ) {
         
@@ -128,7 +128,7 @@ class SQLPeakelProvider(val lcmsDbCtx: LcMsDbConnectionContext) {
       )
       
       // Load peakel items
-      val peakelItems = ezDBC.select( peakelItemQuery ) { this.buildFeaturePeakelItem(_) } toArray
+      val peakelItems = ezDBC.select( peakelItemQuery ) { this.buildFeaturePeakelItem(_) }.toArray
       
       if( loadPeakels ) {
         
@@ -160,7 +160,7 @@ class SQLPeakelProvider(val lcmsDbCtx: LcMsDbConnectionContext) {
         List(t.*) -> "WHERE "~ t.MAP_ID ~" IN ("~ rawMapIds.mkString(",") ~")"
       )
       
-      val peakelItems = ezDBC.select( peakelItemQuery ) { this.buildFeaturePeakelItem(_) } toArray
+      val peakelItems = ezDBC.select( peakelItemQuery ) { this.buildFeaturePeakelItem(_) }.toArray
       
       if( loadPeakels ) {
         

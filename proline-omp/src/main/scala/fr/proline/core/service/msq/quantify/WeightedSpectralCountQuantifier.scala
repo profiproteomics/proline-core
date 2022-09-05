@@ -21,7 +21,7 @@ import fr.proline.core.orm.msi.repository.ObjectTreeSchemaRepository
 import fr.proline.core.orm.msi.{ResultSummary => MsiResultSummary}
 import fr.proline.core.orm.uds.MasterQuantitationChannel
 
-import scala.collection.JavaConversions.{asScalaSet, iterableAsScalaIterable}
+import scala.collection.JavaConverters._
 import scala.collection.mutable
 import scala.collection.mutable.{ArrayBuffer, HashMap, LongMap}
 
@@ -635,7 +635,7 @@ class WeightedSpectralCountQuantifier(
   ): (Array[MasterQuantPeptide], Array[MasterQuantProteinSet]) = {
 
     // Map quant channel id by resultSummary id    
-    val qcIdByRsmId = udsMasterQuantChannel.getQuantitationChannels.map(qc => qc.getIdentResultSummaryId -> qc.getId).toMap
+    val qcIdByRsmId = udsMasterQuantChannel.getQuantitationChannels.asScala.map(qc => qc.getIdentResultSummaryId -> qc.getId).toMap
 
     val refPepInstanceByPepId = quantClonedMergedRSM.peptideInstances.map(pi => pi.peptideId -> pi).toMap
 

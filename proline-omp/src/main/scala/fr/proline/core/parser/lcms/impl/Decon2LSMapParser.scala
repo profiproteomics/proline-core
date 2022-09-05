@@ -55,7 +55,7 @@ class Decon2LSMapParser extends ILcmsMapFileParser {
     // Processing of all lines
     for ( row <- lines) {
       val values = row.split(Decon2LSMapParser.sepChar)
-      val valuesAsHash = columnNames.zip(values) toMap
+      val valuesAsHash = columnNames.zip(values).toMap
       //val ipProps = ( fwhm = valuesAsHash("fwhm"), snr = valuesAsHash("signal_noise"))
 
       val ip = new IsotopicPattern(
@@ -214,7 +214,7 @@ class Decon2LSMapParser extends ILcmsMapFileParser {
       name = lcmsScanSeq.rawFileIdentifier,
       isProcessed = false,
       creationTimestamp = new Date(),
-      features = features toArray,
+      features = features.toArray,
       runId = lcmsScanSeq.runId,
       peakPickingSoftware = new PeakPickingSoftware(
         1,

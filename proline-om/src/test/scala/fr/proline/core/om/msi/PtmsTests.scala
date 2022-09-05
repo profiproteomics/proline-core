@@ -3,7 +3,7 @@ package fr.proline.core.om.msi
 import org.junit._
 import org.junit.Assert._
 import org.junit.runner.RunWith
-import org.scalatest.junit.{ JUnitRunner, JUnitSuite }
+import org.scalatestplus.junit.{ JUnitRunner, JUnitSuite }
 import fr.proline.core.om.model.msi._
 import com.typesafe.scalalogging.StrictLogging
 

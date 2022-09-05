@@ -22,7 +22,7 @@ public abstract class DatabaseTestCase {
 
 	private static final int BUFFER_SIZE = 2048;
 
-	private final RuntimeException m_fakeException = new RuntimeException("_FakeException_ DatabaseTestCase instance creation");
+	private final RuntimeException m_fakeException = new RuntimeException("_FakeException_ DatabaseTestCase instance creation. SHOULD OCCUR !!!! ????");
 
 	private final Object m_testCaseLock = new Object();
 
@@ -225,6 +225,7 @@ public abstract class DatabaseTestCase {
 
 				if (fromFinalize) {
 					LOG.warn("Tearing down " + getProlineDatabaseTypeString() + " TestCase from finalize !", m_fakeException);
+					throw  m_fakeException;
 				}
 
 				/* Close the keep-alive connection and finally the Db Connector */

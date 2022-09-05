@@ -7,7 +7,7 @@ import fr.proline.core.om.model.msi._
 import fr.proline.repository.DriverType
 import org.junit.Assert._
 import org.junit._
-import org.scalatest.MustMatchers
+import org.scalatest.matchers.must.Matchers
 
 object JPAPtmDefinitionStorerTest extends AbstractDatastoreTestCase with StrictLogging {
 
@@ -46,7 +46,7 @@ object JPAPtmDefinitionStorerTest extends AbstractDatastoreTestCase with StrictL
   }
 }
 
-class JPAPtmDefinitionStorerTest extends MustMatchers with StrictLogging {
+class JPAPtmDefinitionStorerTest extends Matchers with StrictLogging {
   
 
   // --- Case #1: a PTM which already exists in the database (same name, same specificity) ---

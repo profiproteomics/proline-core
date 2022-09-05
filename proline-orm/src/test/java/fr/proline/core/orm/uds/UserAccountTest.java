@@ -78,6 +78,30 @@ public class UserAccountTest extends DatabaseTestCase {
 		}
 
 	}
+	@Test
+	public void readAllAccounts() {
+		final EntityManager udsEm = getConnector().createEntityManager();
+
+		try {
+			TypedQuery<UserAccount> query = udsEm.createQuery(
+					"SELECT user FROM fr.proline.core.orm.uds.UserAccount user", UserAccount.class);
+
+			List<UserAccount> account = query.getResultList();
+			assertNotNull(account);
+			assertEquals(4, account.size());
+		} finally {
+
+			if (udsEm != null) {
+				try {
+					udsEm.close();
+				} catch (Exception exClose) {
+					LOG.error("Error closing UDS EntityManager", exClose);
+				}
+			}
+
+		}
+
+	}
 
 	@Test
 	public void readAccount() {
