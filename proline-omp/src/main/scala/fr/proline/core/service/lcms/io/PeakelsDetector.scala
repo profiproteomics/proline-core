@@ -368,7 +368,11 @@ class PeakelsDetector(
             tuples.foreach { t =>
               val theoreticalMoz = massToMoz(t._2.calculatedMass, t._1.charge)
               val rt = t._1.elutionTime
-              landmarks += Landmark(rt.toDouble, 1e6 * (theoreticalMoz - t._1.moz) / theoreticalMoz)
+              val dm = 1e6 * (theoreticalMoz - t._1.moz) / theoreticalMoz
+              if(Math.abs(dm) < 500.0) //Error du to seq with X...  don't consider these delta moz
+                landmarks += Landmark(rt.toDouble, 1e6 * (theoreticalMoz - t._1.moz) / theoreticalMoz)
+              else
+                logger.debug(" --- moz calibration, got a delta moz > 500  ("+ dm +"). Pep calc mass "+t._2.calculatedMass+" ;  theoreticalMoz "+ theoreticalMoz+" ; feature exp. mass "+t._1.moz)
             }
 
 //            Landmark._toCSVFile(List("moz", lcMsRun.getRawFileName).mkString("_") + ".csv", landmarks)
