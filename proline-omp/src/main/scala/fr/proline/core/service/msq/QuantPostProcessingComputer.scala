@@ -261,8 +261,10 @@ class QuantPostProcessingComputer(
           mqPepIon.selectionLevel = masterFt.selectionLevel
         }
 
-        // Re-build the master quant peptides
+        //----  Re-build the master quant peptides
         val newMqPep = BuildMasterQuantPeptide(mqPepIons, mqPep.peptideInstance, mqPep.resultSummaryId, config.pepIonAbundanceSummarizingMethod)
+
+        //-- Update selection level
         //If mqPep.selection_level is AUTO, allow change, if selection_level is DESELEC_MANUAL don't change, if selection_level is SELECT_MANUAL allow change to DESELEC_AUTO
         mqPep.selectionLevel match {
           case SelectionLevel.SELECTED_AUTO |  SelectionLevel.DESELECTED_AUTO => mqPep.selectionLevel = newMqPep.selectionLevel
@@ -273,37 +275,47 @@ class QuantPostProcessingComputer(
           case SelectionLevel.DESELECTED_MANUAL => {}
         }
 
-        //Get properties back
+        //-- Update properties
         mqPep.properties.getOrElse(MasterQuantPeptideProperties()).mqPepIonAbundanceSummarizingConfig = newMqPep.properties.getOrElse(MasterQuantPeptideProperties()).mqPepIonAbundanceSummarizingConfig
 
         // the next step is mandatory since BuildMasterQuantPeptide updates mqPepIons.masterQuantPeptideId to the new MasterQuantPeptide
         mqPepIons.foreach { mqPepIon =>
           mqPepIon.masterQuantPeptideId = mqPep.id
         }
-        mqPep.quantPeptideMap = newMqPep.quantPeptideMap
+
+        // update abundances only
+        val abundances = newMqPep.getAbundancesForQuantChannels(qcIds)
+        mqPep.setAbundancesForQuantChannels(abundances, qcIds)
       }
 
-      logger.info("After Feature summarizer mqPep with selection level < 2 : " + quantRSM.masterQuantPeptides.withFilter(_.selectionLevel < 2).map(_.id).length)
+      logger.info("After discardPeptidesSharingPeakels  : " + quantRSM.masterQuantPeptides.withFilter(_.selectionLevel < 2).map(_.id).length)
     } else {
       //If discardPeptidesSharingPeakels : mqPeptide abundance has been recalculated, otherwise force recomputing of abundance
       //To do ?? Check MqPeptide previous method => in quant config (label free config) or in first/all MQPep (if post processing already run)
       for (mqPep <- quantRSM.masterQuantPeptides) {
         val mqPepIons = mqPep.masterQuantPeptideIons
-        // Re-build the master quant peptides
+
+        //----  Re-build the master quant peptides
         val newMqPep = BuildMasterQuantPeptide(mqPep.masterQuantPeptideIons, mqPep.peptideInstance, mqPep.resultSummaryId, config.pepIonAbundanceSummarizingMethod)
+
+        //-- Update selection level
         //allow change only if mqPep.selection_level is AUTO. No changed done on Ions so keep peptides manual selection
         mqPep.selectionLevel match {
           case SelectionLevel.SELECTED_AUTO |  SelectionLevel.DESELECTED_AUTO => mqPep.selectionLevel = newMqPep.selectionLevel
           case default =>
         }
-        //Get properties back
+
+        //-- Update properties
         mqPep.properties.getOrElse(MasterQuantPeptideProperties()).mqPepIonAbundanceSummarizingConfig = newMqPep.properties.getOrElse(MasterQuantPeptideProperties()).mqPepIonAbundanceSummarizingConfig
 
         // the next step is mandatory since BuildMasterQuantPeptide updates mqPepIons.masterQuantPeptideId to the new MasterQuantPeptide
         mqPepIons.foreach { mqPepIon =>
           mqPepIon.masterQuantPeptideId = mqPep.id
         }
-        mqPep.quantPeptideMap = newMqPep.quantPeptideMap
+
+        // update abundances only
+        val abundances = newMqPep.getAbundancesForQuantChannels(qcIds)
+        mqPep.setAbundancesForQuantChannels(abundances, qcIds)
       }
       logger.info("After mqPeptide abundance has been recalculated")
     }

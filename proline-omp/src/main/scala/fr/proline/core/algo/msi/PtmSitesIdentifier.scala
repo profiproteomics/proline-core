@@ -2,6 +2,7 @@ package fr.proline.core.algo.msi
 
 import com.typesafe.scalalogging.LazyLogging
 import fr.profi.util.misc.InMemoryIdGen
+import fr.proline.core.om.model.SelectionLevel
 import fr.proline.core.om.model.msi._
 
 import scala.collection.mutable
@@ -266,7 +267,12 @@ object PtmSiteClusterer extends LazyLogging {
           // partition sites by sequence matches
           val sequenceMatch = sequenceMatchesByPeptideId(peptideId).filter(sm => (site.seqPosition >= sm.start) && (site.seqPosition <= sm.end))
           if (!sequenceMatch.isEmpty) {
-            sitesBySequenceMatch.getOrElseUpdate(sequenceMatch.head, new ArrayBuffer[PtmSite2]) += site
+            //##VDS #22252 : why only head. In case same peptide has 2 matches on site, only one is taken !
+            if(sequenceMatch.length > 1)
+              logger.warn(s" !!!! MORE Than one sequence match for PTM site ${site} for peptide id ${peptideId} !!!! ")
+            sequenceMatch.foreach(seqM => {
+              sitesBySequenceMatch.getOrElseUpdate(seqM, new ArrayBuffer[PtmSite2]) += site
+            })
           } else {
             logger.error(s"The PTM site ${site} has no sequence match for peptide id ${peptideId}")
           }
@@ -344,7 +350,11 @@ class PtmSiteExactClusterer(
           bestPeptideMatchId = bestPeptideMatch.id,
           localizationConfidence = PtmSitesIdentifier.allModificationsProbability(bestPeptideMatch),
           peptideIds = clusterizedPeptides.flatten(_._2).map(_.id).toArray.distinct,
-          isomericPeptideIds = Array.empty[Long])
+          isomericPeptideIds = Array.empty[Long],
+          selectionLevel = SelectionLevel.SELECTED_AUTO,
+          selectionConfidence = null,
+          selectionInformation = if(clusterizePartiallyIsomorphicPep) "Exact Position Matching" else "Isomorphic Matching"
+        )
 
         createdClusterIds += nextCluster.id //save id used for cluster of current proteinMatch
         //Associate current cluster to lower site position

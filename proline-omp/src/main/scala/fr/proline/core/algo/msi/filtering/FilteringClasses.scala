@@ -28,6 +28,7 @@ object PepMatchFilterParams extends Enumeration {
   val SINGLE_PSM_PER_RANK = Value("SINGLE_PSM_PER_RANK")  // TODO: rename SINGLE_PSM_PER_PRETTY_RANK
   val ISOTOPE_OFFSET = Value("ISOTOPE_OFFSET")
   val BH_AJUSTED_PVALUE = Value("BH_AJUSTED_PVALUE")
+  val SINGLE_SEQ_PER_RANK = Value("SINGLE_SEQ_PER_PRETTY_RANK")
 }
 
 object PepInstanceFilterParams extends Enumeration {

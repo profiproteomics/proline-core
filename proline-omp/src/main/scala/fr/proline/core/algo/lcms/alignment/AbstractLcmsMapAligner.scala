@@ -7,8 +7,7 @@ import fr.proline.core.algo.msq.profilizer.CommonsStatHelper
 import fr.proline.core.om.model.lcms._
 
 import scala.annotation.tailrec
-import scala.collection.mutable.ArrayBuffer
-import scala.collection.mutable.LongMap
+import scala.collection.mutable.{ArrayBuffer, LongMap}
 
 case class AlignmentResult( alnRefMapId: Long, mapAlnSets: Array[MapAlignmentSet] )
 
@@ -43,6 +42,8 @@ abstract class AbstractLcmsMapAligner extends LazyLogging {
 
     try {
 
+      logger.info("Aligning map {} to map {} ", map1.name, map2.name)
+
       val massInterval = if (alnConfig.methodParams.isDefined) alnConfig.methodParams.get.massInterval.getOrElse(20000) else 20000
       //val timeInterval = alnParams.timeInterval
 
@@ -50,6 +51,7 @@ abstract class AbstractLcmsMapAligner extends LazyLogging {
       val ftMapping = ftMapper( map1Features, map2Features)
 
       val map1FtById = map1Features.mapByLong(_.id)
+
 
       /*
       println("*****")
@@ -69,7 +71,7 @@ abstract class AbstractLcmsMapAligner extends LazyLogging {
           val deltaTime = matchingFeatures(0).elutionTime - map1Ft.elutionTime
           val massRangePos = ( map1Ft.mass / massInterval ).toInt
 
-          landmarksByMassIdx.getOrElseUpdate(massRangePos, new ArrayBuffer[Landmark]) += Landmark( map1Ft.elutionTime, deltaTime)
+          landmarksByMassIdx.getOrElseUpdate(massRangePos, new ArrayBuffer[Landmark]) += Landmark(map1Ft.elutionTime, deltaTime)
         }
       }
 
@@ -83,7 +85,10 @@ abstract class AbstractLcmsMapAligner extends LazyLogging {
       for ((massRangeIdx,landmarks) <- landmarksByMassIdx) {
 
         if (!landmarks.isEmpty) {
-          val landmarksSortedByTime = landmarks.sortBy(_.time)
+          val landmarksSortedByTime = landmarks.sortBy(l => (l.x,l.dx))
+
+          //Landmark._toCSVFile(List("RT", map1.name, map2.name, massRangeIdx).mkString("_") + ".csv", landmarksSortedByTime)
+
           var smoothedLandmarks = alnSmoother.smoothLandmarks(landmarksSortedByTime, alnConfig.smoothingMethodParams)
           // FIXME: this should not be empty
           if (smoothedLandmarks.isEmpty) {
@@ -91,21 +96,19 @@ abstract class AbstractLcmsMapAligner extends LazyLogging {
             smoothedLandmarks = landmarksSortedByTime
           }
 
-          /*val timeList = landmarksSortedByTime.map { _.time }
-        val deltaTimeList = landmarksSortedByTime.map { _.deltaTime }*/
-
-          val (timeList, deltaTimeList) = (new ArrayBuffer[Float](smoothedLandmarks.length), new ArrayBuffer[Float](smoothedLandmarks.length))
-          var prevTimePlusDelta = smoothedLandmarks(0).time + smoothedLandmarks(0).deltaTime - 1
+          val (timeList, deltaTimeList, toleranceTimeList) = (new ArrayBuffer[Float](smoothedLandmarks.length), new ArrayBuffer[Float](smoothedLandmarks.length), new ArrayBuffer[Float](smoothedLandmarks.length))
+          var prevTimePlusDelta = smoothedLandmarks(0).x.toFloat + smoothedLandmarks(0).dx.toFloat - 1
           var prevTime = -1f
-          smoothedLandmarks.sortBy(_.time).foreach { lm =>
+          smoothedLandmarks.sortBy(_.x).foreach { lm =>
 
-            val timePlusDelta = lm.time + lm.deltaTime
+            val timePlusDelta = lm.x.toFloat + lm.dx.toFloat
 
             // Filter time+delta values which are not greater than the previous one
-            if (lm.time > prevTime && timePlusDelta > prevTimePlusDelta) {
-              timeList += lm.time
-              deltaTimeList += lm.deltaTime
-              prevTime = lm.time
+            if (lm.x > prevTime && timePlusDelta > prevTimePlusDelta) {
+              timeList += lm.x.toFloat
+              deltaTimeList += lm.dx.toFloat
+              toleranceTimeList += lm.tx.toFloat
+              prevTime = lm.x.toFloat
               prevTimePlusDelta = timePlusDelta
             }
           }
@@ -115,12 +118,13 @@ abstract class AbstractLcmsMapAligner extends LazyLogging {
             targetMapId = map2.id,
             massRange = (massRangeIdx * massInterval, (massRangeIdx + 1) * massInterval),
             timeList = timeList.toArray,
-            deltaTimeList = deltaTimeList.toArray
+            deltaTimeList = deltaTimeList.toArray,
+            properties = Some(MapAlignmentProperties(toleranceTimeList = toleranceTimeList.toArray))
           )
 
           ftAlignments += mapAlignment //alnSmoother.smoothMapAlignment( landmarksSortedByTime, alnParams.smoothingParams )
         } else {
-          logger.warn("Non landmarks found for massRange {} from map #{} and map #{}", massRangeIdx, map1.id, map2.id)
+          logger.warn("No landmarks found for massRange {} from map #{} and map #{}", massRangeIdx, map1.id, map2.id)
         }
       }
 
@@ -135,14 +139,15 @@ abstract class AbstractLcmsMapAligner extends LazyLogging {
       )
 
     } catch {
-      case e: Throwable =>
+      case e: Throwable => {
         val errorMsg = s"Can't compute map alignment set between map #${map1.id} and map #${map2.id} because: ${e.getMessage}"
+        this.logger.warn("error during alignement:", e)
         if (alnConfig.ignoreErrors.getOrElse(false)) {
-          this.logger.warn(errorMsg)
           None
         } else {
-          throw new Exception(errorMsg)
+          throw new Exception(e)
         }
+      }
     }
 
   }
@@ -164,8 +169,11 @@ abstract class AbstractLcmsMapAligner extends LazyLogging {
   private def _removeMapAlnOutliers(mapAln: MapAlignment, remainingIterations: Int): MapAlignment = {
     if (remainingIterations == 0) return mapAln
 
+
     val timeList = mapAln.timeList
+    val dataPointsCount = timeList.length
     val deltaTimeList = mapAln.deltaTimeList
+    val properties = mapAln.properties.getOrElse(MapAlignmentProperties(Array.fill[Float](dataPointsCount)(0.0f)))
 
     val deltaTimeDiffs = deltaTimeList.sliding(2).map { deltaTimePair =>
       (deltaTimePair(1) - deltaTimePair(0)).toDouble
@@ -178,9 +186,9 @@ abstract class AbstractLcmsMapAligner extends LazyLogging {
     val maxAbsDiff = math.max( math.abs(lowerInnerFence), math.abs(upperInnerFence) )
 
     // Create new lists
-    val dataPointsCount = timeList.length
     val newTimeList = new ArrayBuffer[Float](dataPointsCount)
     val newDeltaTimeList = new ArrayBuffer[Float](dataPointsCount)
+    val newToleranceTimeList = new ArrayBuffer[Float](dataPointsCount)
 
     // Add first data point to the new list
     newTimeList += timeList(0)
@@ -195,6 +203,7 @@ abstract class AbstractLcmsMapAligner extends LazyLogging {
         val dataPointIdx = i + 1
         newTimeList += timeList(dataPointIdx)
         newDeltaTimeList += deltaTimeList(dataPointIdx)
+        newToleranceTimeList += properties.toleranceTimeList(dataPointIdx)
       }
     }
 
@@ -217,7 +226,8 @@ abstract class AbstractLcmsMapAligner extends LazyLogging {
     // Create a copy of map alignment if outliers were found
     val filteredMapAln = mapAln.copy(
       timeList = newTimeList.toArray,
-      deltaTimeList = newDeltaTimeList.toArray
+      deltaTimeList = newDeltaTimeList.toArray,
+      properties = Some(properties.copy(toleranceTimeList = newToleranceTimeList.toArray))
     )
 
     this._removeMapAlnOutliers(filteredMapAln, remainingIterations - 1)

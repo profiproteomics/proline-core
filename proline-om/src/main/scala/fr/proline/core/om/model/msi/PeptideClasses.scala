@@ -105,7 +105,7 @@ object Peptide extends InMemoryIdGen with LazyLogging {
     }
     
     // Sort located PTMs
-    val sortedLocatedPtms = locatedPtms.sortWith { (a,b) => a.seqPosition <= b.seqPosition }
+    val sortedLocatedPtms = locatedPtms.sortBy(_.seqPosition)
     
     // Define data structure which will contain located PTM strings mapped by sequence position
     // TODO: do we allow more than one PTM at a given position ???
@@ -267,7 +267,11 @@ object PeptideMatch extends InMemoryIdGen with LazyLogging {
   ): Int = {
     
     require( sequence != null, "sequence is null" )
-    
+
+    //If no enzyme, no missed cleavage
+    if(enzymes == null || enzymes.isEmpty)
+      return 0
+
     // Only consider first enzyme
     require(enzymes.length == 1, "Unexpected number of enzymes")
     
@@ -386,6 +390,41 @@ case class PeptideMatch(
     else {
       deltaMoz + massToMoz( peptide.calculatedMass, charge )
     }
+  }
+
+  /**
+   * Return Peptide Sequence with ambiguous AA replaced.
+   * If there is no ambiguous AA or Peptide is not specified in this object, an empty String will be returned
+   *
+   * @return
+   */
+  def getDisambiguatedSeq(): String ={
+    var resultSeq = ""
+    if (peptide != null) {
+      val ambiguityStringOpt = properties.flatMap(_.getMascotProperties).flatMap(_.ambiguityString)
+      if (ambiguityStringOpt.isDefined) {
+        val seq = peptide.sequence.toCharArray
+        val seqB = new StringBuilder()
+        val indexAmbiguity = Seq.newBuilder[Int]
+        val charAmbiguity = Seq.newBuilder[Char]
+        ambiguityStringOpt.get.split(',').sliding(3, 3).foreach(tuple => {
+          charAmbiguity += tuple(2).charAt(0)
+          indexAmbiguity += (tuple(0).toInt)
+        })
+
+        val indSeq = indexAmbiguity.result()
+        val charsSeq = charAmbiguity.result()
+
+        for( i <- 0 until (seq.size)){
+          if(indSeq.contains(i+1)) {
+            seqB.append(charsSeq(indSeq.indexOf(i + 1)))
+          } else
+            seqB.append(seq(i))
+        }
+        resultSeq = seqB.mkString("")
+      }
+    }
+    resultSeq
   }
   
 }

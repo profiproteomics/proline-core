@@ -6,6 +6,7 @@ import org.junit.Before
 import org.junit.Test
 import com.typesafe.scalalogging.StrictLogging
 import fr.proline.context.DatabaseConnectionContext
+import fr.proline.core.Settings
 import fr.proline.core.dal._
 import fr.proline.core.dal.context._
 import fr.proline.core.dbunit.Init_Dataset
@@ -70,6 +71,7 @@ class AuthenticationTest extends DatabaseTestCase with StrictLogging {
 
     assertTrue(isLoginOK)
   }
+
 
 }
 

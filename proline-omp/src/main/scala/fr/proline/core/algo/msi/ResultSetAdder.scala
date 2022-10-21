@@ -1,13 +1,14 @@
 package fr.proline.core.algo.msi
 
 import java.util.Date
-
 import scala.collection.mutable.{ArrayBuffer, HashMap, HashSet}
 import com.typesafe.scalalogging.LazyLogging
 import fr.profi.chemistry.model.Enzyme
 import fr.profi.util.StringUtils.isEmpty
 import fr.proline.core.algo.msi.validation.TargetDecoyModes
 import fr.proline.core.om.model.msi._
+
+import scala.collection.mutable
 
 object AdditionMode extends Enumeration {
   val AGGREGATION = Value("aggregation")
@@ -19,14 +20,14 @@ class ResultSetAdder(
   val isValidatedContent: Boolean = false,
   val isDecoy: Boolean = false,
   val additionMode: AdditionMode.Value = AdditionMode.AGGREGATION,
-  val clonePeptideMatches: Boolean = true
+  val clonePeptideMatches: Boolean = true  //VDS Seems never used !
 ) extends LazyLogging {
 
-  private val protMatchAdderByKey = new HashMap[String, ProteinMatchAdder]()
-  private val pepMatchAdderByPeptideId = new HashMap[Long, IPeptideMatchAdder]()
-  val peptideById = new HashMap[Long, Peptide]()
+  private val protMatchAdderByKey = new mutable.HashMap[String, ProteinMatchAdder]()
+  private val pepMatchAdderByPeptideId = new mutable.HashMap[Long, IPeptideMatchAdder]()
+  val peptideById = new mutable.HashMap[Long, Peptide]()
 
-  private val distinctTdModes = new HashSet[String]()
+  private val distinctTdModes = new mutable.HashSet[String]()
   private val msiSearches = new ArrayBuffer[MSISearch]()
   
   def addResultSets(resultSets: Iterable[ResultSet]): ResultSetAdder = {
@@ -51,7 +52,7 @@ class ResultSetAdder(
       
       // Check if this peptide is already mapped by its id in this class
       val peptide = peptideMatch.peptide
-      if( peptideById.contains(peptide.id) == false ) {
+      if( !peptideById.contains(peptide.id) ) {
         peptideById += (peptide.id -> peptide)
       }
       
@@ -119,6 +120,19 @@ class ResultSetAdder(
       }
     }
 
+    val commonFragmentationRuleSet = {
+      val fragRuleSets = msiSearches.map(_.searchSettings.fragmentationRuleSet).filter(_.isDefined).map(_.get)
+      if (fragRuleSets.isEmpty) {
+        None
+      } else {
+        val sameRuleSetid  = fragRuleSets.map(_.id).reduceOption((m1, m2) => if (m1.equals(m2)) m1 else -1L).getOrElse(-1L)
+        if(sameRuleSetid.equals(-1L))
+          None
+        else
+          Some(fragRuleSets.head)
+      }
+    }
+
     val mergedMsiSearch = new MSISearch(
       id = MSISearch.generateNewId(),
       resultFileName = msiSearches.map(_.resultFileName).reduceOption((s1, s2) => if (s1 == s2) s1 else "").getOrElse(""),
@@ -137,6 +151,7 @@ class ResultSetAdder(
         fixedPtmDefs =  msiSearches.map(_.searchSettings.fixedPtmDefs).reduceOption((l1, l2) => if (l1.map(_.id).sameElements(l2.map(_.id))) l1 else Array.empty[PtmDefinition]).getOrElse(Array.empty[PtmDefinition]),
         seqDatabases =  msiSearches.map(_.searchSettings.seqDatabases).reduceOption((l1, l2) => if (l1.toIndexedSeq.sameElements(l2.toIndexedSeq)) l1 else Array.empty[SeqDatabase]).getOrElse(Array.empty[SeqDatabase]),
         instrumentConfig = msiSearches.map(_.searchSettings.instrumentConfig).headOption.orNull,
+        fragmentationRuleSet = commonFragmentationRuleSet,
         msmsSearchSettings = msmsSearchSettings
       ),
       peakList = new Peaklist(
@@ -179,7 +194,7 @@ class ResultSetAdder(
           mergedPeptideMatchesBuffer ++= pepMatchAccumulator.toPeptideMatches()
         }
       }
-    } toArray
+    }.toArray
     
     val mergedPeptideMatches = mergedPeptideMatchesBuffer.toArray
 
@@ -257,12 +272,12 @@ private[this] class PeptideMatchAggregator(
     })    
     
     // If cloning is disabled, update the bestChild object
-    val aggregatedPepMatch = if( cloneObjects == false ) {
+    val aggregatedPepMatch = if( !cloneObjects ) {
       bestChild.bestChildId = bestChild.id
       bestChild.id = PeptideMatch.generateNewId()
       bestChild.children = Some(peptideMatchChildren.toArray)
       bestChild.resultSetId = newResultSetId
-      if(!bestChild.properties.isDefined)
+      if(bestChild.properties.isEmpty)
         bestChild.properties = Some(new PeptideMatchProperties())
       bestChild.properties.get.spectralCount = Some(psmSC)
       
@@ -276,7 +291,7 @@ private[this] class PeptideMatchAggregator(
         bestChildId = bestChild.id,
         resultSetId = newResultSetId
       )
-       if(!newPSM.properties.isDefined)
+       if(newPSM.properties.isEmpty)
           newPSM.properties = Some(new PeptideMatchProperties())
       newPSM.properties.get.spectralCount = Some(psmSC)
       newPSM
@@ -306,7 +321,7 @@ private[this] class PeptideMatchAccumulator(
 
     
     // If cloning is disabled, update the peptideMatch object // CBY : WARNING : children relationship will be wrong !!!!!
-    val newPeptideMatch = if( cloneObjects == false ) {
+    val newPeptideMatch = if( !cloneObjects ) {
       peptideMatch.bestChildId = peptideMatch.id
       peptideMatch.id = PeptideMatch.generateNewId()
       peptideMatch.resultSetId = newResultSetId

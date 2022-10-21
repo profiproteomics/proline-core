@@ -1,19 +1,25 @@
 package fr.proline.core.orm.lcms;
 
 /* time and delta time represented in the time_list and delta_time_list of MapAlignment */
+
+/**
+ * Represent an delta value at a specific time.
+ * This could be a delta time for MapAlignment (time_list and delta_time_list )
+ * as well as delta moz for Processed Map MozCalibration (time is specified instead of moz in MoZCalibration !!)
+ */
 public class MapTime {
 
 	private Double time;
-	private Double deltaTime;
+	private Double deltaValue;
 
 	public MapTime() {
 		super();
 	}
 
-	public MapTime(Double time, Double deltaTime) {
+	public MapTime(Double time, Double deltaValue) {
 		super();
 		this.time = time;
-		this.deltaTime = deltaTime;
+		this.deltaValue = deltaValue;
 	}
 
 	public Double getTime() {
@@ -24,12 +30,12 @@ public class MapTime {
 		this.time = time;
 	}
 
-	public Double getDeltaTime() {
-		return deltaTime;
+	public Double getDeltaValue() {
+		return deltaValue;
 	}
 
-	public void setDeltaTime(Double deltaTime) {
-		this.deltaTime = deltaTime;
+	public void setDeltaValue(Double deltaValue) {
+		this.deltaValue = deltaValue;
 	}
 
 }

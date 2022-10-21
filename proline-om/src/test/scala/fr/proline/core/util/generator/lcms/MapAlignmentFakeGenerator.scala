@@ -1,8 +1,7 @@
 package fr.proline.core.util.generator.lcms
 
 import scala.collection.mutable.ArrayBuffer
-import fr.proline.core.om.model.lcms.LcMsRun
-import fr.proline.core.om.model.lcms.MapAlignment
+import fr.proline.core.om.model.lcms.{LcMsRun, MapAlignment, MapAlignmentProperties}
 
 object Distortions {
   
@@ -42,7 +41,6 @@ class MapAlignmentFakeGenerator(
     
     val fixedTimeList = new ArrayBuffer[Float](timeList.length)
     val fixedDeltaTimeList = new ArrayBuffer[Float](deltaTimeList.length)
-    
     var prevX = 0f
     var prevY = 0f
     timeList.zip(deltaTimeList).foreach { case(x,y) =>

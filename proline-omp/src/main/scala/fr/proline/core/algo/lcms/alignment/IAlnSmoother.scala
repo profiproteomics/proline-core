@@ -7,26 +7,11 @@ trait IAlnSmoother {
   import fr.proline.core.om.model.lcms._
   
   def smoothLandmarks( landmarks: Seq[Landmark], smoothingParams: Option[AlnSmoothingParams]): Seq[Landmark]
-  
-  @deprecated("0.1.1","use smoothLandmarks instead")
-  def smoothMapAlignment(mapAlignment: MapAlignment, smoothingParams: AlnSmoothingParams ): MapAlignment = {
-    
-    val smoothedLandmarks = this.smoothLandmarks(mapAlignment.getLandmarks,Some(smoothingParams))
-    
-    val( timeList, deltaTimeList ) = ( new Array[Float](smoothedLandmarks.length), new Array[Float](smoothedLandmarks.length) )
-    smoothedLandmarks.indices.foreach { i =>
-      val lm = smoothedLandmarks(i)
-      timeList(i) = lm.time
-      deltaTimeList(i) = lm.deltaTime
-    }
-    
-    mapAlignment.copy( timeList = timeList, deltaTimeList = deltaTimeList )
-  }
 
   protected def computeMedianLandmark( landmarkGroup: Seq[Landmark] ): Landmark = {
     
-    val lmSortedByDeltaTime = landmarkGroup.sortBy( _.deltaTime )
-    val lmSortedByTime = landmarkGroup.sortBy( _.time )
+    val lmSortedByDx = landmarkGroup.sortBy( _.dx)
+    val lmSortedByX = landmarkGroup.sortBy( _.x)
     val nbLandmarks = landmarkGroup.length
     
     // Compute median landmark considering the delta time
@@ -35,25 +20,23 @@ trait IAlnSmoother {
       
       val secondIndex = nbLandmarks/2
       val firstIndex = secondIndex - 1
-      val firstLm = lmSortedByDeltaTime(firstIndex)
-      val secondLm = lmSortedByDeltaTime(secondIndex)
+      val firstLm = lmSortedByDx(firstIndex)
+      val secondLm = lmSortedByDx(secondIndex)
       
-      medianLm = Landmark( time = ( lmSortedByTime.head.time + lmSortedByTime.last.time )/2,
-                           deltaTime = ( firstLm.deltaTime + secondLm.deltaTime )/2 )
+      medianLm = Landmark(x = ( lmSortedByX.head.x + lmSortedByX.last.x )/2, dx = ( firstLm.dx + secondLm.dx )/2)
     } // odd number of landmarks
     else { 
-      medianLm = lmSortedByDeltaTime( (nbLandmarks-1)/2 ) 
-      medianLm = Landmark( time =  ( lmSortedByTime.head.time + lmSortedByTime.last.time )/2,
-                           deltaTime = medianLm.deltaTime)
+      medianLm = lmSortedByDx( (nbLandmarks-1)/2 )
+      medianLm = Landmark(x =  ( lmSortedByX.head.x + lmSortedByX.last.x )/2, dx = medianLm.dx)
     }
     
     medianLm
   }
   
-  protected def eachSlidingWindow( dataSetSize: Float, windowSize: Int, windowOverlap: Int, onEachWindow: Function2[Float,Float,Unit] ): Unit = {
+  protected def eachSlidingWindow( dataSetSize: Double, windowSize: Int, windowOverlap: Int, onEachWindow: Function2[Double,Double,Unit] ): Unit = {
     require( windowOverlap >= 0 && windowOverlap < 100 )
     
-    val stepSize = windowSize * ((100-windowOverlap).toFloat/100)
+    val stepSize = windowSize * ((100-windowOverlap).toDouble/100)
     val nbIntervals = (dataSetSize/stepSize).toInt
     
     for( step <- 0 to nbIntervals ) {

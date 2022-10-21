@@ -53,6 +53,11 @@ public class ProcessedMap extends Map implements Serializable {
 	@OneToMany(mappedBy = "processedMap")
 	private List<ProcessedMapFeatureItem> processedMapFeatureItems;
 
+
+	//bi-directional many-to-one association to ProcessedMapMozCalibration
+	@OneToMany(mappedBy = "processedMap")
+	private List<ProcessedMapMozCalibration> processedMapMozCalibration;
+
 	public ProcessedMap() {
 	}
 
@@ -154,6 +159,13 @@ public class ProcessedMap extends Map implements Serializable {
 		}
 	}
 
+	public List<ProcessedMapMozCalibration> getProcessedMapMozCalibration() {
+		return processedMapMozCalibration;
+	}
+
+	public void setProcessedMapMozCalibration(List<ProcessedMapMozCalibration> processedMapMozCalibration) {
+		this.processedMapMozCalibration = processedMapMozCalibration;
+	}
 
 	@Override
 	public String toString() {

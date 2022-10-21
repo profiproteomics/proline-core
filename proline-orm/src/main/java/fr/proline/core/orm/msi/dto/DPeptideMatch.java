@@ -1,9 +1,10 @@
 package fr.proline.core.orm.msi.dto;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Map;
+import java.util.*;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import fr.profi.util.CollectionUtils;
 import fr.proline.core.orm.msi.Peptide;
 import fr.proline.core.orm.msi.SequenceMatch;
 import fr.proline.core.orm.util.JsonSerializer;
@@ -49,6 +50,7 @@ public class DPeptideMatch implements Comparable<DPeptideMatch> {
 	private ArrayList<DPeptidePTM> m_peptidePTMArray = null;
 	private DPtmSiteProperties m_ptmSiteProperties = null;
 	private Integer m_isotopeOff = 0;
+	private Map<String, Object> m_propertiesAsMap = null;
 
 	public DPeptideMatch(
 		long id,
@@ -360,4 +362,63 @@ public class DPeptideMatch implements Comparable<DPeptideMatch> {
 		}
 	}
 
+	public Map<String, Object> getPropertiesAsMap() {
+		if (m_propertiesAsMap == null && m_serializedProperties != null) {
+			m_propertiesAsMap = new HashMap<>();
+			try {
+				m_propertiesAsMap = JsonSerializer.getMapper().readValue(m_serializedProperties, Map.class);
+			} catch (JsonProcessingException e) {
+				m_propertiesAsMap = null;
+			}
+		}
+		return m_propertiesAsMap;
+	}
+
+	public Boolean hasAmbiguousSeq() {
+		if (m_peptide == null )
+			return null;
+		boolean hasAmbiguity = false;
+		if(getPropertiesAsMap() != null && getPropertiesAsMap().containsKey("mascot_properties")) {
+			Map<String, Object> mascotProperties = (Map<String, Object>) getPropertiesAsMap().get("mascot_properties");
+			if (mascotProperties.containsKey("ambiguity_string")) {
+				hasAmbiguity = true;
+			}
+		}
+		return hasAmbiguity;
+	}
+
+
+	/**
+	 * Return Peptide Sequence with ambiguous AA replaced.
+	 * If there is no ambiguous AA or Peptide is not specified in this object, an empty String will be returned
+	 *
+	 * @return
+	 */
+	public String getDisambiguatedSeq() {
+		if (m_peptide != null && hasAmbiguousSeq() ) {
+			String ambiguityInfo = (String) ((Map<String, Object>) getPropertiesAsMap().get("mascot_properties")).get("ambiguity_string");
+
+			List<Integer> indexes = new ArrayList<>();
+			List<Character> subsitituteChars = new ArrayList<>();
+
+			List<String> ambiguityChars = Arrays.asList(ambiguityInfo.split(","));
+			CollectionUtils.createSlidingWindow(ambiguityChars, 3).forEach(substInfo -> {
+				if (substInfo.size() == 3) {
+					indexes.add(Integer.valueOf(substInfo.get(0)));
+					subsitituteChars.add(substInfo.get(2).toCharArray()[0]);
+				}
+			});
+			StringBuilder seqB = new StringBuilder();
+			String sequence = m_peptide.getSequence();
+			for (int i = 0; i < sequence.length(); i++) {
+				if (indexes.contains(i + 1))
+					seqB.append(subsitituteChars.get(indexes.indexOf(i + 1)));
+				else
+					seqB.append(sequence.toCharArray()[i]);
+			}
+			return seqB.toString();
+		} else
+			return "";
+
+	}
 }

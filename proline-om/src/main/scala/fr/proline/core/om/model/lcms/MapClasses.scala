@@ -1,16 +1,14 @@
 package fr.proline.core.om.model.lcms
 
-import java.util.Date
-
-import scala.beans.BeanProperty
-import scala.collection.mutable.ArrayBuffer
-import scala.collection.mutable.HashMap
-import scala.collection.mutable.LongMap
-
 import com.typesafe.scalalogging.LazyLogging
-
 import fr.profi.util.collection._
+import fr.profi.util.math.linearInterpolation
 import fr.profi.util.misc.InMemoryIdGen
+
+import java.io.PrintWriter
+import java.util.Date
+import scala.beans.BeanProperty
+import scala.collection.mutable.{ArrayBuffer, LongMap}
 
 // TODO:  move in Scala Commons ???
 trait IEntityReference[T] {
@@ -65,7 +63,6 @@ case class PeakelFittingModelProperties()
 case class MapMozCalibration(
 
   // Required fields
-  val id: Long,
   val mozList: Array[Double],
   val deltaMozList: Array[Double],
 
@@ -80,12 +77,40 @@ case class MapMozCalibration(
   require( mozList != null, "mozList is null" )
   require( deltaMozList != null, "deltaMozList is null" )
 
+  lazy val deltaMozVersusMoz = mozList.zip(deltaMozList)
+
+  //VDS Warning, currently it's RT as parameter and mozList
+   def calcDeltaMoz( mass: Double ): Double = {
+    linearInterpolation(mass, deltaMozVersusMoz, fixOutOfRange = true)
+  }
+
 }
 
 case class MapMozCalibrationProperties()
 
+object Landmark {
 
-case class Landmark( time: Float, deltaTime: Float )
+  def _toCSVFile(filePath: String, landmarks : ArrayBuffer[Landmark]) = {
+    val file = new java.io.File(filePath)
+    val writer = new PrintWriter(file)
+
+    val header = "x dx"
+    writer.println(header.replaceAll(" ", ";"))
+
+    for( lm <- landmarks ) {
+      val row: List[Any] = List(
+        lm.x, lm.dx
+      )
+      writer.println( row.mkString(";"))
+      writer.flush()
+    }
+
+    writer.close()
+  }
+
+}
+
+case class Landmark(x: Double, dx: Double, tx: Double = 0)
 
 case class MapAlignment(
 
@@ -95,7 +120,6 @@ case class MapAlignment(
   val massRange: Tuple2[Float,Float],
   val timeList: Array[Float],
   val deltaTimeList: Array[Float],
-
   // Mutable optional fields
   var properties: Option[MapAlignmentProperties] = None
 
@@ -109,6 +133,7 @@ case class MapAlignment(
 
   // Define some lazy vals
   lazy val deltaTimeVersusTime = timeList.zip(deltaTimeList)
+  lazy val toleranceTimeVersusTime = if (properties.isDefined) Some(timeList.zip(properties.get.toleranceTimeList)) else None
 
   private def _checkSlopes(): Unit = {
 
@@ -133,7 +158,7 @@ case class MapAlignment(
 
     var landmarks = new ArrayBuffer[Landmark](timeList.length)
     deltaTimeVersusTime.foreach { case (time, deltaTime) =>
-      landmarks += Landmark( time , deltaTime )
+      landmarks += Landmark(time, deltaTime)
     }
 
     landmarks.toArray
@@ -154,15 +179,21 @@ case class MapAlignment(
    * @param refMapTime The time to convert (must be a in the refMap scale).
    * @return The elution time converted in the targetMap scale.
    */
-  def calcTargetMapElutionTime( refMapTime: Float ): Float = {
+  def calcTargetMapElutionTime( refMapTime: Float ): (Float, Float) = {
     // Delta = aln_map - ref_map
-    refMapTime + this.calcDeltaTime(refMapTime)
+    (refMapTime + this.calcDeltaTime(refMapTime), calcToleranceTime(refMapTime))
+  }
+
+
+  protected def calcToleranceTime( elutionTime: Float ): Float = {
+    if (toleranceTimeVersusTime.isDefined) {
+      linearInterpolation(elutionTime, toleranceTimeVersusTime.get, fixOutOfRange = true)
+    } else {
+      0.0f
+    }
   }
 
   protected def calcDeltaTime( elutionTime: Float ): Float = {
-
-    import fr.profi.util.math.linearInterpolation
-
     linearInterpolation(elutionTime, deltaTimeVersusTime, fixOutOfRange = true)
   }
 
@@ -184,7 +215,8 @@ case class MapAlignment(
       targetMapId = refMapId,
       massRange = massRange,
       timeList = revTimeList,
-      deltaTimeList = revDeltaTimeList
+      deltaTimeList = revDeltaTimeList,
+      properties = properties
     )
 
     tmpAln
@@ -211,7 +243,9 @@ case class MapAlignment(
 
 }
 
-case class MapAlignmentProperties()
+case class MapAlignmentProperties(
+    @BeanProperty var toleranceTimeList: Array[Float] = Array[Float]()
+)
 
 case class MapAlignmentSet(
 
@@ -236,16 +270,16 @@ case class MapAlignmentSet(
    * @param mass A mass value which may be used to select the appropriate map alignment.
    * @return The elution time converted in the targetMap scale.
    */
-  def calcTargetMapElutionTime( refMapTime: Float, mass: Option[Double] ): Float = {
+  def calcTargetMapElutionTime( refMapTime: Float, mass: Option[Double] ): (Float, Float) = {
 
-    val mapAln = if( mapAlignments.length == 0 ) mapAlignments(0)
+    val mapAln = if (mapAlignments.length == 0) mapAlignments(0)
     else {
       // Select right map alignment
-      val foundMapAln = mass.map { m => mapAlignments find { x => m >= x.massRange._1 && m < x.massRange._2 } } getOrElse(None)
+      val foundMapAln = mass.map { m => mapAlignments find { x => m >= x.massRange._1 && m < x.massRange._2 } } getOrElse (None)
 
       // Small workaround for masses greater than the map alignment with highest number of data points
-      if( foundMapAln.isDefined ) foundMapAln.get
-      else mapAlignments.sortBy( _.timeList.length).last
+      if (foundMapAln.isDefined) foundMapAln.get
+      else mapAlignments.sortBy(_.timeList.length).last
     }
 
     // Convert reference map elution time into the target map one
@@ -331,7 +365,7 @@ case class MapSet(
     alnRefMapOpt.get.isAlnReference = true
   }
 
-  def convertElutionTime( time: Float, refMapId: Long, targetMapId: Long, mass: Option[Double] = None): Option[Float] = {
+  def convertElutionTime( time: Float, refMapId: Long, targetMapId: Long, mass: Option[Double] = None): Option[(Float, Float)] = {
     require( mapAlnSets != null, "can't convert elution time without map alignments" )
     require( refMapId != 0, "refMapId must be different than zero")
     require( targetMapId != 0, "targetMapId must be different than zero")
@@ -340,7 +374,7 @@ case class MapSet(
     require( alnRefMapId != 0, "can't convert elution time without a defined alnRefMapId" )
 
     // If the reference is the target map => returns the provided time
-    if (refMapId == targetMapId) return Some(time)
+    if (refMapId == targetMapId) return Some(time, 0)
 
     try {
       // If we have an alignment between the reference and the target
@@ -357,7 +391,8 @@ case class MapSet(
           val refMapTime = toRefMapAlnSetOpt.get.calcTargetMapElutionTime(time, mass)
           // Convert reference map time into the target map scale
           val mapAlnSetOpt = _mapAlnSetByMapIdPair.get(alnRefMapId -> targetMapId)
-          mapAlnSetOpt.map(_.calcTargetMapElutionTime(refMapTime, mass))
+          val targetMapTime = mapAlnSetOpt.get.calcTargetMapElutionTime(refMapTime._1, mass)
+          Some((targetMapTime._1, math.max(refMapTime._2, targetMapTime._2)))
         }
       }
     } catch {
@@ -435,7 +470,6 @@ case class MapSet(
 
   // Debug purpose
   def toTsvFile( filePath: String ) {
-    import java.io.FileOutputStream
     import java.io.PrintWriter
     val file = new java.io.File(filePath)
     val writer = new PrintWriter(file)
@@ -653,7 +687,6 @@ abstract class ILcMsMap {
 
   // Debug purpose
   def toTsvFile( filePath: String ) {
-    import java.io.FileOutputStream
     import java.io.PrintWriter
     val file = new java.io.File(filePath)
     val writer = new PrintWriter(file)

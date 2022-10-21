@@ -14,9 +14,9 @@ import fr.proline.core.algo.msi.validation.{TargetDecoyComputer, TargetDecoyMode
 import fr.proline.core.dal._
 import fr.proline.core.dal.context._
 import fr.proline.core.dal.helper.MsiDbHelper
-import fr.proline.core.dal.tables.msi.MsiDbResultSetRelationTable
-import fr.proline.core.dal.tables.msi.MsiDbResultSetTable
-import fr.proline.core.dal.tables.msi.MsiDbResultSummaryRelationTable
+import fr.proline.core.dal.tables.SelectQueryBuilder.any2ClauseAdd
+import fr.proline.core.dal.tables.SelectQueryBuilder1
+import fr.proline.core.dal.tables.msi.{MsiDbPeptideMatchObjectTreeMapTable, MsiDbResultSetRelationTable, MsiDbResultSetTable, MsiDbResultSummaryRelationTable}
 import fr.proline.core.om.model.msi._
 import fr.proline.core.om.provider.PeptideCacheExecutionContext
 import fr.proline.core.om.provider.msi.impl.SQLResultSummaryProvider
@@ -302,11 +302,45 @@ class ResultSummaryMerger(
 
     logger.debug("Storing TARGET ResultSummary ...")
     _storeResultSummary(storerContext, mergedTargetRsm, targetRsmIds, childTargetRsIds)
-
+    _storePeptideMatchSpectrumMatches(storerContext,mergedTargetRsm.resultSet.get)
     mergedTargetRsm
   }
 
-private def _loadReadablePtmString( storerContext: StorerContext, rsIds: Seq[Long]): mutable.Map[Long,PeptideReadablePtmString] ={
+  private def _storePeptideMatchSpectrumMatches( storerContext: StorerContext, mergedRS : ResultSet): Unit = {
+
+    val objTreeIdByPepMatchId = new mutable.HashMap[Long, Long]
+    val msiSQLCtx = storerContext.getMSIDbConnectionContext
+    val bestPepMatchesAsStr = mergedRS.peptideMatches.map(_.bestChildId).mkString(",")
+
+    //************* Duplicate Spectrum match info if exits in new peptide match .
+    DoJDBCWork.withEzDBC(msiSQLCtx) { msiEzDBC =>
+
+      val pepMatchSpectrumMatchQuery = new SelectQueryBuilder1(MsiDbPeptideMatchObjectTreeMapTable).mkSelectQuery( (t,c) =>
+        List(t.PEPTIDE_MATCH_ID, t.OBJECT_TREE_ID) -> " WHERE "~  t.SCHEMA_NAME ~"= 'peptide_match.spectrum_match' AND "~
+          t.PEPTIDE_MATCH_ID ~" IN ("~ bestPepMatchesAsStr ~")")
+
+      msiEzDBC.selectAndProcess(pepMatchSpectrumMatchQuery) { r =>
+        val pmId = r.nextLong
+        val obId  = r.nextLong
+        objTreeIdByPepMatchId += (pmId -> obId)
+      }
+
+      if(objTreeIdByPepMatchId != null && !objTreeIdByPepMatchId.isEmpty){
+        //Insert link
+        // Insert result set relation between parent and its children
+        val rsRelationInsertQuery = MsiDbPeptideMatchObjectTreeMapTable.mkInsertQuery()
+        msiEzDBC.executeInBatch(rsRelationInsertQuery) { stmt =>
+          mergedRS.peptideMatches.foreach( pepMatch => {
+            if(objTreeIdByPepMatchId.contains(pepMatch.bestChildId)) {
+              stmt.executeWith(pepMatch.id,"peptide_match.spectrum_match", objTreeIdByPepMatchId(pepMatch.bestChildId))
+            }
+          })
+        }
+      }
+    } //End DoJDBCWork
+  }
+
+ private def _loadReadablePtmString( storerContext: StorerContext, rsIds: Seq[Long]): mutable.Map[Long,PeptideReadablePtmString] ={
     val pepReadablePtmStringByPepId : mutable.Map[Long,PeptideReadablePtmString] = storerContext.getEntityCache(classOf[PeptideReadablePtmString])
     //clear previous data
     pepReadablePtmStringByPepId.clear()

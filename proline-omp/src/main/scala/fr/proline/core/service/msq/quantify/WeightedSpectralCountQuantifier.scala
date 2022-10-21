@@ -690,7 +690,7 @@ class WeightedSpectralCountQuantifier(
           nextEntry._2.foreach(pmIdAndAcc => {
             if (pmIdAndAcc._2.equals(currentProteinSetWeightStruct.typicalPMAcc)) {
               if (peptideSetForPM != null ) {
-                logger.warn(" --- !!  FOUND AN OTHER MATCH FOR " + currentProteinSetWeightStruct.typicalPMAcc + " => " + peptideSetForPM.isSubset + " and " + nextEntry._1.id)
+                logger.warn(" --- !!  FOUND AN OTHER MATCH FOR " + currentProteinSetWeightStruct.typicalPMAcc + " => is subset ?" + peptideSetForPM.isSubset + " and pepSetId =  " + nextEntry._1.id)
                 if(foundSameSet && !foundTypical) {
                   peptideSetForPM = nextEntry._1
                   foundPMIDandAcc = pmIdAndAcc
@@ -708,9 +708,8 @@ class WeightedSpectralCountQuantifier(
                 if(!foundTypical){
                   peptideSetForPM = nextEntry._1
                   foundPMIDandAcc = pmIdAndAcc
-                }
-                if (peptideSetForPM != null )
-                  logger.warn(" --- !!  FOUND AN OTHER MATCH FOR " + currentProteinSetWeightStruct.typicalPMAcc + " => " + peptideSetForPM.isSubset + " and " + nextEntry._1.id)
+                } else if (peptideSetForPM != null ) // found protein in samesetPMAcc but already define as typicel
+                  logger.warn(" --- !!  FOUND AN OTHER MATCH FOR Subset of " + currentProteinSetWeightStruct.typicalPMAcc + " => " + peptideSetForPM.isSubset + " and " + nextEntry._1.id)
               }//End found an entry
             } //End search from samesets
 
@@ -722,11 +721,10 @@ class WeightedSpectralCountQuantifier(
         var protSSC: Float = 0.0f
         var protBSC: Int = 0
 
-        if (peptideSetForPM != null) { //  Current Typical from Ref RSM found in current RSM
+        if (peptideSetForPM != null && currentProteinSetWeightStruct.peptideInfoByRSMId.contains(weightRefRSMId)) { //  Current Typical from Ref RSM found in current RSM
 
         	val currentWeightRefRSMPepInfo = currentProteinSetWeightStruct.peptideInfoByRSMId(weightRefRSMId)
 
-          
           //Go through peptides instances,  compute SC and create QuantPeptide
           peptideSetForPM.getPeptideInstances().foreach(pepInst => {
             if (currentWeightRefRSMPepInfo.weightByPeptideId.get(pepInst.peptideId).isEmpty) {
