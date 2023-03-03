@@ -138,14 +138,14 @@ class IsobaricTaggingEntitiesSummarizer(
             properties = None,
             masterQuantReporterIons = mqReporterIons
           )
-        }
-      }
+        } //End mqReporterIons.nonEmpty
+      } //End for each (charge-[pepMatch])
       
       if( mqPepIons.nonEmpty ) {
         mqPepIonsByPeptideId += peptideIdOpt.get -> mqPepIons.toArray
       }
       
-    }
+    } // end Iterate over validated peptide instances
     
     // --- Convert master quant peptide ions into master quant peptides ---
     val masterQuantPeptides = new ArrayBuffer[MasterQuantPeptide]( quantMergedRSM.peptideInstances.length )
