@@ -1,26 +1,26 @@
 package fr.proline.core.orm.msi;
 
-import static org.junit.Assert.*;
-
-import java.util.Collection;
-import java.util.List;
-
-import javax.persistence.EntityManager;
-import javax.persistence.EntityTransaction;
-
+import fr.profi.util.MathUtils;
 import fr.proline.core.orm.MergeMode;
+import fr.proline.core.orm.msi.repository.PeptideMatchRepository;
+import fr.proline.core.orm.msi.repository.PeptideReadablePtmStringRepository;
+import fr.proline.core.orm.msi.repository.ResultSetRepository;
+import fr.proline.repository.ProlineDatabaseType;
+import fr.proline.repository.util.DatabaseTestCase;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import fr.proline.core.orm.msi.repository.PeptideMatchRepository;
-import fr.proline.core.orm.msi.repository.PeptideReadablePtmStringRepository;
-import fr.proline.core.orm.msi.repository.ResultSetRepository;
-import fr.proline.repository.ProlineDatabaseType;
-import fr.proline.repository.util.DatabaseTestCase;
-import fr.profi.util.MathUtils;
+import javax.persistence.EntityManager;
+import javax.persistence.EntityTransaction;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+
+import static org.junit.Assert.*;
 
 public class ResultsetTest extends DatabaseTestCase {
 
@@ -360,8 +360,7 @@ public class ResultsetTest extends DatabaseTestCase {
 			assertNotNull(peptide);
 			assertEquals(peptide.getSequence(), "VLQAELK");
 
-			List<PeptideMatch> matches = PeptideMatchRepository.findPeptideMatchByPeptide(msiEm,
-				match.getPeptideId());
+			Set<PeptideMatch> matches = new HashSet(PeptideMatchRepository.findPeptideMatchByPeptide(msiEm, match.getPeptideId()));
 			assertTrue(matches.contains(match));
 		} finally {
 
