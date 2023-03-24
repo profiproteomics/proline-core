@@ -3,28 +3,33 @@ package fr.proline.core.service.msq
 import com.typesafe.scalalogging.LazyLogging
 import fr.profi.api.service.IService
 import fr.profi.jdbc.easy._
+import fr.profi.util.MathUtils
 import fr.profi.util.collection._
 import fr.profi.util.serialization.ProfiJson
-import fr.proline.context.IExecutionContext
+import fr.proline.context.{IExecutionContext, MsiDbConnectionContext}
 import fr.proline.core.algo.lcms.summarizing._
 import fr.proline.core.algo.lcms.{FeatureSummarizer, FeatureSummarizingMethod}
 import fr.proline.core.algo.msq.Profilizer
-import fr.proline.core.algo.msq.config.profilizer.PostProcessingConfig
+import fr.proline.core.algo.msq.config.profilizer.{MqPeptideAbundanceSummarizingMethod, PostProcessingConfig}
+import fr.proline.core.algo.msq.profilizer.AbundanceSummarizer
 import fr.proline.core.algo.msq.summarizing.BuildMasterQuantPeptide
-import fr.proline.core.dal.{BuildLazyExecutionContext, DoJDBCWork}
 import fr.proline.core.dal.helper.UdsDbHelper
-import fr.proline.core.om.model.lcms.Feature
+import fr.proline.core.dal.{BuildLazyExecutionContext, DoJDBCWork}
 import fr.proline.core.om.model.SelectionLevel
-import fr.proline.core.om.model.msq.{ExperimentalDesign, MasterQuantPeptideProperties}
+import fr.proline.core.om.model.lcms.Feature
+import fr.proline.core.om.model.msq.{ExperimentalDesign, MasterQuantPeptideIon, MasterQuantPeptideProperties, QuantResultSummary}
 import fr.proline.core.om.provider.PeptideCacheExecutionContext
 import fr.proline.core.om.provider.lcms.impl.SQLMapSetProvider
 import fr.proline.core.om.provider.msq.impl.{SQLExperimentalDesignProvider, SQLQuantResultSummaryProvider}
-import fr.proline.core.orm.uds.{MasterQuantitationChannel, ObjectTree, ObjectTreeSchema}
 import fr.proline.core.orm.uds.repository.ObjectTreeSchemaRepository
+import fr.proline.core.orm.uds.{MasterQuantitationChannel, ObjectTree, ObjectTreeSchema, QuantitationMethod}
 import fr.proline.repository.IDataStoreConnectorFactory
+import org.apache.commons.math3.linear.{Array2DRowRealMatrix, RealMatrix}
 
+import java.io.{File, FilenameFilter}
 import scala.collection.mutable
 import scala.collection.mutable.ArrayBuffer
+import scala.collection.JavaConverters._
 
 // Factory for Proline-Cortex
 object QuantPostProcessingComputer {
@@ -32,7 +37,8 @@ object QuantPostProcessingComputer {
   def apply(
        executionContext: IExecutionContext,
        masterQuantChannelId: Long,
-       config: PostProcessingConfig
+       config: PostProcessingConfig,
+       matrixFolder : Option [File] = None
    ): QuantPostProcessingComputer = {
 
     val udsDbCtx = executionContext.getUDSDbConnectionContext
@@ -47,7 +53,8 @@ object QuantPostProcessingComputer {
       executionContext = executionContext,
       experimentalDesign = expDesign,
       masterQuantChannelId = masterQuantChannelId,
-      config = config
+      config = config,
+      matrixFolder
     )
   }
 
@@ -57,7 +64,8 @@ class QuantPostProcessingComputer(
   executionContext: IExecutionContext,
   experimentalDesign: ExperimentalDesign,
   masterQuantChannelId: Long,
-  config: PostProcessingConfig
+  config: PostProcessingConfig,
+  matrixFolder : Option [File] = None
 ) extends IService with LazyLogging {
   
   require( executionContext.isJPA,"invalid type of executionContext, JPA type is required")
@@ -80,21 +88,84 @@ class QuantPostProcessingComputer(
     )
     _hasInitiatedExecContext = true
   }
-  
+
+
+  private def getDefaultCorrectionMatrix(qMethod : QuantitationMethod): RealMatrix = {
+
+//    val isobaricTags = qMethod.getLabels.asScala.toList.map { udsQuantLabel =>
+//      IsobaricTag(
+//        id = udsQuantLabel.getId,
+//        name = udsQuantLabel.getName,
+//        number = udsQuantLabel.getNumber,
+//        properties =  deserialize[IsobaricTagProperties](udsQuantLabel.getSerializedProperties)
+//      )
+//    }
+//
+//    // TODO: sort by number when the column has been added
+//   IsobaricTaggingQuantMethod( isobaricTags.sortBy(_.reporterMz) ).getDefaultCorrectionMatrix()
+    val purityCorrectionFileName = qMethod.getName.replace(" ","_")+".txt"
+
+    if(matrixFolder.isEmpty || !matrixFolder.get.isDirectory)
+      throw new RuntimeException(" NO DEFAULT purityCorrectionMatrix")
+
+    val matrixFile = matrixFolder.get.listFiles(new FilenameFilter {
+        override def accept(dir: File, name: String): Boolean = {
+          name.equals(purityCorrectionFileName)
+        }
+    })
+
+    if(matrixFile.length >0 ){
+          val defMatrix = Array(
+            Array(0.9026,0.0031,0.0909,0.0002,0.0032,0,0,0,0,0,0,0,0,0,0,0             ),
+            Array(0.0078,0.8948,0,0.0941,0,0.0033,0,0,0,0,0,0,0,0,0,0                  ),
+            Array(0.0093,0,0.8981,0.0035,0.0863,0.0001,0.0027,0,0,0,0,0,0,0,0,0        ),
+            Array(0,0.0082,0.0065,0.9014,0,0.0813,0,0.0026,0,0,0,0,0,0,0,0             ),
+            Array(0,0,0.0147,0,0.9113,0.0034,0.0691,0,0.0015,0,0,0,0,0,0,0             ),
+            Array(0,0,0,0.0146,0.0128,0.9025,0,0.0686,0,0.0015,0,0,0,0,0,0             ),
+            Array(0,0,0.0051,0,0.0274,0,0.9013,0.0036,0.0615,0,0.0011,0,0,0,0,0        ),
+            Array(0,0,0,0.0013,0,0.0241,0.0027,0.9151,0,0.0558,0,0.001,0,0,0,0         ),
+            Array(0,0,0,0,0.0004,0,0.031,0,0.9154,0.0042,0.0482,0.0002,0.0006,0,0,0    ),
+            Array(0,0,0,0,0,0.0003,0,0.0278,0.0063,0.9187,0,0.0457,0,0.0012,0,0        ),
+            Array(0,0,0,0,0,0,0.0008,0,0.039,0,0.9194,0.0047,0.0357,0,0.0004,0         ),
+            Array(0,0,0,0,0,0,0,0.0015,0.0001,0.0358,0.0072,0.9374,0,0.018,0,0         ),
+            Array(0,0,0,0,0,0,0,0,0.0011,0,0.0455,0,0.9305,0.0043,0.0186,0             ),
+            Array(0,0,0,0,0,0,0,0,0,0.0007,0.0001,0.0314,0.0073,0.9262,0,0.034         ),
+            Array(0,0,0,0,0,0,0,0,0,0,0.0022,0,0.0496,0,0.9345,0.0034                  ),
+            Array(0,0,0,0,0,0,0,0,0,0,0,0.003,0.0003,0.0549,0.0062,0.9242              )
+          )
+          val quantMethodCorrectionMatrix = new Array2DRowRealMatrix(defMatrix)
+          return  quantMethodCorrectionMatrix
+      } else
+      throw new RuntimeException(" NO DEFAULT purityCorrectionMatrix")
+
+  }
+
   def runService(): Boolean = {
 
-    this.logger.info("Running service QuantProfilesComputer.")
-    
+    this.logger.info("Running service Quant Post Processing Computer.")
+
     // Get entity manager
     val udsDbCtx = executionContext.getUDSDbConnectionContext
     val udsEM = udsDbCtx.getEntityManager
     val udsDbHelper = new UdsDbHelper(udsDbCtx)
-    
+
     // Retrieve the quantitation fraction
-    val udsMasterQuantChannel = udsEM.find(classOf[MasterQuantitationChannel], masterQuantChannelId)    
-    require( udsMasterQuantChannel != null, "undefined master quant channel with id=" + udsMasterQuantChannel )
-    
-    // FIXME: check the quantitation method first
+    val udsMasterQuantChannel = udsEM.find(classOf[MasterQuantitationChannel], masterQuantChannelId)
+    require(udsMasterQuantChannel != null, "undefined master quant channel with id=" + udsMasterQuantChannel)
+
+    val qChIdsSorted: Seq[Long] = udsMasterQuantChannel.getQuantitationChannels.asScala.toList.map(_.getId).sorted
+    val isIsobaricQuant = false // udsMasterQuantChannel.getDataset.getMethod.getType.equals(QuantitationMethod.Type.ISOBARIC_TAGGING.toString)
+    val purityCorrectionMatrix: Option[RealMatrix] = if (!isIsobaricQuant) None else {
+      if (config.purityCorrectionMatrix.isDefined) {
+        config.purityCorrectionMatrix
+      } else {
+        Some(getDefaultCorrectionMatrix(udsMasterQuantChannel.getDataset.getMethod))
+      }
+    }
+
+    if(isIsobaricQuant && config.usePurityCorrectionMatrix && (purityCorrectionMatrix.isEmpty || purityCorrectionMatrix.get==null || !purityCorrectionMatrix.get.isSquare)){
+        throw new RuntimeException(" INVALID purityCorrectionMatrix") //for tests ...
+    }
 
     val quantRsmId = udsMasterQuantChannel.getQuantResultSummaryId
     val qcIds = udsDbHelper.getQuantChannelIds(masterQuantChannelId)
@@ -104,14 +175,14 @@ class QuantPostProcessingComputer(
     val quantRsmProvider = new SQLQuantResultSummaryProvider(PeptideCacheExecutionContext(executionContext))
 
     // Note that it is important to load the Result Set to have all required information
-    val quantRSM = quantRsmProvider.getQuantResultSummary(quantRsmId, qcIds, loadResultSet = true).get
+    val quantRSM = quantRsmProvider.getQuantResultSummary(quantRsmId, qcIds, loadResultSet = true, loadProteinMatches = None, loadReporterIons = Some( true)).get
     logger.info("Before Feature summarizer mqPep with selection level == 1 : "+quantRSM.masterQuantPeptides.count(_.selectionLevel == 1))
 
     // !!! STILL EXPERIMENTAL !!!
     val summarizeFeatures = false
     if( summarizeFeatures ) {
-      
-      logger.warn("!!! STILL EXPERIMENTAL CODE FEATURE SUMMARIZER !!! ")
+      /// VDS Warning: No code update for Reporter ions purity correction !
+      logger.warn("!!! STILL EXPERIMENTAL CODE FEATURE SUMMARIZER !!! NOT Up To Date ")
       // --- 1.2 Load the peakels --- //
       val qcByLcMsMapId = experimentalDesign.masterQuantChannels.head.quantChannels.map { qc =>
         qc.lcmsMapId.get -> qc
@@ -211,27 +282,28 @@ class QuantPostProcessingComputer(
     quantRSM.masterQuantPeptides.foreach { mqPep => if (mqPep.selectionLevel == 1) mqPep.selectionLevel = 2 }
 
     //
-    // Reset ions abundances to raw abundances
+    // Reset ions abundances and reporter ions abundances if defined to raw abundances
     //
     val masterQuantPeptideIons = quantRSM.masterQuantPeptides.flatMap(_.masterQuantPeptideIons)
+    logger.info(" Pre-first step : Reset & compute new peptideIons/Reporter ions abundances")
     for (mqPepIon <- masterQuantPeptideIons) {
       mqPepIon.setAbundancesForQuantChannels(mqPepIon.getRawAbundancesForQuantChannels(qcIds), qcIds)
+      if(isIsobaricQuant)
+        _resetAndComputeIonsAbundance(mqPepIon, qChIdsSorted, purityCorrectionMatrix)
     }
-
 
     //
     // Change mqPeptide selection level sharing peakels of mqPep sharing features
     //
     logger.info("Run first step : discardPeptidesSharingPeakels or just recompute MQPep Abundance . discardPeptidesSharingPeakels : "+config.discardPepIonsSharingPeakels)
     if (config.discardPepIonsSharingPeakels) {
-      
-      val qcByLcMsMapId = experimentalDesign.masterQuantChannels.head.quantChannels.map{ qc => qc.lcmsMapId.get -> qc }.toMap
+
       val lcmsDbCtx = executionContext.getLCMSDbConnectionContext
       val mapSetProvider = new SQLMapSetProvider(lcmsDbCtx = lcmsDbCtx)
       val mapSet = mapSetProvider.getMapSet(udsMasterQuantChannel.getLcmsMapSetId, loadPeakels = true)
       val masterFtById = mapSet.masterMap.features.toSeq.view.map(ft => ft.id -> ft).toMap
 
-      val mqPepIonIdsByFeatureId = mutable.LongMap[scala.collection.mutable.Set[Long]]()
+      val mqPepIonIdsByFeatureId = mutable.LongMap[mutable.Set[Long]]()
       quantRSM.masterQuantPeptides.flatMap(_.masterQuantPeptideIons).foreach { mqPepIon => 
         val masterFt = masterFtById(mqPepIon.lcmsMasterFeatureId.get)
         val childFts = masterFt.children.flatMap{ft:Feature => if(!ft.isCluster) Array(ft) else ft.subFeatures }
@@ -287,8 +359,8 @@ class QuantPostProcessingComputer(
         val abundances = newMqPep.getAbundancesForQuantChannels(qcIds)
         mqPep.setAbundancesForQuantChannels(abundances, qcIds)
       }
-
       logger.info("After discardPeptidesSharingPeakels  : " + quantRSM.masterQuantPeptides.withFilter(_.selectionLevel < 2).map(_.id).length)
+
     } else {
       //If discardPeptidesSharingPeakels : mqPeptide abundance has been recalculated, otherwise force recomputing of abundance
       //To do ?? Check MqPeptide previous method => in quant config (label free config) or in first/all MQPep (if post processing already run)
@@ -296,7 +368,7 @@ class QuantPostProcessingComputer(
         val mqPepIons = mqPep.masterQuantPeptideIons
 
         //----  Re-build the master quant peptides
-        val newMqPep = BuildMasterQuantPeptide(mqPep.masterQuantPeptideIons, mqPep.peptideInstance, mqPep.resultSummaryId, config.pepIonAbundanceSummarizingMethod)
+        val newMqPep = BuildMasterQuantPeptide(mqPepIons, mqPep.peptideInstance, mqPep.resultSummaryId, config.pepIonAbundanceSummarizingMethod)
 
         //-- Update selection level
         //allow change only if mqPep.selection_level is AUTO. No changed done on Ions so keep peptides manual selection
@@ -335,82 +407,7 @@ class QuantPostProcessingComputer(
 
     // --- 5. Update MasterQuantPeptides and MasterQuantProtSets properties --- //
     val msiDbCtx = executionContext.getMSIDbConnectionContext
-    
-    DoJDBCWork.tryTransactionWithEzDBC(msiDbCtx) { ezDBC =>
-      
-      // TODO: create an UPDATE query builder
-      val mqComponentUpdateQuery = "UPDATE master_quant_component SET selection_level = ?, serialized_properties = ? WHERE id = ?"
-      val objTreeUpdateQuery = "UPDATE object_tree SET clob_data = ? " +
-        "WHERE object_tree.id IN (SELECT object_tree_id FROM master_quant_component WHERE master_quant_component.id = ?)"
-       val objTreeIonUpdateQuery = "UPDATE object_tree SET clob_data = ? " +
-        "WHERE object_tree.id IN (SELECT master_quant_component.object_tree_id FROM master_quant_component,master_quant_peptide_ion  WHERE master_quant_component.id = master_quant_peptide_ion.master_quant_component_id AND master_quant_peptide_ion.id = ?)"
-      
-      
-      ezDBC.executeInBatch(mqComponentUpdateQuery) { mqComponentUpdateStmt =>
-        ezDBC.executeInBatch(objTreeUpdateQuery) { objTreeUpdateStmt =>
-      
-          
-          this.logger.info("Updating MasterQuantPeptideIons...")
- 
-          ezDBC.executeInBatch(objTreeIonUpdateQuery) { objTreeIonUpdateStmt =>
-            for (mqPepIon <- quantRSM.masterQuantPeptideIons) {
-              // Retrieve quant peptides sorted by quant channel
-              val quantPeptideIonMap = mqPepIon.quantPeptideIonMap
-              val quantPeptideIons = qcIds.map { quantPeptideIonMap.getOrElse(_, null) }
-
-              // Update MasterQuantPeptides object tree
-              objTreeIonUpdateStmt.executeWith(ProfiJson.serialize(quantPeptideIons), mqPepIon.id)
-            }
-          }
-  
-          this.logger.info("Updating MasterQuantPeptides...")
-          
-          // Iterate over MasterQuantPeptides 
-          for( mqPep <- quantRSM.masterQuantPeptides ) {
-            
-            // Update MasterQuantPeptides selection level and properties
-            mqComponentUpdateStmt.executeWith(
-              mqPep.selectionLevel,
-              mqPep.properties.map( props => ProfiJson.serialize(props) ),
-              mqPep.id
-            )
-            
-            // Retrieve quant peptides sorted by quant channel
-            val quantPeptideMap = mqPep.quantPeptideMap
-            val quantPeptides = qcIds.map { quantPeptideMap.getOrElse(_, null) }
-            
-            // Update MasterQuantPeptides object tree
-            objTreeUpdateStmt.executeWith(
-              ProfiJson.serialize(quantPeptides),
-              mqPep.id
-            )
-          }
-          
-          this.logger.info("Updating MasterQuantProtSets...")
-          
-          // Iterate over MasterQuantProtSets
-          for( mqProtSet <- quantRSM.masterQuantProteinSets ) {
-            
-            // Update MasterQuantProtSets selection level and properties
-            mqComponentUpdateStmt.executeWith(
-              mqProtSet.selectionLevel,
-              mqProtSet.properties.map( props => ProfiJson.serialize(props) ),
-              mqProtSet.getMasterQuantComponentId()
-            )
-            
-            // Retrieve quant protein sets sorted by quant channel
-            val quantProtSetMap = mqProtSet.quantProteinSetMap
-            val quantProtSets = qcIds.map { quantProtSetMap.getOrElse(_, null) }
-             
-            // Update MasterQuantProtSets object tree
-            objTreeUpdateStmt.executeWith(
-              ProfiJson.serialize(quantProtSets),
-              mqProtSet.getMasterQuantComponentId()
-            )
-          }
-        } // END OF executeInBatch(objTreeUpdateQuery)
-      } // END OF executeInBatch(mqComponentUpdateQuery)
-    } // END OF tryTransactionWithEzDBC
+    updateMasterQuantData(msiDbCtx, quantRSM, qcIds)
 
     udsDbCtx.beginTransaction()
     
@@ -432,9 +429,159 @@ class QuantPostProcessingComputer(
     // Close execution context if initiated locally
     if( this._hasInitiatedExecContext ) executionContext.closeAll()
 
-    this.logger.info("Exiting QuantProfilesComputer service.")
+    this.logger.info("Exiting Quant Post Processing service.")
     
     true
   }
 
+  private def updateMasterQuantData(msiDbCtx: MsiDbConnectionContext,  quantRSM: QuantResultSummary, qcIds: Array[Long]): Unit = {
+    DoJDBCWork.tryTransactionWithEzDBC(msiDbCtx) { ezDBC =>
+
+      // TODO: create an UPDATE query builder
+      val mqComponentUpdateQuery = "UPDATE master_quant_component SET selection_level = ?, serialized_properties = ? WHERE id = ?"
+      val objTreeUpdateQuery = "UPDATE object_tree SET clob_data = ? " +
+        "WHERE object_tree.id IN (SELECT object_tree_id FROM master_quant_component WHERE master_quant_component.id = ?)"
+      val objTreeIonUpdateQuery = "UPDATE object_tree SET clob_data = ? " +
+        "WHERE object_tree.id IN (SELECT master_quant_component.object_tree_id FROM master_quant_component,master_quant_peptide_ion  WHERE master_quant_component.id = master_quant_peptide_ion.master_quant_component_id AND master_quant_peptide_ion.id = ?)"
+      val objTreeRepIonUpdateQuery = "UPDATE object_tree SET clob_data = ? " +
+        "WHERE object_tree.id IN (SELECT master_quant_component.object_tree_id FROM master_quant_component,master_quant_reporter_ion  WHERE master_quant_component.id = master_quant_reporter_ion.master_quant_component_id AND master_quant_reporter_ion.id = ?)"
+
+
+      ezDBC.executeInBatch(mqComponentUpdateQuery) { mqComponentUpdateStmt =>
+        ezDBC.executeInBatch(objTreeUpdateQuery) { objTreeUpdateStmt =>
+
+
+          this.logger.info("Updating MasterQuantPeptideIons and MasterQuantReporterIons...")
+
+          for (mqPepIon <- quantRSM.masterQuantPeptideIons) {
+            // Retrieve quant peptides sorted by quant channel
+            val quantPeptideIonMap = mqPepIon.quantPeptideIonMap
+            val quantPeptideIons = qcIds.map {
+              quantPeptideIonMap.getOrElse(_, null)
+            }
+
+            ezDBC.executeInBatch(objTreeIonUpdateQuery) { objTreeIonUpdateStmt =>
+              // Update MasterQuantPeptideIons object tree
+              objTreeIonUpdateStmt.executeWith(ProfiJson.serialize(quantPeptideIons), mqPepIon.id)
+            }
+
+            // Update associated MasterQuantReporterIons object tree
+            mqPepIon.masterQuantReporterIons.foreach(mqRepIon => {
+              val qRepIonMap = mqRepIon.quantReporterIonMap
+              val quantRepIons = qcIds.map {
+                qRepIonMap.getOrElse(_, null)
+              }
+
+              ezDBC.executeInBatch(objTreeRepIonUpdateQuery) { objTreeRepIonUpdateStmt =>
+                // Update MasterQuantReporterIons object tree
+                objTreeRepIonUpdateStmt.executeWith(ProfiJson.serialize(quantRepIons), mqRepIon.id)
+              }
+            })
+          }
+
+          this.logger.info("Updating MasterQuantPeptides...")
+
+          // Iterate over MasterQuantPeptides
+          for (mqPep <- quantRSM.masterQuantPeptides) {
+
+            // Update MasterQuantPeptides selection level and properties
+            mqComponentUpdateStmt.executeWith(
+              mqPep.selectionLevel,
+              mqPep.properties.map(props => ProfiJson.serialize(props)),
+              mqPep.id
+            )
+
+            // Retrieve quant peptides sorted by quant channel
+            val quantPeptideMap = mqPep.quantPeptideMap
+            val quantPeptides = qcIds.map {
+              quantPeptideMap.getOrElse(_, null)
+            }
+
+            // Update MasterQuantPeptides object tree
+            objTreeUpdateStmt.executeWith(
+              ProfiJson.serialize(quantPeptides),
+              mqPep.id
+            )
+          }
+
+          this.logger.info("Updating MasterQuantProtSets...")
+
+          // Iterate over MasterQuantProtSets
+          for (mqProtSet <- quantRSM.masterQuantProteinSets) {
+
+            // Update MasterQuantProtSets selection level and properties
+            mqComponentUpdateStmt.executeWith(
+              mqProtSet.selectionLevel,
+              mqProtSet.properties.map(props => ProfiJson.serialize(props)),
+              mqProtSet.getMasterQuantComponentId()
+            )
+
+            // Retrieve quant protein sets sorted by quant channel
+            val quantProtSetMap = mqProtSet.quantProteinSetMap
+            val quantProtSets = qcIds.map {
+              quantProtSetMap.getOrElse(_, null)
+            }
+
+            // Update MasterQuantProtSets object tree
+            objTreeUpdateStmt.executeWith(
+              ProfiJson.serialize(quantProtSets),
+              mqProtSet.getMasterQuantComponentId()
+            )
+          }
+        } // END OF executeInBatch(objTreeUpdateQuery)
+      } // END OF executeInBatch(mqComponentUpdateQuery)
+    } // END OF tryTransactionWithEzDBC
+  }
+
+  private def _resetAndComputeIonsAbundance(mqPepIon: MasterQuantPeptideIon, qChIdsSorted : Seq[Long], purityCorrectionMatrix : Option[RealMatrix]  ) : Unit = {
+    val values  = new ArrayBuffer[Array[Double]](1)
+    values += Array.empty[Double]
+
+    val skipPurityCorrection = true //VDS TODO For temp version. To remove
+    val mqReporterIonAbundanceMatrix =  new ArrayBuffer[Array[Float]](qChIdsSorted.size)
+    val tPurityCorrectionMatrix = if(config.usePurityCorrectionMatrix) MathUtils.transposeMatrix(purityCorrectionMatrix.get.getData) else Array.empty[Array[Double]]
+
+    // If reporter ions, reset values
+    mqPepIon.masterQuantReporterIons.foreach(mqRepIon => {
+
+      if (!skipPurityCorrection && config.usePurityCorrectionMatrix) { //Compute Abundance using purityCorrectionMatrix
+        val psmIntensitySortedByQChId = mqRepIon.getRawAbundancesForQuantChannels(qChIdsSorted.toArray)
+        val pepIntensityAsDoubleArray = new Array[Double](qChIdsSorted.size)
+        for (i <- qChIdsSorted.indices) {
+          if (psmIntensitySortedByQChId.apply(i).isNaN) {
+            pepIntensityAsDoubleArray.update(i, 0)
+          } else
+            pepIntensityAsDoubleArray.update(i, psmIntensitySortedByQChId.apply(i).toDouble)
+        }
+
+        values.update(0, pepIntensityAsDoubleArray)
+        val peptideCorrectedValues = MathUtils.matrixSolver(tPurityCorrectionMatrix, values.toArray, true)
+        val pepIntensityFinalValue = new Array[Float](peptideCorrectedValues(0).length)
+        for (i <- qChIdsSorted.indices) {
+          if (psmIntensitySortedByQChId.apply(i).isNaN) { //There was NO intensity before ...
+            pepIntensityFinalValue.update(i, Float.NaN)
+          } else
+            pepIntensityFinalValue.update(i, peptideCorrectedValues(0)(i).toFloat)
+        }
+        mqRepIon.setAbundancesForQuantChannels(pepIntensityFinalValue, qChIdsSorted)
+        //end usePurityCorrectionMatrix
+
+        val qRepIonMap = mqRepIon.quantReporterIonMap
+        mqReporterIonAbundanceMatrix += qChIdsSorted.map( qRepIonMap.get(_).map(_.abundance).getOrElse(Float.NaN) ).toArray
+
+      } else {
+        //reset to previous value
+        mqRepIon.setAbundancesForQuantChannels(mqRepIon.getRawAbundancesForQuantChannels(qChIdsSorted.toArray), qChIdsSorted)
+      }
+    }) //end for each mqRepIon
+
+    if (!skipPurityCorrection && config.usePurityCorrectionMatrix) {
+      // Summarize abundance matrix only if abundance has been calculated
+      val summarizedRawAbundanceMatrix = AbundanceSummarizer.summarizeAbundanceMatrix(
+        mqReporterIonAbundanceMatrix.toArray,
+        MqPeptideAbundanceSummarizingMethod.SUM
+      )
+      mqPepIon.setAbundancesForQuantChannels(summarizedRawAbundanceMatrix, qChIdsSorted)
+    }
+  }
 }

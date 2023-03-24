@@ -29,6 +29,12 @@ object MqPepIonAbundanceSummarizingMethod extends Enumeration {
   val SUM = Value
 }
 
+class MqReporterIonAbundanceSummarizingMethodRef extends TypeReference[MqReporterIonAbundanceSummarizingMethod.type]
+
+object MqReporterIonAbundanceSummarizingMethod extends Enumeration {
+  val MEDIAN = Value
+  val SUM = Value
+}
 
 class AlnSmoothingRef extends TypeReference[AlnSmoothing.type]
 

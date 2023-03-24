@@ -88,7 +88,7 @@ class IsobaricTaggingEntitiesSummarizer(
           // Summarize abundance matrix
           val summarizedRawAbundanceMatrix = AbundanceSummarizer.summarizeAbundanceMatrix(
             mqReporterIonRawAbundanceMatrix,
-            MqPeptideAbundanceSummarizingMethod.MEDIAN
+            MqPeptideAbundanceSummarizingMethod.SUM
           )
           
           // Retrieve the best peptide match
@@ -187,7 +187,7 @@ class IsobaricTaggingWithLabelFreeEntitiesSummarizer(
             lcmsMapSet: MapSet,
             spectrumIdByRsIdAndScanNumber: LongMap[LongMap[Long]],
             ms2ScanNumbersByFtId: LongMap[Array[Int]]){
-    this(mqReporterIonsByIdentRsmId, lcmsMapSet,spectrumIdByRsIdAndScanNumber, ms2ScanNumbersByFtId, MqPepIonAbundanceSummarizingMethod.BEST_ION)
+    this(mqReporterIonsByIdentRsmId, lcmsMapSet,spectrumIdByRsIdAndScanNumber, ms2ScanNumbersByFtId, MqPepIonAbundanceSummarizingMethod.SUM)
   }
 
 

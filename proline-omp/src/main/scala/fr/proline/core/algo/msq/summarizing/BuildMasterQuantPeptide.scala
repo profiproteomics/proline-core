@@ -15,7 +15,7 @@ object BuildMasterQuantPeptide {
              masterPepInstAsOpt: Option[PeptideInstance],
              quantRsmId: Long
            ): MasterQuantPeptide = {
-    apply(mqPepIons, masterPepInstAsOpt, quantRsmId, MqPepIonAbundanceSummarizingMethod.BEST_ION)
+    apply(mqPepIons, masterPepInstAsOpt, quantRsmId, MqPepIonAbundanceSummarizingMethod.SUM)
   }
 
   def apply(
