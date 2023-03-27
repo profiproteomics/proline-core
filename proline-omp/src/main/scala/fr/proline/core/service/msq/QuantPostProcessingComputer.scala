@@ -30,6 +30,7 @@ import java.io.{File, FilenameFilter}
 import scala.collection.mutable
 import scala.collection.mutable.ArrayBuffer
 import scala.collection.JavaConverters._
+import scala.io.Source
 
 // Factory for Proline-Cortex
 object QuantPostProcessingComputer {
@@ -92,21 +93,10 @@ class QuantPostProcessingComputer(
 
   private def getDefaultCorrectionMatrix(qMethod : QuantitationMethod): RealMatrix = {
 
-//    val isobaricTags = qMethod.getLabels.asScala.toList.map { udsQuantLabel =>
-//      IsobaricTag(
-//        id = udsQuantLabel.getId,
-//        name = udsQuantLabel.getName,
-//        number = udsQuantLabel.getNumber,
-//        properties =  deserialize[IsobaricTagProperties](udsQuantLabel.getSerializedProperties)
-//      )
-//    }
-//
-//    // TODO: sort by number when the column has been added
-//   IsobaricTaggingQuantMethod( isobaricTags.sortBy(_.reporterMz) ).getDefaultCorrectionMatrix()
     val purityCorrectionFileName = qMethod.getName.replace(" ","_")+".txt"
 
     if(matrixFolder.isEmpty || !matrixFolder.get.isDirectory)
-      throw new RuntimeException(" NO DEFAULT purityCorrectionMatrix")
+      throw new RuntimeException(" NO DEFAULT purityCorrectionMatrix folder for "+purityCorrectionFileName)
 
     val matrixFile = matrixFolder.get.listFiles(new FilenameFilter {
         override def accept(dir: File, name: String): Boolean = {
@@ -114,29 +104,14 @@ class QuantPostProcessingComputer(
         }
     })
 
-    if(matrixFile.length >0 ){
-          val defMatrix = Array(
-            Array(0.9026,0.0031,0.0909,0.0002,0.0032,0,0,0,0,0,0,0,0,0,0,0             ),
-            Array(0.0078,0.8948,0,0.0941,0,0.0033,0,0,0,0,0,0,0,0,0,0                  ),
-            Array(0.0093,0,0.8981,0.0035,0.0863,0.0001,0.0027,0,0,0,0,0,0,0,0,0        ),
-            Array(0,0.0082,0.0065,0.9014,0,0.0813,0,0.0026,0,0,0,0,0,0,0,0             ),
-            Array(0,0,0.0147,0,0.9113,0.0034,0.0691,0,0.0015,0,0,0,0,0,0,0             ),
-            Array(0,0,0,0.0146,0.0128,0.9025,0,0.0686,0,0.0015,0,0,0,0,0,0             ),
-            Array(0,0,0.0051,0,0.0274,0,0.9013,0.0036,0.0615,0,0.0011,0,0,0,0,0        ),
-            Array(0,0,0,0.0013,0,0.0241,0.0027,0.9151,0,0.0558,0,0.001,0,0,0,0         ),
-            Array(0,0,0,0,0.0004,0,0.031,0,0.9154,0.0042,0.0482,0.0002,0.0006,0,0,0    ),
-            Array(0,0,0,0,0,0.0003,0,0.0278,0.0063,0.9187,0,0.0457,0,0.0012,0,0        ),
-            Array(0,0,0,0,0,0,0.0008,0,0.039,0,0.9194,0.0047,0.0357,0,0.0004,0         ),
-            Array(0,0,0,0,0,0,0,0.0015,0.0001,0.0358,0.0072,0.9374,0,0.018,0,0         ),
-            Array(0,0,0,0,0,0,0,0,0.0011,0,0.0455,0,0.9305,0.0043,0.0186,0             ),
-            Array(0,0,0,0,0,0,0,0,0,0.0007,0.0001,0.0314,0.0073,0.9262,0,0.034         ),
-            Array(0,0,0,0,0,0,0,0,0,0,0.0022,0,0.0496,0,0.9345,0.0034                  ),
-            Array(0,0,0,0,0,0,0,0,0,0,0,0.003,0.0003,0.0549,0.0062,0.9242              )
-          )
-          val quantMethodCorrectionMatrix = new Array2DRowRealMatrix(defMatrix)
-          return  quantMethodCorrectionMatrix
-      } else
-      throw new RuntimeException(" NO DEFAULT purityCorrectionMatrix")
+    if(matrixFile.nonEmpty ){
+      val fileBSource =Source.fromFile(matrixFile.head)
+      val readMatrix = fileBSource.getLines().mkString
+      fileBSource.close()
+      val readMatrixObj = ProfiJson.deserialize[Array[Array[Double]]](readMatrix)
+      new Array2DRowRealMatrix(readMatrixObj)
+    } else
+        throw new RuntimeException(" NO DEFAULT purityCorrectionMatrix : "+purityCorrectionFileName)
 
   }
 
@@ -154,7 +129,7 @@ class QuantPostProcessingComputer(
     require(udsMasterQuantChannel != null, "undefined master quant channel with id=" + udsMasterQuantChannel)
 
     val qChIdsSorted: Seq[Long] = udsMasterQuantChannel.getQuantitationChannels.asScala.toList.map(_.getId).sorted
-    val isIsobaricQuant = false // udsMasterQuantChannel.getDataset.getMethod.getType.equals(QuantitationMethod.Type.ISOBARIC_TAGGING.toString)
+    val isIsobaricQuant = udsMasterQuantChannel.getDataset.getMethod.getType.equals(QuantitationMethod.Type.ISOBARIC_TAGGING.toString) //false
     val purityCorrectionMatrix: Option[RealMatrix] = if (!isIsobaricQuant) None else {
       if (config.purityCorrectionMatrix.isDefined) {
         config.purityCorrectionMatrix
@@ -537,14 +512,14 @@ class QuantPostProcessingComputer(
     val values  = new ArrayBuffer[Array[Double]](1)
     values += Array.empty[Double]
 
-    val skipPurityCorrection = true //VDS TODO For temp version. To remove
+    // val skipPurityCorrection = false //VDS TODO For temp version. To remove
     val mqReporterIonAbundanceMatrix =  new ArrayBuffer[Array[Float]](qChIdsSorted.size)
     val tPurityCorrectionMatrix = if(config.usePurityCorrectionMatrix) MathUtils.transposeMatrix(purityCorrectionMatrix.get.getData) else Array.empty[Array[Double]]
 
     // If reporter ions, reset values
     mqPepIon.masterQuantReporterIons.foreach(mqRepIon => {
 
-      if (!skipPurityCorrection && config.usePurityCorrectionMatrix) { //Compute Abundance using purityCorrectionMatrix
+      if (/*!skipPurityCorrection &&*/ config.usePurityCorrectionMatrix) { //Compute Abundance using purityCorrectionMatrix
         val psmIntensitySortedByQChId = mqRepIon.getRawAbundancesForQuantChannels(qChIdsSorted.toArray)
         val pepIntensityAsDoubleArray = new Array[Double](qChIdsSorted.size)
         for (i <- qChIdsSorted.indices) {
@@ -575,7 +550,7 @@ class QuantPostProcessingComputer(
       }
     }) //end for each mqRepIon
 
-    if (!skipPurityCorrection && config.usePurityCorrectionMatrix) {
+    if (/*!skipPurityCorrection &&*/ config.usePurityCorrectionMatrix) {
       // Summarize abundance matrix only if abundance has been calculated
       val summarizedRawAbundanceMatrix = AbundanceSummarizer.summarizeAbundanceMatrix(
         mqReporterIonAbundanceMatrix.toArray,
