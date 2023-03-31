@@ -7,6 +7,8 @@ public class DQuantReporterIon {
     Float rawAbundance;
     Float abundance;
     Long quantChannelId;
+    Integer selectionLevel;
+    Integer peptideMatchesCount;
     Double moz;
 
     // Necessary Construtor for JSON parsing !
@@ -44,5 +46,21 @@ public class DQuantReporterIon {
 
     public void setMoz(Double moz) {
         this.moz = moz;
+    }
+
+    public Integer getSelectionLevel() {
+        return selectionLevel;
+    }
+
+    public void setSelectionLevel(Integer selectionLevel) {
+        this.selectionLevel = selectionLevel;
+    }
+
+    public Integer getPeptideMatchesCount() {
+        return peptideMatchesCount;
+    }
+
+    public void setPeptideMatchesCount(Integer peptideMatchesCount) {
+        this.peptideMatchesCount = peptideMatchesCount;
     }
 }
