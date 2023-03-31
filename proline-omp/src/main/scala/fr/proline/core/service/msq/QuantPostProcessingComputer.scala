@@ -94,7 +94,7 @@ class QuantPostProcessingComputer(
   private def getDefaultCorrectionMatrix(qMethod : QuantitationMethod): RealMatrix = {
 
     val purityCorrectionFileName = qMethod.getName.replace(" ","_")+".txt"
-
+    this.logger.info("Search for purityCorrectionFileName : "+purityCorrectionFileName)
     if(matrixFolder.isEmpty || !matrixFolder.get.isDirectory)
       throw new RuntimeException(" NO DEFAULT purityCorrectionMatrix folder for "+purityCorrectionFileName)
 
@@ -105,6 +105,7 @@ class QuantPostProcessingComputer(
     })
 
     if(matrixFile.nonEmpty ){
+      this.logger.info("Read from file : "+matrixFile.head.getAbsolutePath)
       val fileBSource =Source.fromFile(matrixFile.head)
       val readMatrix = fileBSource.getLines().mkString
       fileBSource.close()
@@ -137,6 +138,8 @@ class QuantPostProcessingComputer(
         Some(getDefaultCorrectionMatrix(udsMasterQuantChannel.getDataset.getMethod))
       }
     }
+    logger.debug("Isobaric  quanti ? "+isIsobaricQuant)
+    logger.debug("usePurityCorrectionMatrix ? "+config.usePurityCorrectionMatrix)
 
     if(isIsobaricQuant && config.usePurityCorrectionMatrix && (purityCorrectionMatrix.isEmpty || purityCorrectionMatrix.get==null || !purityCorrectionMatrix.get.isSquare)){
         throw new RuntimeException(" INVALID purityCorrectionMatrix") //for tests ...
