@@ -131,7 +131,7 @@ class QuantPostProcessingComputer(
 
     val qChIdsSorted: Seq[Long] = udsMasterQuantChannel.getQuantitationChannels.asScala.toList.map(_.getId).sorted
     val isIsobaricQuant = udsMasterQuantChannel.getDataset.getMethod.getType.equals(QuantitationMethod.Type.ISOBARIC_TAGGING.toString) //false
-    val purityCorrectionMatrix: Option[RealMatrix] = if (!isIsobaricQuant) None else {
+    val purityCorrectionMatrix: Option[RealMatrix] = if (!isIsobaricQuant || !config.usePurityCorrectionMatrix) None else {
       if (config.purityCorrectionMatrix.isDefined) {
         config.purityCorrectionMatrix
       } else {
