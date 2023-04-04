@@ -553,7 +553,7 @@ class QuantPostProcessingComputer(
       }
     }) //end for each mqRepIon
 
-    if (/*!skipPurityCorrection &&*/ config.usePurityCorrectionMatrix) {
+    if (/*!skipPurityCorrection &&*/ config.usePurityCorrectionMatrix && !mqReporterIonAbundanceMatrix.isEmpty) {
       // Summarize abundance matrix only if abundance has been calculated
       val summarizedRawAbundanceMatrix = AbundanceSummarizer.summarizeAbundanceMatrix(
         mqReporterIonAbundanceMatrix.toArray,
