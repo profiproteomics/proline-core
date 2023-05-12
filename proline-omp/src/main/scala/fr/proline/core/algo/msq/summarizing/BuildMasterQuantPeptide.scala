@@ -40,7 +40,8 @@ object BuildMasterQuantPeptide {
     // Filter MQ peptide ions using the selection level
     var filteredMQPepIons = mqPepIons.filter(_.selectionLevel >= SelectionLevel.SELECTED_AUTO)
     // Fall back to input list if none MQ peptide is selected
-    if (filteredMQPepIons.isEmpty) filteredMQPepIons = mqPepIons
+    if (filteredMQPepIons.isEmpty)
+      filteredMQPepIons = mqPepIons
     val quantPepByQcId = new LongMap[QuantPeptide]()
     // created quantPeptides
     var mqPepSelectionLevel = SelectionLevel.SELECTED_AUTO

@@ -220,7 +220,7 @@ case class PostProcessingConfig(
     var peakelsSummarizingMethod : PeakelsSummarizingMethod.Value = PeakelsSummarizingMethod.APEX_INTENSITY,
 
     @(JsonScalaEnumeration @field)(classOf[MqReporterIonAbundanceSummarizingMethodRef])
-    var reporteIonAbundanceSummarizingMethod : MqReporterIonAbundanceSummarizingMethod.Value = MqReporterIonAbundanceSummarizingMethod.SUM,
+    var reporterIonAbundanceSummarizingMethod : MqReporterIonAbundanceSummarizingMethod.Value = MqReporterIonAbundanceSummarizingMethod.SUM,
 
     usePurityCorrectionMatrix: Boolean = true,
 

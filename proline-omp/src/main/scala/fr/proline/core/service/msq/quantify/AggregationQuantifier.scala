@@ -13,7 +13,7 @@ import fr.proline.core.om.storer.msi.impl.RsmDuplicator
 import fr.proline.core.orm.msi.ObjectTreeSchema.SchemaName
 import fr.proline.core.orm.msi.repository.ObjectTreeSchemaRepository
 import fr.proline.core.orm.msi.{ResultSummary => MsiResultSummary}
-import fr.proline.core.orm.uds.{MasterQuantitationChannel, Dataset => UdsDataset}
+import fr.proline.core.orm.uds.{MasterQuantitationChannel, QuantitationMethod, Dataset => UdsDataset}
 
 import scala.collection.JavaConverters._
 import scala.collection.mutable
@@ -27,10 +27,13 @@ class AggregationQuantifier(
 ) extends AbstractMasterQuantChannelQuantifier {
 
   var identRsms = Array.empty[ResultSummary]
-  var childMasterQuantitationChannels = {
+  var childQuantMethod : QuantitationMethod = null
+  var childMasterQuantitationChannels: Array[MasterQuantitationChannel] = {
     val masterQuantitationChannels = new ArrayBuffer[MasterQuantitationChannel](quantConfig.quantitationIds.length)
     for (childQuantitationId <- quantConfig.quantitationIds) {
       val childQuantitation = udsEm.find(classOf[UdsDataset], childQuantitationId)
+      if(childQuantMethod == null) // VDS FIXME : test all same quant method ?
+        childQuantMethod = childQuantitation.getMethod
       masterQuantitationChannels += childQuantitation.getMasterQuantitationChannels.get(0)
     }
     masterQuantitationChannels.toArray
@@ -70,13 +73,13 @@ class AggregationQuantifier(
 
     val udsDbHelper = new UdsDbHelper(udsDbCtx)
     val childQuantRSMbychildMQCId = new mutable.HashMap[Long, QuantResultSummary]
-
+    val isIsobaric = childQuantMethod.getType.equals(QuantitationMethod.Type.ISOBARIC_TAGGING.toString)
     for (udsMasterQuantChannel <- childMasterQuantitationChannels) {
       val quantRsmId = udsMasterQuantChannel.getQuantResultSummaryId
       val qcIds = udsDbHelper.getQuantChannelIds(udsMasterQuantChannel.getId)
       logger.info("Loading the quantitative result summary #" + quantRsmId)
       val quantRsmProvider = new SQLQuantResultSummaryProvider(PeptideCacheExecutionContext(executionContext))
-      childQuantRSMbychildMQCId += (udsMasterQuantChannel.getId -> quantRsmProvider.getQuantResultSummary(quantRsmId, qcIds, loadResultSet = true).get)
+      childQuantRSMbychildMQCId += (udsMasterQuantChannel.getId -> quantRsmProvider.getQuantResultSummary(quantRsmId, qcIds, loadResultSet = true,loadReporterIons = Some(isIsobaric) ).get)
     }
 
     val quantChannelsMapping = new mutable.HashMap[Long, QuantChannel]()
@@ -87,8 +90,10 @@ class AggregationQuantifier(
       }
     }
 
+    logger.debug(" -------------- AGG ISOBARIC Tagging method ??? "+isIsobaric+" childQuantMethod.getType  "+ childQuantMethod.getType+" == ? "+childQuantMethod.getType.toString.equals(QuantitationMethod.Type.ISOBARIC_TAGGING.toString))
+
     // Compute and store quant entities (MQ Peptides, MQ ProteinSets)
-    this.computeAndStoreQuantEntities(msiQuantRSM, aggregateQuantRSM, childQuantRSMbychildMQCId.toMap, quantChannelsMapping.toMap, quantConfig.intensityComputationMethodName)
+    this.computeAndStoreQuantEntities(msiQuantRSM, aggregateQuantRSM, childQuantRSMbychildMQCId.toMap, quantChannelsMapping.toMap, quantConfig.intensityComputationMethodName, isIsobaric)
 
     // Flush the entity manager to perform the update on the master quant peptides
     msiEm.flush()
@@ -101,9 +106,10 @@ class AggregationQuantifier(
                                              aggregateQuantRSM: ResultSummary,
                                              childQuantRSMbychildMQCId: Map[Long, QuantResultSummary],
                                              quantChannelsMapping: Map[Long, QuantChannel],
-                                             intensityComputation: AbundanceComputationMethod.Value) {
+                                             intensityComputation: AbundanceComputationMethod.Value,
+                                             isIsobaric : Boolean) {
 
-    val entitiesSummarizer = new AggregationEntitiesSummarizer(childQuantRSMbychildMQCId, quantChannelsMapping, intensityComputation)
+    val entitiesSummarizer = new AggregationEntitiesSummarizer(childQuantRSMbychildMQCId, quantChannelsMapping, intensityComputation, isIsobaric)
     val (mqPeptides,mqProtSets) = entitiesSummarizer.computeMasterQuantPeptidesAndProteinSets(
       masterQc,
       aggregateQuantRSM,

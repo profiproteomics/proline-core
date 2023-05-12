@@ -326,7 +326,8 @@ abstract class AbstractMasterQuantChannelQuantifier extends LazyLogging {
     msiMQPepIon.setMasterQuantPeptideId(mqPep.id)
     msiMQPepIon.setResultSummary(msiRSM)
 
-    if (mqPepIon.properties.isDefined) msiMQPepIon.setSerializedProperties(ProfiJson.serialize(mqPepIon.properties.get))
+    if (mqPepIon.properties.isDefined)
+      msiMQPepIon.setSerializedProperties(ProfiJson.serialize(mqPepIon.properties.get))
     if (mqPep.peptideInstance.isDefined) {
       val msiPepInst = this.msiEm.find(classOf[MsiPeptideInstance],mqPep.peptideInstance.get.id)
       msiMQPepIon.setPeptideInstance(msiPepInst)
