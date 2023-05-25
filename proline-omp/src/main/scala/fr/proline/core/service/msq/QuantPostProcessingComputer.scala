@@ -8,7 +8,7 @@ import fr.profi.util.collection._
 import fr.profi.util.serialization.ProfiJson
 import fr.proline.context.{IExecutionContext, MsiDbConnectionContext}
 import fr.proline.core.algo.lcms.summarizing._
-import fr.proline.core.algo.lcms.{FeatureSummarizer, FeatureSummarizingMethod}
+import fr.proline.core.algo.lcms.{FeatureSummarizer, FeatureSummarizingMethod, MqReporterIonAbundanceSummarizingMethod}
 import fr.proline.core.algo.msq.Profilizer
 import fr.proline.core.algo.msq.config.profilizer.{MqPeptideAbundanceSummarizingMethod, PostProcessingConfig}
 import fr.proline.core.algo.msq.profilizer.AbundanceSummarizer
@@ -38,8 +38,8 @@ object QuantPostProcessingComputer {
   def apply(
        executionContext: IExecutionContext,
        masterQuantChannelId: Long,
-       config: PostProcessingConfig,
-       matrixFolder : Option [File] = None
+       config: PostProcessingConfig
+//       ,       matrixFolder : Option [File] = None
    ): QuantPostProcessingComputer = {
 
     val udsDbCtx = executionContext.getUDSDbConnectionContext
@@ -54,8 +54,8 @@ object QuantPostProcessingComputer {
       executionContext = executionContext,
       experimentalDesign = expDesign,
       masterQuantChannelId = masterQuantChannelId,
-      config = config,
-      matrixFolder
+      config = config
+//      ,      matrixFolder
     )
   }
 
@@ -65,8 +65,8 @@ class QuantPostProcessingComputer(
   executionContext: IExecutionContext,
   experimentalDesign: ExperimentalDesign,
   masterQuantChannelId: Long,
-  config: PostProcessingConfig,
-  matrixFolder : Option [File] = None
+  config: PostProcessingConfig
+//  ,  matrixFolder : Option [File] = None
 ) extends IService with LazyLogging {
   
   require( executionContext.isJPA,"invalid type of executionContext, JPA type is required")
@@ -91,30 +91,30 @@ class QuantPostProcessingComputer(
   }
 
 
-  private def getDefaultCorrectionMatrix(qMethod : QuantitationMethod): RealMatrix = {
-
-    val purityCorrectionFileName = qMethod.getName.replace(" ","_")+".txt"
-    this.logger.info("Search for purityCorrectionFileName : "+purityCorrectionFileName)
-    if(matrixFolder.isEmpty || !matrixFolder.get.isDirectory)
-      throw new RuntimeException(" NO DEFAULT purityCorrectionMatrix folder for "+purityCorrectionFileName)
-
-    val matrixFile = matrixFolder.get.listFiles(new FilenameFilter {
-        override def accept(dir: File, name: String): Boolean = {
-          name.equals(purityCorrectionFileName)
-        }
-    })
-
-    if(matrixFile.nonEmpty ){
-      this.logger.info("Read from file : "+matrixFile.head.getAbsolutePath)
-      val fileBSource =Source.fromFile(matrixFile.head)
-      val readMatrix = fileBSource.getLines().mkString
-      fileBSource.close()
-      val readMatrixObj = ProfiJson.deserialize[Array[Array[Double]]](readMatrix)
-      new Array2DRowRealMatrix(readMatrixObj)
-    } else
-        throw new RuntimeException(" NO DEFAULT purityCorrectionMatrix : "+purityCorrectionFileName)
-
-  }
+//  private def getDefaultCorrectionMatrix(qMethod : QuantitationMethod): RealMatrix = {
+//
+//    val purityCorrectionFileName = qMethod.getName.replace(" ","_")+".txt"
+//    this.logger.info("Search for purityCorrectionFileName : "+purityCorrectionFileName)
+//    if(matrixFolder.isEmpty || !matrixFolder.get.isDirectory)
+//      throw new RuntimeException(" NO DEFAULT purityCorrectionMatrix folder for "+purityCorrectionFileName)
+//
+//    val matrixFile = matrixFolder.get.listFiles(new FilenameFilter {
+//        override def accept(dir: File, name: String): Boolean = {
+//          name.equals(purityCorrectionFileName)
+//        }
+//    })
+//
+//    if(matrixFile.nonEmpty ){
+//      this.logger.info("Read from file : "+matrixFile.head.getAbsolutePath)
+//      val fileBSource =Source.fromFile(matrixFile.head)
+//      val readMatrix = fileBSource.getLines().mkString
+//      fileBSource.close()
+//      val readMatrixObj = ProfiJson.deserialize[Array[Array[Double]]](readMatrix)
+//      new Array2DRowRealMatrix(readMatrixObj)
+//    } else
+//        throw new RuntimeException(" NO DEFAULT purityCorrectionMatrix : "+purityCorrectionFileName)
+//
+//  }
 
   def runService(): Boolean = {
 
@@ -133,16 +133,16 @@ class QuantPostProcessingComputer(
     val isIsobaricQuant = udsMasterQuantChannel.getDataset.getMethod.getType.equals(QuantitationMethod.Type.ISOBARIC_TAGGING.toString) //false
     val purityCorrectionMatrix: Option[RealMatrix] = if (!isIsobaricQuant || !config.usePurityCorrectionMatrix) None else {
       if (config.purityCorrectionMatrix.isDefined) {
-        config.purityCorrectionMatrix
-      } else {
-        Some(getDefaultCorrectionMatrix(udsMasterQuantChannel.getDataset.getMethod))
-      }
+        val readMatrixObj = ProfiJson.deserialize[Array[Array[Double]]](config.purityCorrectionMatrix.get)
+        Some(new Array2DRowRealMatrix(readMatrixObj))
+      } else
+        None
     }
     logger.debug("Isobaric  quanti ? "+isIsobaricQuant)
     logger.debug("usePurityCorrectionMatrix ? "+config.usePurityCorrectionMatrix)
 
     if(isIsobaricQuant && config.usePurityCorrectionMatrix && (purityCorrectionMatrix.isEmpty || purityCorrectionMatrix.get==null || !purityCorrectionMatrix.get.isSquare)){
-        throw new RuntimeException(" INVALID purityCorrectionMatrix") //for tests ...
+        throw new RuntimeException(" INVALID purityCorrectionMatrix  !") //for tests ...
     }
 
     val quantRsmId = udsMasterQuantChannel.getQuantResultSummaryId
@@ -515,14 +515,13 @@ class QuantPostProcessingComputer(
     val values  = new ArrayBuffer[Array[Double]](1)
     values += Array.empty[Double]
 
-    // val skipPurityCorrection = false //VDS TODO For temp version. To remove
     val mqReporterIonAbundanceMatrix =  new ArrayBuffer[Array[Float]](qChIdsSorted.size)
     val tPurityCorrectionMatrix = if(config.usePurityCorrectionMatrix) MathUtils.transposeMatrix(purityCorrectionMatrix.get.getData) else Array.empty[Array[Double]]
 
     // If reporter ions, reset values
     mqPepIon.masterQuantReporterIons.foreach(mqRepIon => {
 
-      if (/*!skipPurityCorrection &&*/ config.usePurityCorrectionMatrix) { //Compute Abundance using purityCorrectionMatrix
+      if (config.usePurityCorrectionMatrix) { //Compute Abundance using purityCorrectionMatrix
         val psmIntensitySortedByQChId = mqRepIon.getRawAbundancesForQuantChannels(qChIdsSorted.toArray)
         val pepIntensityAsDoubleArray = new Array[Double](qChIdsSorted.size)
         for (i <- qChIdsSorted.indices) {
@@ -553,11 +552,18 @@ class QuantPostProcessingComputer(
       }
     }) //end for each mqRepIon
 
-    if (/*!skipPurityCorrection &&*/ config.usePurityCorrectionMatrix && !mqReporterIonAbundanceMatrix.isEmpty) {
+    if ( config.usePurityCorrectionMatrix && !mqReporterIonAbundanceMatrix.isEmpty) {
       // Summarize abundance matrix only if abundance has been calculated
+      val summarizingMethod = {
+        config.reporterIonAbundanceSummarizingMethod match {
+          case MqReporterIonAbundanceSummarizingMethod.SUM => MqPeptideAbundanceSummarizingMethod.SUM
+          case MqReporterIonAbundanceSummarizingMethod.MEDIAN => MqPeptideAbundanceSummarizingMethod.MEDIAN
+        }
+      }
+
       val summarizedRawAbundanceMatrix = AbundanceSummarizer.summarizeAbundanceMatrix(
         mqReporterIonAbundanceMatrix.toArray,
-        MqPeptideAbundanceSummarizingMethod.SUM
+        summarizingMethod
       )
       mqPepIon.setAbundancesForQuantChannels(summarizedRawAbundanceMatrix, qChIdsSorted)
     }

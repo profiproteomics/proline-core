@@ -224,10 +224,9 @@ case class PostProcessingConfig(
 
     usePurityCorrectionMatrix: Boolean = true,
 
-    var purityCorrectionMatrix: Option[RealMatrix] = None,
+    var purityCorrectionMatrix: Option[String] = None,
 
     //PEPTIDES level
-
     @(JsonScalaEnumeration @field)(classOf[MqPepIonAbundanceSummarizingMethodRef])
     var pepIonAbundanceSummarizingMethod : MqPepIonAbundanceSummarizingMethod.Value = MqPepIonAbundanceSummarizingMethod.BEST_ION,
 
@@ -282,76 +281,76 @@ case class PostProcessingConfig(
 
 }
 
-// !!!  NORMALIZATION WARNING !!!  : Peptide config normalization config is currently used for Peptide IONS normalisation .... To be changed
-case class PostProcessingConfigV4(
-     val configVersion: String = "4.0",
-
-     //IONS level
-     var discardPepIonsSharingPeakels: Boolean = true,
-
-     @(JsonScalaEnumeration @field)(classOf[PeakelsSummarizingMethodRef])
-     var peakelsSummarizingMethod : PeakelsSummarizingMethod.Value = PeakelsSummarizingMethod.APEX_INTENSITY,
-
-     @(JsonScalaEnumeration @field)(classOf[MqReporterIonAbundanceSummarizingMethodRef])
-     var reporterIonAbundanceSummarizingMethod : MqReporterIonAbundanceSummarizingMethod.Value = MqReporterIonAbundanceSummarizingMethod.SUM,
-
-     usePurityCorrectionMatrix: Boolean = false,
-
-     var purityCorrectionMatrix: Option[RealMatrix] = None,
-
-     //PEPTIDES level
-     @(JsonScalaEnumeration @field)(classOf[MqPepIonAbundanceSummarizingMethodRef])
-     var pepIonAbundanceSummarizingMethod : MqPepIonAbundanceSummarizingMethod.Value = MqPepIonAbundanceSummarizingMethod.SUM,
-
-     // !!!  NORMALIZATION WARNING !!!  : Peptide config normalization config is currently used for Peptide IONS normalisation .... To be changed
-     peptideStatConfig: ProfilizerStatConfig = new ProfilizerStatConfig(),
-
-     //PROTEINS level
-     @(JsonScalaEnumeration @field)(classOf[MqPeptidesSelectionMethodRef])
-     peptidesSelectionMethod: MqPeptidesSelectionMethod.Value = MqPeptidesSelectionMethod.ALL_PEPTIDES, //alt: SPECIFIC, RAZOR_AND_SPECIFIC
-     var peptidesSelectionConfig: Option[MqPeptidesSelectionConfig] = None,
-
-     discardMissCleavedPeptides: Boolean = true,
-     @(JsonScalaEnumeration @field)(classOf[MissCleavedPeptideFilteringMethodRef])
-     var missCleavedPeptideFilteringMethod: Option[MissCleavedPeptideFilteringMethod.Value] = None,
-
-     discardModifiedPeptides: Boolean = true,
-     @(JsonScalaEnumeration @field)(classOf[ModifiedPeptideFilteringMethodRef])
-     var modifiedPeptideFilteringMethod: Option[ModifiedPeptideFilteringMethod.Value] = None,
-     modifiedPeptideFilterConfig: Option[ModifiedPeptideFilterConfig] = None,
-
-     applyProfileClustering: Boolean = true,
-     @(JsonScalaEnumeration @field)(classOf[MqPeptidesClusteringMethodRef])
-     var profileClusteringMethod: Option[MqPeptidesClusteringMethod.Value] = None,
-     profileClustererConfig: Option[MqPeptidesClustererConfig] = None,
-
-     @(JsonScalaEnumeration @field)(classOf[MqPeptideAbundanceSummarizingMethodRef])
-     var peptideAbundanceSummarizingMethod: MqPeptideAbundanceSummarizingMethod.Value = MqPeptideAbundanceSummarizingMethod.MEAN,
-     peptideAbundanceSummarizerConfig: Option[MqPeptideAbundanceSummarizerConfig] = None,
-
-     proteinStatConfig: ProfilizerStatConfig = new ProfilizerStatConfig()
-) {
-
-  //if peptidesSelectionConfig not specified and RAZOR_AND_SPECIFIC is specified, set to default method
-  if(peptidesSelectionMethod.equals(MqPeptidesSelectionMethod.RAZOR_AND_SPECIFIC) && peptidesSelectionConfig.isEmpty){
-    peptidesSelectionConfig = Some(MqPeptidesSelectionConfig(razorStrategyMethod = RazorStrategyMethod.MOST_SPECIFIC_PEP_SELECTION))
-  }
-
-  //if discardMissCleavedPeptides selected with no specified missCleavedPeptideFilteringMethod, set method to default
-  if(discardMissCleavedPeptides && missCleavedPeptideFilteringMethod.isEmpty ){
-    missCleavedPeptideFilteringMethod = Some(MissCleavedPeptideFilteringMethod.DISCARD_MISS_CLEAVED_FORMS)
-  }
-
-  def isMqPeptideAbundanceSummarizerBasedOn(component: QuantComponentItem.Value): Boolean = {
-    if (peptideAbundanceSummarizerConfig.isDefined) {
-      (peptideAbundanceSummarizerConfig.get.peptideSummarizingBasedOn.get == component.toString)
-    } else {
-      ((peptideAbundanceSummarizingMethod == MqPeptideAbundanceSummarizingMethod.MEDIAN_RATIO_FITTING) && (component == QuantComponentItem.QUANT_PEPTIDE_IONS)) ||
-        ((peptideAbundanceSummarizingMethod != MqPeptideAbundanceSummarizingMethod.MEDIAN_RATIO_FITTING) && (component == QuantComponentItem.QUANT_PEPTIDES))
-    }
-  }
-
-}
+//// !!!  NORMALIZATION WARNING !!!  : Peptide config normalization config is currently used for Peptide IONS normalisation .... To be changed
+//case class PostProcessingConfigV4(
+//     val configVersion: String = "4.0",
+//
+//     //IONS level
+//     var discardPepIonsSharingPeakels: Boolean = true,
+//
+//     @(JsonScalaEnumeration @field)(classOf[PeakelsSummarizingMethodRef])
+//     var peakelsSummarizingMethod : PeakelsSummarizingMethod.Value = PeakelsSummarizingMethod.APEX_INTENSITY,
+//
+//     @(JsonScalaEnumeration @field)(classOf[MqReporterIonAbundanceSummarizingMethodRef])
+//     var reporterIonAbundanceSummarizingMethod : MqReporterIonAbundanceSummarizingMethod.Value = MqReporterIonAbundanceSummarizingMethod.SUM,
+//
+//     usePurityCorrectionMatrix: Boolean = false,
+//
+//     var purityCorrectionMatrix: Option[RealMatrix] = None,
+//
+//     //PEPTIDES level
+//     @(JsonScalaEnumeration @field)(classOf[MqPepIonAbundanceSummarizingMethodRef])
+//     var pepIonAbundanceSummarizingMethod : MqPepIonAbundanceSummarizingMethod.Value = MqPepIonAbundanceSummarizingMethod.SUM,
+//
+//     // !!!  NORMALIZATION WARNING !!!  : Peptide config normalization config is currently used for Peptide IONS normalisation .... To be changed
+//     peptideStatConfig: ProfilizerStatConfig = new ProfilizerStatConfig(),
+//
+//     //PROTEINS level
+//     @(JsonScalaEnumeration @field)(classOf[MqPeptidesSelectionMethodRef])
+//     peptidesSelectionMethod: MqPeptidesSelectionMethod.Value = MqPeptidesSelectionMethod.ALL_PEPTIDES, //alt: SPECIFIC, RAZOR_AND_SPECIFIC
+//     var peptidesSelectionConfig: Option[MqPeptidesSelectionConfig] = None,
+//
+//     discardMissCleavedPeptides: Boolean = true,
+//     @(JsonScalaEnumeration @field)(classOf[MissCleavedPeptideFilteringMethodRef])
+//     var missCleavedPeptideFilteringMethod: Option[MissCleavedPeptideFilteringMethod.Value] = None,
+//
+//     discardModifiedPeptides: Boolean = true,
+//     @(JsonScalaEnumeration @field)(classOf[ModifiedPeptideFilteringMethodRef])
+//     var modifiedPeptideFilteringMethod: Option[ModifiedPeptideFilteringMethod.Value] = None,
+//     modifiedPeptideFilterConfig: Option[ModifiedPeptideFilterConfig] = None,
+//
+//     applyProfileClustering: Boolean = true,
+//     @(JsonScalaEnumeration @field)(classOf[MqPeptidesClusteringMethodRef])
+//     var profileClusteringMethod: Option[MqPeptidesClusteringMethod.Value] = None,
+//     profileClustererConfig: Option[MqPeptidesClustererConfig] = None,
+//
+//     @(JsonScalaEnumeration @field)(classOf[MqPeptideAbundanceSummarizingMethodRef])
+//     var peptideAbundanceSummarizingMethod: MqPeptideAbundanceSummarizingMethod.Value = MqPeptideAbundanceSummarizingMethod.MEAN,
+//     peptideAbundanceSummarizerConfig: Option[MqPeptideAbundanceSummarizerConfig] = None,
+//
+//     proteinStatConfig: ProfilizerStatConfig = new ProfilizerStatConfig()
+//) {
+//
+//  //if peptidesSelectionConfig not specified and RAZOR_AND_SPECIFIC is specified, set to default method
+//  if(peptidesSelectionMethod.equals(MqPeptidesSelectionMethod.RAZOR_AND_SPECIFIC) && peptidesSelectionConfig.isEmpty){
+//    peptidesSelectionConfig = Some(MqPeptidesSelectionConfig(razorStrategyMethod = RazorStrategyMethod.MOST_SPECIFIC_PEP_SELECTION))
+//  }
+//
+//  //if discardMissCleavedPeptides selected with no specified missCleavedPeptideFilteringMethod, set method to default
+//  if(discardMissCleavedPeptides && missCleavedPeptideFilteringMethod.isEmpty ){
+//    missCleavedPeptideFilteringMethod = Some(MissCleavedPeptideFilteringMethod.DISCARD_MISS_CLEAVED_FORMS)
+//  }
+//
+//  def isMqPeptideAbundanceSummarizerBasedOn(component: QuantComponentItem.Value): Boolean = {
+//    if (peptideAbundanceSummarizerConfig.isDefined) {
+//      (peptideAbundanceSummarizerConfig.get.peptideSummarizingBasedOn.get == component.toString)
+//    } else {
+//      ((peptideAbundanceSummarizingMethod == MqPeptideAbundanceSummarizingMethod.MEDIAN_RATIO_FITTING) && (component == QuantComponentItem.QUANT_PEPTIDE_IONS)) ||
+//        ((peptideAbundanceSummarizingMethod != MqPeptideAbundanceSummarizingMethod.MEDIAN_RATIO_FITTING) && (component == QuantComponentItem.QUANT_PEPTIDES))
+//    }
+//  }
+//
+//}
 
 case class ProfilizerConfig(
   discardMissedCleavedPeptides: Boolean = true, // TODO: rename me in discardMissCleavedPeptides
