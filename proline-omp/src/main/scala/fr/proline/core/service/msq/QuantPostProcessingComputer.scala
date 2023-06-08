@@ -549,10 +549,14 @@ class QuantPostProcessingComputer(
       } else {
         //reset to previous value
         mqRepIon.setAbundancesForQuantChannels(mqRepIon.getRawAbundancesForQuantChannels(qChIdsSorted.toArray), qChIdsSorted)
+
+        val qRepIonMap = mqRepIon.quantReporterIonMap
+        mqReporterIonAbundanceMatrix += qChIdsSorted.map( qRepIonMap.get(_).map(_.abundance).getOrElse(Float.NaN) ).toArray
+
       }
     }) //end for each mqRepIon
 
-    if ( config.usePurityCorrectionMatrix && !mqReporterIonAbundanceMatrix.isEmpty) {
+    if ( !mqReporterIonAbundanceMatrix.isEmpty) {
       // Summarize abundance matrix only if abundance has been calculated
       val summarizingMethod = {
         config.reporterIonAbundanceSummarizingMethod match {
