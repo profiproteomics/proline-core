@@ -5,7 +5,7 @@
   <parent>
     <artifactId>profi-pom</artifactId>
     <groupId>fr.proline</groupId>
-    <version>1.1.1-SNAPSHOT</version>  <!-- Snapshot Trunk version -->
+    <version>1.1.0</version>  <!-- Snapshot Trunk version -->
   </parent>
 
   <artifactId>proline-core</artifactId>
@@ -26,8 +26,8 @@
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <mzdb.version>1.1.1-SNAPSHOT</mzdb.version>
-    <commons.version>1.1.1-SNAPSHOT</commons.version>  <!-- Tag version -->
+    <mzdb.version>1.1.0</mzdb.version>
+    <commons.version>1.1.0</commons.version>  <!-- Tag version -->
   </properties>
   <scm>
     <connection>scm:git:https://github.com/profiproteomics/proline-core.git</connection>
