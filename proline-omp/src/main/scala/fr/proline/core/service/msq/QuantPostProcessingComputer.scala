@@ -537,8 +537,10 @@ class QuantPostProcessingComputer(
         for (i <- qChIdsSorted.indices) {
           if (psmIntensitySortedByQChId.apply(i).isNaN) { //There was NO intensity before ...
             pepIntensityFinalValue.update(i, Float.NaN)
-          } else
-            pepIntensityFinalValue.update(i, peptideCorrectedValues(0)(i).toFloat)
+          } else {
+            val newVal = if(peptideCorrectedValues(0)(i)>0) peptideCorrectedValues(0)(i).toFloat else 0f;
+            pepIntensityFinalValue.update(i, newVal)
+          }
         }
         mqRepIon.setAbundancesForQuantChannels(pepIntensityFinalValue, qChIdsSorted)
         //end usePurityCorrectionMatrix
