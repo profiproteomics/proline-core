@@ -59,6 +59,9 @@ public class DMasterQuantPeptideIon {
 		m_moz = mqpi.getMoz();
 		m_elutionTime = mqpi.getElutionTime();
 		m_lcmsMasterFeatureId = mqpi.getLcmsMasterFeatureId();
+		try {
+			m_peptideInstance = new DPeptideInstance(mqpi.getPeptideInstance());
+		} catch (IOException e) { }
 		updatePepIonStatus();
 	}
 
@@ -157,8 +160,8 @@ public class DMasterQuantPeptideIon {
 		return m_bestPeptideMatch;
 	}
 
-	public void setBestPeptideMatch(DPeptideMatch m_bestPeptideMatch) {
-		this.m_bestPeptideMatch = m_bestPeptideMatch;
+	public void setBestPeptideMatch(DPeptideMatch bestPeptideMatch) {
+		this.m_bestPeptideMatch = bestPeptideMatch;
 	}
 
 	public DPeptideMatch getRepresentativePepMatch() {

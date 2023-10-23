@@ -17,7 +17,7 @@ case class SpectralCountConfig(
 case class ProteinSetSCDescription(
   val proteinSet: ProteinSet,
   val typicalPMAcc: String,
-  val samesetPMAcc: Seq[String],
+  val samesetPMAcc: Set[String],
   val refRSMPeptidesInfo: PeptidesSCDescription,
   var peptideInfoByRSMId: Map[Long, PeptidesSCDescription] = Map.empty[Long, PeptidesSCDescription]
 )
@@ -26,7 +26,7 @@ case class ProteinSetSCDescription(
  * Peptide information for spectralCount calculation
  */
 case class PeptidesSCDescription(
-  var pepSpecificIds: Seq[Long],
+  var pepSpecificIds: Set[Long],
   var nbrPSMSpecific: Int,
   var weightByPeptideId: scala.collection.mutable.Map[Long, Float] = null
 )

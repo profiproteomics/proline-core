@@ -16,10 +16,11 @@ import fr.proline.core.om.provider.msi.impl.SQLSpectrumProvider
 import fr.proline.core.om.storer.msi.impl.RsmDuplicator
 import fr.proline.core.orm.msi.ObjectTreeSchema.SchemaName
 import fr.proline.core.orm.msi.repository.ObjectTreeSchemaRepository
-import fr.proline.core.orm.msi.{ResultSummary => MsiResultSummary}
+import fr.proline.core.orm.msi.{ObjectTreeSchema, ResultSummary => MsiResultSummary}
 import fr.proline.core.orm.uds.MasterQuantitationChannel
 import fr.proline.core.service.lcms.io.ExtractMapSet
 
+import scala.collection.mutable
 import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.LongMap
 
@@ -55,7 +56,6 @@ class IsobaricTaggingQuantifier(
 
     // Store the master quant result set
     val msiQuantResultSet = this.storeMsiQuantResultSet()
-    val quantRsId = msiQuantResultSet.getId
 
     // Create corresponding master quant result summary
     val msiQuantRsm = this.storeMsiQuantResultSummary(msiQuantResultSet)
@@ -71,7 +71,7 @@ class IsobaricTaggingQuantifier(
     // TODO: remove code redundancy with the AbstractLabelFreeFeatureQuantifier (maybe add a dedicated method in AbstractMasterQuantChannelQuantifier)
     val rsmProvider = new SQLResultSummaryProvider(PeptideCacheExecutionContext(executionContext))
     val rsmDuplicator =  new RsmDuplicator(rsmProvider)
-    val quantRsm = rsmDuplicator.cloneAndStoreRSM(mergedResultSummary, msiQuantRsm, msiQuantResultSet, !masterQc.identResultSummaryId.isDefined, msiEm)
+    val quantRsm = rsmDuplicator.cloneAndStoreRSM(mergedResultSummary, msiQuantRsm, msiQuantResultSet, masterQc.identResultSummaryId.isEmpty, msiEm)
     
     // Compute and store quant entities (MQ Peptides, MQ ProteinSets)
     this.computeAndStoreQuantEntities(msiQuantRsm, quantRsm)
@@ -165,11 +165,11 @@ class IsobaricTaggingQuantifier(
     this.storeMasterQuantPeptidesAndProteinSets(msiQuantRsm,mqPeptides,mqProtSets)
   }
   
-  protected lazy val quantPeptidesObjectTreeSchema = {
+  protected lazy val quantPeptidesObjectTreeSchema: ObjectTreeSchema = {
     ObjectTreeSchemaRepository.loadOrCreateObjectTreeSchema(msiEm, SchemaName.ISOBARIC_TAGGING_QUANT_PEPTIDES.toString)
   }
 
-  protected lazy val quantPeptideIonsObjectTreeSchema = {
+  protected lazy val quantPeptideIonsObjectTreeSchema: ObjectTreeSchema = {
     ObjectTreeSchemaRepository.loadOrCreateObjectTreeSchema(msiEm, SchemaName.ISOBARIC_TAGGING_QUANT_PEPTIDE_IONS.toString)
   }
   
@@ -249,14 +249,14 @@ class IsobaricTaggingQuantifier(
   
   private def _foreachIdentifiedSpectrum(
     peaklistId: Long,
-    identifiedMs2QueryBySpectrumId: LongMap[Ms2Query]
+    identifiedMs2QueryBySpectrumId: mutable.LongMap[Ms2Query]
   )( onEachSpectrum: (Long, IsobaricTaggingQuantifier.ISpectrum, Ms2Query) => Unit ): Unit = {
     
     import fr.profi.mzdb.db.model.params.param.CVEntry
     import fr.profi.mzdb.model.SpectrumHeader
     
     val reporterIonDataSource = quantConfig.reporterIonDataSource
-    val isProlineDataSource = (reporterIonDataSource == ReporterIonDataSource.PROLINE_SPECTRUM)
+    val isProlineDataSource = reporterIonDataSource == ReporterIonDataSource.PROLINE_SPECTRUM
     
     val mzDbReaderOpt = if(isProlineDataSource) None
     else {
@@ -269,7 +269,7 @@ class IsobaricTaggingQuantifier(
       Some(new fr.profi.mzdb.MzDbReader(mzDbFilePathOpt.get, true) )
     }
     
-    lazy val ms3SpectraHeaderByMs2SpecId = if (mzDbReaderOpt.isEmpty) LongMap.empty[SpectrumHeader]
+    lazy val ms3SpectraHeaderByMs2SpecId = if (mzDbReaderOpt.isEmpty) mutable.LongMap.empty[SpectrumHeader]
     else {
       val mzDbReader = mzDbReaderOpt.get
       
@@ -279,7 +279,7 @@ class IsobaricTaggingQuantifier(
       
       val spectraHeaders = mzDbReaderOpt.get.getSpectrumHeaders
       val spectraHeadersByCycle = spectraHeaders.groupBy(_.getCycle)
-      val ms3ShMap = new LongMap[SpectrumHeader](spectraHeaders.length)
+      val ms3ShMap = new mutable.LongMap[SpectrumHeader](spectraHeaders.length)
       
       for( (cycle, msnSpecHeadersInCycle) <- spectraHeadersByCycle ) {
         

@@ -24,15 +24,19 @@ public class DPeptideInstance {
 
 
 	public DPeptideInstance(PeptideInstance peptideInstance) throws IOException {
+		m_peptide = null;
+		m_bestPeptideMatch = null;
 		if (peptideInstance != null) {
 			m_id = peptideInstance.getId();
 			m_validatedProteinSetCount = peptideInstance.getValidatedProteinSetCount();
 			m_elutionTime = peptideInstance.getElutionTime();
 			m_peptideId = peptideInstance.getPeptide().getId();
 			m_properties = (peptideInstance.getSerializedProperties() != null) ? JsonSerializer.getMapper().readValue(peptideInstance.getSerializedProperties(), Map.class) : null;
+			if(peptideInstance.getPeptide()!= null)
+				m_peptide = peptideInstance.getPeptide();
+			if(peptideInstance.getTransientData() != null && peptideInstance.getTransientData().getBestPeptideMatch() != null)
+				m_bestPeptideMatch = peptideInstance.getTransientData().getBestPeptideMatch();
 		}
-		m_bestPeptideMatch = null;
-		m_peptide = null;
 	}
 
 	public long getId() {

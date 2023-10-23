@@ -21,7 +21,7 @@ case class AggregationQuantConfig (
 ) extends IQuantConfig
 
 /*
- * Map a parent QuantChannel with a set of "child" QuantChannel (one for each child dataset). Child QuantChannel are indexed
+ * Map a parent QuantChannel number with a set of "child" QuantChannel ids (one for each child dataset). Child QuantChannel are indexed
  * by their MasterQuantChannel id
  */
 case class QuantChannelMapping(
