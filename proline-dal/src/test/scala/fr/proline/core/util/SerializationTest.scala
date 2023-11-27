@@ -1,20 +1,44 @@
 package fr.proline.core.util
 
 import fr.profi.util.serialization.ProfiJson
-import fr.proline.core.algo.lcms.DetectionMethod
-import fr.proline.core.algo.msq.config.LabelFreeQuantConfigConverter
+import fr.profi.util.serialization.ProfiJson.{deserialize, serialize}
+import fr.proline.core.algo.lcms.{ AlnSmoothing, DetectionMethod, MozCalibrationSmoothing}
+import fr.proline.core.algo.msq.config.{LabelFreeQuantConfig, LabelFreeQuantConfigConverter}
 import fr.proline.core.om.model.msi.PtmDataSet
 import org.junit.Test
 import org.junit.Assert
 
 class SerializationTest {
 
+  val quandCfgV2 : String ="{\"use_last_peakel_detection\":\"true\",\"clustering_params\":{\"moz_tol_unit\":\"PPM\",\"intensity_computation\":\"MOST_INTENSE\",\"time_computation\":\"MOST_INTENSE\",\"time_tol\":\"15.0\",\"moz_tol\":\"5.0\"},\"detection_params\":{\"psm_matching_params\":{\"moz_tol_unit\":\"PPM\",\"moz_tol\":\"5.0\"},\"isotope_matching_params\":{\"moz_tol_unit\":\"PPM\",\"moz_tol\":\"5.0\"}},\"extraction_params\":{\"moz_tol_unit\":\"PPM\",\"moz_tol\":\"5.0\"},\"detection_method_name\":\"DETECT_PEAKELS\",\"alignment_config\":{\"ft_mapping_method_name\":\"PEPTIDE_IDENTITY\",\"ignore_errors\":\"false\",\"method_name\":\"EXHAUSTIVE\",\"method_params\":{},\"smoothing_method_name\":\"LOESS\",\"ft_mapping_method_params\":{\"time_tol\":\"120.0\"}},\"config_version\":\"2.0\"}"
+
+  @Test
+  def testConvertXicParamV2ToLast(): Unit = {
+    val qcAsMap = ProfiJson.deserialize[Map[String, Object]](quandCfgV2)
+    val quantConfigLastAsMap = LabelFreeQuantConfigConverter.convertFromV2(qcAsMap)
+    val quantConfigV3AsStr2 = serialize(quantConfigLastAsMap)
+    val lfCfg = deserialize[LabelFreeQuantConfig](quantConfigV3AsStr2)
+    Assert.assertNotNull(lfCfg)
+    Assert.assertTrue(lfCfg.normalizationMethod.isEmpty)
+    Assert.assertTrue(lfCfg.pepIonSummarizingMethod.isEmpty)
+    Assert.assertEquals(5.0, lfCfg.detectionParams.get.psmMatchingParams.get.mozTol,0.01)
+    Assert.assertEquals(AlnSmoothing.LOESS, lfCfg.alignmentConfig.get.smoothingMethodName)
+
+    Assert.assertEquals(DetectionMethod.DETECT_PEAKELS.toString, quantConfigLastAsMap("detection_method_name"))
+    Assert.assertEquals(quantConfigLastAsMap("moz_calibration_smoothing_method"), MozCalibrationSmoothing.LOESS.toString)
+    //TODO add some verification
+  }
+
   @Test
   def testSerialzeXic1Param(): Unit = {
     val quantConfigAsStr = "{\"start_from_validated_peptides\":true,\"ft_mapping_params\":{\"moz_tol_unit\":\"PPM\",\"time_tol\":\"42.0\",\"moz_tol\":\"5.0\"},\"detect_peakels\":true,\"use_last_peakel_detection\":false,\"restrain_cross_assignment_to_reliable_features\":true,\"clustering_params\":{\"moz_tol_unit\":\"PPM\",\"intensity_computation\":\"MOST_INTENSE\",\"time_computation\":\"MOST_INTENSE\",\"time_tol\":\"15.0\",\"moz_tol\":\"5.0\"},\"perform_cross_assignment_inside_groups_only\":true,\"aln_method_name\":\"EXHAUSTIVE\",\"extraction_params\":{\"moz_tol_unit\":\"PPM\",\"moz_tol\":\"5.0\"},\"aln_params\":{\"max_iterations\":\"3\",\"ft_mapping_method_name\":\"PEPTIDE_IDENTITY\",\"ft_mapping_params\":{\"moz_tol_unit\":\"PPM\",\"time_tol\":\"300.0\",\"moz_tol\":\"5.0\"},\"mass_interval\":\"20000\",\"smoothing_method_name\":\"LOESS\",\"smoothing_params\":{\"window_size\":\"200\",\"window_overlap\":\"20\",\"min_window_landmarks\":\"50\"}},\"ft_filter\":{\"name\":\"INTENSITY\",\"value\":\"0.0\",\"operator\":\"GT\"},\"detect_features\":false}"
     val qcAsMap= ProfiJson.deserialize[Map[String,Object]](quantConfigAsStr)
-    val quantConfigV2AsMap = LabelFreeQuantConfigConverter.convertFromV1(qcAsMap)
-    Assert.assertEquals(quantConfigV2AsMap("detection_method_name"),DetectionMethod.DETECT_PEAKELS.toString)
+    val quantConfigLastAsMap = LabelFreeQuantConfigConverter.convertFromV1(qcAsMap)
+    val quantConfigAsStr2 = serialize(quantConfigLastAsMap)
+    val lfCfg = deserialize[LabelFreeQuantConfig](quantConfigAsStr2)
+    Assert.assertNotNull(lfCfg)
+    Assert.assertEquals(DetectionMethod.DETECT_PEAKELS.toString, quantConfigLastAsMap("detection_method_name"))
+    Assert.assertEquals(quantConfigLastAsMap("moz_calibration_smoothing_method"),MozCalibrationSmoothing.LOESS.toString)
     //TODO add some verification
   }
 
@@ -22,8 +46,9 @@ class SerializationTest {
   def testSerialzeXic2Param(): Unit = {
     val quantConfigAsStr = "{\"start_from_validated_peptides\":true,\"ft_mapping_params\":{\"moz_tol_unit\":\"PPM\",\"time_tol\":\"30.0\",\"moz_tol\":\"5.0\"},\"detect_peakels\":true,\"clustering_params\":{\"moz_tol_unit\":\"PPM\",\"intensity_computation\":\"MOST_INTENSE\",\"time_computation\":\"MOST_INTENSE\",\"time_tol\":\"15\",\"moz_tol\":\"5.0\"},\"aln_method_name\":\"ITERATIVE\",\"extraction_params\":{\"moz_tol_unit\":\"PPM\",\"moz_tol\":\"5.0\"},\"aln_params\":{\"max_iterations\":\"3\",\"ft_mapping_params\":{\"moz_tol_unit\":\"PPM\",\"time_tol\":\"30.0\",\"moz_tol\":\"5.0\"},\"ft_mapping_method_name\":\"FEATURE_COORDINATES\",\"mass_interval\":\"20000\",\"smoothing_method_name\":\"LOESS\",\"smoothing_params\":{\"window_size\":\"200\",\"window_overlap\":\"20\",\"min_window_landmarks\":\"50\"}},\"ft_filter\":{\"name\":\"INTENSITY\",\"value\":\"0.0\",\"operator\":\"GT\"},\"detect_features\":false}"
     val qcAsMap= ProfiJson.deserialize[Map[String,Object]](quantConfigAsStr)
-    val quantConfigV2AsMap = LabelFreeQuantConfigConverter.convertFromV1(qcAsMap)
-    Assert.assertEquals(quantConfigV2AsMap("detection_method_name"),DetectionMethod.DETECT_PEAKELS.toString)
+    val quantConfigLastAsMap = LabelFreeQuantConfigConverter.convertFromV1(qcAsMap)
+    Assert.assertEquals(quantConfigLastAsMap("detection_method_name"),DetectionMethod.DETECT_PEAKELS.toString)
+    Assert.assertEquals(quantConfigLastAsMap("moz_calibration_smoothing_method"), MozCalibrationSmoothing.LOESS.toString)
     //TODO add some verification
   }
 

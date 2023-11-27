@@ -136,13 +136,13 @@ class IsobaricTaggingQuantifier(
       val spectrumIdByRsIdAndScanNumber = entityCache.spectrumIdByRsIdAndScanNumber
       val ms2ScanNumbersByFtId = entityCache.getMs2ScanNumbersByFtId(lcMsScans, rawMapIds)
 
-      if(lfqConfig.pepIonSummarizingMethdd.isDefined) {
+      if(lfqConfig.pepIonSummarizingMethod.isDefined) {
         new IsobaricTaggingWithLabelFreeEntitiesSummarizer(
           mqReporterIonsByIdentRsmId,
           lcmsMapSet,
           spectrumIdByRsIdAndScanNumber,
           ms2ScanNumbersByFtId,
-          lfqConfig.pepIonSummarizingMethdd.get
+          lfqConfig.pepIonSummarizingMethod.get
         )
       } else {
         new IsobaricTaggingWithLabelFreeEntitiesSummarizer(

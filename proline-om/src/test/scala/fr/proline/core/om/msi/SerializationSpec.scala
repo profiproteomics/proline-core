@@ -28,7 +28,8 @@ abstract class AbstractSerializationSpec extends AnyFunSpec with GivenWhenThen w
   
     // Iterate over each sperialization specification
     for( jsonSpecif <- jsonSpecifs ) {
-      
+      logger.info("Compare in test "+ jsonSpecif.description )
+
       describe(jsonSpecif.description) {
         
         it("should be correctly serialized to JSON with the ProFI serializer") {
@@ -40,8 +41,8 @@ abstract class AbstractSerializationSpec extends AnyFunSpec with GivenWhenThen w
           val jsonString = ProfiJson.serialize(objectData)
           val jsonAsMap = ProfiJson.deserialize[Map[String,Any]](jsonString)
           
-          logger.info("INPUT JSON:\n"+ jsonSpecif.jsonData)
-          logger.info("OUTPUT JSON:\n"+ jsonString)
+          logger.info("\n -------- INPUT JSON:\n"+ jsonSpecif.jsonData)
+          logger.info("\n -------- OUTPUT JSON:\n"+ jsonString)
           
           Then("it should match the Map obtained from the expected JSON string")
           jsonAsMap should equal ( ProfiJson.deserialize[Map[String,Any]](jsonSpecif.jsonData) )         
@@ -97,7 +98,7 @@ class SerializationSpec extends AbstractSerializationSpec {
       LocatedPtm(
         definition = PtmDefinition(
           id = -1,
-          location = PtmLocation.ANYWHERE.toString(),
+          location = PtmLocation.ANYWHERE.toString,
           residue = 'M',
           names = PtmNames("Oxidation","Hydroxylation"),
           ptmEvidences = Array(

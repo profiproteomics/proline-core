@@ -118,14 +118,14 @@ class ResidueLabelingQuantifier(
     val ms2ScanNumbersByFtId = entityCache.getMs2ScanNumbersByFtId(lcMsScans, rawMapIds)
 
 
-    val entitiesSummarizer = if(lfqConfig.pepIonSummarizingMethdd.isDefined) {
+    val entitiesSummarizer = if(lfqConfig.pepIonSummarizingMethod.isDefined) {
       new ResidueLabelingEntitiesSummarizer(
         this.qcByRSMIdAndTagId,
         this.tagByPtmId,
         lcmsMapSet,
         spectrumIdByRsIdAndScanNumber,
         ms2ScanNumbersByFtId,
-        lfqConfig.pepIonSummarizingMethdd.get)
+        lfqConfig.pepIonSummarizingMethod.get)
     } else {
       new ResidueLabelingEntitiesSummarizer(
         this.qcByRSMIdAndTagId,

@@ -25,7 +25,7 @@ class FeatureClustererTest extends JUnitSuite with StrictLogging {
   val rawMap = rawMapGenerator.generateRawMap( lcmsRun )
     
   // TODO: try other kind of parameters
-  val ftMappingParams = FeatureMappingParams(mozTol = Some(5.0), mozTolUnit = Some("PPM"), timeTol = 5f )
+  val ftMappingParams = FeatureMappingParams(mozTol = Some(5.0), mozTolUnit = Some("PPM"), timeTol = Some(5f), useMozCalibration = false)
   val ftClusteringParams = ClusteringParams(mozTol = 5.0, mozTolUnit = "PPM", timeTol = 5f , intensityComputation = "MOST_INTENSE", timeComputation= "MOST_INTENSE")
 
     

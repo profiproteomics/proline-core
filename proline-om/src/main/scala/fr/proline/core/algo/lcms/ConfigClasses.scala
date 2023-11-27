@@ -44,6 +44,15 @@ object AlnSmoothing extends Enumeration {
   val TIME_WINDOW = Value("TIME_WINDOW")
 }
 
+class MozCalibrationSmoothingRef extends TypeReference[MozCalibrationSmoothing.type]
+
+object MozCalibrationSmoothing extends Enumeration{
+  val LANDMARK_RANGE = Value("LANDMARK_RANGE")
+  val LOESS = Value("LOESS")
+  val TIME_WINDOW = Value("TIME_WINDOW")
+  val MEAN = Value("MEAN") //To be defined !
+}
+
 class FeatureMappingMethodRef extends TypeReference[FeatureMappingMethod.type]
 
 object FeatureMappingMethod extends Enumeration {
@@ -100,11 +109,13 @@ case class AlignmentConfig(
   @(JsonScalaEnumeration @field)(classOf[FeatureMappingMethodRef])
   ftMappingMethodName: FeatureMappingMethod.Value,
   ftMappingMethodParams: FeatureMappingParams,
-    @JsonDeserialize(contentAs = classOf[java.lang.Boolean])
+  @JsonDeserialize(contentAs = classOf[java.lang.Boolean])
   removeOutliers: Option[Boolean] = None, // getOrElse(false)
-    @JsonDeserialize(contentAs = classOf[java.lang.Boolean])
+  @JsonDeserialize(contentAs = classOf[java.lang.Boolean])
   ignoreErrors: Option[Boolean] = None    // getOrElse(false)
-  )
+  ) {
+  require(ftMappingMethodParams.timeTol.isDefined, "Fixed time tolerance should be specified !")
+}
 
 case class CrossAssignmentConfig(
   @(JsonScalaEnumeration @field)(classOf[CrossAssignMethodRef])
@@ -114,19 +125,39 @@ case class CrossAssignmentConfig(
   ftFilter: Option[Filter] = None
 )
 
+// Default value to be confirmed
 case class FeatureMappingParams(
-  @JsonDeserialize(contentAs = classOf[java.lang.Double])
-  mozTol: Option[Double] = None,
-  mozTolUnit: Option[String] = None,
-  timeTol: Float
-)
+ @JsonDeserialize(contentAs = classOf[java.lang.Double])
+ mozTol: Option[Double] = None,
+ mozTolUnit: Option[String] = None,
+ @JsonDeserialize(contentAs = classOf[java.lang.Float])
+ timeTol: Option[Float],
+ useMozCalibration: Boolean = true,
+ useAutomaticTimeTol: Boolean = false,
+ @JsonDeserialize(contentAs = classOf[java.lang.Double])
+ maxAutoTimeTol: Option[Float] = None,
+ @JsonDeserialize(contentAs = classOf[java.lang.Double])
+ minAutoTimeTol: Option[Float] = None
+) {
+  if(useAutomaticTimeTol){
+    require(maxAutoTimeTol.isDefined, "Max time tolerance should be specified is Automatic time tolerance mdoe")
+    require(minAutoTimeTol.isDefined, "Min time tolerance should be specified is Automatic time tolerance mdoe")
+  } else {
+    require(timeTol.isDefined,  "time tolerance should be specified in None Automatic time tolerance mode")
+  }
+
+}
 
 case class DetectionParams(
   startFromValidatedPeptides: Option[Boolean] = None,
   psmMatchingParams: Option[MzToleranceParams] = None,
   ftMappingParams: Option[FeatureMappingParams] = None,
   isotopeMatchingParams: Option[MzToleranceParams] = None
-)
+) {
+  if(ftMappingParams.isDefined){
+    require(ftMappingParams.get.timeTol.isDefined, "Fixed time tolerance should be specified !")
+  }
+}
 
 case class ClusteringParams(
   mozTol: Double,
