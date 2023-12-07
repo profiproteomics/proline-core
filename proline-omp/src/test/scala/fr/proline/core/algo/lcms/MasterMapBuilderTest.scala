@@ -38,7 +38,7 @@ class MasterMapBuilderTest extends JUnitSuite  with StrictLogging {
     val mapSet = mapSetFakeGen.generateMapSet(lcmsRun, rawMap)
     
     // Build the corresponding master map
-    val ftMappingParams = FeatureMappingParams(mozTol = Some(10.0), mozTolUnit = Some("PPM"), timeTol = Some(20f), useMozCalibration = false )
+    val ftMappingParams = FeatureMappingParams(mozTol = Some(10.0), mozTolUnit = Some("PPM"), timeTol = 20f )
     val ftClusteringParams = ClusteringParams(mozTol = 10.0, mozTolUnit = "PPM", timeTol = 20f, intensityComputation = "MOST_INTENSE", timeComputation= "MOST_INTENSE")
       /*
       mozTol=10., mozTolUnit= "PPM", timeTol=20f,

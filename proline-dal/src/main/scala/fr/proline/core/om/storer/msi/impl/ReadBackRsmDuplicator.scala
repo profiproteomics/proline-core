@@ -221,7 +221,8 @@ class RsmDuplicator(rsmProvider: IResultSummaryProvider) extends IRsmDuplicator 
       }
 
       // PeptideReadablePTMString
-      if (peptide.readablePtmString != null && !peptide.readablePtmString.isEmpty) {
+      //VDS TODO : get childs peptide readable ptm
+      if (peptide.readablePtmString != null && peptide.readablePtmString.nonEmpty) {
         val msiPeptideReadablePtmStringPK = new MsiPeptideReadablePtmStringPK()
         msiPeptideReadablePtmStringPK.setPeptideId(peptideId)
         msiPeptideReadablePtmStringPK.setResultSetId(emptyRS.getId)

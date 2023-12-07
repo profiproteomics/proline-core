@@ -18,11 +18,10 @@ object FeatureMapper {
 
     require(methodParams.mozTol.isDefined, "FeatureMapper requires FeatureMappingParams.mozTol parameter")
     require(methodParams.mozTolUnit.isDefined, "FeatureMapper requires FeatureMappingParams.mozTolUnit parameter")
-    require(methodParams.timeTol.isDefined, "FeatureMapper requires FeatureMappingParams.timeTol parameter")
 
     val mozTol = methodParams.mozTol.get
     val mozTolUnit = methodParams.mozTolUnit.get
-    val timeTol = methodParams.timeTol.get
+    val timeTol = methodParams.timeTol
     
     // Group features by charge
     var map1FtsByCharge = LongMap.empty[Seq[Feature]]

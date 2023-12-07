@@ -45,13 +45,10 @@ object LabelFreeQuantConfigConverter {
         newFeatureParams += ("moz_tol"->featureMappingParamMap("moz_tol"))
       if (featureMappingParamMap.contains("moz_tol"))
         newFeatureParams += ("moz_tol_unit" -> featureMappingParamMap("moz_tol_unit"))
-      if (featureMappingParamMap.contains("time_tol"))
-        newFeatureParams += ("time_tol" -> featureMappingParamMap("time_tol"))
-      newFeatureParams += ("use_moz_calibration" -> false)
-      newFeatureParams += ("use_automatic_time_tol" -> false)
+      newFeatureParams += ("time_tol" -> featureMappingParamMap("time_tol"))
 
-      alignMap += ("ft_mapping_method_params"->newFeatureParams)
-      alignMap
+      alignMap += ("ft_mapping_params"->newFeatureParams)
+      alignMap - "ft_mapping_method_params"
     } else
       Map.empty[String, Any]
 
@@ -85,12 +82,9 @@ object LabelFreeQuantConfigConverter {
           newFeatureParams += ("moz_tol" -> featureMappingParamMap("moz_tol"))
         if (featureMappingParamMap.contains("moz_tol"))
           newFeatureParams += ("moz_tol_unit" -> featureMappingParamMap("moz_tol_unit"))
-        if (featureMappingParamMap.contains("time_tol"))
-          newFeatureParams += ("time_tol" -> featureMappingParamMap("time_tol"))
-        newFeatureParams += ("use_moz_calibration" -> false)
-        newFeatureParams += ("use_automatic_time_tol" -> false)
+        newFeatureParams += ("time_tol" -> featureMappingParamMap("time_tol"))
 
-        detectionCgfMap += ("ft_mapping_method_params" -> newFeatureParams)
+        detectionCgfMap += ("ft_mapping_params" -> newFeatureParams)
       }
       detectionCgfMap
     } else

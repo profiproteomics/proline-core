@@ -29,7 +29,7 @@ abstract class AbstractLcmsMapAligner extends LazyLogging {
     alnConfig: AlignmentConfig
   ): AlignmentResult = {
     this.computeMapAlignmentsUsingCustomFtMapper(lcmsMaps,alnConfig) { (map1Features, map2Features) =>
-      FeatureMapper.computePairwiseFtMapping( map1Features, map2Features, alnConfig.ftMappingMethodParams)
+      FeatureMapper.computePairwiseFtMapping( map1Features, map2Features, alnConfig.ftMappingParams)
     }
   }
 

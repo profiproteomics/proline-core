@@ -805,7 +805,7 @@ class PeakelsDetector(
               mftBuilderOpt = mftBuilderByFtId.get(map1Ft.id);
               if mftBuilderOpt.isDefined;
               map2FtOpt = map2FtByMftBuilder.get(mftBuilderOpt.get);
-              if (map2FtOpt.isDefined && Math.abs(map1Ft.elutionTime - map2FtOpt.get.elutionTime) < alignmentConfig.get.ftMappingMethodParams.timeTol.get)
+              if (map2FtOpt.isDefined && Math.abs(map1Ft.elutionTime - map2FtOpt.get.elutionTime) < alignmentConfig.get.ftMappingParams.timeTol)
             ) {
               ftMapping.getOrElseUpdate(map1Ft.id, new ArrayBuffer[LcMsFeature]) += map2FtOpt.get
             }

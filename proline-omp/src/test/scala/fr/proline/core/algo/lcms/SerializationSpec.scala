@@ -37,19 +37,15 @@ class SerializationSpec extends AbstractSerializationSpec {
           minWindowLandmarks = Some(50)
         )),
         ftMappingMethodName = FeatureMappingMethod.FEATURE_COORDINATES,
-        ftMappingMethodParams = FeatureMappingParams(
+        ftMappingParams = FeatureMappingParams(
           mozTol = Some(5.0),
           mozTolUnit = Some(MassTolUnit.PPM.toString),
-          timeTol = Some(300),
-          useAutomaticTimeTol = false,
-          maxAutoTimeTol = None,
-          minAutoTimeTol = None,
-          useMozCalibration = false
+          timeTol = 300
         )
       )),
       crossAssignmentConfig = Some(CrossAssignmentConfig(
         methodName = CrossAssignMethod.BETWEEN_ALL_RULS,
-        ftMappingParams = FeatureMappingParams(
+        ftMappingParams = CrossAssignFeatMappingParams(
           mozTol = Some(5.0),
           mozTolUnit = Some(MassTolUnit.PPM.toString),
           timeTol = Some(30f),
@@ -79,9 +75,9 @@ class SerializationSpec extends AbstractSerializationSpec {
         """ation":"MOST_INTENSE"},"alignment_config":{"method_name":"ITERATIVE","method_params":{"mass_interval":""" +
         """20000,"max_iterations":3},"smoothing_method_name":"TIME_WINDOW","smoothing_method_params":{"window_siz""" +
         """e":60,"window_overlap":20,"min_window_landmarks":50},"ft_mapping_method_name":"FEATURE_COORDINATES","f""" +
-        """t_mapping_method_params":{"moz_tol":5.0,"moz_tol_unit":"ppm","time_tol":300.0,"use_moz_calibration":false,"""+
-        """"use_automatic_time_tol":false}},"moz_calibration_smoothing_method":"LOESS","cross_assignment_config":{"method_name""""+
-        """:"BETWEEN_ALL_RUNS","ft_mapping_params":{"moz_tol":5.0,"moz_tol_unit":"ppm","time_tol":30.0,"use_moz_calibration":false,"""+
+        """t_mapping_params":{"moz_tol":5.0,"moz_tol_unit":"ppm","time_tol":300.0}},"moz_calibration_smoothing_method""""+
+        """:"LOESS","cross_assignment_config":{"method_name":"BETWEEN_ALL_RUNS","ft_mapping_params":{"moz_tol":5.0,"moz_tol_unit":"""+
+        """"ppm","time_tol":30.0,"use_moz_calibration":false,"""+
         """"use_automatic_time_tol":false},"restrain_to_reliable_features":true,"ft_filter":{"name":"INTENSITY","operator":"GT","value":""" +
         """0.0}},"normalization_method":"MEDIAN_RATIO","detection_method_name":"DETECT_PEAKELS","detection_params""" +
         """":{"psm_matching_params":{"moz_tol":5.0,"moz_tol_unit":"PPM"}},"use_last_peakel_detection":false}"""
@@ -120,8 +116,8 @@ class SerializationSpec extends AbstractSerializationSpec {
     """"clustering_params":{"moz_tol_unit":"PPM","intensity_computation":"MOST_INTENSE","time_computation":"MOST_INTENSE","time_tol":15.0,"moz_tol":"5.0"},"""+
     """"alignment_config": {"method_name": "ITERATIVE", "method_params": {"mass_interval": """ +
     """ 20000, "max_iterations": 3}, "smoothing_method_name": "TIME_WINDOW", "smoothing_method_params": {"window_size":60,"window_overlap":20,"""+
-    """"min_window_landmarks":50},"ft_mapping_method_name":"FEATURE_COORDINATES","ft_mapping_method_params":{"moz_tol":5.0,"moz_tol_unit":"ppm","time_tol":300.0,"use_moz_calibration":false,""" +
-    """"use_automatic_time_tol":false}},"moz_calibration_smoothing_method":"LOESS","cross_assignment_config":{"method_name":"BETWEEN_ALL_RUNS","ft_mapping_params":{"moz_tol":5.0,"moz_tol_unit":"ppm","""+
+    """"min_window_landmarks":50},"ft_mapping_method_name":"FEATURE_COORDINATES","ft_mapping_params":{"moz_tol":5.0,"moz_tol_unit":"ppm","time_tol":300.0}""" +
+    """},"moz_calibration_smoothing_method":"LOESS","cross_assignment_config":{"method_name":"BETWEEN_ALL_RUNS","ft_mapping_params":{"moz_tol":5.0,"moz_tol_unit":"ppm","""+
     """"time_tol":"30.0","use_moz_calibration":false,"use_automatic_time_tol":false},"restrain_to_reliable_features":true},"ft_filter":{"name":"INTENSITY","value":0.0,"operator":"GT"}},"""+
     """"detection_method_name":"DETECT_PEAKELS","detection_params":{"psm_matching_params":{"moz_tol":"5.0","moz_tol_unit":"PPM"},"isotope_matching_params":{"moz_tol":"5.0","moz_tol_unit":"PPM"}}"""
 

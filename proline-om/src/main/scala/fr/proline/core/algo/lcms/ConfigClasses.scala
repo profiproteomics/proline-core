@@ -108,25 +108,30 @@ case class AlignmentConfig(
   smoothingMethodParams: Option[AlnSmoothingParams] = None,
   @(JsonScalaEnumeration @field)(classOf[FeatureMappingMethodRef])
   ftMappingMethodName: FeatureMappingMethod.Value,
-  ftMappingMethodParams: FeatureMappingParams,
+  ftMappingParams: FeatureMappingParams,
   @JsonDeserialize(contentAs = classOf[java.lang.Boolean])
   removeOutliers: Option[Boolean] = None, // getOrElse(false)
   @JsonDeserialize(contentAs = classOf[java.lang.Boolean])
   ignoreErrors: Option[Boolean] = None    // getOrElse(false)
-  ) {
-  require(ftMappingMethodParams.timeTol.isDefined, "Fixed time tolerance should be specified !")
-}
+  )
 
 case class CrossAssignmentConfig(
   @(JsonScalaEnumeration @field)(classOf[CrossAssignMethodRef])
   methodName : CrossAssignMethod.Value,
-  ftMappingParams: FeatureMappingParams,
+  ftMappingParams: CrossAssignFeatMappingParams,
   restrainToReliableFeatures: Boolean = true,
   ftFilter: Option[Filter] = None
 )
 
-// Default value to be confirmed
 case class FeatureMappingParams(
+   @JsonDeserialize(contentAs = classOf[java.lang.Double])
+   mozTol: Option[Double] = None,
+   mozTolUnit: Option[String] = None,
+   timeTol: Float
+ )
+
+// Default value to be confirmed
+case class CrossAssignFeatMappingParams(
  @JsonDeserialize(contentAs = classOf[java.lang.Double])
  mozTol: Option[Double] = None,
  mozTolUnit: Option[String] = None,
@@ -138,7 +143,7 @@ case class FeatureMappingParams(
  maxAutoTimeTol: Option[Float] = None,
  @JsonDeserialize(contentAs = classOf[java.lang.Double])
  minAutoTimeTol: Option[Float] = None
-) {
+)  {
   if(useAutomaticTimeTol){
     require(maxAutoTimeTol.isDefined, "Max time tolerance should be specified is Automatic time tolerance mdoe")
     require(minAutoTimeTol.isDefined, "Min time tolerance should be specified is Automatic time tolerance mdoe")
@@ -153,11 +158,7 @@ case class DetectionParams(
   psmMatchingParams: Option[MzToleranceParams] = None,
   ftMappingParams: Option[FeatureMappingParams] = None,
   isotopeMatchingParams: Option[MzToleranceParams] = None
-) {
-  if(ftMappingParams.isDefined){
-    require(ftMappingParams.get.timeTol.isDefined, "Fixed time tolerance should be specified !")
-  }
-}
+)
 
 case class ClusteringParams(
   mozTol: Double,
