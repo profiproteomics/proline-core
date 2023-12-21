@@ -1,16 +1,18 @@
 package fr.proline.core.om.storer.msi.impl
 
 import java.util
-
 import scala.collection.mutable
 import scala.collection.mutable.{ArrayBuffer, HashMap, HashSet}
+import scala.collection.JavaConverters._
 import com.typesafe.scalalogging.LazyLogging
+import fr.profi.util.StringUtils
 import fr.profi.util.serialization.ProfiJson
 import fr.proline.core.om.model.msi.{PeptideInstance, PeptideMatch, PeptideSet, PeptideSetItem, ProteinMatch, ResultSummary}
 import fr.proline.core.om.provider.msi.IResultSummaryProvider
 import fr.proline.core.om.storer.msi.IRsmDuplicator
 import fr.proline.core.orm.msi.{MsQuery, MsiSearch, Peptide, ProteinMatchSeqDatabaseMap, ProteinMatchSeqDatabaseMapPK, SequenceMatchPK, PeptideInstance => MsiPeptideInstance, PeptideInstancePeptideMatchMap => MsiPepInstPepMatchMap, PeptideInstancePeptideMatchMapPK => MsiPepInstPepMatchMapPK, PeptideMatch => MsiPeptideMatch, PeptideMatchRelation => MsiPeptideMatchRelation, PeptideMatchRelationPK => MsiPeptideMatchRelationPK, PeptideReadablePtmString => MsiPeptideReadablePtmString, PeptideReadablePtmStringPK => MsiPeptideReadablePtmStringPK, PeptideSet => MsiPeptideSet, PeptideSetPeptideInstanceItem => MsiPeptideSetItem, PeptideSetPeptideInstanceItemPK => MsiPeptideSetItemPK, PeptideSetProteinMatchMap => MsiPepSetProtMatchMap, PeptideSetProteinMatchMapPK => MsiPepSetProtMatchMapPK, PeptideSetRelation => MsiPeptideSetRelation, PeptideSetRelationPK => MsiPeptideSetRelationPK, ProteinMatch => MsiProteinMatch, ProteinSet => MsiProteinSet, ProteinSetProteinMatchItem => MsiProtSetProtMatchItem, ProteinSetProteinMatchItemPK => MsiProtSetProtMatchItemPK, ResultSet => MsiResultSet, ResultSummary => MsiResultSummary, Scoring => MsiScoring, SequenceMatch => MsiSequenceMatch}
 import fr.proline.core.util.ResidueUtils.scalaCharToCharacter
+
 import javax.persistence.{EntityManager, TypedQuery}
 import fr.proline.core.orm.msi.repository.ScoringRepository
 
@@ -54,6 +56,7 @@ class RsmDuplicator(rsmProvider: IResultSummaryProvider) extends IRsmDuplicator 
     val peptideMatchByIds = new mutable.HashMap[Long, MsiPeptideMatch]()
 
     val pepIds = new ArrayBuffer[Long]()
+    val readablePTMByPepId = new mutable.HashMap[Long, String]();
     val pepMatchIds = new ArrayBuffer[Long]()
     for (sourcePepInstance <- sourcePepInstances) {
       pepIds += sourcePepInstance.peptide.id
@@ -64,6 +67,17 @@ class RsmDuplicator(rsmProvider: IResultSummaryProvider) extends IRsmDuplicator 
           pepMatchIds ++= childIds
       }
     }
+
+    val query = msiEm.createNativeQuery("SELECT p.id, prp.readable_ptm_string FROM peptide p, peptide_readable_ptm_string prp " +
+      " WHERE p.id = prp.peptide_id AND p.id IN (:pepIds) AND prp.result_set_id = :rsId")
+    query.setParameter("pepIds", pepIds.asJavaCollection)
+    query.setParameter("rsId", sourceRS.id)
+    val rList = query.getResultList.iterator()
+    while(rList.hasNext){
+      val nextObjs =rList.next().asInstanceOf[ Array[Object]]
+      readablePTMByPepId.put( nextObjs(0).asInstanceOf[java.math.BigInteger].longValue(), nextObjs(1).toString)
+    }
+
 
     val pepQuery: TypedQuery[Peptide] = msiEm.createQuery("Select p FROM fr.proline.core.orm.msi.Peptide p WHERE id in ( " + pepIds.mkString(",") + " )", classOf[Peptide])
     val queryPeptideIt: util.Iterator[Peptide] = pepQuery.getResultList.iterator()
@@ -85,7 +99,6 @@ class RsmDuplicator(rsmProvider: IResultSummaryProvider) extends IRsmDuplicator 
     this.logger.debug("getting all peptides ("+ pepIds.length+") and child peptidesMatch in 2 queries... (" + pepMatchIds.length + "). duration: "+(end-start) + " ms")
     start = end
 
-    var cumul1 = 0l
 
     for (sourcePepInstance <- sourcePepInstances) {
       val peptide = sourcePepInstance.peptide
@@ -220,9 +233,15 @@ class RsmDuplicator(rsmProvider: IResultSummaryProvider) extends IRsmDuplicator 
         msiEm.persist(msiPepInstMatch)
       }
 
+      var readablePtmString = ""
       // PeptideReadablePTMString
-      //VDS TODO : get childs peptide readable ptm
-      if (peptide.readablePtmString != null && peptide.readablePtmString.nonEmpty) {
+      if(readablePTMByPepId.contains(peptideId) ){
+        readablePtmString = readablePTMByPepId(peptideId)
+      } else if (peptide.readablePtmString != null && peptide.readablePtmString.nonEmpty) {
+        readablePtmString = peptide.readablePtmString
+      }
+
+      if(StringUtils.isNotEmpty(readablePtmString)) {
         val msiPeptideReadablePtmStringPK = new MsiPeptideReadablePtmStringPK()
         msiPeptideReadablePtmStringPK.setPeptideId(peptideId)
         msiPeptideReadablePtmStringPK.setResultSetId(emptyRS.getId)
@@ -231,7 +250,7 @@ class RsmDuplicator(rsmProvider: IResultSummaryProvider) extends IRsmDuplicator 
         msiPeptideReadablePtmString.setId(msiPeptideReadablePtmStringPK)
         msiPeptideReadablePtmString.setResultSet(emptyRS)
         msiPeptideReadablePtmString.setPeptide(msiPep)
-        msiPeptideReadablePtmString.setReadablePtmString(peptide.readablePtmString)
+        msiPeptideReadablePtmString.setReadablePtmString(readablePtmString)
 
         // Save PeptideReadablePTMString
         msiEm.persist(msiPeptideReadablePtmString)
