@@ -68,16 +68,20 @@ class RsmDuplicator(rsmProvider: IResultSummaryProvider) extends IRsmDuplicator 
       }
     }
 
-    val query = msiEm.createNativeQuery("SELECT p.id, prp.readable_ptm_string FROM peptide p, peptide_readable_ptm_string prp " +
-      " WHERE p.id = prp.peptide_id AND p.id IN (:pepIds) AND prp.result_set_id = :rsId")
-    query.setParameter("pepIds", pepIds.asJavaCollection)
-    query.setParameter("rsId", sourceRS.id)
-    val rList = query.getResultList.iterator()
-    while(rList.hasNext){
-      val nextObjs =rList.next().asInstanceOf[ Array[Object]]
-      readablePTMByPepId.put( nextObjs(0).asInstanceOf[java.math.BigInteger].longValue(), nextObjs(1).toString)
+    if(sourceRS.id>0 && !pepIds.isEmpty ) {
+      val splittedPepIds  = pepIds.grouped(10000).toList
+      splittedPepIds.foreach( idsList => {
+        val query = msiEm.createNativeQuery("SELECT p.id, prp.readable_ptm_string FROM peptide p, peptide_readable_ptm_string prp " +
+          " WHERE p.id = prp.peptide_id AND p.id IN (:pepIds) AND prp.result_set_id = :rsId")
+        query.setParameter("pepIds", idsList.asJavaCollection)
+        query.setParameter("rsId", sourceRS.id)
+        val rList = query.getResultList.iterator()
+        while (rList.hasNext) {
+          val nextObjs = rList.next().asInstanceOf[Array[Object]]
+          readablePTMByPepId.put(nextObjs(0).asInstanceOf[java.math.BigInteger].longValue(), nextObjs(1).toString)
+        }
+      })
     }
-
 
     val pepQuery: TypedQuery[Peptide] = msiEm.createQuery("Select p FROM fr.proline.core.orm.msi.Peptide p WHERE id in ( " + pepIds.mkString(",") + " )", classOf[Peptide])
     val queryPeptideIt: util.Iterator[Peptide] = pepQuery.getResultList.iterator()
