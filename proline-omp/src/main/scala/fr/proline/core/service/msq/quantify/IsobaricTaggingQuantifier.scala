@@ -6,13 +6,10 @@ import fr.profi.util.ms._
 import fr.proline.context._
 import fr.proline.core.algo.msq.config._
 import fr.proline.core.algo.msq.summarizing._
-import fr.proline.core.om.model.msi.Ms2Query
-import fr.proline.core.om.model.msi.ResultSummary
-import fr.proline.core.om.model.msi.Spectrum
+import fr.proline.core.om.model.msi.{Ms2Query, PeaklistSoftware, PeptideMatch, PeptideMatchProperties, ResultSummary, Spectrum}
 import fr.proline.core.om.model.msq._
 import fr.proline.core.om.provider.PeptideCacheExecutionContext
-import fr.proline.core.om.provider.msi.impl.SQLResultSummaryProvider
-import fr.proline.core.om.provider.msi.impl.SQLSpectrumProvider
+import fr.proline.core.om.provider.msi.impl.{SQLPeaklistProvider, SQLResultSummaryProvider, SQLSpectrumProvider}
 import fr.proline.core.om.storer.msi.impl.RsmDuplicator
 import fr.proline.core.orm.msi.ObjectTreeSchema.SchemaName
 import fr.proline.core.orm.msi.repository.ObjectTreeSchemaRepository
@@ -45,7 +42,9 @@ class IsobaricTaggingQuantifier(
     (tag.id, calcMozTolInDalton(tag.reporterMz, quantConfig.extractionParams.mozTol, msnMozTolUnit) )
   }
   private val maxMassToUse = quantMethod.quantLabels.map(_.reporterMz).max + 1
-  
+
+  private var peptdeMatchBySpecId : LongMap[PeptideMatch] = mutable.LongMap[PeptideMatch]()
+
   protected def quantifyMasterChannel(): Unit = {
 
     // --- TODO: merge following code with AbstractLabelFreeFeatureQuantifier ---
@@ -100,7 +99,7 @@ class IsobaricTaggingQuantifier(
       )
       
       // Quantify reporter ions
-      val mqReporterIons = _quantifyIdentRsm(entityCache.quantChannelResultSummaries.head).toArray
+      val mqReporterIons = _quantifyIdentRsm(entityCache.quantChannelResultSummaries.head, quantRsm).toArray
       
       new IsobaricTaggingEntitiesSummarizer(mqReporterIons)
     }  else {
@@ -111,7 +110,7 @@ class IsobaricTaggingQuantifier(
       // Quantify reporter ions
       val mqReporterIonsByIdentRsmId = new LongMap[Array[MasterQuantReporterIon]]
       for(identRsm <- entityCache.quantChannelResultSummaries) {
-        mqReporterIonsByIdentRsmId += identRsm.id -> _quantifyIdentRsm(identRsm).toArray
+        mqReporterIonsByIdentRsmId += identRsm.id -> _quantifyIdentRsm(identRsm, quantRsm).toArray
       }
       
       logger.info("computing label-free quant entities...")
@@ -179,7 +178,7 @@ class IsobaricTaggingQuantifier(
   }
   
   
-  private def _quantifyIdentRsm(identRsm: ResultSummary): ArrayBuffer[MasterQuantReporterIon] = {
+  private def _quantifyIdentRsm(identRsm: ResultSummary, quantRsm: ResultSummary): ArrayBuffer[MasterQuantReporterIon] = {
     
     val peaklistIdByIdentRsId = entityCache.peaklistIdByIdentRsId
     
@@ -192,6 +191,11 @@ class IsobaricTaggingQuantifier(
       val ms2Query = pepMatch.msQuery.asInstanceOf[Ms2Query]
       (ms2Query.spectrumId,ms2Query)
     }
+
+    //Get Quant result_summary's PSMs
+    quantRsm.resultSet.get.peptideMatches.foreach(pepM => {
+      peptdeMatchBySpecId += (pepM.getMs2Query().spectrumId -> pepM)
+    })
     
     val tagInfoTuples = identRsmQuantChannels.map { qc =>
       val tag = tagByQcId(qc.id)
@@ -201,7 +205,7 @@ class IsobaricTaggingQuantifier(
     
     val masterQuantReporterIons = new ArrayBuffer[MasterQuantReporterIon](identMs2QueryBySpecId.size)
 
-    _foreachIdentifiedSpectrum(peaklistId, identMs2QueryBySpecId) { case (specId, spectrum, identMs2Query) =>
+    _foreachIdentifiedSpectrum(peaklistId, identMs2QueryBySpecId, peptdeMatchBySpecId) { case (specId, spectrum, identMs2Query) =>
       
       // Keep only peaks having a low m/z value
       val mozListToUse = spectrum.getMozList().takeWhile( _ <= maxMassToUse )
@@ -249,7 +253,8 @@ class IsobaricTaggingQuantifier(
   
   private def _foreachIdentifiedSpectrum(
     peaklistId: Long,
-    identifiedMs2QueryBySpectrumId: mutable.LongMap[Ms2Query]
+    identifiedMs2QueryBySpectrumId: mutable.LongMap[Ms2Query],
+    peptdeMatchBySpecId : LongMap[PeptideMatch]
   )( onEachSpectrum: (Long, IsobaricTaggingQuantifier.ISpectrum, Ms2Query) => Unit ): Unit = {
     
     import fr.profi.mzdb.db.model.params.param.CVEntry
@@ -257,7 +262,15 @@ class IsobaricTaggingQuantifier(
     
     val reporterIonDataSource = quantConfig.reporterIonDataSource
     val isProlineDataSource = reporterIonDataSource == ReporterIonDataSource.PROLINE_SPECTRUM
-    
+
+    //Get PeaklostSoftware to be able to read pif from spectrum title if reg exp specified
+    var peaklistSoftware : Option[PeaklistSoftware] = None
+    val pklistProvider = new SQLPeaklistProvider(msiDbCtx)
+    val pklList =pklistProvider.getPeaklists(Seq(peaklistId))
+    if(!pklList.isEmpty){
+      peaklistSoftware = Some(pklList.head.peaklistSoftware)
+    }
+
     val mzDbReaderOpt = if(isProlineDataSource) None
     else {
       val rawFileOpt = entityCache.rawFileByPeaklistId.get(peaklistId)
@@ -342,7 +355,7 @@ class IsobaricTaggingQuantifier(
     
     try {
       val spectrumProvider = new SQLSpectrumProvider(msiDbCtx)
-      
+      val readPif = peaklistSoftware.isDefined && peaklistSoftware.get.properties.isDefined && peaklistSoftware.get.properties.get.pifRegExp.isDefined
       // Iterate over the spectra
       spectrumProvider.foreachPeaklistSpectrum(peaklistId, loadPeaks = isProlineDataSource) { spectrum =>
         
@@ -381,6 +394,18 @@ class IsobaricTaggingQuantifier(
               }
               
             } // ends case ReporterIonDataSource.MZDB_MS3_SPECTRUM
+          }
+
+          if (readPif) {
+            if(spectrum.title.contains("-1.0"))
+              logger.info(" READ & parser "+spectrum.title)
+            val pifValue = peaklistSoftware.get.parsePIFValue(spectrum.title)
+            if (!pifValue.isNaN) {
+              val peptideMatch = peptdeMatchBySpecId(specId)
+              val pmProp = peptideMatch.properties.getOrElse(new PeptideMatchProperties())
+              pmProp.precursorIntensityFraction = Some(pifValue)
+              peptideMatch.properties = Some(pmProp)
+            }
           }
         } // ends if (identifiedMs2QueryOpt.isDefined)
       } // ends foreachPeaklistSpectrum

@@ -434,6 +434,8 @@ case class PeptideMatchProperties (
   @BeanProperty var omssaProperties: Option[PeptideMatchOmssaProperties] = None,
   @BeanProperty var xtandemProperties: Option[PeptideMatchXtandemProperties] = None,
   @BeanProperty var ptmSiteProperties: Option[PeptideMatchPtmSiteProperties] = None,
+  @JsonDeserialize(contentAs = classOf[java.lang.Float] )
+  @BeanProperty var precursorIntensityFraction: Option[Float] = None,
   @BeanProperty var spectralCount: Option[Int] = None,
   @BeanProperty var isotopeOffset: Option[Int] = None
 )

@@ -1,6 +1,7 @@
 package fr.proline.core.algo.msq.config.profilizer
 
 import com.fasterxml.jackson.core.`type`.TypeReference
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize
 import com.fasterxml.jackson.module.scala.JsonScalaEnumeration
 import fr.profi.util.lang.EnhancedEnum
 import fr.proline.core.algo.lcms.{MqPepIonAbundanceSummarizingMethod, MqPepIonAbundanceSummarizingMethodRef, MqReporterIonAbundanceSummarizingMethod, MqReporterIonAbundanceSummarizingMethodRef, PeakelsSummarizingMethod, PeakelsSummarizingMethodRef}
@@ -215,6 +216,9 @@ case class PostProcessingConfig(
 
     //IONS level
     var discardPepIonsSharingPeakels: Boolean = true,
+    var discardPeptideMatchesPif: Boolean = false,
+    @JsonDeserialize(contentAs = classOf[Float])
+    var discardPeptideMatchesPifValue: Option[Float] = None,
 
     @(JsonScalaEnumeration @field)(classOf[PeakelsSummarizingMethodRef])
     var peakelsSummarizingMethod : PeakelsSummarizingMethod.Value = PeakelsSummarizingMethod.APEX_INTENSITY,
@@ -223,7 +227,6 @@ case class PostProcessingConfig(
     var reporterIonAbundanceSummarizingMethod : MqReporterIonAbundanceSummarizingMethod.Value = MqReporterIonAbundanceSummarizingMethod.SUM,
 
     usePurityCorrectionMatrix: Boolean = true,
-
     var purityCorrectionMatrix: Option[String] = None,
 
     //PEPTIDES level

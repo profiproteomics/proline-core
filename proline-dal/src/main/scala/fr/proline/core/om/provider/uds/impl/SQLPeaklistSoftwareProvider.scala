@@ -5,10 +5,11 @@ import fr.profi.jdbc.easy._
 import fr.proline.context.UdsDbConnectionContext
 import fr.proline.core.dal.DoJDBCReturningWork
 import fr.proline.core.dal.tables.uds.UdsDbPeaklistSoftwareTable
-import fr.proline.core.dal.tables.uds.UdsDbSpecTitleParsingRuleTable    
-import fr.proline.core.om.model.msi.{PeaklistSoftware,SpectrumTitleParsingRule}
+import fr.proline.core.dal.tables.uds.UdsDbSpecTitleParsingRuleTable
+import fr.proline.core.om.model.msi.{PeaklistSoftware, PeaklistSoftwareProperties, SpectrumTitleParsingRule}
 import fr.proline.core.om.provider.uds.IPeaklistSoftwareProvider
 import fr.profi.util.primitives._
+import fr.profi.util.serialization.ProfiJson
  
 // TODO: use Select Query builder
 class SQLPeaklistSoftwareProvider(val udsDbCtx: UdsDbConnectionContext) extends IPeaklistSoftwareProvider {
@@ -63,7 +64,12 @@ class SQLPeaklistSoftwareProvider(val udsDbCtx: UdsDbConnectionContext) extends 
     r: fr.profi.jdbc.ResultSetRow,
     specRuleById: Map[Long,SpectrumTitleParsingRule]
   ): PeaklistSoftware = {
-    val pklSoft = new PeaklistSoftware(id = toLong(r.nextAny), name = r.nextString, version = r.nextStringOrElse(""))
+    val pklSoft = new PeaklistSoftware(
+      id = toLong(r.nextAny),
+      name = r.nextString,
+      version = r.nextStringOrElse(""),
+      properties = r.getStringOption(PklSoftCols.SERIALIZED_PROPERTIES).map( ProfiJson.deserialize[PeaklistSoftwareProperties](_) )
+    )
     
     r.getLongOption(PklSoftCols.SPEC_TITLE_PARSING_RULE_ID).map { ruleId =>
       pklSoft.specTitleParsingRule = specRuleById.get(ruleId)
