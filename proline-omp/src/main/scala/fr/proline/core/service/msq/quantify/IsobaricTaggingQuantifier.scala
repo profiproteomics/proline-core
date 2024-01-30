@@ -10,6 +10,7 @@ import fr.proline.core.om.model.msi.{Ms2Query, PeaklistSoftware, PeptideMatch, P
 import fr.proline.core.om.model.msq._
 import fr.proline.core.om.provider.PeptideCacheExecutionContext
 import fr.proline.core.om.provider.msi.impl.{SQLPeaklistProvider, SQLResultSummaryProvider, SQLSpectrumProvider}
+import fr.proline.core.om.storer.msi.PeptideWriter
 import fr.proline.core.om.storer.msi.impl.RsmDuplicator
 import fr.proline.core.orm.msi.ObjectTreeSchema.SchemaName
 import fr.proline.core.orm.msi.repository.ObjectTreeSchemaRepository
@@ -152,6 +153,11 @@ class IsobaricTaggingQuantifier(
         )
       }
     }
+
+    logger.info("save peptide match modification...") //** VDS Pas les bons psms sauvegardés ^^
+    val pepProvider = PeptideWriter.apply(msiDbCtx.getDriverType)
+    pepProvider.updatePeptideMatchProperties(peptdeMatchBySpecId.values.toSeq, msiDbCtx)
+
     
     logger.info("summarizing quant entities...")
 
@@ -397,8 +403,6 @@ class IsobaricTaggingQuantifier(
           }
 
           if (readPif) {
-            if(spectrum.title.contains("-1.0"))
-              logger.info(" READ & parser "+spectrum.title)
             val pifValue = peaklistSoftware.get.parsePIFValue(spectrum.title)
             if (!pifValue.isNaN) {
               val peptideMatch = peptdeMatchBySpecId(specId)
