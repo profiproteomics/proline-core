@@ -94,36 +94,32 @@ public class PeaklistSoftware implements Serializable {
 
 	public enum SoftwareRelease {
 
-		EXTRACT_MSN("extract_msn.exe"),
-		DATA_ANALYSIS_4_0("Data Analysis", "4.0"),
-		DATA_ANALYSIS_4_1("Data Analysis", "4.1"),
-		MASCOT_DLL("mascot.dll"),
-		MASCOT_DISTILLER("Mascot Distiller", "2.5"),
-		MAX_QUANT("MaxQuant"),
-		PROLINE("Proline", "1.0"),
-		PROTEIN_PILOT("Protein Pilot"),
-		PROTEOME_DISCOVER("Proteome Discoverer"),
-		PROTEO_WIZARD_2_0("ProteoWizard", "2.0"),
-		PROTEO_WIZARD_2_1("ProteoWizard", "2.1"),
-		PROTEO_WIZARD_3_0("ProteoWizard", "3.0"),
-		SPECTRUM_MILL("Spectrum Mill");
+		EXTRACT_MSN("extract_msn.exe", null, null),
+		DATA_ANALYSIS_4_0("Data Analysis", "4.0", null),
+		DATA_ANALYSIS_4_1("Data Analysis", "4.1", null),
+		MASCOT_DLL("mascot.dll", null, null),
+		MASCOT_DISTILLER("Mascot Distiller", "2.5", null),
+		MAX_QUANT("MaxQuant", null, null),
+		PROLINE("Proline", "1.0", "{\"pif_reg_exp\":\"pif:(\\-?\\d+\\.\\d+);\"}"),
+		PROTEIN_PILOT("Protein Pilot", null, null),
+		PROTEOME_DISCOVER("Proteome Discoverer", null, null),
+		PROTEO_WIZARD_2_0("ProteoWizard", "2.0", null),
+		PROTEO_WIZARD_2_1("ProteoWizard", "2.1", null),
+		PROTEO_WIZARD_3_0("ProteoWizard", "3.0", null),
+		SPECTRUM_MILL("Spectrum Mill", null, null);
 
 		private final String m_name;
 		private final String m_version;
 
-		private SoftwareRelease(final String name, final String version) {
+		private String m_serializedProperties;
+
+		private SoftwareRelease(final String name, final String version, final String serializedProperties) {
 			assert (!StringUtils.isEmpty(name)) : "PeaklistSoftware.SoftwareRelease() invalid name";
-			assert (!StringUtils.isEmpty(version)) : "PeaklistSoftware.Definition() invalid version";
+//			assert (!StringUtils.isEmpty(version)) : "PeaklistSoftware.Definition() invalid version";
 
 			m_name = name;
 			m_version = version;
-		}
-
-		private SoftwareRelease(final String name) {
-			assert (!StringUtils.isEmpty(name)) : "PeaklistSoftware.SoftwareRelease() invalid name";
-
-			m_name = name;
-			m_version = "";
+			m_serializedProperties = serializedProperties;
 		}
 
 		public String getName() {
@@ -132,6 +128,10 @@ public class PeaklistSoftware implements Serializable {
 
 		public String getVersion() {
 			return m_version;
+		}
+
+		public String getProperties() {
+			return m_serializedProperties;
 		}
 
 		@Override
