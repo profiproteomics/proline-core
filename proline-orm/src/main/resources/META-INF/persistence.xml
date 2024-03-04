@@ -35,6 +35,8 @@
 
   <persistence-unit name="msidb_production" transaction-type="RESOURCE_LOCAL">
     <provider>org.hibernate.jpa.HibernatePersistenceProvider</provider>
+    <class>fr.proline.core.orm.msi.Alphabet</class>
+    <class>fr.proline.core.orm.msi.AtomLabel</class>
     <class>fr.proline.core.orm.msi.BioSequence</class>
     <class>fr.proline.core.orm.msi.ConsensusSpectrum</class>
     <class>fr.proline.core.orm.msi.Enzyme</class>
@@ -68,6 +70,7 @@
     <class>fr.proline.core.orm.msi.PeptideMatchRelation</class>
     <class>fr.proline.core.orm.msi.PeptideMatchRelationPK</class>
     <class>fr.proline.core.orm.msi.PeptideReadablePtmString</class>
+    <class>fr.proline.core.orm.msi.PeptideReadablePtmStringPK</class>
     <class>fr.proline.core.orm.msi.PeptideSet</class>
     <class>fr.proline.core.orm.msi.PeptideSetPeptideInstanceItem</class>
     <class>fr.proline.core.orm.msi.PeptideSetPeptideInstanceItemPK</class>
@@ -78,6 +81,11 @@
     <class>fr.proline.core.orm.msi.ProteinSetProteinMatchItem</class>
     <class>fr.proline.core.orm.msi.ProteinSetProteinMatchItemPK</class>
     <class>fr.proline.core.orm.msi.Peptide</class>
+    <class>fr.proline.core.orm.msi.PeptidePtm</class>
+    <class>fr.proline.core.orm.msi.Ptm</class>
+    <class>fr.proline.core.orm.msi.PtmClassification</class>
+    <class>fr.proline.core.orm.msi.PtmEvidence</class>
+    <class>fr.proline.core.orm.msi.PtmSpecificity</class>
     <class>fr.proline.core.orm.msi.SequenceMatch</class>
     <class>fr.proline.core.orm.msi.SequenceMatchPK</class>
     <class>fr.proline.core.orm.msi.ProteinMatchSeqDatabaseMap</class>

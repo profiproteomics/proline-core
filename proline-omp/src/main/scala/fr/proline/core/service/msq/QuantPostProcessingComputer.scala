@@ -247,9 +247,8 @@ class QuantPostProcessingComputer(
     for (mqPepIon <- masterQuantPeptideIons) {
       mqPepIon.setAbundancesForQuantChannels(mqPepIon.getRawAbundancesForQuantChannels(qcIds), qcIds)
       if(isIsobaricQuant)
-        _resetAndComputeIonsAbundance(mqPepIon, qChIdsSorted, purityCorrectionMatrix, pepMatchByPepInsMSQIds.toMap)
+        _resetAndComputeIonsAbundance(mqPepIon, qChIdsSorted, purityCorrectionMatrix, pepMatchByPepInsMSQIds)
     }
-
     //
     // Change mqPeptide selection level sharing peakels of mqPep sharing features
     //
@@ -501,8 +500,7 @@ class QuantPostProcessingComputer(
     } // END OF tryTransactionWithEzDBC
   }
 
-  private def _resetAndComputeIonsAbundance(mqPepIon: MasterQuantPeptideIon, qChIdsSorted : Seq[Long], purityCorrectionMatrix : Option[RealMatrix], pepMatchByPepInstQueryIds : Map[String,PeptideMatch]  ) : Unit = {
-
+  private def _resetAndComputeIonsAbundance(mqPepIon: MasterQuantPeptideIon, qChIdsSorted : Seq[Long], purityCorrectionMatrix : Option[RealMatrix], pepMatchByPepInstQueryIds : mutable.Map[String,PeptideMatch]  ) : Unit = {
     val values  = new ArrayBuffer[Array[Double]](1)
     values += Array.empty[Double]
 
