@@ -1,15 +1,14 @@
 package fr.proline.core.service.msq.quantify
 
-import fr.proline.context.{DatabaseConnectionContext, IExecutionContext, MsiDbConnectionContext}
+import fr.proline.context.{DatabaseConnectionContext, IExecutionContext}
 import fr.proline.core.algo.msq.config.{AbundanceComputationMethod, AggregationQuantConfig}
 import fr.proline.core.algo.msq.summarizing.AggregationEntitiesSummarizer
 import fr.proline.core.dal.helper.UdsDbHelper
-import fr.proline.core.om.model.msi.{PeaklistSoftware, PeptideMatch, PeptideMatchProperties, ResultSummary}
+import fr.proline.core.om.model.msi.{PeptideMatch, ResultSummary}
 import fr.proline.core.om.model.msq.{ExperimentalDesign, QuantChannel, QuantResultSummary}
 import fr.proline.core.om.provider.PeptideCacheExecutionContext
-import fr.proline.core.om.provider.msi.impl.{SQLPeaklistProvider, SQLPeaklistSoftwareProvider, SQLResultSummaryProvider, SQLSpectrumProvider}
+import fr.proline.core.om.provider.msi.impl.SQLResultSummaryProvider
 import fr.proline.core.om.provider.msq.impl.SQLQuantResultSummaryProvider
-import fr.proline.core.om.storer.msi.PeptideWriter
 import fr.proline.core.om.storer.msi.impl.RsmDuplicator
 import fr.proline.core.om.util.PepMatchPropertiesUtil
 import fr.proline.core.orm.msi.ObjectTreeSchema.SchemaName
@@ -71,7 +70,7 @@ class AggregationQuantifier(
     // Build or clone master quant result summary, then store it
     val rsmProvider = new SQLResultSummaryProvider(PeptideCacheExecutionContext(executionContext))
     val rsmDuplicator =  new RsmDuplicator(rsmProvider)
-    val aggregateQuantRSM = rsmDuplicator.cloneAndStoreRSM(mergedResultSummary, msiQuantRSM, msiQuantResultSet, !masterQc.identResultSummaryId.isDefined, msiEm)
+    val aggregateQuantRSM = rsmDuplicator.cloneAndStoreRSM(mergedResultSummary, msiQuantRSM, msiQuantResultSet, masterQc.identResultSummaryId.isEmpty, msiEm)
 
     val udsDbHelper = new UdsDbHelper(udsDbCtx)
     val childQuantRSMbychildMQCId = new mutable.HashMap[Long, QuantResultSummary]
@@ -87,28 +86,15 @@ class AggregationQuantifier(
 
     //Test if need & can Read PIF values
     val start = System.currentTimeMillis()
-    var peaklistSoftware : Option[PeaklistSoftware] = None
-    val peakListId : Option[Long] = if(msiQuantResultSet.getMsiSearch !=null) {
-      Some(msiQuantResultSet.getMsiSearch.getPeaklist.getId)
-    } else None
-
-    if(peakListId.isDefined) {
-      val pklistProvider = new SQLPeaklistProvider(msiDbCtx)
-      val pklList = pklistProvider.getPeaklists(Seq(peakListId.get))
-      if (!pklList.isEmpty) {
-        peaklistSoftware = Some(pklList.head.peaklistSoftware)
-      }
-    }
-    val canParsePIF= peaklistSoftware.isDefined && peaklistSoftware.get.properties.isDefined && peaklistSoftware.get.properties.get.pifRegExp.isDefined
-    //logger.debug(" Able to READ PIF ? " + canParsePIF+"; is Isobaric aggregation ? " +isIsobaric)
-    if(canParsePIF && isIsobaric){
+    if(isIsobaric) { //Read PIF only for  Isobaric tag quantitation
       val peptdeMatchBySpecId: mutable.LongMap[PeptideMatch] = mutable.LongMap[PeptideMatch]()
       aggregateQuantRSM.resultSet.get.peptideMatches.foreach(pepM => {
         peptdeMatchBySpecId += (pepM.getMs2Query().spectrumId -> pepM)
       })
-      PepMatchPropertiesUtil.readPIFValues(peptdeMatchBySpecId, peakListId.get, peaklistSoftware.get, msiDbCtx )
+
+      val nbPepMatchModified = PepMatchPropertiesUtil.readPIFValuesForResultSummary(peptdeMatchBySpecId, aggregateQuantRSM, udsDbCtx, msiDbCtx)
       val end = System.currentTimeMillis()
-      logger.info(" ------ READ "+peptdeMatchBySpecId.size+" pepMatches PIF in "+(end-start)+"ms" )
+      logger.info(" ------ READ PIF for " + nbPepMatchModified+ " from"+  peptdeMatchBySpecId.size + " pepMatches in " + (end - start) + "ms")
     }
 
     val quantChannelsMapping = new mutable.HashMap[Long, QuantChannel]()

@@ -237,27 +237,16 @@ class QuantPostProcessingComputer(
       })
     })
 
-    val start = System.currentTimeMillis()
-    if (config.discardPeptideMatchesPif && quantRSM.resultSummary.getResultSet().get.msiSearch.isDefined) {
-      val peakListId = quantRSM.resultSummary.getResultSet().get.msiSearch.get.peakList.id
+    if (config.discardPeptideMatchesPif) {
+      val start = System.currentTimeMillis()
+      val pmOpt = quantRSM.resultSummary.resultSet.get.peptideMatches.find(pm => {
+        pm.properties.isDefined && pm.properties.get.precursorIntensityFraction.isDefined
+      })
 
-      var peaklistSoftware: Option[PeaklistSoftware] = None
-      val pklistProvider = new SQLPeaklistProvider(msiDbCtx)
-      val pklList = pklistProvider.getPeaklists(Seq(peakListId))
-      if (!pklList.isEmpty) {
-        peaklistSoftware = Some(pklList.head.peaklistSoftware)
-      }
-
-      val canReadPif = peaklistSoftware.isDefined && peaklistSoftware.get.properties.isDefined && peaklistSoftware.get.properties.get.pifRegExp.isDefined
-      if (canReadPif) {
-        val pmOpt = quantRSM.resultSummary.resultSet.get.peptideMatches.find(pm => {
-          pm.properties.isDefined && pm.properties.get.precursorIntensityFraction.isDefined
-        })
-        if (pmOpt.isEmpty) { //try to read PIF values
-          PepMatchPropertiesUtil.readPIFValues(peptdeMatchBySpecId, peakListId, peaklistSoftware.get,msiDbCtx)
-          val end = System.currentTimeMillis()
-          logger.debug(" **PIF** ReadPIFValues took  " + (end - start) / 1000)
-        }
+      if (pmOpt.isEmpty) { //try to read PIF values
+        val nbPepMatchModified = PepMatchPropertiesUtil.readPIFValuesForResultSummary(peptdeMatchBySpecId, quantRSM.resultSummary, udsDbCtx, msiDbCtx)
+        val end = System.currentTimeMillis()
+        logger.info(" ------ READ PIF for " + nbPepMatchModified + " from" + peptdeMatchBySpecId.size + " pepMatches in " + (end - start) + "ms")
       }
     }
     peptdeMatchBySpecId.clear()
