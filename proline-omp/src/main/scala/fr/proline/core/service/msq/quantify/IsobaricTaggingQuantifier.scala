@@ -1,6 +1,9 @@
 package fr.proline.core.service.msq.quantify
 
 import com.typesafe.scalalogging.LazyLogging
+import fr.profi.mzdb.MzDbReader
+import fr.profi.mzdb.db.model.params.param.CVEntry
+import fr.profi.mzdb.model.SpectrumHeader
 import fr.profi.util.collection._
 import fr.profi.util.ms._
 import fr.proline.context._
@@ -9,15 +12,17 @@ import fr.proline.core.algo.msq.summarizing._
 import fr.proline.core.om.model.msi.{Ms2Query, PeaklistSoftware, PeptideMatch, PeptideMatchProperties, ResultSummary, Spectrum}
 import fr.proline.core.om.model.msq._
 import fr.proline.core.om.provider.PeptideCacheExecutionContext
-import fr.proline.core.om.provider.msi.impl.{SQLPeaklistProvider, SQLResultSummaryProvider, SQLSpectrumProvider}
+import fr.proline.core.om.provider.msi.impl.{SQLPeaklistProvider, SQLPeaklistSoftwareProvider, SQLResultSummaryProvider, SQLSpectrumProvider}
 import fr.proline.core.om.storer.msi.PeptideWriter
 import fr.proline.core.om.storer.msi.impl.RsmDuplicator
+import fr.proline.core.om.util.PepMatchPropertiesUtil
 import fr.proline.core.orm.msi.ObjectTreeSchema.SchemaName
 import fr.proline.core.orm.msi.repository.ObjectTreeSchemaRepository
 import fr.proline.core.orm.msi.{ObjectTreeSchema, ResultSummary => MsiResultSummary}
 import fr.proline.core.orm.uds.MasterQuantitationChannel
 import fr.proline.core.service.lcms.io.ExtractMapSet
 
+import java.io.File
 import scala.collection.mutable
 import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.LongMap
@@ -44,7 +49,7 @@ class IsobaricTaggingQuantifier(
   }
   private val maxMassToUse = quantMethod.quantLabels.map(_.reporterMz).max + 1
 
-  private var peptdeMatchBySpecId : LongMap[PeptideMatch] = mutable.LongMap[PeptideMatch]()
+  private val peptdeMatchBySpecId: LongMap[PeptideMatch] = mutable.LongMap[PeptideMatch]()
 
   protected def quantifyMasterChannel(): Unit = {
 
@@ -86,7 +91,7 @@ class IsobaricTaggingQuantifier(
   
 
   
-  protected def computeAndStoreQuantEntities(msiQuantRsm: MsiResultSummary, quantRsm : ResultSummary) {
+  protected def computeAndStoreQuantEntities(msiQuantRsm: MsiResultSummary, quantRsm : ResultSummary): Unit = {
     
     logger.info("computing isobaric quant entities...")
     
@@ -154,7 +159,7 @@ class IsobaricTaggingQuantifier(
       }
     }
 
-    logger.info("save peptide match modification...") //** VDS Pas les bons psms sauvegardés ^^
+    logger.info("save peptide match modification...") //** VDS Pas les bons psms sauvegardés -> ? toujours ??
     val pepProvider = PeptideWriter.apply(msiDbCtx.getDriverType)
     pepProvider.updatePeptideMatchProperties(peptdeMatchBySpecId.values.toSeq, msiDbCtx)
 
@@ -262,10 +267,7 @@ class IsobaricTaggingQuantifier(
     identifiedMs2QueryBySpectrumId: mutable.LongMap[Ms2Query],
     peptdeMatchBySpecId : LongMap[PeptideMatch]
   )( onEachSpectrum: (Long, IsobaricTaggingQuantifier.ISpectrum, Ms2Query) => Unit ): Unit = {
-    
-    import fr.profi.mzdb.db.model.params.param.CVEntry
-    import fr.profi.mzdb.model.SpectrumHeader
-    
+
     val reporterIonDataSource = quantConfig.reporterIonDataSource
     val isProlineDataSource = reporterIonDataSource == ReporterIonDataSource.PROLINE_SPECTRUM
 
@@ -285,83 +287,18 @@ class IsobaricTaggingQuantifier(
       val mzDbFilePathOpt = rawFileOpt.get.getMzdbFilePath()
       assert( mzDbFilePathOpt.isDefined, s"mzDB file is not linked to the raw file '${rawFileOpt.get.name}' in the UDSdb")
       
-      Some(new fr.profi.mzdb.MzDbReader(mzDbFilePathOpt.get, true) )
+      Some(new MzDbReader(mzDbFilePathOpt.get, true) )
     }
-    
-    lazy val ms3SpectraHeaderByMs2SpecId = if (mzDbReaderOpt.isEmpty) mutable.LongMap.empty[SpectrumHeader]
-    else {
-      val mzDbReader = mzDbReaderOpt.get
-      
-      // Enable meta-data loading
-      mzDbReader.enableScanListLoading()
-      mzDbReader.enablePrecursorListLoading()
-      
-      val spectraHeaders = mzDbReaderOpt.get.getSpectrumHeaders
-      val spectraHeadersByCycle = spectraHeaders.groupBy(_.getCycle)
-      val ms3ShMap = new mutable.LongMap[SpectrumHeader](spectraHeaders.length)
-      
-      for( (cycle, msnSpecHeadersInCycle) <- spectraHeadersByCycle ) {
-        
-        val ms2SpecHeadersInCycle = new ArrayBuffer[SpectrumHeader](msnSpecHeadersInCycle.length)
-        val ms3SpecHeadersInCycle = new ArrayBuffer[SpectrumHeader](msnSpecHeadersInCycle.length)
-        
-        for (sh <- msnSpecHeadersInCycle) {
-          if (sh.getMsLevel == 2) {
-            ms2SpecHeadersInCycle += sh
-          }
-          else if (sh.getMsLevel == 3) {
-            ms3SpecHeadersInCycle += sh
-          }
-        }
-        
-        for (ms3SpecHeader <- ms3SpecHeadersInCycle) {
-          
-          val ms3SpecInitialId = ms3SpecHeader.getInitialId
-          //println( ms3SpecHeader.getElutionTime )
-          //println( ms3SpecInitialId )
-          //println( ms3SpecHeader.getMsLevel )
-          
-          val thermoMetaData = ms3SpecHeader.getScanList.getScans.get(0).getThermoMetaData
-          assert(thermoMetaData != null, "Isobaric quantification of MS3 data is only supported for Thermo data")
-          
-          val ms1Target = thermoMetaData.getTargets.apply(0)
-          val ms1TargetMz = ms1Target.getMz
-          //println( "ms1TargetMz", ms1TargetMz )
-          
-          val( nearestMs2Sh, lowestDiff ) = ms2SpecHeadersInCycle.map { ms2Sh =>
-            val isolationWindow = ms2Sh.getPrecursor.getIsolationWindow
-            val isolationWindowTargetMz = isolationWindow.getCVParam(CVEntry.ISOLATION_WINDOW_TARGET_MZ).getValue.toFloat
-            ms2Sh -> math.abs(isolationWindowTargetMz - ms1TargetMz)
-          }.minBy { _._2 }
 
-          //println( "nearestMs2Sh.getPrecursorMz", nearestMs2Sh.getPrecursorMz )
-          
-          // Check m/z difference between nearestMs2Sh precursor m/z and ms2TargetMz is not too high
-          assert(
-            lowestDiff < 0.05,
-            s"Can't find an MS2 spectrum corresponding to the MS3 spectrum #$ms3SpecInitialId"
-          )
-          
-          val ms2SpecInitialId = nearestMs2Sh.getInitialId
-          assert(
-            !ms3ShMap.contains(ms2SpecInitialId),
-            s"The MS2 spectrum #$ms2SpecInitialId is already mapped to another MS3 spectrum (#${ms3ShMap(ms2SpecInitialId).getId}), "+
-            s"can't create a new mapping with MS3 spectrum #$ms3SpecInitialId"
-          )
-          
-          ms3ShMap.put(ms2SpecInitialId, ms3SpecHeader)
-        }
-        
-      } // ends foreach spectraHeadersByCycle
-      
-      ms3ShMap
-    }
-    
-    val mzDbFileName = mzDbReaderOpt.map( mzdb => new java.io.File(mzdb.getDbLocation).getName ).getOrElse("")
-    
+    val mzDbFileName = mzDbReaderOpt.map( mzdb => new File(mzdb.getDbLocation).getName ).getOrElse("")
+
     try {
       val spectrumProvider = new SQLSpectrumProvider(msiDbCtx)
       val readPif = peaklistSoftware.isDefined && peaklistSoftware.get.properties.isDefined && peaklistSoftware.get.properties.get.pifRegExp.isDefined
+      lazy val ms3SpectraHeaderByMs2SpecId = getMS3ShByMS2IdMap(mzDbReaderOpt)
+
+     // logger.info(" -- 1 Start for each spectrum from provider. readPif : "+readPif+" ")
+
       // Iterate over the spectra
       spectrumProvider.foreachPeaklistSpectrum(peaklistId, loadPeaks = isProlineDataSource) { spectrum =>
         
@@ -371,7 +308,7 @@ class IsobaricTaggingQuantifier(
         if (identifiedMs2QueryOpt.isDefined) {
           val specId = spectrum.id
           val identifiedMs2Query = identifiedMs2QueryOpt.get
-          
+
           reporterIonDataSource match {
             case ReporterIonDataSource.PROLINE_SPECTRUM => onEachSpectrum(specId, spectrum, identifiedMs2Query)
             case ReporterIonDataSource.MZDB_MS2_SPECTRUM => {
@@ -388,28 +325,22 @@ class IsobaricTaggingQuantifier(
                 spectrum.firstScan > 0,
                 s"mzDB file $mzDbFileName: undefined firstScan for Proline spectrum #$specId, you may have provided a wrong peaklist software"
               )
-              
               val mzDbReader =  mzDbReaderOpt.get
-              val ms3ShOpt = ms3SpectraHeaderByMs2SpecId.get(spectrum.firstScan)
+              val ms3ShOpt = ms3SpectraHeaderByMs2SpecId.get(spectrum.firstScan) //Should be a MS2
+
               //assert( ms3ShsOpt.isDefined, s"can't find MS3 spectra in mzDB file for Proline spectrum #$specId" )
               
               if (ms3ShOpt.isDefined) {
                 onEachSpectrum(specId, mzDbReader.getSpectrum(ms3ShOpt.get.getId), identifiedMs2Query)
               } else {
-                logger.warn(s"can't find an MS3 spectrum in the mzDB file $mzDbFileName for Proline MS2 spectrum #$specId")
+                logger.warn(s"can't find an MS3 spectrum in the mzDB file $mzDbFileName for Proline MS2 spectrum (first scan) #${spectrum.firstScan}")
               }
               
             } // ends case ReporterIonDataSource.MZDB_MS3_SPECTRUM
           }
 
           if (readPif) {
-            val pifValue = peaklistSoftware.get.parsePIFValue(spectrum.title)
-            if (!pifValue.isNaN) {
-              val peptideMatch = peptdeMatchBySpecId(specId)
-              val pmProp = peptideMatch.properties.getOrElse(new PeptideMatchProperties())
-              pmProp.precursorIntensityFraction = Some(pifValue)
-              peptideMatch.properties = Some(pmProp)
-            }
+            PepMatchPropertiesUtil.readSinglePIFValue(spectrum,peptdeMatchBySpecId, peaklistSoftware.get)
           }
         } // ends if (identifiedMs2QueryOpt.isDefined)
       } // ends foreachPeaklistSpectrum
@@ -422,7 +353,123 @@ class IsobaricTaggingQuantifier(
     
     ()
   }
-  
+  private def getMS3ShByMS2IdMap(mzDbReaderOpt: Option[MzDbReader]): mutable.LongMap[SpectrumHeader] = {
+
+    var ms3SpectraHeaderByMs2SpecId = mutable.LongMap.empty[SpectrumHeader]
+
+    if( mzDbReaderOpt.isDefined){
+      logger.debug(" -------------- INIT ms3SpectraHeaderByMs2SpecId")
+      val mzDbReader = mzDbReaderOpt.get
+
+      // Enable meta-data loading
+      mzDbReader.enableScanListLoading()
+      mzDbReader.enablePrecursorListLoading()
+
+      val spectraHeaders = mzDbReaderOpt.get.getSpectrumHeaders
+      val ms3ShFistMethodMap = new mutable.LongMap[SpectrumHeader](spectraHeaders.length)
+      val remainingMS3SpHeader = new ArrayBuffer[SpectrumHeader]()
+      var countMs3 = 0
+      for (spectrH <- spectraHeaders) {
+        if (spectrH.getMsLevel == 3) {
+          countMs3 = countMs3 + 1
+          var ms2SpectrumId = -1
+          val masterScanUP = spectrH.getScanList.getScans.get(0).getUserParam("[Thermo Trailer Extra]Master Scan Number:")
+          if (masterScanUP != null) {
+            val masterScanIndex = masterScanUP.getValue.toInt
+            if (masterScanIndex >= 0) {
+              ms2SpectrumId = masterScanIndex
+            }
+          }
+          if (ms2SpectrumId > -1)
+            ms3ShFistMethodMap.put(ms2SpectrumId, spectrH)
+          else
+            remainingMS3SpHeader += spectrH
+        }
+      }
+      ms3SpectraHeaderByMs2SpecId = ms3ShFistMethodMap
+      //      if(!remainingMS3SpHeader.isEmpty)
+      logger.warn(" *****  Found " + remainingMS3SpHeader.size + " MS3 without MasterScanNumber on " + countMs3)
+
+      val ms3ShMap = new mutable.LongMap[SpectrumHeader](remainingMS3SpHeader.length)
+      if(remainingMS3SpHeader.nonEmpty) { // No Master Scan specified. Search for nearest
+        val spectraHeadersByCycle = spectraHeaders.groupBy(_.getCycle)
+
+
+        for ((cycle, msnSpecHeadersInCycle) <- spectraHeadersByCycle) {
+
+          val ms2SpecHeadersInCycle = new ArrayBuffer[SpectrumHeader](msnSpecHeadersInCycle.length)
+          val ms3SpecHeadersInCycle = new ArrayBuffer[SpectrumHeader](msnSpecHeadersInCycle.length)
+
+          for (sh <- msnSpecHeadersInCycle) {
+            if (sh.getMsLevel == 2) {
+              ms2SpecHeadersInCycle += sh
+            }
+            else if (sh.getMsLevel == 3 && remainingMS3SpHeader.contains(sh)) {
+              ms3SpecHeadersInCycle += sh
+            }
+          }
+
+          for (ms3SpecHeader <- remainingMS3SpHeader) {
+            try {
+              val ms3SpecInitialId = ms3SpecHeader.getInitialId
+              //println( ms3SpecHeader.getElutionTime )
+              //println( ms3SpecInitialId )
+              //println( ms3SpecHeader.getMsLevel )
+
+              val thermoMetaData = ms3SpecHeader.getScanList.getScans.get(0).getThermoMetaData
+              assert(thermoMetaData != null, "Isobaric quantification of MS3 data is only supported for Thermo data")
+
+              val ms1Target = thermoMetaData.getTargets.apply(0)
+              val ms1TargetMz = ms1Target.getMz
+              //println( "ms1TargetMz", ms1TargetMz )
+
+              val (nearestMs2Sh, lowestDiff) = ms2SpecHeadersInCycle.map { ms2Sh =>
+                val isolationWindow = ms2Sh.getPrecursor.getIsolationWindow
+                val isolationWindowTargetMz = isolationWindow.getCVParam(CVEntry.ISOLATION_WINDOW_TARGET_MZ).getValue.toFloat
+                ms2Sh -> math.abs(isolationWindowTargetMz - ms1TargetMz)
+              }.minBy {
+                _._2
+              }
+
+              //println( "nearestMs2Sh.getPrecursorMz", nearestMs2Sh.getPrecursorMz )
+
+              // Check m/z difference between nearestMs2Sh precursor m/z and ms2TargetMz is not too high
+              assert(
+                lowestDiff < 0.05,
+                s"Can't find an MS2 spectrum corresponding to the MS3 spectrum #$ms3SpecInitialId"
+              )
+
+              val ms2SpecInitialId = nearestMs2Sh.getInitialId
+              assert(
+                !ms3ShMap.contains(ms2SpecInitialId),
+                s"The MS2 spectrum #$ms2SpecInitialId is already mapped to another MS3 spectrum (#${ms3ShMap(ms2SpecInitialId).getId}), " +
+                  s"can't create a new mapping with MS3 spectrum #$ms3SpecInitialId"
+              )
+
+              ms3ShMap.put(ms2SpecInitialId, ms3SpecHeader)
+            } catch {
+              case ex: Exception => logger.warn(s"Error while " + ex.getMessage)
+            }
+          }
+
+        } // ends foreach spectraHeadersByCycle
+        logger.warn(" *****  Found " + ms3ShMap.size + " MS3 Soectrum " + countMs3)
+        ms3SpectraHeaderByMs2SpecId = ms3ShMap
+      }//End No Master scan
+
+//      //VDS TEST 2 methods ...
+//      if (ms3ShMap.size != ms3ShFistMethodMap.size)
+//        logger.warn(" ***** MAP NOT SAME Size 1rst method  " + ms3ShFistMethodMap.size + " <> 2nd Method" + ms3ShMap.size)
+//      else {
+//        for (ms2Id <- ms3ShFistMethodMap.keySet) {
+//          if (!ms3ShFistMethodMap.get(ms2Id).equals(ms3ShMap.get(ms2Id)))
+//            logger.warn(" ***** MAP NOT SAME ENTRY  for " + ms3ShFistMethodMap(ms2Id).getId)
+//        }
+//      }
+
+    }
+    ms3SpectraHeaderByMs2SpecId
+  }
 }
 
 object IsobaricTaggingQuantifier {

@@ -15,11 +15,14 @@ import fr.proline.core.dal.helper.UdsDbHelper
 import fr.proline.core.dal.{BuildLazyExecutionContext, DoJDBCWork}
 import fr.proline.core.om.model.SelectionLevel
 import fr.proline.core.om.model.lcms.Feature
-import fr.proline.core.om.model.msi.PeptideMatch
+import fr.proline.core.om.model.msi.{PeaklistSoftware, PeptideMatch, PeptideMatchProperties, ResultSummary}
 import fr.proline.core.om.model.msq.{ExperimentalDesign, MasterQuantPeptideIon, MasterQuantPeptideProperties, QuantResultSummary}
 import fr.proline.core.om.provider.PeptideCacheExecutionContext
 import fr.proline.core.om.provider.lcms.impl.SQLMapSetProvider
+import fr.proline.core.om.provider.msi.impl.{SQLPeaklistProvider, SQLPeaklistSoftwareProvider, SQLSpectrumProvider}
 import fr.proline.core.om.provider.msq.impl.{SQLExperimentalDesignProvider, SQLQuantResultSummaryProvider}
+import fr.proline.core.om.storer.msi.PeptideWriter
+import fr.proline.core.om.util.PepMatchPropertiesUtil
 import fr.proline.core.orm.uds.repository.ObjectTreeSchemaRepository
 import fr.proline.core.orm.uds.{MasterQuantitationChannel, ObjectTree, ObjectTreeSchema, QuantitationMethod}
 import fr.proline.repository.IDataStoreConnectorFactory
@@ -36,7 +39,6 @@ object QuantPostProcessingComputer {
        executionContext: IExecutionContext,
        masterQuantChannelId: Long,
        config: PostProcessingConfig
-//       ,       matrixFolder : Option [File] = None
    ): QuantPostProcessingComputer = {
 
     val udsDbCtx = executionContext.getUDSDbConnectionContext
@@ -52,7 +54,6 @@ object QuantPostProcessingComputer {
       experimentalDesign = expDesign,
       masterQuantChannelId = masterQuantChannelId,
       config = config
-//      ,      matrixFolder
     )
   }
 
@@ -63,7 +64,6 @@ class QuantPostProcessingComputer(
   experimentalDesign: ExperimentalDesign,
   masterQuantChannelId: Long,
   config: PostProcessingConfig
-//  ,  matrixFolder : Option [File] = None
 ) extends IService with LazyLogging {
   
   require( executionContext.isJPA,"invalid type of executionContext, JPA type is required")
@@ -96,6 +96,8 @@ class QuantPostProcessingComputer(
     val udsDbCtx = executionContext.getUDSDbConnectionContext
     val udsEM = udsDbCtx.getEntityManager
     val udsDbHelper = new UdsDbHelper(udsDbCtx)
+
+    val msiDbCtx = executionContext.getMSIDbConnectionContext
 
     // Retrieve the quantitation fraction
     val udsMasterQuantChannel = udsEM.find(classOf[MasterQuantitationChannel], masterQuantChannelId)
@@ -225,14 +227,40 @@ class QuantPostProcessingComputer(
 //      quantRSM.masterQuantPeptides
 //
 //    } // end of summarizeFeatures
-
+    var peptdeMatchBySpecId : mutable.LongMap[PeptideMatch]= mutable.LongMap[PeptideMatch]()
     val pepMatchByPepInsMSQIds = mutable.Map.empty[String,PeptideMatch]
     quantRSM.resultSummary.peptideInstances.foreach(pepI =>{
       pepI.peptideMatches.foreach( pepM => {
         val keyMap = pepI.id+"_"+pepM.msQueryId
         pepMatchByPepInsMSQIds.put(keyMap, pepM)
+        peptdeMatchBySpecId += (pepM.getMs2Query().spectrumId -> pepM)
       })
     })
+
+    val start = System.currentTimeMillis()
+    if (config.discardPeptideMatchesPif && quantRSM.resultSummary.getResultSet().get.msiSearch.isDefined) {
+      val peakListId = quantRSM.resultSummary.getResultSet().get.msiSearch.get.peakList.id
+
+      var peaklistSoftware: Option[PeaklistSoftware] = None
+      val pklistProvider = new SQLPeaklistProvider(msiDbCtx)
+      val pklList = pklistProvider.getPeaklists(Seq(peakListId))
+      if (!pklList.isEmpty) {
+        peaklistSoftware = Some(pklList.head.peaklistSoftware)
+      }
+
+      val canReadPif = peaklistSoftware.isDefined && peaklistSoftware.get.properties.isDefined && peaklistSoftware.get.properties.get.pifRegExp.isDefined
+      if (canReadPif) {
+        val pmOpt = quantRSM.resultSummary.resultSet.get.peptideMatches.find(pm => {
+          pm.properties.isDefined && pm.properties.get.precursorIntensityFraction.isDefined
+        })
+        if (pmOpt.isEmpty) { //try to read PIF values
+          PepMatchPropertiesUtil.readPIFValues(peptdeMatchBySpecId, peakListId, peaklistSoftware.get,msiDbCtx)
+          val end = System.currentTimeMillis()
+          logger.debug(" **PIF** ReadPIFValues took  " + (end - start) / 1000)
+        }
+      }
+    }
+    peptdeMatchBySpecId.clear()
 
     //
     // Reset mq peptide selection level, only for AUTO values
@@ -366,7 +394,7 @@ class QuantPostProcessingComputer(
     profilizer.computeMasterQuantProtSetProfiles(quantRSM.masterQuantProteinSets, config)
 
     // --- 5. Update MasterQuantPeptides and MasterQuantProtSets properties --- //
-    val msiDbCtx = executionContext.getMSIDbConnectionContext
+
     updateMasterQuantData(msiDbCtx, quantRSM, qcIds)
 
     udsDbCtx.beginTransaction()
@@ -548,12 +576,12 @@ class QuantPostProcessingComputer(
         val pepMOp = pepMatchByPepInstQueryIds.get( (mqPepIon.peptideInstanceId.get + "_" + mqRepIon.msQueryId ))
         if (pepMOp.isDefined && pepMOp.get.properties.isDefined && pepMOp.get.properties.get.precursorIntensityFraction.isDefined) {
           if(pepMOp.get.properties.get.precursorIntensityFraction.get <= config.discardPeptideMatchesPifValue.get){
-            logger.warn(" **PIF** DISCARD PSM regarding its PIF VALUE :  " + pepMOp.get.properties.get.precursorIntensityFraction)
+            logger.trace(" **PIF** DISCARD PSM regarding its PIF VALUE :  " + pepMOp.get.properties.get.precursorIntensityFraction)
             mqRepIon.selectionLevel= SelectionLevel.DESELECTED_AUTO
           } //else
 //            logger.info(" **PIF** KEEP PSM regarding its PIF VALUE :  " + pepMOp.get.properties.get.precursorIntensityFraction)
         } else
-          logger.warn(" **PIF** TRY DISCARD PSM regarding its PIF VALUE BUT NO PROPERTIES DEFINED !!! ")
+          logger.debug(" **PIF** TRY DISCARD PSM regarding its PIF VALUE BUT NO PROPERTIES DEFINED !!! ")
       }
 
       if(mqRepIon.selectionLevel >= SelectionLevel.SELECTED_AUTO ) {

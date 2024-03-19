@@ -1,6 +1,5 @@
 package fr.proline.core.om.provider.uds.impl
 
-import scala.util.matching.Regex
 import fr.profi.jdbc.easy._
 import fr.proline.context.UdsDbConnectionContext
 import fr.proline.core.dal.DoJDBCReturningWork
@@ -64,11 +63,17 @@ class SQLPeaklistSoftwareProvider(val udsDbCtx: UdsDbConnectionContext) extends 
     r: fr.profi.jdbc.ResultSetRow,
     specRuleById: Map[Long,SpectrumTitleParsingRule]
   ): PeaklistSoftware = {
+
+    //Convert read properies to JSON Compatible string
+    var plSoftProp = r.getStringOption(PklSoftCols.SERIALIZED_PROPERTIES)
+    if(plSoftProp.isDefined && plSoftProp.get.contains("\\"))
+      plSoftProp = Some(plSoftProp.get.replace("\\","\\\\"))
+
     val pklSoft = new PeaklistSoftware(
       id = toLong(r.nextAny),
       name = r.nextString,
       version = r.nextStringOrElse(""),
-      properties = r.getStringOption(PklSoftCols.SERIALIZED_PROPERTIES).map( ProfiJson.deserialize[PeaklistSoftwareProperties](_) )
+      properties = plSoftProp.map( ProfiJson.deserialize[PeaklistSoftwareProperties](_) )
     )
     
     r.getLongOption(PklSoftCols.SPEC_TITLE_PARSING_RULE_ID).map { ruleId =>

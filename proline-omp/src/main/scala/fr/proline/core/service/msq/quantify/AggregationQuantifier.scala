@@ -1,15 +1,17 @@
 package fr.proline.core.service.msq.quantify
 
-import fr.proline.context.{DatabaseConnectionContext, IExecutionContext}
+import fr.proline.context.{DatabaseConnectionContext, IExecutionContext, MsiDbConnectionContext}
 import fr.proline.core.algo.msq.config.{AbundanceComputationMethod, AggregationQuantConfig}
 import fr.proline.core.algo.msq.summarizing.AggregationEntitiesSummarizer
 import fr.proline.core.dal.helper.UdsDbHelper
-import fr.proline.core.om.model.msi.ResultSummary
+import fr.proline.core.om.model.msi.{PeaklistSoftware, PeptideMatch, PeptideMatchProperties, ResultSummary}
 import fr.proline.core.om.model.msq.{ExperimentalDesign, QuantChannel, QuantResultSummary}
 import fr.proline.core.om.provider.PeptideCacheExecutionContext
-import fr.proline.core.om.provider.msi.impl.SQLResultSummaryProvider
+import fr.proline.core.om.provider.msi.impl.{SQLPeaklistProvider, SQLPeaklistSoftwareProvider, SQLResultSummaryProvider, SQLSpectrumProvider}
 import fr.proline.core.om.provider.msq.impl.SQLQuantResultSummaryProvider
+import fr.proline.core.om.storer.msi.PeptideWriter
 import fr.proline.core.om.storer.msi.impl.RsmDuplicator
+import fr.proline.core.om.util.PepMatchPropertiesUtil
 import fr.proline.core.orm.msi.ObjectTreeSchema.SchemaName
 import fr.proline.core.orm.msi.repository.ObjectTreeSchemaRepository
 import fr.proline.core.orm.msi.{ResultSummary => MsiResultSummary}
@@ -74,12 +76,39 @@ class AggregationQuantifier(
     val udsDbHelper = new UdsDbHelper(udsDbCtx)
     val childQuantRSMbychildMQCId = new mutable.HashMap[Long, QuantResultSummary]
     val isIsobaric = childQuantMethod.getType.equals(QuantitationMethod.Type.ISOBARIC_TAGGING.toString)
+
     for (udsMasterQuantChannel <- childMasterQuantitationChannels) {
       val quantRsmId = udsMasterQuantChannel.getQuantResultSummaryId
       val qcIds = udsDbHelper.getQuantChannelIds(udsMasterQuantChannel.getId)
-      logger.info("Loading the quantitative result summary #" + quantRsmId)
+      logger.debug("Loading the quantitative result summary to aggregate #" + quantRsmId)
       val quantRsmProvider = new SQLQuantResultSummaryProvider(PeptideCacheExecutionContext(executionContext))
       childQuantRSMbychildMQCId += (udsMasterQuantChannel.getId -> quantRsmProvider.getQuantResultSummary(quantRsmId, qcIds, loadResultSet = true,loadReporterIons = Some(isIsobaric) ).get)
+    }
+
+    //Test if need & can Read PIF values
+    val start = System.currentTimeMillis()
+    var peaklistSoftware : Option[PeaklistSoftware] = None
+    val peakListId : Option[Long] = if(msiQuantResultSet.getMsiSearch !=null) {
+      Some(msiQuantResultSet.getMsiSearch.getPeaklist.getId)
+    } else None
+
+    if(peakListId.isDefined) {
+      val pklistProvider = new SQLPeaklistProvider(msiDbCtx)
+      val pklList = pklistProvider.getPeaklists(Seq(peakListId.get))
+      if (!pklList.isEmpty) {
+        peaklistSoftware = Some(pklList.head.peaklistSoftware)
+      }
+    }
+    val canParsePIF= peaklistSoftware.isDefined && peaklistSoftware.get.properties.isDefined && peaklistSoftware.get.properties.get.pifRegExp.isDefined
+    //logger.debug(" Able to READ PIF ? " + canParsePIF+"; is Isobaric aggregation ? " +isIsobaric)
+    if(canParsePIF && isIsobaric){
+      val peptdeMatchBySpecId: mutable.LongMap[PeptideMatch] = mutable.LongMap[PeptideMatch]()
+      aggregateQuantRSM.resultSet.get.peptideMatches.foreach(pepM => {
+        peptdeMatchBySpecId += (pepM.getMs2Query().spectrumId -> pepM)
+      })
+      PepMatchPropertiesUtil.readPIFValues(peptdeMatchBySpecId, peakListId.get, peaklistSoftware.get, msiDbCtx )
+      val end = System.currentTimeMillis()
+      logger.info(" ------ READ "+peptdeMatchBySpecId.size+" pepMatches PIF in "+(end-start)+"ms" )
     }
 
     val quantChannelsMapping = new mutable.HashMap[Long, QuantChannel]()
@@ -89,8 +118,6 @@ class AggregationQuantifier(
         quantChannelsMapping += (childQcId -> quantChannelByNumber(qcMapping.quantChannelNumber))
       }
     }
-
-    logger.debug(" -------------- AGG ISOBARIC Tagging method ??? "+isIsobaric+" childQuantMethod.getType  "+ childQuantMethod.getType+" == ? "+childQuantMethod.getType.toString.equals(QuantitationMethod.Type.ISOBARIC_TAGGING.toString))
 
     // Compute and store quant entities (MQ Peptides, MQ ProteinSets)
     this.computeAndStoreQuantEntities(msiQuantRSM, aggregateQuantRSM, childQuantRSMbychildMQCId.toMap, quantChannelsMapping.toMap, quantConfig.intensityComputationMethodName, isIsobaric)
