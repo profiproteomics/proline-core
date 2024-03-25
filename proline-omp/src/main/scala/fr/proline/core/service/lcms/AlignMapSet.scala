@@ -43,7 +43,7 @@ class AlignMapSet(
     // Check if reference map already exists: if so delete alignments
     val existingAlnRefMapId = mapSet.getAlnReferenceMapId
     if( existingAlnRefMapId > 0 ) {
-      DoJDBCWork.withEzDBC(lcmsDbCtx, { ezDBC =>
+      DoJDBCWork.withEzDBC(lcmsDbCtx) { ezDBC =>
       
         
         ezDBC.execute( "DELETE FROM map_alignment WHERE map_set_id = " + mapSetId )
@@ -51,7 +51,7 @@ class AlignMapSet(
         // Update processed reference map
         ezDBC.execute( "UPDATE processed_map SET is_aln_reference = ? WHERE id = ?", false, existingAlnRefMapId )
       
-      })
+      }//end DoJDBCWork
     }
     
     // Copy maps while removing feature clusters

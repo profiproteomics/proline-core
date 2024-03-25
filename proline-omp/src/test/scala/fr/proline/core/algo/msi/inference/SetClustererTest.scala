@@ -1,13 +1,8 @@
 package fr.proline.core.algo.msi.inference
 
-import org.scalatest.FunSpec
-import org.scalatest.Assertions
-import org.scalatest.GivenWhenThen
-import org.junit.runner.RunWith
-import org.scalatest.junit.JUnitRunner
-import org.scalatest.junit.JUnitSuite
-import org.junit.Test
 import org.junit.Assert._
+import org.junit.Test
+import org.scalatestplus.junit.JUnitSuite
 
 @Test
 class SetClustererTest extends JUnitSuite {

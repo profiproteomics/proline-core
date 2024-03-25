@@ -24,7 +24,7 @@ class LabelFreeEntitiesSummarizer(
   def this(lcmsMapSet: MapSet,
            spectrumIdByRsIdAndScanNumber: LongMap[LongMap[Long]],
            ms2ScanNumbersByFtId: LongMap[Array[Int]]){
-    this(lcmsMapSet, spectrumIdByRsIdAndScanNumber,ms2ScanNumbersByFtId, MqPepIonAbundanceSummarizingMethod.BEST_ION)
+    this(lcmsMapSet, spectrumIdByRsIdAndScanNumber,ms2ScanNumbersByFtId, MqPepIonAbundanceSummarizingMethod.SUM)
   }
   
   private class MQPepsComputer(

@@ -121,7 +121,7 @@ class SQLPeptideProvider(
     if (peptideIds.isEmpty) return Array()
 
     val peptides = this.getPeptides(peptideIds)
-    val pepById = peptides.map { pep => pep.id -> pep } toMap
+    val pepById = peptides.map { pep => pep.id -> pep }.toMap
 
     val optPeptidesBuffer = new ArrayBuffer[Option[Peptide]]
     peptideIds.foreach { pepId =>

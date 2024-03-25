@@ -5,32 +5,26 @@
   <parent>
     <artifactId>proline-core</artifactId>
     <groupId>fr.proline</groupId>
-    <version>2.2.1-SNAPSHOT</version>
+    <version>2.3.0-SNAPSHOT</version>
   </parent>
 
-  <artifactId>proline-dal_${scala.version}</artifactId>
+  <artifactId>proline-dal_${scala.compat.version}</artifactId>
 
   <name>${project.artifactId}</name>
 
   <dependencies>
 
-
-    <dependency>
-      <groupId>org.slf4j</groupId>
-      <artifactId>slf4j-api</artifactId>
-    </dependency>
-
     <!-- ProFi Commons -->
     <dependency>
       <groupId>fr.profi.util</groupId>
-      <artifactId>profi-commons-scala_${scala.version}</artifactId>
+      <artifactId>profi-commons-scala_${scala.compat.version}</artifactId>
       <!-- Version inherited from parent POM -->
     </dependency>
 
     <!-- "Proline" modules -->
     <dependency>
       <groupId>fr.proline</groupId>
-      <artifactId>proline-om_${scala.version}</artifactId>
+      <artifactId>proline-om_${scala.compat.version}</artifactId>
     </dependency>
 
     <dependency>
@@ -45,12 +39,12 @@
 
     <dependency>
       <groupId>fr.profi</groupId>
-      <artifactId>mzdb-processing_${scala.version}</artifactId>
+      <artifactId>mzdb-processing_${scala.compat.version}</artifactId>
     </dependency>
 
     <dependency>
       <groupId>fr.profi</groupId>
-      <artifactId>profi-proteomics_${scala.version}</artifactId>
+      <artifactId>profi-proteomics_${scala.compat.version}</artifactId>
     </dependency>
 
     <!-- Direct dependencies -->
@@ -62,7 +56,7 @@
 
     <dependency>
       <groupId>com.typesafe.scala-logging</groupId>
-      <artifactId>scala-logging_${scala.version}</artifactId>
+      <artifactId>scala-logging_${scala.compat.version}</artifactId>
       <!-- Version inherited from ProFI-Pom -->
       <scope>compile</scope>
     </dependency>
@@ -74,11 +68,10 @@
     </dependency>
 
     <dependency>
-      <groupId>org.xerial</groupId>
-      <artifactId>sqlite-jdbc</artifactId>
-      <scope>runtime</scope>
+      <groupId>com.h2database</groupId>
+      <artifactId>h2</artifactId>
     </dependency>
-    
+
     <!-- Used by ProlineEzDBC -->
     <dependency>
       <groupId>joda-time</groupId>
@@ -86,19 +79,10 @@
       <!-- Version inherited from ProFI-Pom -->
     </dependency>
 
-    <!-- joda-time 2.2 requires joda-convert to compile Scala projects -->
-    <dependency>
-      <groupId>org.joda</groupId>
-      <artifactId>joda-convert</artifactId>
-      <!-- Version inherited from ProFI-Pom -->
-    </dependency>
-
-
     <dependency>
       <groupId>org.flywaydb</groupId>
       <artifactId>flyway-core</artifactId>
       <version>3.2.1</version>
-
       <!-- Use SLF4J instead of Apache common-loggings -->
       <exclusions>
         <exclusion>
@@ -106,51 +90,43 @@
           <artifactId>commons-logging</artifactId>
         </exclusion>
       </exclusions>
-
     </dependency>
 
     <dependency>
       <groupId>org.msgpack</groupId>
       <artifactId>msgpack</artifactId>
-      <!-- Version should be inherited from ProFI-Pom but the scala module is not available yet -->
       <version>0.6.12</version>
+      <exclusions>
+        <exclusion><!-- for conflict with 3.27.0 from proline-database -->
+          <groupId>org.javassist</groupId>
+          <artifactId>javassist</artifactId>
+        </exclusion>
+      </exclusions>
+    </dependency>
+    <dependency>
+      <groupId>com.google.code.gson</groupId>
+      <artifactId>gson</artifactId>
+      <version>2.9.0</version>
     </dependency>
 
     <dependency>
       <groupId>commons-codec</groupId>
       <artifactId>commons-codec</artifactId>
-      <version>1.10</version>
+      <version>1.15</version>
     </dependency>
 
     <!-- Cache -->
     <dependency>
       <groupId>com.github.ben-manes.caffeine</groupId>
       <artifactId>caffeine</artifactId>
-      <version>2.2.2</version>
+      <version>3.1.1</version>
     </dependency>
     <!-- caffeine requires jsr305 to compile Scala projects -->
-    <dependency>
-      <groupId>com.google.code.findbugs</groupId>
-      <artifactId>jsr305</artifactId>
-      <version>3.0.1</version>
-    </dependency>
-
-    <!-- Compression -->
-<!--     <dependency> -->
-<!--       <groupId>com.github.jponge</groupId> -->
-<!--       <artifactId>lzma-java</artifactId> -->
-<!--       <version>1.2</version> -->
-<!--     </dependency> -->
-<!--     <dependency> -->
-<!--       <groupId>org.tukaani</groupId> -->
-<!--       <artifactId>xz</artifactId> -->
-<!--       <version>1.1</version> -->
-<!--     </dependency> -->
-<!--     <dependency> -->
-<!--       <groupId>org.xerial.snappy</groupId> -->
-<!--       <artifactId>snappy-java</artifactId> -->
-<!--       <version>1.0.4.1</version> -->
-<!--     </dependency> -->
+<!--    <dependency>-->
+<!--      <groupId>com.google.code.findbugs</groupId>-->
+<!--      <artifactId>jsr305</artifactId>-->
+<!--      <version>3.0.1</version>-->
+<!--    </dependency>-->
 
     <dependency>
       <groupId>com.fasterxml.jackson.core</groupId>
@@ -161,20 +137,44 @@
     <dependency>
       <groupId>org.hibernate.javax.persistence</groupId>
       <artifactId>hibernate-jpa-2.1-api</artifactId>
-      <version>1.0.0.Final</version>
+      <version>1.0.2.Final</version>
     </dependency>
 
     <!-- Tests -->
     <dependency>
-      <groupId>org.scalatest</groupId>
-      <artifactId>scalatest_${scala.version}</artifactId>
+      <groupId>org.scalactic</groupId>
+      <artifactId>scalactic_${scala.compat.version}</artifactId>
       <!-- Version inherited from ProFI-Pom -->
+    </dependency>
+
+    <dependency>
+      <groupId>org.scalatest</groupId>
+      <artifactId>scalatest-funspec_${scala.compat.version}</artifactId>
+      <scope>test</scope>
+    </dependency>
+
+
+    <dependency>
+      <groupId>org.scalatest</groupId>
+      <artifactId>scalatest-core_${scala.compat.version}</artifactId>
+      <scope>test</scope>
+    </dependency>
+
+    <dependency>
+      <groupId>org.scalatest</groupId>
+      <artifactId>scalatest-compatible</artifactId>
+      <scope>test</scope>
+    </dependency>
+
+    <dependency>
+      <groupId>org.scalatest</groupId>
+      <artifactId>scalatest-matchers-core_${scala.compat.version}</artifactId>
       <scope>test</scope>
     </dependency>
 
     <dependency>
       <groupId>fr.proline</groupId>
-      <artifactId>proline-om_${scala.version}</artifactId>
+      <artifactId>proline-om_${scala.compat.version}</artifactId>
       <!-- <version>${core.version}</version> -->
       <type>test-jar</type>
       <scope>test</scope>
@@ -191,22 +191,29 @@
     <dependency>
       <groupId>org.dbunit</groupId>
       <artifactId>dbunit</artifactId>
-      <scope>test</scope>
     </dependency>
 
     <dependency>
-      <groupId>org.hamcrest</groupId>
-      <artifactId>hamcrest-core</artifactId>
-      <version>1.3</version>
-      <scope>test</scope>
+      <groupId>org.scalatest</groupId>
+      <artifactId>scalatest-shouldmatchers_${scala.compat.version}</artifactId>
     </dependency>
+
+    <dependency>
+      <groupId>org.scalatest</groupId>
+      <artifactId>scalatest-mustmatchers_${scala.compat.version}</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>org.scalatestplus</groupId>
+      <artifactId>junit-4-13_${scala.compat.version}</artifactId>
+    </dependency>
+
   </dependencies>
 
   <build>
     <plugins>
       <plugin>
         <artifactId>maven-jar-plugin</artifactId>
-
         <executions>
           <execution>
             <goals>
@@ -221,7 +228,12 @@
       <plugin>
         <groupId>net.alchim31.maven</groupId>
         <artifactId>scala-maven-plugin</artifactId>
-        <!-- Version inherited from ProFI-Pom -->
+        <configuration>
+<!--          <args>-->
+<!--            <arg>-deprecation</arg>-->
+<!--            <arg>-feature</arg>-->
+<!--          </args>-->
+        </configuration>
       </plugin>
 
     </plugins>

@@ -88,7 +88,7 @@ class IsobaricTaggingEntitiesSummarizer(
           // Summarize abundance matrix
           val summarizedRawAbundanceMatrix = AbundanceSummarizer.summarizeAbundanceMatrix(
             mqReporterIonRawAbundanceMatrix,
-            MqPeptideAbundanceSummarizingMethod.MEDIAN
+            MqPeptideAbundanceSummarizingMethod.SUM
           )
           
           // Retrieve the best peptide match
@@ -138,14 +138,14 @@ class IsobaricTaggingEntitiesSummarizer(
             properties = None,
             masterQuantReporterIons = mqReporterIons
           )
-        }
-      }
+        } //End mqReporterIons.nonEmpty
+      } //End for each (charge-[pepMatch])
       
       if( mqPepIons.nonEmpty ) {
         mqPepIonsByPeptideId += peptideIdOpt.get -> mqPepIons.toArray
       }
       
-    }
+    } // end Iterate over validated peptide instances
     
     // --- Convert master quant peptide ions into master quant peptides ---
     val masterQuantPeptides = new ArrayBuffer[MasterQuantPeptide]( quantMergedRSM.peptideInstances.length )
@@ -187,7 +187,7 @@ class IsobaricTaggingWithLabelFreeEntitiesSummarizer(
             lcmsMapSet: MapSet,
             spectrumIdByRsIdAndScanNumber: LongMap[LongMap[Long]],
             ms2ScanNumbersByFtId: LongMap[Array[Int]]){
-    this(mqReporterIonsByIdentRsmId, lcmsMapSet,spectrumIdByRsIdAndScanNumber, ms2ScanNumbersByFtId, MqPepIonAbundanceSummarizingMethod.BEST_ION)
+    this(mqReporterIonsByIdentRsmId, lcmsMapSet,spectrumIdByRsIdAndScanNumber, ms2ScanNumbersByFtId, MqPepIonAbundanceSummarizingMethod.SUM)
   }
 
 
@@ -215,7 +215,7 @@ class IsobaricTaggingWithLabelFreeEntitiesSummarizer(
     }
     val identRsmIdByRunId = quantChannels.map { qc =>
       qc.runId.get -> qc.identResultSummaryId
-    } toMap
+    }.toMap
     
     // Build fake quant channels to perform label-free entities summarizing
     val identRsmIdByFakeQcId = new LongMap[Long](childMapsCount)

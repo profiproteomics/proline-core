@@ -30,13 +30,17 @@ public class DatabaseConnectionContext implements Closeable {
 
 	private static final Logger LOG = LoggerFactory.getLogger(DatabaseConnectionContext.class);
 
-	/*
+/*
+	*/
+/*
 	 * TODO LMN Remove fakeException generation and finalize() implementation
 	 * when all Db Connections are closed correctly in Proline
-	 */
-	private static final boolean DEBUG_LEAK = true;
+	 *//*
 
-	private final Exception m_fakeException;
+	private static final boolean DEBUG_LEAK = true;
+*/
+
+//	private final Exception m_fakeException;
 
 	private final EntityManager m_entityManager;
 
@@ -111,11 +115,11 @@ public class DatabaseConnectionContext implements Closeable {
 			throw new IllegalArgumentException("EntityManager and Connection are both null");
 		}
 
-		if (DEBUG_LEAK) {
-			m_fakeException = new RuntimeException("_FakeException_ DatabaseConnectionContext instance creation");
-		} else {
-			m_fakeException = null;
-		}
+//		if (DEBUG_LEAK) {
+//			m_fakeException = new RuntimeException("_FakeException_ DatabaseConnectionContext instance creation");
+//		} else {
+//			m_fakeException = null;
+//		}
 
 		m_entityManager = entityManager;
 
@@ -357,9 +361,10 @@ public class DatabaseConnectionContext implements Closeable {
 	 */
 	public void close() {
 		/* Regular way to close a Db Connection Context */
-		doClose(false);
+		doClose(/*false*/);
 	}
 
+/*
 	// TODO LMN Remove finalize() implementation when all Db Connections are
 	// closed correctly in Proline
 	@Override
@@ -369,10 +374,12 @@ public class DatabaseConnectionContext implements Closeable {
 
 			if (DEBUG_LEAK) {
 				try {
-					/*
+					*/
+/*
 					 * It is not the regular way to close a Db Connection
 					 * Context ! Just the last security
-					 */
+					 *//*
+
 					doClose(true);
 				} catch (Exception ex) {
 					LOG.error("Error closing " + getProlineDatabaseTypeString() + " Context", ex);
@@ -384,6 +391,7 @@ public class DatabaseConnectionContext implements Closeable {
 		}
 
 	}
+*/
 
 	/**
 	 * Checks if is closed.
@@ -591,7 +599,7 @@ public class DatabaseConnectionContext implements Closeable {
 		return result;
 	}
 
-	private void doClose(final boolean fromFinalize) {
+	private void doClose(/*final boolean fromFinalize*/) {
 
 		synchronized (m_contextLock) {
 
@@ -601,10 +609,10 @@ public class DatabaseConnectionContext implements Closeable {
 				final String prolineDbType = getProlineDatabaseTypeString();
 
 				if (m_connection != null && m_closableConnection) {
-
-					if (fromFinalize) {
-						LOG.warn("Trying to close ORPHAN {} Context from finalize", prolineDbType, m_fakeException);
-					}
+//
+//					if (fromFinalize) {
+//						LOG.warn("Trying to close ORPHAN {} Context from finalize", prolineDbType, m_fakeException);
+//					}
 
 					try {
 						m_connection.close();
@@ -613,9 +621,9 @@ public class DatabaseConnectionContext implements Closeable {
 					}
 				} else if (m_entityManager != null) {
 
-					if (fromFinalize) {
-						LOG.warn("Trying to close ORPHAN {} Context from finalize", prolineDbType, m_fakeException);
-					}
+//					if (fromFinalize) {
+//						LOG.warn("Trying to close ORPHAN {} Context from finalize", prolineDbType, m_fakeException);
+//					}
 
 					/* Paranoiac rollback then close */
 
@@ -641,7 +649,7 @@ public class DatabaseConnectionContext implements Closeable {
 							 * Check EM open state only on finalize (not on
 							 * explicit close call)
 							 */
-							if (!fromFinalize || m_entityManager.isOpen()) {
+							if (/*!fromFinalize ||*/ m_entityManager.isOpen()) {
 								m_entityManager.close();
 							}
 

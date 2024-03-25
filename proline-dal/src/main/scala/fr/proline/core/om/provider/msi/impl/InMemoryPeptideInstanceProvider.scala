@@ -12,7 +12,7 @@ class InMemoryPeptideInstanceProvider( peptideInstances: Array[PeptideInstance] 
   protected lazy val peptideInstancesByRsmId = peptideInstances.groupByLong( _.resultSummaryId )
 
   def getPeptideInstancesAsOptions( pepSetIds: Seq[Long] ): Array[Option[PeptideInstance]] = {
-    pepSetIds.map { this.peptideInstanceById.get(_) } toArray
+    pepSetIds.map { this.peptideInstanceById.get(_) }.toArray
   }
   
   def getPeptideInstances( pepSetIds: Seq[Long] ): Array[PeptideInstance] = {

@@ -6,9 +6,8 @@ import fr.profi.jdbc.PreparedStatementWrapper
 import fr.profi.util.serialization.ProfiJson
 import fr.proline.context.MsiDbConnectionContext
 import fr.proline.core.dal.DoJDBCWork
-import fr.proline.core.dal.tables.msi.{MsiDbPeptideTable,MsiDbPeptidePtmTable}
-import fr.proline.core.om.model.msi.LocatedPtm
-import fr.proline.core.om.model.msi.Peptide
+import fr.proline.core.dal.tables.msi.{MsiDbPeptideMatchTable, MsiDbPeptidePtmTable, MsiDbPeptideTable}
+import fr.proline.core.om.model.msi.{LocatedPtm, Peptide, PeptideMatch}
 import fr.proline.core.om.storer.msi.IPeptideWriter
 
 private[msi] object SQLPeptideWriter extends IPeptideWriter with LazyLogging {
@@ -68,6 +67,22 @@ private[msi] object SQLPeptideWriter extends IPeptideWriter with LazyLogging {
       Option.empty[Long]
     )
 
+  }
+
+  def updatePeptideMatchProperties(pepMatches: Seq[PeptideMatch], msiDbConCtxt: MsiDbConnectionContext): Unit = {
+    DoJDBCWork.withEzDBC(msiDbConCtxt) { msiEzDBC =>
+      msiEzDBC.executeInBatch("UPDATE " + MsiDbPeptideMatchTable.name + " SET " + MsiDbPeptideMatchTable.columns.SERIALIZED_PROPERTIES + " = ?  WHERE id = ? ") { stmt =>
+        for (pepMatch <- pepMatches) {
+          if (pepMatch.properties.isDefined) {
+            val propAsString = ProfiJson.serialize(pepMatch.properties.get)
+            stmt.executeWith(
+              propAsString,
+              pepMatch.id
+            )
+          }
+        }
+      }
+    }
   }
 
 }

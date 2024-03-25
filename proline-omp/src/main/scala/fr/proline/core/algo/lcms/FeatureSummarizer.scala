@@ -70,7 +70,7 @@ class FeatureSummarizer(
     
     val peakelsByFeature = indexedFeatures.view.map { case (feature, index) =>
       feature -> feature.relations.peakelItems.map( _.getPeakel.get )
-    } toMap
+    }.toMap
     
     // *** Pre-processing of peakels *** //
     val preProcFilterOpt = peakelPreProcessingMethod match {
@@ -119,7 +119,7 @@ class FeatureSummarizer(
   ): Array[Float] = {
     indexedFeatures.map { case (feature, index) =>
       peakelIntensitiesByFeature(feature).sum
-    } toArray
+    }.toArray
   }
   
   private def sumFirstPeakelIntensities(
@@ -138,7 +138,7 @@ class FeatureSummarizer(
     
     intensityMatrix.map { featureIntensities =>
       featureIntensities.take(peakelsCountToUse).sum
-    } toArray
+    }.toArray
   }
   
   private def retrieveHighestPeakelIntensities(
@@ -147,7 +147,7 @@ class FeatureSummarizer(
   ): Array[Float] = {
     indexedFeatures.map { case (feature, index) =>
       peakelIntensitiesByFeature(feature).max
-    } toArray
+    }.toArray
   }
   
   private def retrieveHighestTheoIsotopeIntensities(
@@ -161,7 +161,7 @@ class FeatureSummarizer(
       
       val peakelIntensities = peakelIntensitiesByFeature(feature)
       if( maxIdx > peakelIntensities.length - 1 ) Float.NaN else peakelIntensities(maxIdx)      
-    } toArray
+    }.toArray
   }
   
   /*private def fitPeakelIntensitiesWithIsotopePattern(
@@ -233,7 +233,7 @@ class FeatureSummarizer(
         newRow(idx) = v
       }
       newRow
-    } toArray
+    }.toArray
     
     // Summarize the matrix to a single median isotope pattern
     val medianIP = AbundanceSummarizer.summarizeAbundanceMatrix(fixedLengthIntensityMatrix, MqPeptideAbundanceSummarizingMethod.MEDIAN_PROFILE)
@@ -289,7 +289,7 @@ class FeatureSummarizer(
         fittedIP(maxIdx)
       }
       
-    } toArray
+    }.toArray
   }
   
   private def computeWeightedAverageDistance( observedIntensities: Seq[Float], theoIntensities: Seq[Float] ): Float = {
@@ -324,7 +324,7 @@ class FeatureSummarizer(
     indexedFeatures.map { case (feature, index) =>
       val featureIntensities = peakelIntensitiesByFeature(feature)
       featureIntensities(bestIsotopeIndex)
-    } toArray
+    }.toArray
   }
   
   private def retrieveLowestVarianceIsotopeIndex(
@@ -398,7 +398,7 @@ class FeatureSummarizer(
       
       theoIpIntensities.map( polyFunction.value(_, coeffs: _*) ).sum.toFloat
       
-    } toArray
+    }.toArray
     
     // Re-scale computed intensities (the regression may have modified the scale of the computed values)
     val featuresIntensities = indexedFeatures.map( _._1.intensity )

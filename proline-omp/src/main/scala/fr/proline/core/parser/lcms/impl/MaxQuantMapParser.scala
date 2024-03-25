@@ -33,15 +33,15 @@ class MaxQuantMapParser extends ILcmsMapFileParser {
     val features = ArrayBuffer[Feature]()
 
     def processLine(l: String): Unit = {
-      val data = columnNames.zip(l.stripLineEnd.split(MaxQuantMapParser.sepChar)) toMap
+      val data = columnNames.zip(l.stripLineEnd.split(MaxQuantMapParser.sepChar)).toMap
 
       if (data("Raw File").equals(shortFileName)) {
-        val moz = data("m/z") toDouble
-        val charge = data("charge") toInt
-        val intensity = data("Intensity") toFloat
-        val elutionTime = data("Retention Time") * 60 toFloat
-        val retentionLength = data("Retention Length") * 60 toFloat
-        val ms2Count = data("MS/MS Count") toInt
+        val moz = data("m/z").toDouble
+        val charge = data("charge").toInt
+        val intensity = data("Intensity").toFloat
+        val elutionTime = (data("Retention Time") * 60).toFloat
+        val retentionLength = (data("Retention Length") * 60).toFloat
+        val ms2Count = data("MS/MS Count").toInt
 
         val intensities = data("Intensities").split(";").map(_.toFloat).sortBy(f => f)
 
@@ -103,7 +103,7 @@ class MaxQuantMapParser extends ILcmsMapFileParser {
       name = lcmsScanSeq.rawFileIdentifier,
       isProcessed = false,
       creationTimestamp = new Date(),
-      features = features toArray,
+      features = features.toArray,
       runId = lcmsScanSeq.runId,
       peakPickingSoftware = new PeakPickingSoftware(
         1,

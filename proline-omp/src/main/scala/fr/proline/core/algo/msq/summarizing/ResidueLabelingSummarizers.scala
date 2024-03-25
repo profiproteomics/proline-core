@@ -29,7 +29,7 @@ class ResidueLabelingEntitiesSummarizer(
             lcmsMapSet: MapSet,
             spectrumIdByRsIdAndScanNumber: LongMap[LongMap[Long]],
             ms2ScanNumbersByFtId: LongMap[Array[Int]] ){
-      this(qcByRSMIdAndTagId, tagByPtmId, lcmsMapSet, spectrumIdByRsIdAndScanNumber, ms2ScanNumbersByFtId,  MqPepIonAbundanceSummarizingMethod.BEST_ION)
+      this(qcByRSMIdAndTagId, tagByPtmId, lcmsMapSet, spectrumIdByRsIdAndScanNumber, ms2ScanNumbersByFtId,  MqPepIonAbundanceSummarizingMethod.SUM)
   }
   
   //type CombinedQIons = (QuantPeptideIon,MasterQuantPeptideIon,Long)
@@ -52,7 +52,7 @@ class ResidueLabelingEntitiesSummarizer(
     
     val identRsmIdByRunId = quantChannels.map { qc =>
       qc.runId.get -> qc.identResultSummaryId
-    } toMap
+    }.toMap
     
     // Build fake quant channels to perform label-free entities summarizing
     val identRsmIdByFakeQcId = new LongMap[Long](childMapsCount)

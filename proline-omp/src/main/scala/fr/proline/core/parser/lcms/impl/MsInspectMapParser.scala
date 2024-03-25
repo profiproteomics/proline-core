@@ -34,15 +34,15 @@ class MsInspectMapParser extends ILcmsMapFileParser {
     val features = new ArrayBuffer[Feature](linesIterator.size)
 
     for( line <- linesIterator ) {
-      val data = columnNames.zip(line.split(MsInspectMapParser.sepChar)) toMap
-      val scanId = data("scan") toInt
-      val elutionTime = data("time") toFloat
-      val moz = data("mz") toDouble
-      val intensity = data("totalIntensity") toFloat
-      val charge = data("charge") toInt
-      //var nbPeaks = data("peaks") toInt
-      val firstScanId = data("scanFirst") toInt
-      val lastScanId = data("scanLast") toInt
+      val data = columnNames.zip(line.split(MsInspectMapParser.sepChar)).toMap
+      val scanId = data("scan").toInt
+      val elutionTime = data("time").toFloat
+      val moz = data("mz").toDouble
+      val intensity = data("totalIntensity").toFloat
+      val charge = data("charge").toInt
+      //var nbPeaks = data("peaks").toInt
+      val firstScanId = data("scanFirst").toInt
+      val lastScanId = data("scanLast").toInt
 
       val ms2EventIds = getMs2Events(lcmsScanSeq, scanId)
 
@@ -82,7 +82,7 @@ class MsInspectMapParser extends ILcmsMapFileParser {
         name = lcmsScanSeq.rawFileIdentifier,
         isProcessed = false,
         creationTimestamp = timeStamp,
-        features = features toArray,
+        features = features.toArray,
         runId = lcmsScanSeq.runId,
         peakPickingSoftware = new PeakPickingSoftware(
           1,

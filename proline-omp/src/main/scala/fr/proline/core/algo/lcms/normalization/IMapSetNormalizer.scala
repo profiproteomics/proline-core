@@ -38,7 +38,7 @@ trait IMapSetNormalizer {
     
     // Compute normalization factor for each map of the map_set compared to the reference map
     // Normalized factor for reference map = 1
-    mapIds.map { mapId => (mapId -> (refMapIntensity/intensityByMapId(mapId)).toFloat ) } toMap
+    mapIds.map { mapId => (mapId -> (refMapIntensity/intensityByMapId(mapId)).toFloat ) }.toMap
     
   }
  

@@ -1,15 +1,19 @@
 package fr.proline.core.orm.msi;
 
-import java.io.Serializable;
+import com.fasterxml.jackson.core.type.TypeReference;
+import fr.proline.core.orm.lcms.MapAlignment;
+import fr.proline.core.orm.msi.dto.DMasterQuantPeptideIon;
+import fr.proline.core.orm.msi.dto.DPeptideMatch;
+import fr.proline.core.orm.msi.dto.DQuantReporterIon;
+import fr.proline.core.orm.util.JsonSerializer;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
-import javax.persistence.JoinColumn;
-import javax.persistence.ManyToOne;
-import javax.persistence.Table;
+import javax.persistence.*;
+import java.io.Serializable;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
  * The persistent class for the consensus_spectrum database table.
@@ -20,6 +24,7 @@ import javax.persistence.Table;
 public class MasterQuantReporterIon implements Serializable {
 
 	private static final long serialVersionUID = 1L;
+	private static final Logger LOG = LoggerFactory.getLogger(MapAlignment.class);
 
 	@Id
 	@GeneratedValue(strategy = GenerationType.AUTO)
@@ -42,6 +47,10 @@ public class MasterQuantReporterIon implements Serializable {
 	@ManyToOne
 	@JoinColumn(name = "result_summary_id")
 	private ResultSummary resultSummary;
+
+	// Transient Variables not saved in database
+	@Transient
+	private TransientData transientData = null;
 
 	public MasterQuantReporterIon() {
 	}
@@ -94,4 +103,76 @@ public class MasterQuantReporterIon implements Serializable {
 		this.masterQuantPeptideIon = masterQuantPeptideIon;
 	}
 
+	public TransientData getTransientData() {
+		if (transientData == null) {
+			transientData = new TransientData();
+		}
+		return transientData;
+	}
+
+	public void parseAnSetQuantReporterIonFromProperties(String quantReporterIonData) {
+		Map<Long, DQuantReporterIon> quantReporterIonByQchIds = null;
+		try {
+			List<DQuantReporterIon> quantReporterIons = JsonSerializer.getMapper().readValue(quantReporterIonData, new TypeReference<List<DQuantReporterIon>>() {
+			});
+
+			quantReporterIonByQchIds = new HashMap<Long, DQuantReporterIon>();
+			if (quantReporterIons != null) {
+				for (int i = 0; i < quantReporterIons.size(); i++) {
+					DQuantReporterIon nextQuantRepIon = quantReporterIons.get(i);
+					if (nextQuantRepIon != null) {
+						quantReporterIonByQchIds.put(nextQuantRepIon.getQuantChannelId(), nextQuantRepIon);
+					}
+				}
+			}
+
+		} catch (Exception e) {
+			LOG.warn("Error Parsing DQuantReporterIon ", e);
+			LOG.warn("quantReporterIonData= " + quantReporterIonData);
+			quantReporterIonByQchIds = null;
+		} finally {
+			this.getTransientData().setQuantReporterIonByQchIds(quantReporterIonByQchIds);
+		}
+	}
+
+	/**
+	 * Transient Data which will be not saved in database Used by the Proline Studio IHM
+	 *
+	 * @author VD225637
+	 */
+	public static class TransientData implements Serializable {
+		private static final long serialVersionUID = 1L;
+
+		//Peptide Match quant value are associated to
+		private DPeptideMatch peptideMatch;
+
+		//MasterQuantPeptideIon this reporter ion is linked to
+		private DMasterQuantPeptideIon masterQuantPeptideIon;
+
+		private Map<Long, DQuantReporterIon> quantReporterIonByQchIds = null;
+
+		public DMasterQuantPeptideIon getDMasterQuantPeptideIon() {
+			return masterQuantPeptideIon;
+		}
+
+		public void setDMasterQuantPeptideIon(DMasterQuantPeptideIon masterQuantPeptideIon) {
+			this.masterQuantPeptideIon = masterQuantPeptideIon;
+		}
+
+		public DPeptideMatch getPeptideMatch() {
+			return peptideMatch;
+		}
+
+		public void setPeptideMatch(DPeptideMatch peptideMatch) {
+			this.peptideMatch = peptideMatch;
+		}
+
+		public Map<Long, DQuantReporterIon> getQuantReporterIonByQchIds() {
+			return quantReporterIonByQchIds;
+		}
+
+		public void setQuantReporterIonByQchIds(Map<Long, DQuantReporterIon> quantReporterIonByQchIds) {
+			this.quantReporterIonByQchIds = quantReporterIonByQchIds;
+		}
+	}
 }

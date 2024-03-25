@@ -1,9 +1,6 @@
 package fr.proline.core.om.storer.msi.impl
 
-import java.sql.Connection
 import org.postgresql.copy.CopyIn
-import org.postgresql.copy.CopyManager
-import org.postgresql.core.BaseConnection
 import com.typesafe.scalalogging.LazyLogging
 import fr.profi.jdbc.easy._
 import fr.profi.util.serialization.ProfiJson
@@ -94,7 +91,7 @@ object PgMsiSearchWriter extends AbstractSQLMsiSearchWriter() with LazyLogging {
       // Retrieve generated MS query ids
       val msQueryIdByInitialId = msiEzDBC.select(msqIdQuery, msiSearchId) { r =>
         (toLong(r.nextAny) -> toLong(r.nextAny))
-      } toMap
+      }.toMap
 
       // Iterate over MS queries to update them
       msQueries.foreach { msQuery => msQuery.id = msQueryIdByInitialId(msQuery.initialId) }

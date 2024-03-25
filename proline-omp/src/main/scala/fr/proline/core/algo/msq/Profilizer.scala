@@ -76,36 +76,27 @@ class Profilizer( expDesign: ExperimentalDesign, groupSetupNumber: Int = 1, mast
     // NORMALIZATION WARNING : Peptide config normalization is currently done on all Peptide IONS .... To be changed
     val mqPepIonsAfterAllFilters = masterQuantPeptides.flatMap(_.masterQuantPeptideIons).asInstanceOf[Seq[MasterQuantComponent[QuantComponent]]]
 
-    //
-    // Reset quant peptide abundance of deselected master quant peptides
-    // DBO: is this useful ???
-    //
-    // for( mqPep <- deselectedMqPeps; (qcid,qPep) <- mqPep.quantPeptideMap ) {
-    //  qPep.abundance = Float.NaN
-    // }
-    //
-     
     // --- Compute the PSM count matrix ---
     val psmCountMatrix = mqPepIonsAfterAllFilters.map( _.getPepMatchesCountsForQuantChannels(expDesignSetup.qcIds) ).toArray
     
     // --- Compute the abundance matrix ---
-    val rawAbundanceMatrix: Array[Array[Float]] = mqPepIonsAfterAllFilters.map( _.getRawAbundancesForQuantChannels(expDesignSetup.qcIds) ).toArray
+    val abundanceMatrix: Array[Array[Float]] = mqPepIonsAfterAllFilters.map( _.getAbundancesForQuantChannels(expDesignSetup.qcIds) ).toArray
     
     // --- Normalize the abundance matrix ---
     //
     // TODO modify this to take into account PEPTIDE or ION
     //
     // NORMALIZATION WARNING : Peptide config normalization is currently done on all Peptide IONS .... To be changed
-    val normalizedRawAbundMatrix = if( !config.peptideStatConfig.applyNormalization ) rawAbundanceMatrix else AbundanceNormalizer.normalizeAbundances(rawAbundanceMatrix)
+    val normalizedAbundanceMatrix = if( !config.peptideStatConfig.applyNormalization ) abundanceMatrix else AbundanceNormalizer.normalizeAbundances(abundanceMatrix)
     
-    require( normalizedRawAbundMatrix.length == rawAbundanceMatrix.length, "error during normalization, some peptides were lost...")
+    require( normalizedAbundanceMatrix.length == abundanceMatrix.length, "error during normalization, some peptides were lost...")
  
     // Compute absolute error model and the filled matrix (only if config.peptideStatConfig.applyMissValInference == true)
     //
-    val absoluteErrorModelOpt = this.computeAbsoluteErrorModel(normalizedRawAbundMatrix)
+    val absoluteErrorModelOpt = this.computeAbsoluteErrorModel(normalizedAbundanceMatrix)
     
     val filledMatrix = this.inferMissingValues(
-      normalizedRawAbundMatrix,
+      normalizedAbundanceMatrix,
       psmCountMatrix,
       absoluteErrorModelOpt,
       config.peptideStatConfig
@@ -121,7 +112,6 @@ class Profilizer( expDesign: ExperimentalDesign, groupSetupNumber: Int = 1, mast
      
     // Update master quant component abundances after normalization and missing values inference
     //
-    
     for( (mqQuantComponent, abundances) <- mqPepIonsAfterAllFilters.zip(filledMatrix) ) {
       mqQuantComponent.setAbundancesForQuantChannels(abundances,expDesignSetup.qcIds)
     }

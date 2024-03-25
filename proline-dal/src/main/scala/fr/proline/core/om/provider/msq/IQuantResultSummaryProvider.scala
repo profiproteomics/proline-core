@@ -5,10 +5,10 @@ import fr.proline.core.om.model.msq.QuantResultSummary
 
 trait IQuantResultSummaryProvider {
   
-  def getQuantResultSummaries( quantRsmIds: Seq[Long],  quantChannelIds: Seq[Long], loadResultSet: Boolean, loadProteinMatches: Option[Boolean] = None ): Array[QuantResultSummary]
+  def getQuantResultSummaries( quantRsmIds: Seq[Long],  quantChannelIds: Seq[Long], loadResultSet: Boolean, loadProteinMatches: Option[Boolean] = None, loadReporterIons: Option[Boolean]  = None ): Array[QuantResultSummary]
   
-  def getQuantResultSummary( quantRsmId:Long, quantChannelIds: Seq[Long], loadResultSet: Boolean, loadProteinMatches: Option[Boolean] = None ): Option[QuantResultSummary] = {
-    getQuantResultSummaries( Array(quantRsmId), quantChannelIds, loadResultSet, loadProteinMatches ).headOption
+  def getQuantResultSummary( quantRsmId:Long, quantChannelIds: Seq[Long], loadResultSet: Boolean, loadProteinMatches: Option[Boolean] = None, loadReporterIons: Option[Boolean]  = None ): Option[QuantResultSummary] = {
+    getQuantResultSummaries( Array(quantRsmId), quantChannelIds, loadResultSet, loadProteinMatches,loadReporterIons ).headOption
   }
-  
+
 }

@@ -24,8 +24,10 @@ public class DProteinSet {
 
 	private Integer m_sameSetCount;
 	private Integer m_subSetCount;
-	private DProteinMatch[] m_sameSet = null; // loaded later than sameSetCount
-	private DProteinMatch[] m_subSet = null; // loaded later than subSetCount
+	private String[] m_sameSubSetNames = null;
+
+	private DProteinMatch[] m_sameSet = null; // loaded later than sameSetCount & m_sameSubSetNames
+	private DProteinMatch[] m_subSet = null; // loaded later than subSetCount & m_sameSubSetNames
 
 	public DProteinSet(long id, long typicalProteinMatchId, long resultSummaryId) {
 		m_id = id;
@@ -37,6 +39,7 @@ public class DProteinSet {
 		m_specificSpectralCount = null;
 		m_sameSetCount = null;
 		m_subSetCount = null;
+		m_sameSubSetNames = null;
 	}
 
 	public DProteinSet(long id, long typicalProteinMatchId, long resultSummaryId, String serializedProperties) {
@@ -50,6 +53,7 @@ public class DProteinSet {
 		m_specificSpectralCount = null;
 		m_sameSetCount = null;
 		m_subSetCount = null;
+		m_sameSubSetNames = null;
 	}
 
 	@Override
@@ -107,6 +111,14 @@ public class DProteinSet {
 
 	public void setSameSetCount(Integer sameSetCount) {
 		m_sameSetCount = sameSetCount;
+	}
+
+	public String[] getSameSubSetNames() {
+		return m_sameSubSetNames;
+	}
+
+	public void setSameSubSetNames(String[] sameSubSetNames) {
+		this.m_sameSubSetNames = sameSubSetNames;
 	}
 
 	public Integer getSubSetCount() {

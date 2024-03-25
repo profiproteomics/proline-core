@@ -8,6 +8,6 @@ import fr.proline.core.om.model.msi.ResultSet
  */
 trait IResultSetSplitter {
   
-  def split(rs: ResultSet, acDecoyRegex: util.matching.Regex): Pair[ResultSet, ResultSet]
+  def split(rs: ResultSet, acDecoyRegex: util.matching.Regex): Tuple2[ResultSet, ResultSet]
 
 }

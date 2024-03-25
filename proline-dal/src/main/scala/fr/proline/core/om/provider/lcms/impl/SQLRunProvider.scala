@@ -60,7 +60,7 @@ class SQLRawFileProvider(val udsDbCtx: UdsDbConnectionContext, val pathConverter
           properties = rawFileProperties
         )
         
-      } toArray
+      }.toArray
     }
     
   }

@@ -1,14 +1,13 @@
 package fr.proline.core.algo.lcms
 
-import scala.collection.mutable.ArrayBuffer
-import org.junit.Before
-import org.junit.Test
-import org.junit.Assert._
-import org.scalatest.junit.JUnitSuite
-import org.scalatest.MustMatchers
 import com.typesafe.scalalogging.StrictLogging
 import fr.proline.core.om.model.lcms._
 import fr.proline.core.util.generator.lcms._
+import org.junit.Assert._
+import org.junit.Test
+import org.scalatestplus.junit.JUnitSuite
+
+import scala.collection.mutable.ArrayBuffer
 
 class FeatureClustererTest extends JUnitSuite with StrictLogging {
   
@@ -26,7 +25,7 @@ class FeatureClustererTest extends JUnitSuite with StrictLogging {
   val rawMap = rawMapGenerator.generateRawMap( lcmsRun )
     
   // TODO: try other kind of parameters
-  val ftMappingParams = FeatureMappingParams(mozTol = Some(5.0), mozTolUnit = Some("PPM"), timeTol = 5f )
+  val ftMappingParams = FeatureMappingParams(mozTol = Some(5.0), mozTolUnit = Some("PPM"), timeTol = 5f)
   val ftClusteringParams = ClusteringParams(mozTol = 5.0, mozTolUnit = "PPM", timeTol = 5f , intensityComputation = "MOST_INTENSE", timeComputation= "MOST_INTENSE")
 
     

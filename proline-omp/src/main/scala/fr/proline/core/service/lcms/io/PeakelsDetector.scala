@@ -37,13 +37,13 @@ import scala.util.control.Breaks._
 
 object PeakelsDetector {
 
-  val ISOTOPE_PATTERN_HALF_MZ_WINDOW = 5
-  val RUN_SLICE_MAX_PARALLELISM = { // Defines how many run slices we want to process in parallel
+  private val ISOTOPE_PATTERN_HALF_MZ_WINDOW = 5
+  private val RUN_SLICE_MAX_PARALLELISM = { // Defines how many run slices we want to process in parallel
     val nbProcessors = Runtime.getRuntime().availableProcessors()
-    Some( math.max( 1, (nbProcessors / 2).toInt ) )
+    Some( math.max( 1, nbProcessors / 2 ) )
   }
 
-  val BACK_PRESSURE_BUFFER_SIZE = 50000
+  private val BACK_PRESSURE_BUFFER_SIZE = 50000
 
   private var mzdbMaxParallelism = 2 // Defines how many mzDB files we want to process in parallel
 
@@ -61,12 +61,12 @@ object PeakelsDetector {
     tempDir = tempDirectory
   }
 
-  protected val threadCount = new java.util.concurrent.atomic.AtomicInteger()
-  protected val terminatedThreadCount = new java.util.concurrent.atomic.AtomicInteger()
+  private val threadCount = new java.util.concurrent.atomic.AtomicInteger()
+  private val terminatedThreadCount = new java.util.concurrent.atomic.AtomicInteger()
 
   // Create a custom ThreadFactory to customize the name of threads in the pool
   // TODO: do the same thing in mzDB-processing
-  protected val rtreeThreadFactory = new java.util.concurrent.ThreadFactory {
+  private val rtreeThreadFactory = new java.util.concurrent.ThreadFactory {
 
     def newThread(r: Runnable): Thread = {
       val threadName = s"ExtractMapSet-RTree-Thread-${PeakelsDetector.threadCount.incrementAndGet()}"
@@ -94,8 +94,8 @@ class PeakelsDetector(
   require(quantConfig.detectionParams.get.psmMatchingParams.isDefined, "detect peakels method requires PSM matching parameter")
   require(quantConfig.detectionParams.get.isotopeMatchingParams.isDefined, "detect peakels method requires isotope matching parameter")
 
-  protected val avgIsotopeMassDiff = MolecularConstants.AVERAGE_PEPTIDE_ISOTOPE_MASS_DIFF
-  protected val peakelWriter = rawMapStorer.peakelWriter.get
+  private val avgIsotopeMassDiff = MolecularConstants.AVERAGE_PEPTIDE_ISOTOPE_MASS_DIFF
+  private val peakelWriter = rawMapStorer.peakelWriter.get
 
   protected val pps = new PeakPickingSoftware(
     id = -1,
@@ -104,7 +104,7 @@ class PeakelsDetector(
     algorithm = "ExtractMapSet"
   )
 
-  class LcMsMapDetectorEntityCache(
+   private class LcMsMapDetectorEntityCache(
     val lcMsRuns: Seq[LcMsRun],
     val mzDbFileByLcMsRunId: LongMap[File],
     val mapSetId: Long
@@ -156,7 +156,7 @@ class PeakelsDetector(
       }
     }
 
-    val isomericPeptidesMap = new HashMap[Peptide, Array[Peptide]]()
+    private val isomericPeptidesMap = new HashMap[Peptide, Array[Peptide]]()
 
     def buildIsomericPeptidesMap(peptides: Seq[Peptide]): Unit = {
       val peptidesBySeqPtmsKey = peptides.groupBy(peptide => peptide.sequence + peptide.ptms.map(_.definition.names.shortName).sorted.mkString)
@@ -166,7 +166,7 @@ class PeakelsDetector(
     }
 
     private val conflictingPeptidesMap_lock = new Object()
-    val conflictingPeptidesMap = new HashMap[(Peptide, Int), ArrayBuffer[Peptide]]()
+    private val conflictingPeptidesMap = new HashMap[(Peptide, Int), ArrayBuffer[Peptide]]()
 
     def getConflictingPeptides(peptideAndCharge: (Peptide, Int)): Option[Array[Peptide]] = {
       val r = conflictingPeptidesMap.getOrElse(peptideAndCharge, ArrayBuffer.empty[Peptide]).toArray ++ isomericPeptidesMap.getOrElse(peptideAndCharge._1, Array.empty[Peptide])
@@ -179,7 +179,7 @@ class PeakelsDetector(
       }
     }
 
-  }
+  } // End LcMsMapDetectorEntityCache class
 
   def detectMapSetFromPeakels(
     mzDbFileByLcMsRunId: LongMap[File],
@@ -355,39 +355,35 @@ class PeakelsDetector(
         } // ends (peptide, charge) loop
 
 
-        this.logger.info("Aligning maps moz ...")
-        val featureTuplesByRuns = detectorEntityCache.featureTuples.groupBy { ft => (ft._3) }
+        this.logger.info("Compute moz calibration...")
+        val featureTuplesByRuns = detectorEntityCache.featureTuples.groupBy { ft => ft._3 }
+        val mozCalibSmoothingMethod = MozCalibrationSmoother(method = quantConfig.mozCalibrationSmoothingMethod)
 
-        if (alignmentConfig.isDefined) {
-
-          val alignmentSmoother = AlnSmoother(method = alignmentConfig.get.smoothingMethodName)
-
-          for ((lcMsRun, tuples) <- featureTuplesByRuns) {
-            val processedMap = processedMapByRunId(lcMsRun.id)
-            val landmarks = new ArrayBuffer[Landmark]
-            tuples.foreach { t =>
-              val theoreticalMoz = massToMoz(t._2.calculatedMass, t._1.charge)
-              val rt = t._1.elutionTime
-              val dm = 1e6 * (theoreticalMoz - t._1.moz) / theoreticalMoz
-              if(Math.abs(dm) < 500.0) //Error du to seq with X...  don't consider these delta moz
-                landmarks += Landmark(rt.toDouble, 1e6 * (theoreticalMoz - t._1.moz) / theoreticalMoz)
-              else
-                logger.debug(" --- moz calibration, got a delta moz > 500  ("+ dm +"). Pep calc mass "+t._2.calculatedMass+" ;  theoreticalMoz "+ theoreticalMoz+" ; feature exp. mass "+t._1.moz)
-            }
+        for ((lcMsRun, tuples) <- featureTuplesByRuns) {
+          val processedMap = processedMapByRunId(lcMsRun.id)
+          val landmarks = new ArrayBuffer[Landmark]
+          tuples.foreach { t =>
+            val theoreticalMoz = massToMoz(t._2.calculatedMass, t._1.charge)
+            val rt = t._1.elutionTime
+            val dm = 1e6 * (theoreticalMoz - t._1.moz) / theoreticalMoz
+            if(Math.abs(dm) < 500.0) //Error du to seq with X...  don't consider these delta moz
+              landmarks += Landmark(rt.toDouble, 1e6 * (theoreticalMoz - t._1.moz) / theoreticalMoz)
+            else
+              logger.debug(" --- moz calibration, got a delta moz > 500  ("+ dm +"). Pep calc mass "+t._2.calculatedMass+" ;  theoreticalMoz "+ theoreticalMoz+" ; feature exp. mass "+t._1.moz)
+          }
 
 //            Landmark._toCSVFile(List("moz", lcMsRun.getRawFileName).mkString("_") + ".csv", landmarks)
 
-            val smoothedLandmarks = alignmentSmoother.smoothLandmarks(landmarks, alignmentConfig.get.smoothingMethodParams)
+           val smoothedLandmarks = mozCalibSmoothingMethod.smoothLandmarks(landmarks, quantConfig.mozCalibrationSmoothingParams)
 
-            val mozCalibration = MapMozCalibration(
-                mozList = smoothedLandmarks.map(_.x).toArray,
-                deltaMozList = smoothedLandmarks.map(_.dx).toArray,
-                mapId = -1L,
-                scanId = -1L
-              )
-              processedMap.mozCalibrations = Some(Array(mozCalibration))
-          }
-        }
+           val mozCalibration = MapMozCalibration(
+            mozList = smoothedLandmarks.map(_.x).toArray,
+            deltaMozList = smoothedLandmarks.map(_.dx).toArray,
+            mapId = -1L,
+            scanId = -1L
+          )
+          processedMap.mozCalibrations = Some(Array(mozCalibration))
+      }
 
         this.logger.info("Aligning maps RT and creating new map set...")
 
@@ -421,7 +417,7 @@ class PeakelsDetector(
                 metricsByRunId(bestFtLcMsRun.id).incr("unpredictable peptide elution time")
               } else {
                 val deltaRt = feature.elutionTime - predictedRtOpt.get._1
-                metricsByRunId(bestFtLcMsRun.id).storeValue("matched feature vs predicted RT", (deltaRt))
+                metricsByRunId(bestFtLcMsRun.id).storeValue("matched feature vs predicted RT", deltaRt)
               }
 
             // Compute moz stats
@@ -478,7 +474,7 @@ class PeakelsDetector(
 
             // predict experimental mz of the putative feature
 
-            val putativeMoz = if (Settings.useMozCalibration) {
+            val putativeMoz = if (quantConfig.crossAssignmentConfig.get.ftMappingParams.useMozCalibration) {
                   val targetProcMap = processedMapByRunId(lcMsRunId)
                   val theoreticalMoz = massToMoz(peptide.calculatedMass, charge)
                   val dmass = targetProcMap.mozCalibrations.get.head.calcDeltaMoz(predictedTime)
@@ -560,7 +556,7 @@ class PeakelsDetector(
           require(mft.children.length <= sortedLcMsRuns.length, "master feature contains more child features than maps")
 
           mft
-        } toArray
+        }.toArray
 
         val alnRefMap = tmpMapSet.getAlnReferenceMap.get
         val curTime = new java.util.Date()
@@ -630,12 +626,8 @@ class PeakelsDetector(
 
       // Insert the peakel stream
       val peakelIdByTmpIdByRawMapId = peakelWriter match {
-        case pgPeakelWriter: PgPeakelWriter => {
-          pgPeakelWriter.insertPeakelStream(forEachPeakel, None)
-        }
-        case sqlPeakelWriter: SQLPeakelWriter => {
-          sqlPeakelWriter.insertPeakelStream(forEachPeakel, None)
-        }
+        case pgPeakelWriter: PgPeakelWriter => pgPeakelWriter.insertPeakelStream(forEachPeakel, None)
+        case sqlPeakelWriter: SQLPeakelWriter => sqlPeakelWriter.insertPeakelStream(forEachPeakel, None)
         case _ => throw new Exception("This peakel writer do not implement the required \"insertPeakelStream\" method")
       }
 
@@ -709,7 +701,7 @@ class PeakelsDetector(
       val procMapIdByTmpId = new LongMap[Long](sortedLcMsRuns.length)
       for (processedMap <- tmpMapSet.childMaps) {
         val rawMapId = processedMap.getRawMapIds.head
-        val oldProcessedMapId = procMapTmpIdByRawMapId.get(rawMapId).get
+        val oldProcessedMapId = procMapTmpIdByRawMapId(rawMapId)
         procMapIdByTmpId.put(oldProcessedMapId,processedMap.id )
       }
 
@@ -723,14 +715,14 @@ class PeakelsDetector(
       val finalMapAlnSets = new ArrayBuffer[MapAlignmentSet](tmpMapSet.mapAlnSets.length)
       for (alnSet <- tmpMapSet.mapAlnSets) {
 
-        val finalRefMapId = procMapIdByTmpId.get(alnSet.refMapId).get
-        val finalTargetMapId = procMapIdByTmpId.get(alnSet.targetMapId).get
+        val finalRefMapId = procMapIdByTmpId(alnSet.refMapId)
+        val finalTargetMapId = procMapIdByTmpId(alnSet.targetMapId)
         val finalMapAlignments = new ArrayBuffer[MapAlignment](alnSet.mapAlignments.length)
 
         for (aln <- alnSet.mapAlignments) {
           val finalMapAln = new MapAlignment(
-            procMapIdByTmpId.get(aln.refMapId).get,
-            procMapIdByTmpId.get(aln.targetMapId).get,
+            procMapIdByTmpId(aln.refMapId),
+            procMapIdByTmpId(aln.targetMapId),
             aln.massRange,
             aln.timeList,
             aln.deltaTimeList,
@@ -747,7 +739,7 @@ class PeakelsDetector(
       }
 
       val finalAlnResult = new AlignmentResult(
-        procMapIdByTmpId.get(tmpMapSet.getAlnReferenceMapId).get,
+        procMapIdByTmpId(tmpMapSet.getAlnReferenceMapId),
         finalMapAlnSets.toArray
       )
 
@@ -758,8 +750,8 @@ class PeakelsDetector(
       this.logger.debug("Closing ExtractMapSet thread pools...")
 
       // Shutdown the thread pools
-      if (ioThreadPool.isShutdown() == false ) ioThreadPool.shutdownNow()
-      if (computationThreadPool.isShutdown() == false ) computationThreadPool.shutdownNow()
+      if (!ioThreadPool.isShutdown ) ioThreadPool.shutdownNow()
+      if (!computationThreadPool.isShutdown ) computationThreadPool.shutdownNow()
 
       // Update terminatedThreadCount and reset the ThreadCount
       val terminatedThreadCount = PeakelsDetector.terminatedThreadCount.addAndGet(PeakelsDetector.mzdbMaxParallelism)
@@ -813,7 +805,7 @@ class PeakelsDetector(
               mftBuilderOpt = mftBuilderByFtId.get(map1Ft.id);
               if mftBuilderOpt.isDefined;
               map2FtOpt = map2FtByMftBuilder.get(mftBuilderOpt.get);
-              if (map2FtOpt.isDefined && Math.abs(map1Ft.elutionTime - map2FtOpt.get.elutionTime) < alignmentConfig.get.ftMappingMethodParams.timeTol)
+              if (map2FtOpt.isDefined && Math.abs(map1Ft.elutionTime - map2FtOpt.get.elutionTime) < alignmentConfig.get.ftMappingParams.timeTol)
             ) {
               ftMapping.getOrElseUpdate(map1Ft.id, new ArrayBuffer[LcMsFeature]) += map2FtOpt.get
             }
@@ -894,7 +886,7 @@ class PeakelsDetector(
 
   }
 
-  case class PeakelMatch(
+  private case class PeakelMatch(
     peakel: MzDbPeakel,
     peptide: Peptide,
     spectrumHeader: SpectrumHeader,
@@ -1236,12 +1228,12 @@ class PeakelsDetector(
 
           val entriesBuffer = new ArrayBuffer[Entry[java.lang.Integer,geometry.Point]]
           for (peakel <- peakels) {
-            val peakelId = new java.lang.Integer(peakel.id)
+            val peakelId = java.lang.Integer.valueOf(peakel.id)
             val geom = geometry.Geometries.point(peakel.getMz,peakel.getElutionTime())
             entriesBuffer += Entries.entry(peakelId, geom)
           }
 
-          val entriesIterable = collection.JavaConversions.asJavaIterable(entriesBuffer)
+          val entriesIterable = collection.JavaConverters.asJavaIterable(entriesBuffer)
 
           rTree_lock.synchronized {
             rTree = rTree.add(entriesIterable)
@@ -1545,7 +1537,7 @@ class PeakelsDetector(
           logger.info(s"Searching for coeluting peakels of ${putativeFts.length} missing features...")
           val missingFtIdAndCoelutingPeakelIds = putativeFts.par.map { putativeFt =>
             val mz = putativeFt.mz
-            val rtTolerance = if (Settings.useAdaptativeRTTolerance) Settings.maxAdaptativeRTTolerance else crossAssignmentConfig.get.ftMappingParams.timeTol
+            val rtTolerance = if (quantConfig.crossAssignmentConfig.get.ftMappingParams.useAutomaticTimeTol) crossAssignmentConfig.get.ftMappingParams.maxAutoTimeTol.get else crossAssignmentConfig.get.ftMappingParams.timeTol.get
             val peakelIds = PeakelDbHelper.findPeakelIdsInRange(
               rTree,
               mz - halfMzWindow,
@@ -1555,7 +1547,7 @@ class PeakelsDetector(
             )
 
             (putativeFt.id.toLong, peakelIds)
-          } toArray
+          }.toArray
 
           val coelutingPeakelIdsByMissingFtId = missingFtIdAndCoelutingPeakelIds.toLongMap
           val coelutingPeakelIdMap = missingFtIdAndCoelutingPeakelIds.flatMap(_._2).mapByLong(id => id)
@@ -1588,12 +1580,13 @@ class PeakelsDetector(
               coelutingPeakelById(peakelId)
             }
 
-            val effectiveRTtolerance = {
-              if (Settings.useAdaptativeRTTolerance) {
-                val rtTolerance = math.min(math.max(putativeFt.elutionTimeTolerance, crossAssignmentConfig.get.ftMappingParams.timeTol), Settings.maxAdaptativeRTTolerance)
+
+             val effectiveRTtolerance = {
+              if (crossAssignmentConfig.get.ftMappingParams.useAutomaticTimeTol) {
+                val rtTolerance = math.min(math.max(putativeFt.elutionTimeTolerance, quantConfig.crossAssignmentConfig.get.ftMappingParams.minAutoTimeTol.get), quantConfig.crossAssignmentConfig.get.ftMappingParams.maxAutoTimeTol.get)
                 rtTolerance
               } else {
-                crossAssignmentConfig.get.ftMappingParams.timeTol
+                crossAssignmentConfig.get.ftMappingParams.timeTol.get
               }
             }
 

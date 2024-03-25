@@ -1,8 +1,7 @@
 package fr.proline.core.om.storer.msi.impl
 
 import com.typesafe.scalalogging.LazyLogging
-import scala.collection.JavaConversions.collectionAsScalaIterable
-import scala.collection.JavaConversions.setAsJavaSet
+import scala.collection.JavaConverters._
 import fr.proline.context.IExecutionContext
 import fr.proline.core.om.model.msi.IonTypes
 import fr.proline.core.om.model.msi.PtmDefinition
@@ -47,7 +46,7 @@ object JPAPtmDefinitionStorer extends IPtmDefinitionStorer with LazyLogging {
     val msiEM = msiDbCtx.getEntityManager()
 
     // Retrieve the list of existing PTM classifications
-    val allPtmClassifs = msiEM.createQuery("SELECT e FROM fr.proline.core.orm.msi.PtmClassification e",classOf[MsiPtmClassification]).getResultList().toList
+    val allPtmClassifs = msiEM.createQuery("SELECT e FROM fr.proline.core.orm.msi.PtmClassification e",classOf[MsiPtmClassification]).getResultList().asScala.toList
     val msiPtmClassifByUpperName = Map() ++ allPtmClassifs.map( classif => classif.getName.toUpperCase() -> classif )
 
     val msiOtherPtmClassifName = MsiPtmClassification.PtmClassificationName.OTHER.toString().toUpperCase()
@@ -88,7 +87,7 @@ object JPAPtmDefinitionStorer extends IPtmDefinitionStorer with LazyLogging {
         if (msiPtm != null) {
            
           // Retrieve the Precursor delta of the found PTM
-          val msiPtmPrecDelta: MsiPtmEvidence = msiPtm.getEvidences().toList.find(_.getType() == MsiPtmEvidencePrecursorType).get
+          val msiPtmPrecDelta: MsiPtmEvidence = msiPtm.getEvidences().asScala.toList.find(_.getType() == MsiPtmEvidencePrecursorType).get
           
           // Compare MSI PTM evidence with found PTM evidence
           val precursorDelta = ptmDef.precursorDelta
@@ -103,7 +102,7 @@ object JPAPtmDefinitionStorer extends IPtmDefinitionStorer with LazyLogging {
           }
 
           // Try to retrieve the PTM specificity matching the provided PTM definition
-          val msiPtmSpecifs = Option(msiPtm.getSpecificities()).map(_.toSeq).getOrElse(Seq())
+          val msiPtmSpecifs = Option(msiPtm.getSpecificities()).map(_.asScala.toSeq).getOrElse(Seq())
           
           val msiMatchingPtmSpecifOpt = msiPtmSpecifs.find { msiPtmSpecif =>
             msiPtmSpecif.getLocation == ptmDef.location && characterToScalaChar(msiPtmSpecif.getResidue) == ptmDef.residue
@@ -112,7 +111,7 @@ object JPAPtmDefinitionStorer extends IPtmDefinitionStorer with LazyLogging {
           // IF the PTM Precursor delta is identical but the specificity is new
           if (msiMatchingPtmSpecifOpt.isEmpty) {
 
-            val ptmSpecifLocation = if (ptmDef.residue != '\0') ptmDef.residue else ptmDef.location
+            val ptmSpecifLocation = if (ptmDef.residue != '\u0000') ptmDef.residue else ptmDef.location
             logger.info(s"Insert new PTM specifity at location '$ptmSpecifLocation' for PTM $ptmShortName")
 
             // Save a new specificity
@@ -226,7 +225,7 @@ object JPAPtmDefinitionStorer extends IPtmDefinitionStorer with LazyLogging {
       require(StringUtils.isNotEmpty(composition), "composition must not be an empty string")
 
       val query = msiEM.createQuery("FROM fr.proline.core.orm.msi.PtmEvidence WHERE composition = :composition",classOf[MsiPtmEvidence])
-      query.setParameter("composition", composition).getResultList().toList
+      query.setParameter("composition", composition).getResultList().asScala.toList
     }
 
     protected def nearlyEquals(a: Double, b: Double, epsilon: Double): Boolean = {

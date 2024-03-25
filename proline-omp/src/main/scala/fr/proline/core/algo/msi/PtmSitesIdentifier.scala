@@ -86,7 +86,7 @@ class PtmSitesIdentifier(
     val resultSummary: ResultSummary,
     val proteinMatches: Array[ProteinMatch]) extends LazyLogging {
 
-  private val proteinMatchesById = proteinMatches.map { pm => pm.id -> pm }.toMap
+  protected val proteinMatchesById = proteinMatches.map { pm => pm.id -> pm }.toMap
 
   /**
     * Identifies all ptm sites from validated peptides of the resultSummary
@@ -223,8 +223,173 @@ class PtmSitesIdentifier(
    * get a key for the given PeptideInstance based on sequence and ptms definition sorted by name. This means that to peptide instances with
    * same sequence and a same modification located at a different position get the same key.
    */
-  private def _getAASequenceAndPTMsAsString(peptideInstance: PeptideInstance): String = {
+  protected def _getAASequenceAndPTMsAsString(peptideInstance: PeptideInstance): String = {
     peptideInstance.peptide.sequence + peptideInstance.peptide.ptms.map(_.definition.toReadableString()).sorted.mkString
+  }
+
+}
+
+//New version of PtmSitesIdentifier which creates PtmSite2 object
+class  PtmSitesIdentifierV2(resultSummary: ResultSummary, proteinMatches: Array[ProteinMatch])
+    extends PtmSitesIdentifier(resultSummary, proteinMatches) {
+
+  def identifyPtmSite2s(): Iterable[PtmSite2] = {
+    val validatedProteinMatchesById = scala.collection.immutable.HashSet(resultSummary.getValidatedResultSet().get.proteinMatches.map(_.id): _*)
+    val ptmSites = ArrayBuffer.empty[PtmSite2]
+
+    for (peptideSet <- resultSummary.peptideSets) {
+      for (proteinMatchId <- peptideSet.proteinMatchIds) {
+
+        // Apply PTM site identification only on validated protein sets
+        if (validatedProteinMatchesById.contains(proteinMatchId)) {
+
+          val sequenceMatchesByPeptideId = proteinMatchesById(proteinMatchId).sequenceMatches.groupBy { _.getPeptideId()  }
+          val proteinMatchSites = scala.collection.mutable.Map[(Long, Int), ArrayBuffer[PeptideInstancePtmTuple]]()
+          val peptideInstanceIdsBySeqPtm = scala.collection.mutable.Map[String, ArrayBuffer[Long]]()
+          val peptideInstancesById = peptideSet.getPeptideInstances().map(pi => pi.id -> pi).toMap
+
+          for (peptideInstance <- peptideSet.getPeptideInstances().filter(!_.peptide.ptms.isEmpty)) {
+            val aaSeqAndPTMsKey = _getAASequenceAndPTMsAsString(peptideInstance)
+            peptideInstanceIdsBySeqPtm.getOrElseUpdate(aaSeqAndPTMsKey, ArrayBuffer.empty[Long]) += peptideInstance.id
+
+            for (seqMatch <- sequenceMatchesByPeptideId(peptideInstance.peptide.id)) {
+              for (ptm <- peptideInstance.peptide.ptms) {
+                if (PtmSitesIdentifier.isModificationProbabilityDefined(peptideInstance.peptideMatches.head, ptm)) {
+                  proteinMatchSites.getOrElseUpdate((ptm.definition.id, ptm.seqPosition + seqMatch.start - 1), ArrayBuffer.empty[PeptideInstancePtmTuple]) += PeptideInstancePtmTuple(peptideInstance, ptm)
+                }
+              }
+            }
+          }
+
+          var siteIndex = ptmSites.size
+          val site = proteinMatchSites.map {
+            case (ptmDefinitionPositionTuple, peptideInstPtmTuple) =>
+
+              var peptideIdsBySeqPosition = peptideInstPtmTuple.groupBy(_.ptm.seqPosition).mapValues(_.map(_.peptideInstance.peptide.id).toArray)
+
+              // -- Search for the best PeptideMatch & get SeqPostion correction N/CTerm modif
+              var seqCorrection  = 0
+              val isNTerm = peptideInstPtmTuple.head.ptm.isNTerm
+              val isCTerm = peptideInstPtmTuple.head.ptm.isCTerm
+
+              if( isNTerm) {
+                logger.info("NTerm Ptm site identified, pepIds size: {}",peptideIdsBySeqPosition.size)
+                seqCorrection = +1 //locate modif on first pepAA
+                if(peptideIdsBySeqPosition.size != 1)
+                  throw new RuntimeException("Error identifying PTM Sites : NTerm in more than one position !! ")
+
+                val pepIds = peptideInstPtmTuple.map(_.peptideInstance.peptide.id).toArray
+                peptideIdsBySeqPosition =  Map.empty[Int, Array[Long]]
+                peptideIdsBySeqPosition += 1->pepIds
+              }
+
+              if( isCTerm) {
+                seqCorrection = peptideInstPtmTuple.head.peptideInstance.peptide.sequence.length+1 //locate modif on last pepAA
+              }
+
+              //  Should order by score before getting max value. maxBy don't respect "first for equal order" !
+              val bestPMs = peptideInstPtmTuple.map(peptideInstancePtmTuple => {
+                var bestProba: Float = 0.00f
+                var bestPM: PeptideMatch = null
+                val sortedPepMatches: Array[PeptideMatch] = peptideInstancePtmTuple.peptideInstance.peptideMatches.sortBy(_.score).reverse
+                sortedPepMatches.foreach { pepM =>
+                  val proba = PtmSitesIdentifier.singleModificationProbability(pepM, peptideInstancePtmTuple.ptm)
+                  if (proba > bestProba) {
+                    bestPM = pepM
+                    bestProba = proba
+                  }
+                }
+                (bestPM -> peptideInstancePtmTuple.ptm)
+              })
+
+              var bestPeptideMatch: PeptideMatch = null
+              var bestProba: Float = 0.00f
+              val sortedBestPMs = bestPMs.sortBy(_._1.score).reverse
+              sortedBestPMs.foreach(f => {
+                val proba = PtmSitesIdentifier.singleModificationProbability(f._1, f._2)
+                if (proba > bestProba) {
+                  bestPeptideMatch = f._1
+                  bestProba = proba
+                }
+              })
+
+              val isomericPeptideInstanceIds = peptideInstPtmTuple.flatMap(piptm => peptideInstanceIdsBySeqPtm(_getAASequenceAndPTMsAsString(piptm.peptideInstance))).distinct
+              isomericPeptideInstanceIds --= peptideInstPtmTuple.map(_.peptideInstance.id)
+              val isomericPeptideInstances = isomericPeptideInstanceIds.map(id => peptideInstancesById(id))
+
+              val sitePosition = ptmDefinitionPositionTuple._2 + seqCorrection
+
+               val nextProtSite = PtmSite2(
+                id = siteIndex,
+                proteinMatchId = proteinMatchId,
+                ptmDefinitionId = ptmDefinitionPositionTuple._1,
+                seqPosition = sitePosition,
+                bestPeptideMatchId = bestPeptideMatch.id,
+                localizationConfidence = bestProba,
+                peptideIdsByPtmPosition = peptideIdsBySeqPosition,
+                isomericPeptideIds = isomericPeptideInstances.map(_.id).toArray,
+                isNTerminal = isNTerm,
+                isCTerminal = isCTerm )
+
+              siteIndex = siteIndex+1
+              nextProtSite
+          }
+          ptmSites ++= site
+        }
+      }
+    }
+    logger.info(ptmSites.size + " Ptm sites v2 were identified")
+    ptmSites
+
+  }
+
+  def aggregatePtmSite2s(childrenSites: Array[Iterable[PtmSite2]], sitesProteinMatches: Array[ProteinMatch], peptideMatchProvider: (Array[Long]) => Map[Long, PeptideMatch]): Iterable[PtmSite2] = {
+    val proteinAccessionByProteinMatchId = sitesProteinMatches.map { pm => pm.id -> pm.accession }.toMap
+    val proteinMatchesByAccession = proteinMatches.map { pm => pm.accession -> pm }.toMap
+    val ptmSites = ArrayBuffer.empty[PtmSite2]
+
+    val ptmSitesMap = scala.collection.mutable.Map[(String, Long, Int), ArrayBuffer[PtmSite2]]()
+
+    for (sites <- childrenSites) {
+      sites.foreach { site =>
+        ptmSitesMap.getOrElseUpdate((proteinAccessionByProteinMatchId(site.proteinMatchId), site.ptmDefinitionId, site.seqPosition), ArrayBuffer.empty[PtmSite2]) += site
+      }
+    }
+
+    ptmSitesMap.foreach {
+      case (key, site) =>
+        val peptideMap = site.map(_.peptideIdsByPtmPosition).flatten
+        val newPeptideMap = peptideMap.groupBy(_._1).map { case (k, v) => k -> v.map(_._2).flatten.distinct.toArray }
+        val bestProbabilities = site.map(_.bestPeptideMatchId) zip site.map(_.localizationConfidence)
+        val newBestPTMProbability = bestProbabilities.maxBy(_._2)._2
+        val bestPeptideMatchIds = bestProbabilities.filter(_._2 >= newBestPTMProbability)
+        val newBestPeptideMatchId = {
+          if (bestPeptideMatchIds.size > 1) {
+            // if there is more than one peptideMatch with the same max probability, choose the one with the highest identification score
+            val pmScoresById = peptideMatchProvider(bestPeptideMatchIds.map(_._1).toArray)
+            bestPeptideMatchIds.map(x => (x._1, pmScoresById(x._1))).maxBy(_._2.score)._1
+          } else {
+            bestPeptideMatchIds.head._1
+          }
+        }
+        val newIsomericPeptideIds = site.map(_.isomericPeptideIds).flatten.distinct
+
+        val newSite2 = PtmSite2(
+          id = ptmSites.size+1,
+          proteinMatchId = proteinMatchesByAccession(key._1).id,
+          ptmDefinitionId =  key._2,
+          seqPosition = key._3,
+          bestPeptideMatchId = newBestPeptideMatchId,
+          localizationConfidence = newBestPTMProbability,
+          peptideIdsByPtmPosition = newPeptideMap,
+          isomericPeptideIds = newIsomericPeptideIds.toArray,
+          isNTerminal = site.head.isNTerminal,
+          isCTerminal = site.head.isCTerminal )
+
+        ptmSites += newSite2
+    }
+    logger.info(ptmSites.size + " Ptm sites identified")
+    ptmSites
   }
 
 }

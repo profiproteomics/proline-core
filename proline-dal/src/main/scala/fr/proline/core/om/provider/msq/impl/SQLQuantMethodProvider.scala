@@ -115,6 +115,6 @@ class SQLQuantMethodProvider(val udsDbCtx: UdsDbConnectionContext) extends IQuan
         case _ => throw new Exception(s"the label $quantLabelTypeAsStr is not supported yet")
       }
       
-    } toList
+    }.toList
   }
 }

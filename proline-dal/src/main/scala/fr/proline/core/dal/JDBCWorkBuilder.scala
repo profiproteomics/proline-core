@@ -77,7 +77,7 @@ object DoJDBCWork {
   }
   
   def tryTransactionWithEzDBC( dbCtx: DatabaseConnectionContext, flushEM: Boolean = false )(jdbcWorkFunction: EasyDBC => Unit): Unit = {
-    dbCtx.tryInTransaction(this.withEzDBC(dbCtx,jdbcWorkFunction,flushEM))
+    dbCtx.tryInTransaction(this.withEzDBC(dbCtx,flushEM)(jdbcWorkFunction))
   }
 
 }

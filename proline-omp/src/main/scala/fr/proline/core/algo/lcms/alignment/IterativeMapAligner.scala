@@ -90,7 +90,7 @@ class IterativeMapAligner extends AbstractLcmsMapAligner with LazyLogging {
 
     if (lcmsMaps.length <= 2) return lcmsMaps(0)
 
-    val mapAlnSetByMapId = mapAlnSets.map { alnSet => (alnSet.targetMapId -> alnSet) } toMap
+    val mapAlnSetByMapId = mapAlnSets.map { alnSet => (alnSet.targetMapId -> alnSet) }.toMap
     val mapDistanceByIdBuilder = scala.collection.immutable.Map.newBuilder[Long, Float]
     mapDistanceByIdBuilder += (currentRefMap.id -> 0)
 

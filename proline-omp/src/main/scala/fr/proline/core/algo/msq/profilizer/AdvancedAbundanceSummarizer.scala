@@ -68,7 +68,7 @@ object AdvancedAbundanceSummarizer extends LazyLogging {
       val nonDefValues = column.length - nDefValues
       if (nDefValues < nonDefValues) Array.fill(nValues)(Float.NaN)
       else column
-    } transpose
+    }.transpose
 
     // Compute median profile of the samplesMedianAbMatrix
     // We will thus obtain a reference abundance value for each biological sample

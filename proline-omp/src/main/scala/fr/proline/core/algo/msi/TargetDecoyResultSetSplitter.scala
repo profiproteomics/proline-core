@@ -19,7 +19,7 @@ object TargetDecoyResultSetSplitter extends IResultSetSplitter {
    * @param acDecoyRegex a regular expression which matches only decoy accession numbers
    * @return a Pair of target/decoy result sets
    */
-  def split(rs: ResultSet, acDecoyRegex: util.matching.Regex): Pair[ResultSet, ResultSet] = {
+  def split(rs: ResultSet, acDecoyRegex: util.matching.Regex): Tuple2[ResultSet, ResultSet] = {
 
     // Partition target/decoy protein matches using the provided regex
     val (decoyProtMatches, targetProtMatches) = rs.proteinMatches.partition { protMatch =>

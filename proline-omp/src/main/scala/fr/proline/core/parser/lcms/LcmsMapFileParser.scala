@@ -28,7 +28,7 @@ trait ILcmsMapFileParser {
         idxTmp += 1
       }
       ms2IdEvents.sortBy(i => i) //VDS Sorted not kept ?! 
-      ms2IdEvents toArray
+      ms2IdEvents.toArray
   } 
   
 }

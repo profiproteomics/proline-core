@@ -25,7 +25,7 @@ object EnzymeBuilder {
     
     eachEnzymeRecord { r =>
       buildEnzyme(r,eachEnzymeCleavageRecordSelector)
-    } toArray
+    }.toArray
   }
   
   def buildEnzymes(
@@ -35,7 +35,7 @@ object EnzymeBuilder {
     
     eachEnzymeRecord { r =>
       buildEnzyme(r, enzymeCleavagesByEnzymeId(r.getLong(enzCols.ID)) )
-    } toArray
+    }.toArray
   }
   
   def buildEnzyme(

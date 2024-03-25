@@ -24,7 +24,7 @@ class SQLBioSequenceProvider(val msiDbCtx: MsiDbConnectionContext) {
   def getBioSequences( bioSeqIds: Seq[Long], loadSequence: Boolean = true): Array[BioSequence] = {
     if (bioSeqIds.isEmpty) return Array()
     
-    DoJDBCReturningWork.withEzDBC(msiDbCtx, { msiEzDBC =>
+    DoJDBCReturningWork.withEzDBC(msiDbCtx, false){ msiEzDBC =>
       
       val whereClause = "WHERE " ~ BioSeqCols.ID ~ " IN(" ~ bioSeqIds.mkString(",") ~ ")"
       
@@ -36,7 +36,7 @@ class SQLBioSequenceProvider(val msiDbCtx: MsiDbConnectionContext) {
     	
     	BioSequenceBuilder.buildBioSequences( msiEzDBC.select(bioSeqQuery), setSequence = loadSequence ).toArray
     	
-    }, false)
+    }
   }
   
 }

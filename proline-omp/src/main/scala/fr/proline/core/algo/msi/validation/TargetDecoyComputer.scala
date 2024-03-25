@@ -13,7 +13,7 @@ object TargetDecoyComputer {
   val TARGET_KEY = "TARGET"
   val DECOY_KEY = "DECOY"
 
-  def buildPeptideMatchJointTable( peptideMatches: Seq[PeptideMatch] ): Array[Pair[PeptideMatch,PeptideMatch]] = {
+  def buildPeptideMatchJointTable( peptideMatches: Seq[PeptideMatch] ): Array[Tuple2[PeptideMatch,PeptideMatch]] = {
     
     // Filter peptide matches to have only first rank ones
     val firstRankPSMs = peptideMatches.filter { _.rank == 1 }
@@ -22,7 +22,7 @@ object TargetDecoyComputer {
     val pepMatchesByMsQueryInitialId = firstRankPSMs.groupBy( _.msQuery.initialId )
     
     // Build peptide match joint table
-    val jointTable = new ArrayBuffer[Pair[PeptideMatch,PeptideMatch]]
+    val jointTable = new ArrayBuffer[Tuple2[PeptideMatch,PeptideMatch]]
     for( (msQueryInitialId, pepMatches) <- pepMatchesByMsQueryInitialId ) {
       
       // Group peptide matches by result set id
@@ -42,7 +42,7 @@ object TargetDecoyComputer {
         decoyPepMatch = decoyPepMatches.get.toList.sortWith( (a,b) => a.score > b.score ).head
       }
       
-      jointTable += Pair(targetPepMatch,decoyPepMatch)
+      jointTable += Tuple2(targetPepMatch,decoyPepMatch)
       
     }
   
@@ -73,9 +73,9 @@ object TargetDecoyComputer {
    *    
    */
   def computeTdCompetition(
-    scoreJointTable: Seq[Pair[Double,Double]],
+    scoreJointTable: Seq[Tuple2[Double,Double]],
     scoreThreshold: Double 
-  ): Pair[TDCompetitionCounts,TDCompetitionCounts] = {    
+  ): Tuple2[TDCompetitionCounts,TDCompetitionCounts] = {
 
     val competitionCounts = Map( TARGET_KEY -> TDCompetitionCounts(),
                                  DECOY_KEY -> TDCompetitionCounts() )
@@ -97,7 +97,7 @@ object TargetDecoyComputer {
       else { competitionCounts(compet.winnerKey).under += 1 }
     }
     
-    Pair(competitionCounts(TARGET_KEY), competitionCounts(DECOY_KEY))
+    Tuple2(competitionCounts(TARGET_KEY), competitionCounts(DECOY_KEY))
   }
   
   /**
@@ -109,7 +109,7 @@ object TargetDecoyComputer {
   def computeTdCompetition(
     pmJointMap: Map[Long, Seq[PeptideMatch]],
     sorter: IPeptideMatchSorter
-  ): Pair[TDCompetitionCounts,TDCompetitionCounts] = {
+  ): Tuple2[TDCompetitionCounts,TDCompetitionCounts] = {
     
     val competitionCounts = Map( TARGET_KEY -> TDCompetitionCounts(),
                                  DECOY_KEY -> TDCompetitionCounts() )
@@ -146,7 +146,7 @@ object TargetDecoyComputer {
     } // End go through pmJointMap entries
  
     
-    Pair(competitionCounts(TARGET_KEY), competitionCounts(DECOY_KEY))
+    Tuple2(competitionCounts(TARGET_KEY), competitionCounts(DECOY_KEY))
   }
   
 //  /**

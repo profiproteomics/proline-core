@@ -1,7 +1,7 @@
 package fr.proline.core.service.uds
 
 import javax.persistence.EntityManager
-import scala.collection.JavaConversions.asScalaBuffer
+import scala.collection.JavaConverters._
 import com.typesafe.scalalogging.LazyLogging
 import fr.profi.util.serialization.ProfiJson.deserialize
 import fr.profi.util.serialization.ProfiJson.serialize
@@ -27,7 +27,7 @@ object Quantifier {
    def storeQuantConfig(quantConfigAsStr: String, schemaName: UdsSchemaName, udsEM: EntityManager): ObjectTree = {
     // Store the object tree
     val quantDSObjectTree = new ObjectTree()
-    quantDSObjectTree.setSchema(ObjectTreeSchemaRepository.loadOrCreateObjectTreeSchema(udsEM, schemaName.toString()))
+    quantDSObjectTree.setSchema(ObjectTreeSchemaRepository.loadOrCreateObjectTreeSchema(udsEM, schemaName.toString))
     quantDSObjectTree.setClobData(quantConfigAsStr)
     udsEM.persist(quantDSObjectTree)
     quantDSObjectTree
@@ -59,7 +59,7 @@ class Quantifier(
     quantConfigAsMap: java.util.Map[String,Object]
   ) {
     this(
-      BuildLazyExecutionContext(dsFactory, projectId, true), // Force JPA context
+      BuildLazyExecutionContext(dsFactory, projectId, useJPA = true), // Force JPA context
       name,
       description,
       projectId,
@@ -86,15 +86,15 @@ class Quantifier(
       )
       quantiCreator.runService()
 
-      this._quantiId = quantiCreator.getUdsQuantitation.getId
+      this._quantiId = quantiCreator.getUdsQuantitation().getId
 
       // Retrieve entity manager
-      val udsDbCtx = executionContext.getUDSDbConnectionContext()
-      val udsEM = udsDbCtx.getEntityManager()
-      val udsQuantitation = udsEM.find(classOf[UdsDataset], quantiCreator.getUdsQuantitation.getId)
+      val udsDbCtx = executionContext.getUDSDbConnectionContext
+      val udsEM = udsDbCtx.getEntityManager
+      val udsQuantitation = udsEM.find(classOf[UdsDataset], quantiCreator.getUdsQuantitation().getId)
 
       // Retrieve master quant channels (they should be sorted by their number)
-      val udsMasterQuantChannels = udsQuantitation.getMasterQuantitationChannels.toList
+      val udsMasterQuantChannels = udsQuantitation.getMasterQuantitationChannels.asScala.toList
       val udsQuantMethod = udsMasterQuantChannels.head.getDataset.getMethod
       val methodType = QuantMethodType.withName(udsQuantMethod.getType)
       val abundanceUnit = AbundanceUnit.withName(udsQuantMethod.getAbundanceUnit)
@@ -104,17 +104,17 @@ class Quantifier(
       val quantConfigSchemaName = this.getQuantConfigSchemaName(methodType, abundanceUnit)
       
        // Store QUANT CONFIG in ObjectTree
-      //TODO deserialize before saving and set degault value if necessary
-      logger.info("Storing quantitation configuration with schema named: " + quantConfigSchemaName.toString())
+      //TODO deserialize before saving and set default value if necessary
+      logger.info("Storing quantitation configuration with schema named: " + quantConfigSchemaName.toString)
       val qtConfigObjectTree = Quantifier.storeQuantConfig(quantConfigAsStr, quantConfigSchemaName, udsEM)
 
       val lowlevelConfigSchemaName = UdsSchemaName.PROLINE_LOW_LEVEL_CONFIG
-      logger.info("Storing proline low level configuration with schema named: " + lowlevelConfigSchemaName.toString())
+      logger.info("Storing proline low level configuration with schema named: " + lowlevelConfigSchemaName.toString)
       val lowLevelConfigObjectTree = Quantifier.storeQuantConfig(Settings.renderConfigAsString(), lowlevelConfigSchemaName, udsEM)
 
       // Link QUANT and LOW LEVEL config to quantitation DS
-      udsQuantitation.putObject(quantConfigSchemaName.toString(), qtConfigObjectTree.getId())
-      udsQuantitation.putObject(lowlevelConfigSchemaName.toString(), lowLevelConfigObjectTree.getId())
+      udsQuantitation.putObject(quantConfigSchemaName.toString, qtConfigObjectTree.getId())
+      udsQuantitation.putObject(lowlevelConfigSchemaName.toString, lowLevelConfigObjectTree.getId())
 
       udsEM.merge(udsQuantitation)
 
@@ -153,7 +153,7 @@ class Quantifier(
     isobaricQuantConfig: IsobaricTaggingQuantConfig
   ) {
     
-    val isobaricTags = udsQuantMethod.getLabels.toList.map { udsQuantLabel =>
+    val isobaricTags = udsQuantMethod.getLabels.asScala.toList.map { udsQuantLabel =>
       
       IsobaricTag(
         id = udsQuantLabel.getId,
@@ -193,7 +193,7 @@ class Quantifier(
     residueLabelingQuantConfig: ResidueLabelingQuantConfig
   ) {
 
-    val tags = udsQuantMethod.getLabels.toList.map { udsQuantLabel =>
+    val tags = udsQuantMethod.getLabels.asScala.toList.map { udsQuantLabel =>
       ResidueTag(
         id = udsQuantLabel.getId,
         name = udsQuantLabel.getName,

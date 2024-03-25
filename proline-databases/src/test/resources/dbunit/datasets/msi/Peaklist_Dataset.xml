@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE dataset SYSTEM "../../msi-dataset.dtd">
 <dataset>
-  <PEAKLIST_SOFTWARE ID="5" VERSION="4.3.2" NAME="Mascot Distiller" />
-  
-  <PEAKLIST ID="1" TYPE="Mascot generic" PATH="/fake/filepath/data/VENUS1234.RAW" RAW_FILE_IDENTIFIER="VENUS1234.RAW" MS_LEVEL="2" SPECTRUM_DATA_COMPRESSION="NONE" PEAKLIST_SOFTWARE_ID="5" />
-
+  <PEAKLIST_SOFTWARE ID="5" NAME="Mascot Distiller" VERSION="4.3.2" />
+  <PEAKLIST ID="1" MS_LEVEL="2" SPECTRUM_DATA_COMPRESSION="NONE" PEAKLIST_SOFTWARE_ID="5" TYPE="Mascot generic" PATH="/fake/filepath/data/VENUS1234.RAW" RAW_FILE_IDENTIFIER="VENUS1234.RAW" />
 </dataset>
