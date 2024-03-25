@@ -9,10 +9,10 @@ import fr.profi.util.ms._
 import fr.proline.context._
 import fr.proline.core.algo.msq.config._
 import fr.proline.core.algo.msq.summarizing._
-import fr.proline.core.om.model.msi.{Ms2Query, PeaklistSoftware, PeptideMatch, PeptideMatchProperties, ResultSummary, Spectrum}
+import fr.proline.core.om.model.msi._
 import fr.proline.core.om.model.msq._
 import fr.proline.core.om.provider.PeptideCacheExecutionContext
-import fr.proline.core.om.provider.msi.impl.{SQLPeaklistProvider, SQLPeaklistSoftwareProvider, SQLResultSummaryProvider, SQLSpectrumProvider}
+import fr.proline.core.om.provider.msi.impl.{SQLPeaklistProvider, SQLResultSummaryProvider, SQLSpectrumProvider}
 import fr.proline.core.om.storer.msi.PeptideWriter
 import fr.proline.core.om.storer.msi.impl.RsmDuplicator
 import fr.proline.core.om.util.PepMatchPropertiesUtil
@@ -24,8 +24,7 @@ import fr.proline.core.service.lcms.io.ExtractMapSet
 
 import java.io.File
 import scala.collection.mutable
-import scala.collection.mutable.ArrayBuffer
-import scala.collection.mutable.LongMap
+import scala.collection.mutable.{ArrayBuffer, LongMap}
 
 class IsobaricTaggingQuantifier(
   val executionContext: IExecutionContext,
