@@ -91,7 +91,7 @@ class Quantifier(
       // Retrieve entity manager
       val udsDbCtx = executionContext.getUDSDbConnectionContext
       val udsEM = udsDbCtx.getEntityManager
-      val udsQuantitation = udsEM.find(classOf[UdsDataset], quantiCreator.getUdsQuantitation().getId)
+      val udsQuantitation = udsEM.find(classOf[UdsDataset], _quantiId)
 
       // Retrieve master quant channels (they should be sorted by their number)
       val udsMasterQuantChannels = udsQuantitation.getMasterQuantitationChannels.asScala.toList

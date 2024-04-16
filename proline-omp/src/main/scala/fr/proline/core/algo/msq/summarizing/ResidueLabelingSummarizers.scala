@@ -111,6 +111,7 @@ class ResidueLabelingEntitiesSummarizer(
       var lfMqPep: MasterQuantPeptide = {
         // search for the best MasterQuantPeptide to use, regardless the ion charge
         // for each MQPep calculate the number of ptm matching a tag
+        //VDS : list.collect(map) use value in map where key = list.value
         val mQPepAndTags = ions.map(_._3).distinct.map(mqp => (mqp.peptideInstance.get.peptide.ptms.map(_.definition.id).collect(tagByPtmId).distinct.length, mqp))
         // select the MQPep matching the smallest number of tag (0 means "unmodified" regarding the quantitation method)
         mQPepAndTags.sortBy(_._1).head._2
@@ -124,7 +125,7 @@ class ResidueLabelingEntitiesSummarizer(
 
         var lfqMQPepIon: MasterQuantPeptideIon = {
           // determine again the best MasterQuantPeptide to select the best MQPeptideIon since the current charge state could be missing in lfMqPep
-          // at this step, best MasterQuantPeptide is search only within the set of MQPep matching the chrage state.
+          // at this step, best MasterQuantPeptide is search only within the set of MQPep matching the charge state.
           val mQPepAndTags = lfQIons.map(_._3).distinct.map(mqp => (mqp.peptideInstance.get.peptide.ptms.map(_.definition.id).collect(tagByPtmId).distinct.length, mqp))
           // select the MQPep matching the smallest number of tag (0 means "unmodified" regarding the quantitation method)
           mQPepAndTags.sortBy(_._1).head._2.masterQuantPeptideIons.filter(_.charge == charge).head
