@@ -57,7 +57,6 @@ class ResidueLabelingQuantifier(
 
     // Store the master quant result set
     val msiQuantResultSet = this.storeMsiQuantResultSet()
-    val quantRsId = msiQuantResultSet.getId
 
     // Create corresponding master quant result summary
     val msiQuantRsm = this.storeMsiQuantResultSummary(msiQuantResultSet)
@@ -73,7 +72,7 @@ class ResidueLabelingQuantifier(
     // TODO: remove code redundancy with the AbstractLabelFreeFeatureQuantifier (maybe add a dedicated method in AbstractMasterQuantChannelQuantifier)
     val rsmProvider = new SQLResultSummaryProvider(PeptideCacheExecutionContext(executionContext))
     val rsmDuplicator =  new RsmDuplicator(rsmProvider)
-    val quantRsm = rsmDuplicator.cloneAndStoreRSM(mergedResultSummary, msiQuantRsm, msiQuantResultSet, !masterQc.identResultSummaryId.isDefined, msiEm)
+    val quantRsm = rsmDuplicator.cloneAndStoreRSM(mergedResultSummary, msiQuantRsm, msiQuantResultSet, masterQc.identResultSummaryId.isEmpty, msiEm)
     
     // Compute and store quant entities (MQ Peptides, MQ ProteinSets)
     this.computeAndStoreQuantEntities(msiQuantRsm, quantRsm)

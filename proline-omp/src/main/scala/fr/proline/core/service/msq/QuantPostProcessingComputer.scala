@@ -525,6 +525,7 @@ class QuantPostProcessingComputer(
     val tPurityCorrectionMatrix = if(config.usePurityCorrectionMatrix) MathUtils.transposeMatrix(purityCorrectionMatrix.get.getData) else Array.empty[Array[Double]]
 
     var maxRepIonSelLevel = SelectionLevel.DESELECTED_MANUAL
+    var nbPifError =0
     // If reporter ions, reset values
     mqPepIon.masterQuantReporterIons.foreach(mqRepIon => {
 
@@ -569,8 +570,12 @@ class QuantPostProcessingComputer(
             mqRepIon.selectionLevel= SelectionLevel.DESELECTED_AUTO
           } //else
 //            logger.info(" **PIF** KEEP PSM regarding its PIF VALUE :  " + pepMOp.get.properties.get.precursorIntensityFraction)
-        } else
-          logger.debug(" **PIF** TRY DISCARD PSM regarding its PIF VALUE BUT NO PROPERTIES DEFINED !!! ")
+        } else {
+          if(nbPifError < 10) {
+            logger.debug(" **PIF** TRY DISCARD PSM regarding its PIF VALUE BUT NO PROPERTIES DEFINED !!! - Show only 10 first")
+            nbPifError = nbPifError +1
+          }
+        }
       }
 
       if(mqRepIon.selectionLevel >= SelectionLevel.SELECTED_AUTO ) {
