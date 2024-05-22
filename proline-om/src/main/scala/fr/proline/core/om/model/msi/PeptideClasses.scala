@@ -437,7 +437,8 @@ case class PeptideMatchProperties (
   @JsonDeserialize(contentAs = classOf[java.lang.Float] )
   @BeanProperty var precursorIntensityFraction: Option[Float] = None,
   @BeanProperty var spectralCount: Option[Int] = None,
-  @BeanProperty var isotopeOffset: Option[Int] = None
+  @BeanProperty var isotopeOffset: Option[Int] = None,
+  @BeanProperty var comment : Option[String] = None
 )
 
 case class PeptideMatchMascotProperties (
@@ -561,7 +562,8 @@ case class PeptideInstance(
 }
 
 case class PeptideInstanceProperties(
-  @BeanProperty var score: Option[ScoringProperties] = None
+  @BeanProperty var score: Option[ScoringProperties] = None,
+  @BeanProperty var comment: Option[String] = None
 )
 
 case class ScoringProperties(

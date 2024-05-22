@@ -36,7 +36,7 @@ import java.util.Set;
 		+ " where (upper(p.sequence) = :seq) and (upper(p.ptmString) = :ptmStr)"),
 
 	@NamedQuery(name = "findMsiPepsForSeqWOPtm", query = "select p from fr.proline.core.orm.msi.Peptide p"
-		+ " where (upper(p.sequence) = :seq) and (p.ptmString is null)")
+		+ " where (upper(p.sequence) = :seq) and (p.ptmString is null or p.ptmString ='')")
 
 })
 public class Peptide implements Serializable, Comparable<Peptide> {

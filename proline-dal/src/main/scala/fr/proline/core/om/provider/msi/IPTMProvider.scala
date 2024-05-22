@@ -49,7 +49,7 @@ trait IPTMProvider {
    /**
    * Search for a PtmDefinition with specified features
    * - ptmMonoMass : Associated PtmEvidences have ptmMonoMass as mono_mass
-   * - ptmMonoMassMargin : Margin beetween input mono_mass and ProlineDB mono_mass values
+   * - ptmMonoMassMargin : Margin between input mono_mass and ProlineDB mono_mass values
    * - ptmResidue : residue on which ptm is applied : could be '\u0000' if no specific residue
    * - ptmLocation : Location of the Ptm. Could be one of PtmLocation.Value 
    * 
@@ -108,7 +108,45 @@ object PTMFakeProvider extends IPTMProvider {
     
     Some(newPtmDef)
   }
-  
+
+  /**
+   * Get PtmDefinition with specified ptm (name), residue, mono mass and location. If a ptm definition wuith same name has
+   * already been created using this Provider, it will be returned if other data corresponds and will be set in, cache
+   * or create a new fake one with classification = Post-translational, a fake Precursor PtmEvidence and specified properties
+   * This is a specific method, not a IPTMProvider implementation
+   */
+  def getPtmDefinition(ptmName: String, ptmResidue: Char, ptmLocation: PtmLocation.Location, sMonoMass: Double): Option[PtmDefinition] = {
+
+    val fullName = ptmName + " (" + ptmResidue + ")"
+    if (ptmDefByName.contains(fullName)) {
+      val foundDef =ptmDefByName.get(fullName)
+      if(foundDef.get.residue == ptmResidue && foundDef.get.location.equals(ptmLocation.toString) && foundDef.get.ptmEvidences(0).monoMass.equals(sMonoMass))
+        return ptmDefByName.get(fullName)
+    }
+
+    var newPtmDef: PtmDefinition = null
+    val ptmEvidence = new PtmEvidence(
+      ionType = IonTypes.Precursor,
+      composition = "UNVALID",
+      monoMass = sMonoMass,
+      averageMass = Double.MaxValue,
+      isRequired = false
+    )
+
+    newPtmDef = new PtmDefinition(
+      id = PtmDefinition.generateNewId(),
+      ptmId = PtmNames.generateNewId(),
+      location = ptmLocation.toString,
+      residue = ptmResidue,
+      classification = "Post-translational",
+      names = new PtmNames(shortName = ptmName, fullName = fullName),
+      ptmEvidences = Array(ptmEvidence)
+    )
+    ptmDefByName += fullName -> newPtmDef
+
+    Some(newPtmDef)
+  }
+
   def getPtmDefinition(ptmMonoMass: Double, ptmMonoMassMargin: Double, ptmResidue: Char, ptmLocation: PtmLocation.Location) : Option[PtmDefinition] = {
 
     val ptmName = "UnknownPtmNamesShortNames"

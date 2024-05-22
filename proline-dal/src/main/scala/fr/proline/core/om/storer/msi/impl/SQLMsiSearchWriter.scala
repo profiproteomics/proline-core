@@ -11,8 +11,6 @@ import fr.proline.core.om.model.msi._
 import fr.proline.core.om.storer.msi.IMsiSearchWriter
 import fr.profi.util.primitives._
 import fr.profi.chemistry.model.Enzyme
-import fr.profi.jdbc.Nullable
-import fr.profi.jdbc.LongFormattable
 
 object SQLMsiSearchWriter extends AbstractSQLMsiSearchWriter
 

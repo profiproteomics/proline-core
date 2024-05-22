@@ -102,7 +102,7 @@ case class ResultSet(
   
   // Required fields
   val peptides: Array[Peptide],
-  val peptideMatches: Array[PeptideMatch],
+  var peptideMatches: Array[PeptideMatch],
   val proteinMatches: Array[ProteinMatch],
   val isDecoy: Boolean,
    // true if the ResultSet correspond to a "search result", false otherwise
@@ -133,7 +133,10 @@ case class ResultSet(
   require(peptides != null && peptideMatches != null & proteinMatches != null)
   require(msiSearch != null, "MSI search can't be null => provide None instead")
   require(decoyResultSet != null, "decoy result set can't be null => provide None instead")
-  
+
+  def addPeptideMatches(newPeptideMatches: Array[PeptideMatch]): Unit = {
+    peptideMatches = peptideMatches  ++ newPeptideMatches
+  }
   // Make a deep clone of the ResultSet
   override def clone(): ResultSet = {
     this.copy(
@@ -405,7 +408,7 @@ trait IResultSummaryLike {
 
 case class ResultSummary(
   // Required fields
-  val peptideInstances: Array[PeptideInstance],
+  var peptideInstances: Array[PeptideInstance],
   val peptideSets: Array[PeptideSet],
   val proteinSets: Array[ProteinSet],
   //val isDecoy: Boolean,
@@ -433,7 +436,10 @@ case class ResultSummary(
 
   // Requirements
   require(peptideInstances != null && proteinSets != null)
-  
+
+  def addPeptideInstances(newPeptideInstances : Array[PeptideInstance]): Unit = {
+    peptideInstances = peptideInstances ++ newPeptideInstances
+  }
   /**
    * Reset ids of RSM entities recursively.
    * Only RSM entities will have fresh generated ids (RS entities are not updated).
