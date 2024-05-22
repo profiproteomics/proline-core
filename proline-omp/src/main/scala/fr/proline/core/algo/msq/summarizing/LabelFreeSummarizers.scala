@@ -263,7 +263,7 @@ class LabelFreeEntitiesSummarizer(
               val qcBestPeptideMatch = sameChargePepMatches.maxBy(_.score)
               bestPeptideMatchIdMapBuilder += qcId -> qcBestPeptideMatch.id
               
-              if (qcBestPeptideMatch.score > bestPeptideMatchScore) {
+              if (bestPeptideMatchId.equals(0L)  || qcBestPeptideMatch.score > bestPeptideMatchScore) {
                 bestPeptideMatchScore = qcBestPeptideMatch.score
                 bestPeptideMatchId = qcBestPeptideMatch.id
               }
