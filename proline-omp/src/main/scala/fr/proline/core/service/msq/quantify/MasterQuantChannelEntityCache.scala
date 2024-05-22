@@ -102,6 +102,11 @@ class MasterQuantChannelEntityCache(
 
   }
 
+  def getQuantChannelsByRsm = {
+    val rsmById = quantChannelResultSummaries.map(rsm => rsm.id -> rsm).toMap
+    udsQuantChannels.groupBy(_.getIdentResultSummaryId).map(e => rsmById(e._1) -> e._2)
+  }
+
   // Retrieve corresponding peaklist ids
   // TODO: update the ORM definition so that peaklistId is available from msiSearch object
   //protected lazy val identRsIdByPeaklistId = msiIdentResultSets.toLongMap { rs => rs.getMsiSearch.getPeaklist.getId -> rs.getId }

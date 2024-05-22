@@ -222,7 +222,7 @@ class SQLPeptideProvider(
 
       val resultPepIds: Seq[Long] = if (StringUtils.isEmpty(tmpPep.ptmString)) {
         val pepIdQuery = new SelectQueryBuilder1(MsiDbPeptideTable).mkSelectQuery((t, c) =>
-          List(t.ID) -> "WHERE " ~ t.SEQUENCE ~ " = ? AND " ~ t.PTM_STRING ~ " IS NULL"
+          List(t.ID) -> "WHERE " ~ t.SEQUENCE ~ " = ? AND (" ~ t.PTM_STRING ~ " IS NULL OR " ~ t.PTM_STRING ~ " = '' )"
         )
         psEzDBC.select(pepIdQuery, tmpPep.sequence) { v => toLong(v.nextAny) }
       } else {
