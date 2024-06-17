@@ -35,7 +35,7 @@ class ResidueLabelingEntitiesSummarizer(
   //type CombinedQIons = (QuantPeptideIon,MasterQuantPeptideIon,Long)
   private val childMapsCount = lcmsMapSet.childMaps.length
   
-  type LFQPepIon = (QuantPeptideIon,Long, MasterQuantPeptide,Int)
+  type LFQPepIon = (QuantPeptideIon,Long, MasterQuantPeptide,Int, Boolean)
   
   def computeMasterQuantPeptides(
     masterQuantChannel: MasterQuantChannel,
@@ -91,17 +91,20 @@ class ResidueLabelingEntitiesSummarizer(
       resultSummaries
     )
 
-
+    //VDS : lfMqPeptides mqPeptide for peptide with an ab value.
     val lfQPepIonsByKey = new mutable.HashMap[String, ArrayBuffer[LFQPepIon]]()
 
+    val (fakeMQPep, nonFakeMQPep) = lfMqPeptides.partition(mqP => mqP.peptideInstance.get.properties.isDefined && mqP.peptideInstance.get.properties.get.getComment.isDefined)
+    logger.info(" NB fake = "+fakeMQPep.length+" NB not Fake "+nonFakeMQPep.length)
     for(mqPep <- lfMqPeptides;
         mqPepIon <- mqPep.masterQuantPeptideIons;
         (fakeQcId,qPepIon) <- mqPepIon.quantPeptideIonMap) {
       val identRsmId = identRsmIdByFakeQcId(fakeQcId)
       val peptide = mqPep.peptideInstance.get.peptide
       val key = peptide.sequence + peptide.ptms.filter(p => !tagByPtmId.contains(p.definition.id)).map(_.toPtmString()).mkString("%")
+      val isFake = mqPep.peptideInstance.get.properties.isDefined &&  mqPep.peptideInstance.get.properties.get.getComment.isDefined
       val mQPepIons = lfQPepIonsByKey.getOrElseUpdate(key, new ArrayBuffer[LFQPepIon]())
-      mQPepIons += Tuple4(qPepIon, identRsmId, mqPep, mqPepIon.charge)
+      mQPepIons += Tuple5(qPepIon, identRsmId, mqPep, mqPepIon.charge,isFake)
     }
 
     val masterQuantPeptides = new ArrayBuffer[MasterQuantPeptide]( quantMergedRSM.peptideInstances.length )
@@ -109,12 +112,14 @@ class ResidueLabelingEntitiesSummarizer(
     for ((key, ions) <- lfQPepIonsByKey) {
 
       var lfMqPep: MasterQuantPeptide = {
+        //Consider only non fake "ion"/peptide. If all are fake (should not occur), consider all ions/peptides
+        val validIons= if(ions.count(!_._5)>0) ions.filter(x => !x._5) else ions
         // search for the best MasterQuantPeptide to use, regardless the ion charge
-        // for each MQPep calculate the number of ptm matching a tag
-        //VDS : list.collect(map) use value in map where key = list.value
-        val mQPepAndTags = ions.map(_._3).distinct.map(mqp => (mqp.peptideInstance.get.peptide.ptms.map(_.definition.id).collect(tagByPtmId).distinct.length, mqp))
-        // select the MQPep matching the smallest number of tag (0 means "unmodified" regarding the quantitation method)
-        mQPepAndTags.sortBy(_._1).head._2
+        // for each MQPep calculate the number of ptm matching a tag and select the mqp with the smallest number of
+        // PTM tag (0 means no PTM corresponding to a tag ... generally ot correspond to the Light)
+        //VDS : list.collect(map) create List from call to "map.get(list.value)"  => result will be 'nb Tag -> mqPep'
+        val mQPepAndTags = validIons.map(_._3).distinct.map(mqp => (mqp.peptideInstance.get.peptide.ptms.map(_.definition.id).collect(tagByPtmId).distinct.length, mqp))
+        mQPepAndTags.minBy(_._1)._2
       }
 
       val combinedMqPepIons = new ArrayBuffer[MasterQuantPeptideIon]()
@@ -132,7 +137,7 @@ class ResidueLabelingEntitiesSummarizer(
           mQPepAndTags.sortBy(_._1).head._2.masterQuantPeptideIons.filter(_.charge == charge).head
         }
 
-        for ((qPepIon, rsmId, mqPep, charge) <- lfQIons) {
+        for ((qPepIon, rsmId, mqPep, charge, isFake) <- lfQIons) {
           val ptms = mqPep.peptideInstance.get.peptide.ptms.map(_.definition.id)
           val matchingTags = ptms.collect(tagByPtmId).distinct //for (ptmId <- ptms) yield tagByPtmId(ptmId)
           if (matchingTags.isEmpty) {
