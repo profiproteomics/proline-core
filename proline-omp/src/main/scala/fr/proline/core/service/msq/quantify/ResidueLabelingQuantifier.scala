@@ -70,11 +70,13 @@ class ResidueLabelingQuantifier(
     val rsmDuplicator = new RsmDuplicator(rsmProvider)
 
     val msiDbHelper = new MsiDbHelper(msiDbCtx)
-    //!! Do not initialize  entityCache until modif of qChannels identRSMs
+
+    //!! WARNING  Do not initialize  entityCache until modif of qChannels identRSMs
     val allQuChannels=   udsMasterQuantChannel.getQuantitationChannels.asScala.toList
     val newAllQChannels = new ArrayBuffer[QuantitationChannel]()
     val newRsmIdByOldId = new mutable.HashMap[Long,Long]()
     val quantChannelsByRsmId =allQuChannels.groupBy(_.getIdentResultSummaryId)
+    // Duplicate new RS/RSM from previous ones for all quantChannels to be allowed to modify them
     quantChannelsByRsmId.foreach(entry =>{
 
       val identRsm = rsmProvider.getResultSummary(entry._1, loadResultSet = true).get
@@ -101,14 +103,14 @@ class ResidueLabelingQuantifier(
       newRsmIdByOldId += oldRsmId->qChannelMsiQuantRsm.getId
     })
 
-    // Store the master quant result set
+    // Create and Store the master quant result set
     val msiQuantResultSet = this.storeMsiQuantResultSet()
 
     // Create corresponding master quant result summary
     val msiQuantRsm = this.storeMsiQuantResultSummary(msiQuantResultSet)
     val quantRsmId = msiQuantRsm.getId
 
-    // Update quant result summary id of the master quant channel
+    // Update quant result summary id of the master quant channel and for each quantChannels
     udsMasterQuantChannel.setQuantResultSummaryId(quantRsmId)
     udsMasterQuantChannel.setQuantitationChannels(newAllQChannels.asJava)
     for(index <- masterQc.quantChannels.indices){
@@ -143,12 +145,13 @@ class ResidueLabelingQuantifier(
     // Quantify peptide ions if a label free quant config is provided
     val lfqConfig = quantConfig.labelFreeQuantConfig
 
-    logger.info(" ***** Find missing peptides for Peptides-tag tuples ...")
+    logger.info(" ***** Find missing peptides for Peptides-tag tuples in merged RSM...")
     val start = System.currentTimeMillis()
     createMissingTupleData(quantRsm)
     val end  = System.currentTimeMillis()
     logger.info(" ***** TOOK = "+(end-start)+" ms")
 
+    logger.info(" ***** Find missing peptides for Peptides-tag tuples in qChannels RSM...")
     for( rsm <- entityCache.quantChannelResultSummaries ) {
       createMissingTupleData(rsm)
     }
