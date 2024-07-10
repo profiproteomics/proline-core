@@ -32,6 +32,7 @@ import scala.collection.mutable
 import scala.collection.mutable.{ArrayBuffer, HashMap, HashSet, LongMap}
 import scala.concurrent._
 import scala.concurrent.duration.Duration
+import scala.util.control.Breaks._
 
 object PeakelsDetector {
 
