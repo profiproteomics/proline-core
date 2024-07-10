@@ -20,7 +20,7 @@ abstract class AbstractMapSetDetector (
 ) extends LazyLogging {
 
   protected val sortedLcMsRuns = lcMsRuns.sortBy(_.number)
-  protected val mozTolPPM = quantConfig.extractionParams.mozTol.toFloat
+  protected val extractionMozTolPPM = quantConfig.extractionParams.mozTol.toFloat
   protected val clusteringParams = quantConfig.clusteringParams
   protected val alignmentConfig = quantConfig.alignmentConfig
   protected val crossAssignmentConfig = quantConfig.crossAssignmentConfig
