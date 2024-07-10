@@ -1,7 +1,5 @@
 package fr.proline.core.service.lcms.io
 
-import java.io.File
-
 import com.typesafe.scalalogging.LazyLogging
 import fr.profi.ms.algo.IsotopePatternInterpolator
 import fr.profi.mzdb._
@@ -18,6 +16,7 @@ import fr.proline.core.om.model.msi.Peptide
 import fr.proline.core.service.lcms.CreateMapSet
 import org.apache.commons.math3.stat.descriptive.rank.Percentile
 
+import java.io.File
 import scala.collection.mutable.{ArrayBuffer, HashMap, LongMap}
 
 
@@ -319,7 +318,7 @@ class FeaturesDetector (
     val mzDbFts = try {
 
       val ftXtractConfig = FeatureExtractorConfig(
-        mzTolPPM = this.mozTolPPM
+        mzTolPPM = this.extractionMozTolPPM
       )
 
       val mzdbFtX = new MzDbFeatureExtractor(mzDb, 5, 5, ftXtractConfig)
@@ -348,7 +347,7 @@ class FeaturesDetector (
       val rsdProv = new RunSliceDataProvider(mzDb.getLcMsRunSliceIterator())
 
       // Extract features
-      mzdbFtX.extractFeatures(rsdProv, pfs, mozTolPPM)
+      mzdbFtX.extractFeatures(rsdProv, pfs, extractionMozTolPPM)
 
     } finally {
       mzDb.close()
@@ -370,7 +369,7 @@ class FeaturesDetector (
         mzDb,
         FeatureDetectorConfig(
           msLevel = 1,
-          mzTolPPM = mozTolPPM,
+          mzTolPPM = extractionMozTolPPM,
           minNbOverlappingIPs = 5
         )
       )
@@ -407,7 +406,7 @@ class FeaturesDetector (
     try {
 
       val ftXtractConfig = FeatureExtractorConfig(
-        mzTolPPM = this.mozTolPPM,
+        mzTolPPM = this.extractionMozTolPPM,
         maxIPDeviation = processedMap.properties.flatMap(_.ipDeviationUpperBound)
       )
 
@@ -469,7 +468,7 @@ class FeaturesDetector (
       this.logger.info("Extracting " + missingFtIdByMftId.size + " missing features from " + mzDbFile.getName)
       // Extract features
       // TODO: add minNbCycles param
-      mzDbFts = mzdbFtX.extractFeatures(rsdProv, pfs, mozTolPPM)
+      mzDbFts = mzdbFtX.extractFeatures(rsdProv, pfs, extractionMozTolPPM)
 
     } finally {
       mzDb.close()
