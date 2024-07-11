@@ -162,4 +162,18 @@ public class DQuantitationChannel extends QuantitationChannel {
     fullName = new StringBuilder(biologicalGroupName).append('.').append(super.getName()).toString();
   }
 
+
+  @Override
+  public int hashCode() {
+    return Long.valueOf(getId()).hashCode();
+  }
+
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) return true;
+    if (o == null || getClass() != o.getClass()) return false;
+    DQuantitationChannel that = (DQuantitationChannel) o;
+    return this.getId() == that.getId();
+  }
+
 }

@@ -11,7 +11,7 @@ import scala.collection.mutable.ArrayBuffer
 
 class AggregationEntitiesSummarizer(
   childQuantRSMbychildMQCId: Map[Long, QuantResultSummary],
-  quantChannelsMapping: Map[Long, QuantChannel],
+  quantChannelsChToParentMapping: Map[Long, QuantChannel],
   intensityComputation: AbundanceComputationMethod.Value = AbundanceComputationMethod.INTENSITY_SUM,
   isIsobaricTaggingMethod : Boolean = false
 ) extends IMqPepAndProtEntitiesSummarizer with LazyLogging {
@@ -45,7 +45,7 @@ class AggregationEntitiesSummarizer(
           // Map[Charge --> Iterable[(ChildMasterQuantChannelId, MasterQuantPeptideIon)] ]
           val mqPepIonsByChargeAndMQC = masterQuantPeptidesBymQChlOpt.get.map{ case(k,v) => v.masterQuantPeptideIons.map( (k, _ ))}.flatten.groupBy(_._2.charge)
           for (charge <- mqPepIonsByChargeAndMQC.keys)  {
-            val mqPepIonOpt = _summarize(mqPepIonsByChargeAndMQC(charge), quantChannelsMapping, masterPepInst)
+            val mqPepIonOpt = _summarize(mqPepIonsByChargeAndMQC(charge), quantChannelsChToParentMapping, masterPepInst)
             if (mqPepIonOpt.isDefined) {
               mqPepIons += mqPepIonOpt.get
             }
@@ -61,14 +61,11 @@ class AggregationEntitiesSummarizer(
 
     private def _summarize(
       mqPepIonsByMQC: Iterable[(Long, MasterQuantPeptideIon)],
-      quantChannelsMapping: Map[Long, QuantChannel],
+      quantChannelsChToParentMapping: Map[Long, QuantChannel],
       masterPepInst: PeptideInstance): Option[MasterQuantPeptideIon] = {
 
-//      if(isIsobaricTaggingMethod) {
-//         _summarizeWithReporterIons(mqPepIonsByMQC, quantChannelsMapping, masterPepInst)
-//      } else {
         val newQuantPepIons = new ArrayBuffer[QuantPeptideIon]()
-        val childQCIdsByAggQC = quantChannelsMapping.toSeq.groupBy(_._2).mapValues(_.map(_._1).seq)
+        val childQCIdsByAggQC = quantChannelsChToParentMapping.toSeq.groupBy(_._2).mapValues(_.map(_._1).seq)
         val quantPepIonsUnion = mqPepIonsByMQC.flatMap(_._2.quantPeptideIonMap.values).toList
         val templateMQPepIon = mqPepIonsByMQC.map(_._2).maxBy(_.calcRawAbundanceSum())
         val newMQPepIonId = MasterQuantPeptideIon.generateNewId()
@@ -79,8 +76,10 @@ class AggregationEntitiesSummarizer(
         mqReporterIonsUnion.foreach(mqRepIon =>{
           val newQRepMap = new mutable.LongMap[QuantReporterIon]()
           mqRepIon.quantReporterIonMap.foreach( entry=> {
-            val qChId = quantChannelsMapping(entry._1).id
-            newQRepMap.put(qChId ,entry._2.copy(quantChannelId =qChId ))
+            if(quantChannelsChToParentMapping.contains(entry._1)) {
+              val qChId = quantChannelsChToParentMapping(entry._1).id
+              newQRepMap.put(qChId, entry._2.copy(quantChannelId = qChId))
+            }
           })
           newMQuantRepIons += mqRepIon.copy(
             id=MasterQuantReporterIon.generateNewId(),
@@ -106,7 +105,7 @@ class AggregationEntitiesSummarizer(
             var filteredMQPepIons = mqPepIonsByMQC.map(_._2).filter(mqp => mqp.quantPeptideIonMap.values.exists(qpi => childQCIds.contains(qpi.quantChannelId)))
 
             if (templateQPepIon.isEmpty) {
-              logger.warn(s"Cannot find quant peptide ion from $childQCIds, look for the highest abundance instead")
+              logger.trace(s"Cannot find quant peptide ion from $childQCIds, look for the highest abundance instead")
               //VDS Warning maxBy may return wrong value if NaN
               templateQPepIon = Some(filteredQPepIons.maxBy(_.abundance))
             }
@@ -152,7 +151,6 @@ class AggregationEntitiesSummarizer(
                 case AbundanceComputationMethod.INTENSITY_SUM => {
                   val quantPepIonWRawAb = filteredQPepIons.map(_.rawAbundance).filter(!_.equals(Float.NaN))
                   val quantPepIonWAb = filteredQPepIons.map(_.abundance).filter(!_.equals(Float.NaN))
-                  //val quantPepIonWRT = filteredQPepIons.map(_.elutionTime).filter(!_.equals(Float.NaN))
 
                   newQuantPepIons += templateQPepIon.get.copy(
                     rawAbundance = if (quantPepIonWRawAb.nonEmpty) quantPepIonWRawAb.sum else Float.NaN,
@@ -176,118 +174,7 @@ class AggregationEntitiesSummarizer(
           newMQPeptideIon.properties = Some(prop)
           Some(newMQPeptideIon)
         }
-      //}
     }
-
-//    //Summarize RepIons (same pep/same charge) to MQPepIon
-//    private def _summarizeWithReporterIons(
-//      mqPepIonsByMQC: Iterable[(Long, MasterQuantPeptideIon)],
-//      quantChannelsMapping: Map[Long, QuantChannel],
-//      masterPepInst: PeptideInstance): Option[MasterQuantPeptideIon] = {
-//
-//      val childQCIdsByAggQC = quantChannelsMapping.toSeq.groupBy(_._2).mapValues(_.map(_._1).seq)
-//      val quantPepIonsUnion = mqPepIonsByMQC.flatMap(_._2.quantPeptideIonMap.values).toList
-//      val templateMQPepIon = mqPepIonsByMQC.map(_._2).maxBy(_.calcRawAbundanceSum())
-//      val mqReporterIonsUnion =  mqPepIonsByMQC.map(_._2).flatMap(_.masterQuantReporterIons)
-//
-//      val newQuantPepIons = new ArrayBuffer[QuantPeptideIon]()
-//      val newMQPepIonId = MasterQuantPeptideIon.generateNewId()
-//      val newMQuantRepIons = new ArrayBuffer[MasterQuantReporterIon]()
-//      mqReporterIonsUnion.foreach(mqRepIon =>{
-//        val newQRepMap = new mutable.LongMap[QuantReporterIon]()
-//        mqRepIon.quantReporterIonMap.foreach( entry=> {
-//          val qChId = quantChannelsMapping(entry._1).id
-//          newQRepMap.put(qChId ,entry._2.copy(quantChannelId =qChId ))
-//        })
-//        newMQuantRepIons += mqRepIon.copy(
-//                    id=MasterQuantReporterIon.generateNewId(),
-//                    quantReporterIonMap = newQRepMap,
-//                    masterQuantPeptideIonId = Some(newMQPepIonId))
-//      })
-//
-//      //For MQPep properties info
-//      val mqPepIonIdMapBuilder = scala.collection.immutable.HashMap.newBuilder[Long, Array[Long]]
-//      for ((aggQCh, childQCIds) <- childQCIdsByAggQC) {
-//
-//        //Get all QPepIons with a value for current QChannel
-//        val filteredQPepIons = quantPepIonsUnion.filter(qpi => childQCIds.contains(qpi.quantChannelId))
-//
-//        //Get all MQRepIons / QRepIons with a value for current QChannel
-//        val filteredQRepIons = mqReporterIonsUnion.flatMap(_.quantReporterIonMap.values).filter(qRi => childQCIds.contains(qRi.quantChannelId))
-//        val filteredMQRepIons = mqReporterIonsUnion.filter(mqr => mqr.quantReporterIonMap.values.exists(qRi => childQCIds.contains(qRi.quantChannelId)))
-//
-//        if (filteredQRepIons.nonEmpty) {
-//          var templateQPepIon = templateMQPepIon.quantPeptideIonMap.values.find(qpi => childQCIds.contains(qpi.quantChannelId))
-//          // get all MQPeptideIon having a value for the specified qc
-//          var filteredMQPepIons = mqPepIonsByMQC.map(_._2).filter(mqp => mqp.quantPeptideIonMap.values.exists(qpi => childQCIds.contains(qpi.quantChannelId)))
-//
-//          if (templateQPepIon.isEmpty) {
-//            logger.warn(s"Cannot find quant peptide ion from $childQCIds, look for the highest abundance instead")
-//            //VDS Warning maxBy may return wrong value if NaN
-//            templateQPepIon = Some(filteredQPepIons.maxBy(_.abundance))
-//          }
-//
-//          // Take minimum elution time as a reference for all quant peptide ions
-//          val firstMqReporterIon = filteredMQRepIons.minBy(_.scanNumber)
-//          val firstElutionTime = firstMqReporterIon.elutionTime
-//          val firstScanNumber = firstMqReporterIon.scanNumber
-//
-//          val msQueryIds = filteredMQRepIons.map(_.msQueryId)
-//
-//          val quantPepIonRawAbList = filteredQRepIons.map(_.rawAbundance).filter(!_.equals(Float.NaN))
-//          val quantPepIonAbList = filteredQRepIons.map(_.abundance).filter(!_.equals(Float.NaN))
-//
-//          newQuantPepIons += QuantPeptideIon(
-//            rawAbundance = if (quantPepIonRawAbList.nonEmpty) quantPepIonRawAbList.sum else Float.NaN,
-//            abundance = if (quantPepIonAbList.nonEmpty) quantPepIonAbList.sum else Float.NaN,
-//            moz = templateQPepIon.get.moz,
-//            elutionTime = firstElutionTime,
-//            duration = 0,
-//            correctedElutionTime = firstElutionTime,
-//            scanNumber = firstScanNumber,
-//            peptideMatchesCount = filteredMQRepIons.size,
-//            ms2MatchingFrequency = None,
-//            bestPeptideMatchScore = templateQPepIon.get.bestPeptideMatchScore,
-//            predictedElutionTime = None,
-//            quantChannelId = aggQCh.id,
-//            peptideId = Some(masterPepInst.peptideId),
-//            peptideInstanceId = Some(masterPepInst.id),
-//            msQueryIds = Some(msQueryIds.toArray),
-//            lcmsFeatureId = None,
-//            lcmsMasterFeatureId = None,
-//            unmodifiedPeptideIonId = None, // TODO: set this value ???
-//            selectionLevel = 2
-//          )
-//
-//          mqPepIonIdMapBuilder += aggQCh.id -> filteredMQPepIons.map(_.id).toArray
-//
-//        } // end if  filteredQPepIons.nonEmpty
-//      } //End for all QChannels
-//
-//      if (newQuantPepIons.isEmpty) {
-//        None
-//      } else {
-//
-//        // Map quant peptide ions by feature id or feature id
-//        val qPepIonByQcId = newQuantPepIons.toLongMapWith(qpi => qpi.quantChannelId -> qpi)
-//        require(qPepIonByQcId.size == newQuantPepIons.length, "duplicated feature detected in quant peptide ions")
-//
-//        val newMQPeptideIon = templateMQPepIon.copy(
-//              id = newMQPepIonId,
-//              masterQuantPeptideId = 0,
-//              resultSummaryId = quantMergedRsm.id,
-//              peptideInstanceId =Some(masterPepInst.id),
-//              quantPeptideIonMap = qPepIonByQcId,
-//              peptideMatchesCount = newQuantPepIons.map(_.peptideMatchesCount).sum,
-//              selectionLevel = 2,
-//              masterQuantReporterIons = newMQuantRepIons.toArray
-//        )
-//        val prop = newMQPeptideIon.properties.getOrElse(MasterQuantPeptideIonProperties())
-//        prop.aggregatedMasterQuantPeptideIonIdMap = mqPepIonIdMapBuilder.result
-//        newMQPeptideIon.properties = Some(prop)
-//        Some(newMQPeptideIon )
-//      }
-//  }
 
 
     private def _buildMasterQuantPeptideIon(newMQPepIonId: Long,
@@ -297,7 +184,7 @@ class AggregationEntitiesSummarizer(
       newMasterQuantReporterIons: Option[Array[MasterQuantReporterIon]]
     ): MasterQuantPeptideIon = {
 
-      require(qPepIons != null && qPepIons.length > 0, "qPepIons must not be empty")
+      require(qPepIons != null && qPepIons.nonEmpty, "qPepIons must not be empty")
 
       // Map quant peptide ions by feature id or feature id
       val qPepIonByQcId = qPepIons.toLongMapWith(qpi => qpi.quantChannelId -> qpi)

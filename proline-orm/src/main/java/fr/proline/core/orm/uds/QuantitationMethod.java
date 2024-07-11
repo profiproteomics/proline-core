@@ -1,5 +1,7 @@
 package fr.proline.core.orm.uds;
 
+import fr.profi.util.StringUtils;
+
 import java.io.Serializable;
 import java.util.List;
 
@@ -34,13 +36,31 @@ public class QuantitationMethod implements Serializable {
 
 		private final String type;
 
-		private Type(final String type) {
+		Type(final String type) {
 			this.type = type;
 		}
 
 		@Override
 		public String toString() {
 			return type;
+		}
+
+		public static Type findType(String name){
+
+			if (StringUtils.isEmpty(name)) {
+				throw new IllegalArgumentException("Invalid specified method type");
+			}
+
+			Type result = null;
+
+			for (final Type nextType : Type.values()) {
+				if (nextType.type.equalsIgnoreCase(name)) {
+					result = nextType;
+					break;
+				}
+			}
+
+			return result;
 		}
 	};
 
@@ -117,4 +137,18 @@ public class QuantitationMethod implements Serializable {
 	@Override public String toString() {
 		return this.name;
 	}
+
+	@Override
+	public int hashCode() {
+		return Long.valueOf(getId()).hashCode();
+	}
+
+	@Override
+	public boolean equals(Object o) {
+		if (this == o) return true;
+		if (o == null || getClass() != o.getClass()) return false;
+		QuantitationMethod that = (QuantitationMethod) o;
+		return id == that.id;
+	}
+
 }

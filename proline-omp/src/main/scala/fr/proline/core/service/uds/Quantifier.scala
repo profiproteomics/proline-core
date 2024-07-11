@@ -86,7 +86,7 @@ class Quantifier(
       )
       quantiCreator.runService()
 
-      this._quantiId = quantiCreator.getUdsQuantitation().getId
+      this._quantiId = quantiCreator.getUdsQuantitation.getId
 
       // Retrieve entity manager
       val udsDbCtx = executionContext.getUDSDbConnectionContext

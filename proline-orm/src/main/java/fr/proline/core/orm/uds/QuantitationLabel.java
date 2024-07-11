@@ -98,4 +98,18 @@ public class QuantitationLabel implements Serializable {
 		}
 		return serializedPropertiesMap;
 	}
+
+	@Override
+	public int hashCode() {
+		return Long.valueOf(getId()).hashCode();
+	}
+
+	@Override
+	public boolean equals(Object o) {
+		if (this == o) return true;
+		if (o == null || getClass() != o.getClass()) return false;
+		QuantitationLabel that = (QuantitationLabel) o;
+		return id == that.id;
+	}
+
 }

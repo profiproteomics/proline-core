@@ -24,7 +24,7 @@ import fr.proline.core.om.provider.msq.impl.{SQLExperimentalDesignProvider, SQLQ
 import fr.proline.core.om.storer.msi.PeptideWriter
 import fr.proline.core.om.util.PepMatchPropertiesUtil
 import fr.proline.core.orm.uds.repository.ObjectTreeSchemaRepository
-import fr.proline.core.orm.uds.{MasterQuantitationChannel, ObjectTree, ObjectTreeSchema, QuantitationMethod}
+import fr.proline.core.orm.uds.{MasterQuantitationChannel, ObjectTree, ObjectTreeSchema, QuantitationChannel, QuantitationMethod}
 import fr.proline.repository.IDataStoreConnectorFactory
 import org.apache.commons.math3.linear.{Array2DRowRealMatrix, RealMatrix}
 
@@ -34,7 +34,7 @@ import scala.collection.mutable.ArrayBuffer
 
 // Factory for Proline-Cortex
 object QuantPostProcessingComputer {
-
+  var nbPifError = 0
   def apply(
        executionContext: IExecutionContext,
        masterQuantChannelId: Long,
@@ -91,6 +91,10 @@ class QuantPostProcessingComputer(
   def runService(): Boolean = {
 
     this.logger.info("Running service Quant Post Processing Computer.")
+    experimentalDesign.masterQuantChannels(0).quantChannels.foreach(qCh => {
+      logger.debug("  --TEST PP :  next QCH - nbr " +qCh.name+" - "+qCh.number+" has label "+qCh.quantLabelId)
+    })
+    QuantPostProcessingComputer.nbPifError = 0 //reset nb error
 
     // Get entity manager
     val udsDbCtx = executionContext.getUDSDbConnectionContext
@@ -103,9 +107,48 @@ class QuantPostProcessingComputer(
     val udsMasterQuantChannel = udsEM.find(classOf[MasterQuantitationChannel], masterQuantChannelId)
     require(udsMasterQuantChannel != null, "undefined master quant channel with id=" + udsMasterQuantChannel)
 
-    val qChIdsSorted: Seq[Long] = udsMasterQuantChannel.getQuantitationChannels.asScala.toList.map(_.getId).sorted
-    val isIsobaricQuant = udsMasterQuantChannel.getDataset.getMethod.getType.equals(QuantitationMethod.Type.ISOBARIC_TAGGING.toString) //false
-    val purityCorrectionMatrix: Option[RealMatrix] = if (!isIsobaricQuant || !config.usePurityCorrectionMatrix) None else {
+    val isIsobaricQuant = udsMasterQuantChannel.getDataset.getMethod.getType.equals(QuantitationMethod.Type.ISOBARIC_TAGGING.toString)
+    var isValidQuantMethod  = isIsobaricQuant
+    logger.debug("  --TEST PP :  isIsobaricQuant " +isIsobaricQuant)
+    val qChIdsSorted: Seq[ArrayBuffer[Long]] = if (isIsobaricQuant) {
+
+      val qChannelsByLabelId = mutable.Map.empty[Long, Array[QuantitationChannel]] ++ udsMasterQuantChannel.getQuantitationChannels.asScala.toArray.groupBy(_.getQuantitationLabel.getId)
+      val methodLabelIds: Seq[Long] = udsMasterQuantChannel.getDataset.getMethod.getLabels.asScala.map(l => l.getId).toSeq
+      val fullOrderedQChannels = new ArrayBuffer[ArrayBuffer[Long]]() //Get grouped qCh; qch for each label from Quant Method
+
+      if( qChannelsByLabelId.count(qchLabelId => methodLabelIds.contains(qchLabelId._1))!= qChannelsByLabelId.size){//some qChannel label don't belong to quant method
+        isValidQuantMethod = false
+        logger.debug("  --TEST PP : NOT isValidQuantMethod  => some qChannel label don't belong to quant method")
+      } else {
+        var isRemainingQCh = true
+        while(isRemainingQCh) {
+          val orderedQChannels = new ArrayBuffer[Long]() //Get one group of qChannels representing label, in Quant Method order
+          for (lid <- methodLabelIds.sorted) {
+            var addedElem = "" //for --TEST PP todo remove it
+            if (qChannelsByLabelId.contains(lid)) {
+              val qChsForLabel = qChannelsByLabelId(lid).to[ArrayBuffer]
+              addedElem += "-qChid "+qChsForLabel(0).getId//for --TEST PP todo remove it
+              orderedQChannels += qChsForLabel(0).getId
+              qChsForLabel.remove(0)
+              if(qChsForLabel.isEmpty)
+                qChannelsByLabelId.remove(lid)
+              else
+                qChannelsByLabelId.put(lid,qChsForLabel.toArray)
+            }
+            logger.debug("  --TEST PP :  Label pass " +orderedQChannels.size+" => "+addedElem)
+          }
+          fullOrderedQChannels += orderedQChannels
+          if(qChannelsByLabelId.isEmpty)
+            isRemainingQCh = false
+        }
+        logger.debug("  --TEST PP :  Label NB pass " +fullOrderedQChannels.size)
+      }
+      fullOrderedQChannels
+    }
+    else
+      Seq.empty[ArrayBuffer[Long]]
+
+    val purityCorrectionMatrix: Option[RealMatrix] = if (!isValidQuantMethod || !config.usePurityCorrectionMatrix) None else {
       if (config.purityCorrectionMatrix.isDefined) {
         val readMatrixObj = ProfiJson.deserialize[Array[Array[Double]]](config.purityCorrectionMatrix.get)
         Some(new Array2DRowRealMatrix(readMatrixObj))
@@ -517,45 +560,47 @@ class QuantPostProcessingComputer(
     } // END OF tryTransactionWithEzDBC
   }
 
-  private def _resetAndComputeIonsAbundance(mqPepIon: MasterQuantPeptideIon, qChIdsSorted : Seq[Long], purityCorrectionMatrix : Option[RealMatrix], pepMatchByPepInstQueryIds : mutable.Map[String,PeptideMatch]  ) : Unit = {
+  private def _resetAndComputeIonsAbundance(mqPepIon: MasterQuantPeptideIon, qChIdsSorted :Seq[ArrayBuffer[Long]], purityCorrectionMatrix : Option[RealMatrix], pepMatchByPepInstQueryIds : mutable.Map[String,PeptideMatch]  ) : Unit = {
     val values  = new ArrayBuffer[Array[Double]](1)
     values += Array.empty[Double]
 
-    val mqReporterIonAbundanceMatrix =  new ArrayBuffer[Array[Float]](qChIdsSorted.size)
+    val allQChIdsSorted = qChIdsSorted.flatten.toSeq
+    val mqReporterIonAbundanceMatrix =  new ArrayBuffer[Array[Float]](allQChIdsSorted.size)
     val tPurityCorrectionMatrix = if(config.usePurityCorrectionMatrix) MathUtils.transposeMatrix(purityCorrectionMatrix.get.getData) else Array.empty[Array[Double]]
 
     var maxRepIonSelLevel = SelectionLevel.DESELECTED_MANUAL
-    var nbPifError =0
     // If reporter ions, reset values
     mqPepIon.masterQuantReporterIons.foreach(mqRepIon => {
 
       if (config.usePurityCorrectionMatrix) { //Compute Abundance using purityCorrectionMatrix
-        val psmIntensitySortedByQChId = mqRepIon.getRawAbundancesForQuantChannels(qChIdsSorted.toArray)
-        val pepIntensityAsDoubleArray = new Array[Double](qChIdsSorted.size)
-        for (i <- qChIdsSorted.indices) {
-          if (psmIntensitySortedByQChId.apply(i).isNaN) {
-            pepIntensityAsDoubleArray.update(i, 0)
-          } else
-            pepIntensityAsDoubleArray.update(i, psmIntensitySortedByQChId.apply(i).toDouble)
-        }
-
-        values.update(0, pepIntensityAsDoubleArray)
-        val peptideCorrectedValues = MathUtils.matrixSolver(tPurityCorrectionMatrix, values.toArray, true)
-        val pepIntensityFinalValue = new Array[Float](peptideCorrectedValues(0).length)
-        for (i <- qChIdsSorted.indices) {
-          if (psmIntensitySortedByQChId.apply(i).isNaN) { //There was NO intensity before ...
-            pepIntensityFinalValue.update(i, Float.NaN)
-          } else {
-            val newVal = if(peptideCorrectedValues(0)(i)>0) peptideCorrectedValues(0)(i).toFloat else 0f;
-            pepIntensityFinalValue.update(i, newVal)
+        for( oneGroupQChIds <- qChIdsSorted) {
+          val psmIntensitySortedByQChId = mqRepIon.getRawAbundancesForQuantChannels(oneGroupQChIds.toArray)
+          val pepIntensityAsDoubleArray = new Array[Double](oneGroupQChIds.size)
+          for (i <- oneGroupQChIds.indices) {
+            if (psmIntensitySortedByQChId.apply(i).isNaN) {
+              pepIntensityAsDoubleArray.update(i, 0)
+            } else
+              pepIntensityAsDoubleArray.update(i, psmIntensitySortedByQChId.apply(i).toDouble)
           }
-        }
-        mqRepIon.setAbundancesForQuantChannels(pepIntensityFinalValue, qChIdsSorted)
-        //end usePurityCorrectionMatrix
 
+          values.update(0, pepIntensityAsDoubleArray)
+          val peptideCorrectedValues = MathUtils.matrixSolver(tPurityCorrectionMatrix, values.toArray, true)
+          val pepIntensityFinalValue = new Array[Float](peptideCorrectedValues(0).length)
+          for (i <- oneGroupQChIds.indices) {
+            if (psmIntensitySortedByQChId.apply(i).isNaN) { //There was NO intensity before ...
+              pepIntensityFinalValue.update(i, Float.NaN)
+            } else {
+              val newVal = if (peptideCorrectedValues(0)(i) > 0) peptideCorrectedValues(0)(i).toFloat else 0f;
+              pepIntensityFinalValue.update(i, newVal)
+            }
+          }
+          mqRepIon.setAbundancesForQuantChannels(pepIntensityFinalValue, oneGroupQChIds)
+        }
+
+        //end usePurityCorrectionMatrix
       } else {
         //reset to previous value
-        mqRepIon.setAbundancesForQuantChannels(mqRepIon.getRawAbundancesForQuantChannels(qChIdsSorted.toArray), qChIdsSorted)
+        mqRepIon.setAbundancesForQuantChannels(mqRepIon.getRawAbundancesForQuantChannels(allQChIdsSorted.toArray),allQChIdsSorted.toArray)
       }
 
       //Add filter on PIF .
@@ -566,21 +611,21 @@ class QuantPostProcessingComputer(
         val pepMOp = pepMatchByPepInstQueryIds.get( (mqPepIon.peptideInstanceId.get + "_" + mqRepIon.msQueryId ))
         if (pepMOp.isDefined && pepMOp.get.properties.isDefined && pepMOp.get.properties.get.precursorIntensityFraction.isDefined) {
           if(pepMOp.get.properties.get.precursorIntensityFraction.get <= config.discardPeptideMatchesPifValue.get){
-            logger.trace(" **PIF** DISCARD PSM regarding its PIF VALUE :  " + pepMOp.get.properties.get.precursorIntensityFraction)
+//            logger.trace(" **PIF** DISCARD PSM regarding its PIF VALUE :  " + pepMOp.get.properties.get.precursorIntensityFraction)
             mqRepIon.selectionLevel= SelectionLevel.DESELECTED_AUTO
-          } //else
-//            logger.info(" **PIF** KEEP PSM regarding its PIF VALUE :  " + pepMOp.get.properties.get.precursorIntensityFraction)
+          }
+
         } else {
-          if(nbPifError < 10) {
+          if(QuantPostProcessingComputer.nbPifError < 10) {
             logger.debug(" **PIF** TRY DISCARD PSM regarding its PIF VALUE BUT NO PROPERTIES DEFINED !!! - Show only 10 first")
-            nbPifError = nbPifError +1
+            QuantPostProcessingComputer.nbPifError = QuantPostProcessingComputer.nbPifError +1
           }
         }
       }
 
       if(mqRepIon.selectionLevel >= SelectionLevel.SELECTED_AUTO ) {
         val qRepIonMap = mqRepIon.quantReporterIonMap
-        mqReporterIonAbundanceMatrix += qChIdsSorted.map(qRepIonMap.get(_).map(_.abundance).getOrElse(Float.NaN)).toArray
+        mqReporterIonAbundanceMatrix += allQChIdsSorted.map(qRepIonMap.get(_).map(_.abundance).getOrElse(Float.NaN)).toArray
       }
 
       if(mqRepIon.selectionLevel>maxRepIonSelLevel)
@@ -600,7 +645,7 @@ class QuantPostProcessingComputer(
         mqReporterIonAbundanceMatrix.toArray,
         summarizingMethod
       )
-      mqPepIon.setAbundancesForQuantChannels(summarizedRawAbundanceMatrix, qChIdsSorted)
+      mqPepIon.setAbundancesForQuantChannels(summarizedRawAbundanceMatrix, allQChIdsSorted)
     }
     mqPepIon.selectionLevel = maxRepIonSelLevel
   }

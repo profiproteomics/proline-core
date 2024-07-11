@@ -44,7 +44,7 @@ class CreateQuantitation(
 
   private var _hasInitiatedExecContext: Boolean = false
   private var _udsQuantitation: UdsDataset = null
-  def getUdsQuantitation(): UdsDataset = _udsQuantitation
+  def getUdsQuantitation: UdsDataset = _udsQuantitation
   
   // Secondary constructor
   def this(
@@ -69,8 +69,8 @@ class CreateQuantitation(
   def runService() = {
 
     // Retrieve entity manager
-    val udsDbCtx = executionContext.getUDSDbConnectionContext()
-    val udsEM = executionContext.getUDSDbConnectionContext().getEntityManager()
+    val udsDbCtx = executionContext.getUDSDbConnectionContext
+    val udsEM = executionContext.getUDSDbConnectionContext.getEntityManager
     
     // Retrieve some vars
     val biologicalSamples = experimentalDesign.biologicalSamples
