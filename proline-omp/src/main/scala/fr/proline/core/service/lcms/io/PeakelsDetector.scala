@@ -1531,7 +1531,7 @@ class PeakelsDetector(
 
         // Retrieve the map avoiding the creation of duplicated peakels
         val peakelIdByMzDbPeakelId = entityCache.peakelIdByMzDbPeakelIdByRunId(lcMsRunId)
-        val assignedMzDbPeakelIdSet = new HashSet[Int] () ++= peakelIdByMzDbPeakelId.map(_._1.toInt)
+        val assignedMzDbPeakelIdSet = mutable.Set.empty[Int]  ++ peakelIdByMzDbPeakelId.map(_._1.toInt)
 
         // Create a mapping to track peakels already persisted in the LCMSdb
         val mzDbPeakelIdByTmpPeakelId = peakelIdByMzDbPeakelId.map { case (k,v) => (v,k.toInt) }
@@ -1590,12 +1590,13 @@ class PeakelsDetector(
               coelutingPeakelById(peakelId)
             }
 
+            val immutablePklIds = Set.empty[Int] ++ assignedMzDbPeakelIdSet
             Tuple3(putativeFt, mftBuilder, PeakelDbHelper.findMatchingPeakel(
               coelutingPeakels,
               putativeFt,
               crossAssignmentConfig.get.ftMappingParams.mozTol.get.toFloat,
               extractionMozTolPPM,
-              assignedMzDbPeakelIdSetOpt = if (Settings.filterAssignedPeakels) Some(assignedMzDbPeakelIdSet) else None,
+              assignedMzDbPeakelIdSetOpt = if (Settings.filterAssignedPeakels) Some(immutablePklIds) else None,
               multiMatchedMzDbPeakelIdsOpt = if (Settings.filterAssignedPeakels) Some(multiMatchedMzDbPeakelIdsByPutativeFtId(putativeFt.id)) else None,
               runMetrics))
           }

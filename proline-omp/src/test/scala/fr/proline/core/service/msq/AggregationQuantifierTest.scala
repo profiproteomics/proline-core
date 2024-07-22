@@ -64,8 +64,8 @@ object AggregationQuantifierTest extends AbstractDatastoreTestCase with StrictLo
 @Test
 class AggregationQuantifierTest extends StrictLogging {
 
-  val quantDS1Id = 4L
-  val quantDS2Id = 5L
+  val quantDS1Id = 5L
+  val quantDS2Id = 6L
 
   val executionContext = AggregationQuantifierTest.executionContext
   val dsConnectorFactoryForTest = AggregationQuantifierTest.dsConnectorFactoryForTest
@@ -125,7 +125,7 @@ class AggregationQuantifierTest extends StrictLogging {
         name = "AggregatedXIC",
         description = "a simple description",
         projectId = 1L,
-        methodId = 1,
+        methodId = 3,
         experimentalDesign = experimentalDesign.toExperimentalDesign()
       )
       quantiCreator.runService()
