@@ -137,12 +137,12 @@ class QuantifyGlobalTest extends StrictLogging {
     val qttPep = lfSummarizer.computeMasterQuantPeptides(masterQc, qRsm, cache.quantChannelResultSummaries)
     val qttIons = qttPep.flatMap(_.masterQuantPeptideIons).toList
     logger.info(" == Compute Pep quant Result :  nb quant pep :  "+qttPep.length+" nb quant ions "+qttIons.length )
-    val pepIById = qRsm.getPeptideInstanceById
-    val qChIds = masterQc.quantChannels.map(_.id)
-    qttIons.foreach(qttIon => {
-      val pep = pepIById(qttIon.peptideInstanceId.get).peptide
-      System.out.println("Seq\t"+pep.sequence+"\tptm\t"+pep.ptmString+"\tquant\t"+qttIon.getAbundancesForQuantChannels(qChIds).mkString("$\t"))
-    })
+//    val pepIById = qRsm.getPeptideInstanceById
+//    val qChIds = masterQc.quantChannels.map(_.id)
+//    qttIons.foreach(qttIon => {
+//      val pep = pepIById(qttIon.peptideInstanceId.get).peptide
+//      System.out.println("Seq\t"+pep.sequence+"\tptm\t"+pep.ptmString+"\tquant\t"+qttIon.getAbundancesForQuantChannels(qChIds).mkString("$\t"))
+//    })
     qttIons
   }
 
