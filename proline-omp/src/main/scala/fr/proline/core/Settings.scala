@@ -1,6 +1,6 @@
 package fr.proline.core
 
-import com.typesafe.config.ConfigFactory
+import com.typesafe.config.{ConfigFactory, ConfigRenderOptions}
 
 object Settings {
 
@@ -39,6 +39,24 @@ object Settings {
 
   def renderConfigAsString(): String = {
     config.root().render()
+  }
+
+  def renderCurratedConfigAsString(): String = {
+
+    val nCfg = config.withoutPath("path").withoutPath("idea").withoutPath("os").withoutPath("user")
+    .withoutPath("sun")
+    .withoutPath("java")
+    .withoutPath("jdk")
+    .withoutPath("file")
+    .withoutPath("line")
+    .withoutPath("native")
+
+    //System.out.println(" RenderConfigAsString2 currated config :  "+nCfg.root().entrySet().size())
+    nCfg.root().render(ConfigRenderOptions.concise().setComments(true).setFormatted(true))
+
+//    System.out.println(" \n\n RenderConfigAsString2 "+config.root().entrySet().size())
+//    System.out.println(config.root().render(ConfigRenderOptions.concise().setComments(true).setFormatted(true)))
+
   }
 
 }

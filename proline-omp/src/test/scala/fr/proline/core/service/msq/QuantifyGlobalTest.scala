@@ -11,7 +11,8 @@ import fr.proline.core.om.model.lcms.MapSet
 import fr.proline.core.om.model.msi
 import fr.proline.core.om.model.msq.{ExperimentalDesign, ExperimentalDesignSetup, MasterQuantChannel, MasterQuantPeptideIon}
 import fr.proline.core.om.provider.lcms.impl.SQLScanSequenceProvider
-import fr.proline.core.orm
+import fr.proline.core.Settings
+import fr.proline.core.orm.msi.{MasterQuantPeptideIon => OrmMasterQuantPeptideIon}
 import fr.proline.core.orm.msi.ObjectTree
 import fr.proline.core.orm.uds.{Dataset, MasterQuantitationChannel, QuantitationChannel}
 import fr.proline.core.service.lcms.io.{ExtractMapSet, PeakelsDetector}
@@ -23,7 +24,7 @@ import org.junit.{Assert, BeforeClass, Ignore, Test}
 import java.io.File
 import javax.persistence.TypedQuery
 import scala.collection.JavaConverters._
-import scala.collection.mutable.LongMap
+import scala.collection.mutable
 
 object QuantifyGlobalTest extends AbstractDatastoreTestCase  with StrictLogging {
 
@@ -97,14 +98,12 @@ class QuantifyGlobalTest extends StrictLogging {
   val udsEm =QuantifyGlobalTest.udsDBTestCase.getConnector.createEntityManager()
   val msiEm = QuantifyGlobalTest.msiDBTestCase.getConnector.createEntityManager()
 
-//  @Test
-//  def test52(): Unit = {
-////    logger.info("\n\n\n\n ****************** 1 : \n\n\n\n"+Settings.renderConfigAsString())
-//
-//    logger.info("\n\n\n\n ****************** 2 \n\n\n\n"+Settings.renderConfigAsString2())
-//    val input  = System.in.read()
-//
-//  }
+  @Test
+  def test52(): Unit = {
+//    logger.info("\n\n\n\n ****************** 1 : \n\n\n\n"+Settings.renderConfigAsString())
+
+    logger.info("\n\n\n\n ****************** 2 \n\n\n\n"+Settings.renderCurratedConfigAsString())
+  }
 
   private def createLFQuantExpDesign(expDesign : ExperimentalDesign) : Long = {
 
@@ -147,9 +146,9 @@ class QuantifyGlobalTest extends StrictLogging {
     qttIons
   }
 
-  private def getQRSMPeptideIonsByPepIdAndCharge(rsmId: Long) :  Map[(java.lang.Long, Int), orm.msi.MasterQuantPeptideIon] = {
+  private def getQRSMPeptideIonsByPepIdAndCharge(rsmId: Long) :  Map[(java.lang.Long, Int), OrmMasterQuantPeptideIon] = {
     //Read Q Peptides Ions  to compare with generated ones
-    val pepIonsQuery: TypedQuery[orm.msi.MasterQuantPeptideIon] = msiEm.createQuery("select pions from MasterQuantPeptideIon pions WHERE resultSummary.id = " + rsmId, classOf[orm.msi.MasterQuantPeptideIon])
+    val pepIonsQuery: TypedQuery[OrmMasterQuantPeptideIon] = msiEm.createQuery("select pions from MasterQuantPeptideIon pions WHERE resultSummary.id = " + rsmId, classOf[OrmMasterQuantPeptideIon])
     val rsList = pepIonsQuery.getResultList
    rsList.asScala.toList.map(mqPI => (mqPI.getPeptideId, mqPI.getCharge) -> mqPI).toMap
   }
@@ -335,7 +334,7 @@ class QuantifyGlobalTest extends StrictLogging {
     val pdetector = new PeakelsDetector(testExecutionContext.getLCMSDbConnectionContext, "Test PeakelDetector", sortedLcMsRuns, expDesignSeup, quantConfig, psmByRunAndScanNbr)
 
     //call detectMapSetFromPeakels
-    val mzDbFileByLcMsRunId = new LongMap[File]()
+    val mzDbFileByLcMsRunId = new mutable.LongMap[File]()
 
     val scanSeqProvider = new SQLScanSequenceProvider(QuantifyGlobalTest.executionContext.getLCMSDbConnectionContext)
 
