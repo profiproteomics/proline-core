@@ -286,7 +286,6 @@
         <configuration>
           <excludes>
             <exclude>**/mzdb_files/**</exclude>
-            <exclude>**/*.conf</exclude>
           </excludes>
         </configuration>
       </plugin>
