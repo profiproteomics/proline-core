@@ -75,7 +75,7 @@ object SilacQuantifyGlobalTest extends AbstractDatastoreTestCase with StrictLogg
   }
 }
 
-@Test
+@Ignore
 class SilacQuantifyGlobalTest extends StrictLogging {
 
   // Ident RSM Ids
@@ -531,13 +531,6 @@ class SilacQuantifyGlobalTest extends StrictLogging {
       })
       logger.info(" GOT " + nbOK + " compared Ab OK !!! ")
     })
-  }
-
-  @Test
-  def testFake(): Unit ={
-    logger.warn(" --------------------------------------------------------------------------------------------- ")
-    logger.warn("  Currently not tested automatically. Should get correct data and change  Ignore to Test !!!  ")
-    logger.warn(" --------------------------------------------------------------------------------------------- ")
   }
 
   @Ignore protected
