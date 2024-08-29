@@ -1,6 +1,6 @@
 package fr.proline.core.om.storer.msi
 
-import fr.proline.core.om.storer.msi.impl.PgPeptideInstanceWriter
+import fr.proline.core.om.storer.msi.impl.SQLPeptideInstanceWriter
 import fr.proline.context.MsiDbConnectionContext
 import fr.proline.core.om.model.msi.PeptideInstance
 import fr.proline.repository.DriverType
@@ -12,9 +12,10 @@ trait IPeptideInstanceWriter {
 
 object PeptideInstanceWriter {
   def apply(driverType: DriverType): IPeptideInstanceWriter = {
-    driverType match {
-      case DriverType.POSTGRESQL => PgPeptideInstanceWriter
-      case _ => throw new NotImplementedError()
-    }
+    SQLPeptideInstanceWriter
+//    driverType match {
+//      case DriverType.POSTGRESQL => PgPeptideInstanceWriter
+//      case _ => throw new NotImplementedError()
+//    }
   }
 }

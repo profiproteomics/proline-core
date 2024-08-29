@@ -48,3 +48,7 @@ case object TLS_F027737_MTD_no_varmod extends DbUnitResultFileLocation {
 case object SmallRuns_XIC extends DbUnitResultFileLocation {
   val datastoreDirPath = "/dbunit_samples/SmallRuns_XIC"
 }
+
+case object SILAC_XIC extends DbUnitResultFileLocation {
+  val datastoreDirPath = "/dbunit_samples/SILAC"
+}

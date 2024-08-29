@@ -8,9 +8,10 @@ import fr.proline.core.dal.DoJDBCWork
 import fr.proline.core.dal.tables.msi.{MsiDbPeptideInstancePeptideMatchMapTable, MsiDbPeptideInstanceTable}
 import fr.proline.core.om.model.msi.PeptideInstance
 import fr.proline.core.om.storer.msi.IPeptideInstanceWriter
-
 import fr.profi.jdbc.easy._
-object  PgPeptideInstanceWriter extends  IPeptideInstanceWriter with LazyLogging {
+
+object SQLPeptideInstanceWriter extends IPeptideInstanceWriter with  LazyLogging{
+
   override def insertPeptideInstances(pepInstances: Seq[PeptideInstance], msiDbConCtxt: MsiDbConnectionContext): Unit = {
 
 
@@ -40,8 +41,8 @@ object  PgPeptideInstanceWriter extends  IPeptideInstanceWriter with LazyLogging
       pepInstance.id = stmt.generatedLong
     }
 
-    logger.debug( "storing peptide instances..." )
-    val pepInstInsertQuery = MsiDbPeptideInstanceTable.mkInsertQuery { (c,colsList) => colsList.filter( _ != c.ID) }
+    logger.debug("storing peptide instances...")
+    val pepInstInsertQuery = MsiDbPeptideInstanceTable.mkInsertQuery { (c, colsList) => colsList.filter(_ != c.ID) }
 
     DoJDBCWork.withEzDBC(msiDbConCtxt) { msiEzDBC =>
 

@@ -83,6 +83,7 @@ class QuantifyGlobalTest extends StrictLogging {
   val rsm1Id = 2L
   val rsm2Id = 4L
   val mergedRSM1Id = 6L
+  val mergedDSId = 2L
 
   // Quant RSM/DS Ids
   val singleQRsmId = 7L
@@ -98,12 +99,12 @@ class QuantifyGlobalTest extends StrictLogging {
   val udsEm =QuantifyGlobalTest.udsDBTestCase.getConnector.createEntityManager()
   val msiEm = QuantifyGlobalTest.msiDBTestCase.getConnector.createEntityManager()
 
-  @Test
-  def test52(): Unit = {
-//    logger.info("\n\n\n\n ****************** 1 : \n\n\n\n"+Settings.renderConfigAsString())
-
-    logger.info("\n\n\n\n ****************** 2 \n\n\n\n"+Settings.renderCurratedConfigAsString())
-  }
+//  @Test
+//  def test52(): Unit = {
+////    logger.info("\n\n\n\n ****************** 1 : \n\n\n\n"+Settings.renderConfigAsString())
+//
+//    logger.info("\n\n\n\n ****************** 2 \n\n\n\n"+Settings.renderCurratedConfigAsString())
+//  }
 
   private def createLFQuantExpDesign(expDesign : ExperimentalDesign) : Long = {
 
@@ -271,7 +272,9 @@ class QuantifyGlobalTest extends StrictLogging {
      * \"biological_samples\": [{\"number\": 1,\"name\": \"Group 2Sample null\"}]
      * }"
      */
-    val expDesignStr ="{\"group_setups\": [{\"number\": 1,\"biological_groups\": [{\"number\": 1,\"sample_numbers\": [1],\"name\": \"Group 2\"}],\"name\": \"Quant\",\"ratio_definitions\": [{\"number\": 1,\"numerator_group_number\": 1,\"denominator_group_number\": 1}]}],\"master_quant_channels\": [{\"number\": 1,\"quant_channels\": [{\"number\": 1,\"run_id\": 1,\"ident_result_summary_id\": 2,\"sample_number\": 1,\"name\": \"F071235\"}],\"name\": \"Quant\"}],\"biological_samples\": [{\"number\": 1,\"name\": \"Group 2Sample null\"}]}"
+      //Warning Run Id hardcoded
+    val expDesignStr ="{\"group_setups\": [{\"number\": 1,\"biological_groups\": [{\"number\": 1,\"sample_numbers\": [1],\"name\": \"Group 2\"}],\"name\": \"Quant\",\"ratio_definitions\": [{\"number\": 1,\"numerator_group_number\": 1,\"denominator_group_number\": 1}]}]," +
+      "\"master_quant_channels\": [{\"number\": 1,\"quant_channels\": [{\"number\": 1,\"run_id\": 1,\"ident_result_summary_id\": "+rsm1Id+",\"sample_number\": 1,\"name\": \"F071235\"}],\"name\": \"Quant\", \"ident_result_summary_id\": "+mergedRSM1Id+", \"ident_dataset_id\": "+mergedDSId+"}],\"biological_samples\": [{\"number\": 1,\"name\": \"Group 2Sample null\"}]}"
     val quantConfigStr ="{\"cross_assignment_config\": { \"ft_mapping_params\": {\"moz_tol_unit\": \"PPM\", \"use_moz_calibration\": true,\"use_automatic_time_tol\": false, \"time_tol\": \"60.0\",   \"moz_tol\": \"5.0\"  },  \"method_name\": \"BETWEEN_ALL_RUNS\",  \"ft_filter\": {   \"name\": \"INTENSITY\",   \"value\": 0.0,   \"operator\": \"GT\"  },  \"restrain_to_reliable_features\": true }, \"clustering_params\": {  \"moz_tol_unit\": \"PPM\",  \"intensity_computation\": \"MOST_INTENSE\",  \"time_computation\": \"MOST_INTENSE\",  \"time_tol\": 15.0,  \"moz_tol\": \"5.0\" }, \"detection_params\": {  \"psm_matching_params\": {   \"moz_tol_unit\": \"PPM\",   \"moz_tol\": \"5.0\"  },  \"isotope_matching_params\": {   \"moz_tol_unit\": \"PPM\",   \"moz_tol\": \"5.0\"  } }, \"extraction_params\": {  \"moz_tol_unit\": \"PPM\",  \"moz_tol\": \"5.0\" }, \"detection_method_name\": \"DETECT_PEAKELS\", \"moz_calibration_smoothing_method\": \"LOESS\", \"alignment_config\": {  \"ft_mapping_method_name\": \"PEPTIDE_IDENTITY\",  \"ft_mapping_params\": {   \"time_tol\": \"600.0\"  },  \"ignore_errors\": false,  \"method_name\": \"EXHAUSTIVE\",  \"smoothing_method_name\": \"LOESS\" }, \"config_version\": \"3.0\"}"
     testQuantifyPeptides(singleQRsmId, singleQDSId, expDesignStr, quantConfigStr)
   }
@@ -294,11 +297,12 @@ class QuantifyGlobalTest extends StrictLogging {
      * \"biological_samples\": [{\"number\": 1,\"name\": \"Group 2Sample null\"}]
      * }"
      */
+    //Warning Run Id hardcoded
     val expDesignStr ="{\"group_setups\": [{\"number\": 1,\"biological_groups\": [{\"number\": 1,\"sample_numbers\": [1],\"name\": \"Group Small_2\"}]," +
       "\"name\": \"Quant\",\"ratio_definitions\": [{\"number\": 1,\"numerator_group_number\": 1,\"denominator_group_number\": 1}]}]," +
       "\"master_quant_channels\": " +
-      "[{\"number\": 1,\"quant_channels\": [{\"number\": 1,\"run_id\": 1,\"ident_result_summary_id\": 2,\"sample_number\": 1,\"name\": \"F071235\"}," +
-      "{\"number\": 2,\"run_id\": 2,\"ident_result_summary_id\": 4,\"sample_number\": 1,\"name\": \"F071239\"}],\"name\": \"Quant\"}]," +
+      "[{\"number\": 1,\"quant_channels\": [{\"number\": 1,\"run_id\": 1,\"ident_result_summary_id\": "+rsm1Id+",\"sample_number\": 1,\"name\": \"F071235\"}," +
+      "{\"number\": 2,\"run_id\": 2,\"ident_result_summary_id\": "+rsm2Id+",\"sample_number\": 1,\"name\": \"F071239\"}],\"name\": \"Quant\", \"ident_result_summary_id\": "+mergedRSM1Id+", \"ident_dataset_id\": "+mergedDSId+"}]," +
       "\"biological_samples\": [{\"number\": 1,\"name\": \"Group Small_2Sample Small_2\"}]}"
     val quantConfigStr = "{\"cross_assignment_config\": { \"ft_mapping_params\": {\"moz_tol_unit\": \"PPM\", \"use_moz_calibration\": true,\"use_automatic_time_tol\": false, \"time_tol\": \"60.0\",   \"moz_tol\": \"5.0\"  },  \"method_name\": \"BETWEEN_ALL_RUNS\",  \"ft_filter\": {   \"name\": \"INTENSITY\",   \"value\": 0.0,   \"operator\": \"GT\"  },  \"restrain_to_reliable_features\": true }, \"clustering_params\": {  \"moz_tol_unit\": \"PPM\",  \"intensity_computation\": \"MOST_INTENSE\",  \"time_computation\": \"MOST_INTENSE\",  \"time_tol\": 15.0,  \"moz_tol\": \"5.0\" }, \"detection_params\": {  \"psm_matching_params\": {   \"moz_tol_unit\": \"PPM\",   \"moz_tol\": \"5.0\"  },  \"isotope_matching_params\": {   \"moz_tol_unit\": \"PPM\",   \"moz_tol\": \"5.0\"  } }, \"extraction_params\": {  \"moz_tol_unit\": \"PPM\",  \"moz_tol\": \"5.0\" }, \"detection_method_name\": \"DETECT_PEAKELS\", \"moz_calibration_smoothing_method\": \"LOESS\", \"alignment_config\": {  \"ft_mapping_method_name\": \"PEPTIDE_IDENTITY\",  \"ft_mapping_params\": {   \"time_tol\": \"600.0\"  },  \"ignore_errors\": false,  \"method_name\": \"EXHAUSTIVE\",  \"smoothing_method_name\": \"LOESS\" }, \"config_version\": \"3.0\"}"
     testQuantifyPeptides(twoRunsQRsmId, twoRunsQDSId, expDesignStr, quantConfigStr)
@@ -354,5 +358,7 @@ class QuantifyGlobalTest extends StrictLogging {
     Assert.assertNotNull(finalMapSet)
     Assert.assertNotNull(alnResult)
   }
+
+
 }
 

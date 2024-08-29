@@ -82,19 +82,23 @@ class ResidueLabelingQuantifier(
       val identRsm = rsmProvider.getResultSummary(entry._1, loadResultSet = true).get
       val oldRsmId = identRsm.id
       val childIds = msiDbHelper.getResultSetChildrenIds(identRsm.getResultSetId)
+      //create ans store in DB an orm ResultSet
       val qChannelMsiQuantRs =  if(childIds==null || childIds.isEmpty)
         storeMsiQuantResultSet(List.empty[Long])
       else
         storeMsiQuantResultSet(childIds.toList)
 
+      //create ans store in DB an orm ResultSummary using created RS
       val childRsmIds = msiDbHelper.getResultSummaryChildrenIds(identRsm.id)
       val qChannelMsiQuantRsm = if (childRsmIds == null || childRsmIds.isEmpty)
         storeMsiQuantResultSummary(qChannelMsiQuantRs, Array.empty[Long])
       else
         storeMsiQuantResultSummary(qChannelMsiQuantRs, childRsmIds)
 
+      //Duplicate qCh-identRSM into created one
       rsmDuplicator.cloneAndStoreRSM(identRsm, qChannelMsiQuantRsm, qChannelMsiQuantRs, false, msiEm)
 
+      //Associate new duplicated RSM to qChannels
       entry._2.foreach(qch => {
         qch.setIdentResultSummaryId(qChannelMsiQuantRsm.getId)
         udsEm.persist(qch)
@@ -229,7 +233,7 @@ class ResidueLabelingQuantifier(
     this.storeMasterQuantPeptidesAndProteinSets(msiQuantRsm,mqPeptides,mqProtSets)
   }
 
-  private def createMissingTupleData(quantRsm: ResultSummary): Unit = {
+  private[quantify] def createMissingTupleData(quantRsm: ResultSummary): Unit = {
 
     //groups all peptide with same sequence and PTMs regardless of tags specific PTMs
     val peptideInstanceListByTupleKey = new mutable.HashMap[String, ArrayBuffer[PeptideInstance]]()
@@ -267,7 +271,7 @@ class ResidueLabelingQuantifier(
     }
     logger.info(" ---- Nb Peptide found during search  ....  "+counting.foundPepInMissingPep)
     logger.info(" ---- Nb Peptide still not found during search  ....  "+counting.notFoundPepInMissingPep)
-    logger.info(" ---- Create peptides for following ")
+    logger.info(" ---- Create peptides for following ; psm only "+psmToCreateOnly.size)
 
     var nbPsm = 0
     psmAndPepToCreate.foreach(entry =>{
@@ -307,12 +311,6 @@ class ResidueLabelingQuantifier(
       val pepInstIdsByChargeAndTagId: mutable.HashMap[Long, mutable.HashMap[Integer, ArrayBuffer[Long]]] = getPeptideInstByTagAndCharge(pepInstances, ptmIdsByTagId, emtyTagId)
       val allCharges = pepInstIdsByChargeAndTagId.values.flatten.map(_._1).toSet.asJava
 
-      //VDS TEST
-//      var pepInterest = false
-//      if (pepKeyEntry.startsWith("AAVLYVMDLSEQCGHGLR")) {
-//        logger.info("- Entry " + pepKeyEntry + " with "+pepInstances.size+" pepInstances ")
-//        pepInterest = true
-//      }
       //for each tag
       pepInstIdsByChargeAndTagId.foreach(entry => {
         val tagId = entry._1
@@ -320,8 +318,7 @@ class ResidueLabelingQuantifier(
         //current tuple sequence, empty tag PTMs list and mass
         val seq = pepKeyEntry.split("%")(0) //current seq
         val locatedPTMs = peptidePTMsListByTupleKey.getOrElse(pepKeyEntry, Array.empty[LocatedPtm]).to[ArrayBuffer]
-//        if(pepInterest)
-//          logger.info(" tag "+tagId)
+
         var needTag = true
         if (!tagId.equals(emtyTagId)) { //add specific tag ptms
           var nbSupPTM = 0
@@ -340,8 +337,6 @@ class ResidueLabelingQuantifier(
           needTag = nbSupPTM>0
         }
         val pepMass = Peptide.calcMass(seq, locatedPTMs.toArray)
-//        if(pepInterest)
-//          locatedPTMs.foreach(lptm => {logger.info("- LocPtm at "+lptm.seqPosition+ " : " +lptm.toPtmString() )})
 
         if (pepInstIdsByChargeAndTagId(tagId).isEmpty && needTag) { //Missing tag. Peptide (and psm) to create
           //update counting
@@ -349,8 +344,6 @@ class ResidueLabelingQuantifier(
           nbMissingTag += 1
           counting.missingPeptideCountByTagId.put(tagId, nbMissingTag)
           logger.trace("\t--Missing TAG for pep group\t" + pepInstances(0).peptide.sequence + "_" + pepInstances(0).peptide.id + "\ttag id\t" + tagId + "_" + tagById(tagId).name)
-//          if(pepInterest)
-//            logger.info("\t--Missing TAG for pep group\t" + pepInstances(0).peptide.sequence + "_" + pepInstances(0).peptide.id + "\ttag id\t" + tagId + "_" + tagById(tagId).name)
           allPeptidesInTupleFound = false
 
           // ---- Create Missing Peptide ---
@@ -378,8 +371,6 @@ class ResidueLabelingQuantifier(
             val nbPSM = counting.missingPsmByTagId.getOrDefault(tagId, 0)
             counting.missingPsmByTagId.put(tagId, nbPSM + missingCharges.size)
             logger.trace("\t--Missing PSM only for " + missingCharges.size + " ions (" + missingCharges + ") for current pep group\t"+ pepInstances(0).peptide.sequence + "_" + pepInstances(0).peptide.id+ "\ttag id\t" + tagById(tagId).name)
-//            if (pepInterest)
-//              logger.info("\t--Missing PSM only for " + missingCharges.size + " ions (" + missingCharges + ") for current pep group\t"+ pepInstances(0).peptide.sequence + "_" + pepInstances(0).peptide.id+ "\ttag id\t" + tagById(tagId).name)
             allPSMInTupleFound = false
 
             //get full located PTMs' peptide for current tag
@@ -506,19 +497,19 @@ class ResidueLabelingQuantifier(
         foundPeps(index).get
 
       } else {
-      val seq = pepToCreateKeys(index)._1
-      val lPtms = pepToCreateKeys(index)._2
-      val cMass = Peptide.calcMass(seq, lPtms)
-      val pep = new Peptide(
-          id = Peptide.generateNewId(),
-          sequence = seq,
-          ptmString = Peptide.makePtmString(lPtms) ,
-          ptms = lPtms,
-          calculatedMass = cMass,
-          properties = None
-      )
-      peptidesToCreate += pep
-      pepUniqueKeyByPep.put(pep,pepToCreateKeys(index))
+        val seq = pepToCreateKeys(index)._1
+        val lPtms = pepToCreateKeys(index)._2
+        val cMass = Peptide.calcMass(seq, lPtms)
+        val pep = new Peptide(
+            id = Peptide.generateNewId(),
+            sequence = seq,
+            ptmString = Peptide.makePtmString(lPtms) ,
+            ptms = lPtms,
+            calculatedMass = cMass,
+            properties = None
+        )
+        peptidesToCreate += pep
+        pepUniqueKeyByPep.put(pep,pepToCreateKeys(index))
         pep
       }
 
@@ -537,7 +528,7 @@ class ResidueLabelingQuantifier(
     } // For each peptide to create
 
     //create missing peptides
-    logger.info("  Create " +peptidesToCreate.size + " peptides " )
+    logger.info(" Need to create " +peptidesToCreate.size + " peptides " )
     PeptideWriter(msiDbCtx.getDriverType).insertPeptides(peptidesToCreate, new StorerContext(executionContext))
     for (cPeptide <- peptidesToCreate) {
       val psmsToCreate = pepKeyAndPsmToCreate(pepUniqueKeyByPep(cPeptide))
@@ -551,7 +542,7 @@ class ResidueLabelingQuantifier(
     //create missing peptides matches
     val allPepMatches = (psmToCreateOnly ++ pepKeyAndPsmToCreate.values.flatten).toArray
     val psmByTmpId = allPepMatches.map(pm => (pm.id , pm)).toMap
-    logger.info("  Create " + allPepMatches.length + " peptides matches ")
+    logger.info(" Need to create " + allPepMatches.length + " peptides matches ")
     PeptideMatchWriter(msiDbCtx.getDriverType).insertPeptideMatches(allPepMatches, msiDbCtx)
     rsm.resultSet.get.addPeptideMatches(allPepMatches)
 
@@ -586,7 +577,7 @@ class ResidueLabelingQuantifier(
       var ptmIdsForTag = ptmIdsByTagId(tagId)
       val matchingPeps = ArrayBuffer.empty[PeptideInstance]
       val revert = tagId.equals(emptyTag)
-      if(revert)
+      if(revert) //searching empty tag, test none of tags ptm is define
         ptmIdsForTag = ptmIdsByTagId.values.flatten.toList
 
       val pepInstToLook = new ArrayBuffer[PeptideInstance]() ++ remainingPeps //don't test already associated peptides

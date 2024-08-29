@@ -8,20 +8,18 @@ import fr.proline.core.dal.DoJDBCReturningWork
 import fr.proline.core.dal.helper.MsiDbHelper
 import fr.proline.core.dal.tables.SelectQueryBuilder1
 import fr.proline.core.dal.tables.msi.{MsiDbMsQueryTable, MsiDbPeptideMatchTable}
-import fr.proline.core.om.model.msi.{Ms2Query, MsQuery, PeptideMatch}
+import fr.proline.core.om.model.msi.PeptideMatch
 import fr.proline.repository.util.PostgresUtils
 import fr.proline.core.dal.tables.SelectQueryBuilder._
-import fr.proline.core.om.storer.msi.IPeptideMatchWriter
-import fr.profi.jdbc.easy._
 import scala.collection.mutable.ArrayBuffer
 
-object PgPeptideMatchWriter extends  IPeptideMatchWriter with LazyLogging{
+object PgPeptideMatchWriter extends AbstractPeptideMatchWriter with LazyLogging{
 
   private val pepMatchTableColsWithoutPK = MsiDbPeptideMatchTable.columnsAsStrList.filter(_ != "id").mkString(",")
   private val msQueryTableColsWithoutPK = MsiDbMsQueryTable.columnsAsStrList.filter(_ != "id").mkString(",")
 
 
-  def insertPeptideMatches(peptideMatches: Seq[PeptideMatch], msiDbConCtxt : MsiDbConnectionContext): Unit = {
+  override def insertPeptideMatches(peptideMatches: Seq[PeptideMatch], msiDbConCtxt : MsiDbConnectionContext): Unit = {
 
     //insert msQuery first
     val msQueries = peptideMatches.map(pm => pm.msQuery).filter(_.id<0)
@@ -123,29 +121,5 @@ object PgPeptideMatchWriter extends  IPeptideMatchWriter with LazyLogging{
     msQueryId + "_" + peptideMatchRank + "%" + peptideId
   }
 
-  private def inserMsQueries(queries : Seq[MsQuery], msiDBCtx : MsiDbConnectionContext): Unit = {
-
-    val msQueryInsertQuery = MsiDbMsQueryTable.mkInsertQuery((col, colsList) => colsList.filter(_ != col.ID))
-
-    DoJDBCReturningWork.withEzDBC(msiDBCtx) { msiEzDBC =>
-
-      msiEzDBC.executePrepared(msQueryInsertQuery, true) { stmt =>
-        for (msQuery <- queries) {
-          val spectrumId = if(msQuery.msLevel.equals(1) ) Option.empty[Long] else Some(msQuery.asInstanceOf[Ms2Query].spectrumId)
-          stmt.executeWith(
-            msQuery.initialId,
-            msQuery.charge,
-            msQuery.moz,
-            msQuery.properties.map(ProfiJson.serialize(_)),
-            spectrumId,
-            msQuery.msiSearchId
-          )
-
-          msQuery.id = stmt.generatedLong
-        }
-      }
-
-    }
-  }
 
 }
