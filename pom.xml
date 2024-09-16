@@ -26,7 +26,7 @@
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <mzdb.version>1.3.0-SNAPSHOT</mzdb.version>
+    <mzdb.version>1.3.2-SNAPSHOT</mzdb.version>
     <commons.version>1.3.0-SNAPSHOT</commons.version>  <!-- Tag version -->
   </properties>
   <scm>
