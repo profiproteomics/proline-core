@@ -120,7 +120,8 @@ class ResidueLabelingEntitiesSummarizer(
       val combinedMqPepIons = new ArrayBuffer[MasterQuantPeptideIon]()
 
       for ((charge, lfQIons) <- ions.groupBy(_._4)) {
-        logger.info(s"combining ${lfQIons.length} ions for key $key, ${charge}+")
+        if(lfQIons.length > 1)
+          logger.info(s"combining ${lfQIons.length} ions for key $key, ${charge}+")
         val quantPepIonsBuffer = new ArrayBuffer[QuantPeptideIon](qcCount)
 
         var lfqMQPepIon: MasterQuantPeptideIon = {
