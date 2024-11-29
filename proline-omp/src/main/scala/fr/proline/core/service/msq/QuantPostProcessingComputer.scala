@@ -92,7 +92,7 @@ class QuantPostProcessingComputer(
 
     this.logger.info("Running service Quant Post Processing Computer.")
     experimentalDesign.masterQuantChannels(0).quantChannels.foreach(qCh => {
-      logger.trace("  --TEST PP :  next QCH - nbr " +qCh.name+" - "+qCh.number+" has label "+qCh.quantLabelId)
+      logger.trace("  --TEST PP :  next QCH - " +qCh.name+" - nbr: "+qCh.number+" has label id: "+qCh.quantLabelId)
     })
     QuantPostProcessingComputer.nbPifError = 0 //reset nb error
 
