@@ -62,12 +62,12 @@ values
     ('isobaric_tag', '130CD', '{ "reporter_mz": 130.144068}',7, (SELECT id FROM quant_method WHERE name = 'TMT 16plex-Deuterated')),
     ('isobaric_tag', '131ND', '{ "reporter_mz": 131.141103}',8, (SELECT id FROM quant_method WHERE name = 'TMT 16plex-Deuterated')),
     ('isobaric_tag', '131CD', '{ "reporter_mz": 131.147423}',9, (SELECT id FROM quant_method WHERE name = 'TMT 16plex-Deuterated')),
-    ('isobaric_tag', '132ND', '{ "reporter_mz": 132.144458}',10, (SELECT id FROM quant_method WHERE name = 'TMT 16plex-Deuterated')),;
-    ('isobaric_tag', '132CD', '{ "reporter_mz": 132.150778}',11, (SELECT id FROM quant_method WHERE name = 'TMT 16plex-Deuterated')),;
-    ('isobaric_tag', '133ND', '{ "reporter_mz": 133.147813}',12, (SELECT id FROM quant_method WHERE name = 'TMT 16plex-Deuterated')),;
-    ('isobaric_tag', '133CD', '{ "reporter_mz": 133.154133}',13, (SELECT id FROM quant_method WHERE name = 'TMT 16plex-Deuterated')),;
-    ('isobaric_tag', '134ND', '{ "reporter_mz": 134.151171}',14, (SELECT id FROM quant_method WHERE name = 'TMT 16plex-Deuterated')),;
-    ('isobaric_tag', '134CD', '{ "reporter_mz": 134.157491}',15, (SELECT id FROM quant_method WHERE name = 'TMT 16plex-Deuterated')),;
+    ('isobaric_tag', '132ND', '{ "reporter_mz": 132.144458}',10, (SELECT id FROM quant_method WHERE name = 'TMT 16plex-Deuterated')),
+    ('isobaric_tag', '132CD', '{ "reporter_mz": 132.150778}',11, (SELECT id FROM quant_method WHERE name = 'TMT 16plex-Deuterated')),
+    ('isobaric_tag', '133ND', '{ "reporter_mz": 133.147813}',12, (SELECT id FROM quant_method WHERE name = 'TMT 16plex-Deuterated')),
+    ('isobaric_tag', '133CD', '{ "reporter_mz": 133.154133}',13, (SELECT id FROM quant_method WHERE name = 'TMT 16plex-Deuterated')),
+    ('isobaric_tag', '134ND', '{ "reporter_mz": 134.151171}',14, (SELECT id FROM quant_method WHERE name = 'TMT 16plex-Deuterated')),
+    ('isobaric_tag', '134CD', '{ "reporter_mz": 134.157491}',15, (SELECT id FROM quant_method WHERE name = 'TMT 16plex-Deuterated')),
     ('isobaric_tag', '135ND', '{ "reporter_mz": 135.154526}',16, (SELECT id FROM quant_method WHERE name = 'TMT 16plex-Deuterated'));
 
 -- Add Missing tag for TMT 35plex
