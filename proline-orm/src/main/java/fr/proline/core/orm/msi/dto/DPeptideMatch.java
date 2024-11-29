@@ -1,13 +1,13 @@
 package fr.proline.core.orm.msi.dto;
 
-import java.io.IOException;
-import java.util.*;
-
 import com.fasterxml.jackson.core.JsonProcessingException;
 import fr.profi.util.CollectionUtils;
 import fr.proline.core.orm.msi.Peptide;
 import fr.proline.core.orm.msi.SequenceMatch;
 import fr.proline.core.orm.util.JsonSerializer;
+
+import java.io.IOException;
+import java.util.*;
 
 /**
  *
@@ -399,26 +399,23 @@ public class DPeptideMatch implements Comparable<DPeptideMatch> {
 			String ambiguityInfo = (String) ((Map<String, Object>) getPropertiesAsMap().get("mascot_properties")).get("ambiguity_string");
 
 			List<Integer> indexes = new ArrayList<>();
-			List<Character> subsitituteChars = new ArrayList<>();
+			List<Character> substitutionChars = new ArrayList<>();
 
 			List<String> ambiguityChars = Arrays.asList(ambiguityInfo.split(","));
 			CollectionUtils.createSlidingWindow(ambiguityChars, 3).forEach(substInfo -> {
 				if (substInfo.size() == 3) {
 					indexes.add(Integer.valueOf(substInfo.get(0)));
-					subsitituteChars.add(substInfo.get(2).toCharArray()[0]);
+					substitutionChars.add(substInfo.get(2).toCharArray()[0]);
 				}
 			});
-			StringBuilder seqB = new StringBuilder();
-			String sequence = m_peptide.getSequence();
-			for (int i = 0; i < sequence.length(); i++) {
-				if (indexes.contains(i + 1))
-					seqB.append(subsitituteChars.get(indexes.indexOf(i + 1)));
-				else
-					seqB.append(sequence.toCharArray()[i]);
+			char[] sequence = m_peptide.getSequence().toCharArray();
+			for (int i = 0; i < indexes.size(); i++) {
+					sequence[indexes.get(i) - 1] = substitutionChars.get(i);
 			}
-			return seqB.toString();
+			return new String(sequence);
 		} else
 			return "";
 
 	}
+
 }

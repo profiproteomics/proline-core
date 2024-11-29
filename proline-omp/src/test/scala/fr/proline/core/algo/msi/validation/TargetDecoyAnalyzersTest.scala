@@ -3,7 +3,7 @@ package fr.proline.core.algo.msi.validation
 import org.junit.Assert._
 import org.junit.Ignore
 import org.junit.Test
-import org.scalatest.junit.JUnitSuite
+import org.scalatestplus.junit.JUnitSuite
 import com.typesafe.scalalogging.StrictLogging
 import fr.proline.core.algo.msi.filtering.pepmatch.{BHFilter, ScorePSMFilter}
 import fr.proline.core.algo.msi.filtering.IPeptideMatchSorter

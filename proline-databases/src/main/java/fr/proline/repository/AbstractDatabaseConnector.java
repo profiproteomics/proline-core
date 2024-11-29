@@ -3,7 +3,6 @@ package fr.proline.repository;
 import static fr.profi.util.StringUtils.LINE_SEPARATOR;
 
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileReader;
 import java.io.IOException;
 import java.sql.Connection;
@@ -115,11 +114,11 @@ public abstract class AbstractDatabaseConnector implements IDatabaseConnector, I
 		Properties p = new Properties();
 		try {
 			File  f= new File("config/"+prolineDbType.name()+HIBERNATE_PROP_FILES_SUFFIXE);
-			LOG.info(" ------ Read properties file  : "+(prolineDbType.name()+HIBERNATE_PROP_FILES_SUFFIXE) +" ==> "+f.getAbsolutePath());
 			FileReader fr = new FileReader("config/"+prolineDbType.name()+HIBERNATE_PROP_FILES_SUFFIXE);
 			p.load(fr);
-		} catch (IOException e) {
-			LOG.info(" ------ Properties file not found : "+(prolineDbType.name()+HIBERNATE_PROP_FILES_SUFFIXE));
+			LOG.debug(" ------ Read properties file  : "+(prolineDbType.name()+HIBERNATE_PROP_FILES_SUFFIXE) +"from"+f.getAbsolutePath());
+		} catch (IOException ignored) {
+
 		}
 
 		Iterator<String> keys = p.stringPropertyNames().iterator();
@@ -127,7 +126,7 @@ public abstract class AbstractDatabaseConnector implements IDatabaseConnector, I
 		while (keys.hasNext()){
 			String k = keys.next();
 			String res = p.getProperty(k);
-			LOG.info(" ------ add m_additionalProperties IS "+k+" : "+res);
+			LOG.debug(" ------ add m_additionalProperties IS "+k+" : "+res);
 			ap.put(k, res);
 		}
 		setAdditionalProperties(ap);

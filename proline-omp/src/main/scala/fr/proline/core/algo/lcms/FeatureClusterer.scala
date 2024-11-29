@@ -186,7 +186,7 @@ class FeatureClusterer(
   }
 
   // Retrieve some vars
-  private val scanById = scans map { scan => (scan.id -> scan) } toMap
+  private val scanById = scans.map { scan => (scan.id -> scan) }.toMap
   
   def buildFeatureCluster( ftGroup: Seq[Feature] ): Feature = {
     ClusterizeFeatures.buildFeatureCluster(ftGroup, rawMapId, procMapId, intensityComputationMethod, timeComputationMethod, scanById)

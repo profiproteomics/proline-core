@@ -5,6 +5,8 @@ import scala.collection.mutable.HashMap
 import com.typesafe.scalalogging.LazyLogging
 import fr.profi.util.misc.InMemoryIdGen
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize
+import fr.profi.util.regex.RegexUtils._
+
 
 object Peaklist extends InMemoryIdGen
 
@@ -36,9 +38,38 @@ case class PeaklistSoftware(
   var specTitleParsingRule: Option[SpectrumTitleParsingRule] = None,
   
   var properties: Option[PeaklistSoftwareProperties] = None
-)
+) extends LazyLogging{
 
-case class PeaklistSoftwareProperties()
+  def parsePIFValue(title: String): Float = {
+
+    if(properties.isEmpty || properties.get.pifRegExp.isEmpty)
+      return Float.NaN
+
+    val pifRegex = properties.get.pifRegExp.get
+    var pifFloatValue : Float = Float.NaN
+    if (pifRegex.nonEmpty) {
+      // Try to capture the corresponding regex group
+      try {
+        val matcherResultOpt = title =# pifRegex
+        if (matcherResultOpt.isDefined) {
+          val grpIndex = matcherResultOpt.get.groupCount //suppose last group ...
+          pifFloatValue = matcherResultOpt.get.group(grpIndex).toFloat
+        }
+      } catch {
+        case t: Throwable => {
+          logger.warn("Error during PIF parsing: " + t.getMessage)
+          pifFloatValue = Float.NaN
+        }
+      }
+    }
+
+     pifFloatValue
+  }
+}
+
+case class PeaklistSoftwareProperties(
+  @BeanProperty var pifRegExp : Option[String] = None
+)
 
 
 object Spectrum extends InMemoryIdGen
@@ -111,7 +142,7 @@ case class SpectrumTitleParsingRule (
   
   def parseTitle(title: String): Map[SpectrumTitleFields.Value,String] = {
     
-    import fr.profi.util.regex.RegexUtils._
+
     
     // Parse all spectrum title fields defined in the specTitleParsingRule
     val specTitleFieldMap = new HashMap[SpectrumTitleFields.Value,String]

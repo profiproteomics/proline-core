@@ -1,11 +1,10 @@
 package fr.proline.core.om.msi
 
 import org.junit.runner.RunWith
-//import org.scalatest.junit.AssertionsForJUnit
-import org.scalatest.junit.JUnitRunner
+import org.scalatestplus.junit.JUnitRunner
 import org.scalatest.GivenWhenThen
-import org.scalatest.FunSpec
-import org.scalatest.Matchers
+import org.scalatest.funspec.AnyFunSpec
+import org.scalatest.matchers.should.Matchers
 
 import com.typesafe.scalalogging.StrictLogging
 
@@ -19,7 +18,7 @@ case class SerializationSpecif(
   jsonData: String
 )
 
-abstract class AbstractSerializationSpec extends FunSpec with GivenWhenThen with Matchers with StrictLogging {
+abstract class AbstractSerializationSpec extends AnyFunSpec with GivenWhenThen with Matchers with StrictLogging {
 
   def checkJsonSpecifs( jsonSpecifs: List[SerializationSpecif] ) {
     
@@ -29,7 +28,8 @@ abstract class AbstractSerializationSpec extends FunSpec with GivenWhenThen with
   
     // Iterate over each sperialization specification
     for( jsonSpecif <- jsonSpecifs ) {
-      
+      logger.info("Compare in test "+ jsonSpecif.description )
+
       describe(jsonSpecif.description) {
         
         it("should be correctly serialized to JSON with the ProFI serializer") {
@@ -41,8 +41,8 @@ abstract class AbstractSerializationSpec extends FunSpec with GivenWhenThen with
           val jsonString = ProfiJson.serialize(objectData)
           val jsonAsMap = ProfiJson.deserialize[Map[String,Any]](jsonString)
           
-          logger.info("INPUT JSON:\n"+ jsonSpecif.jsonData)
-          logger.info("OUTPUT JSON:\n"+ jsonString)
+          logger.info("\n -------- INPUT JSON:\n"+ jsonSpecif.jsonData)
+          logger.info("\n -------- OUTPUT JSON:\n"+ jsonString)
           
           Then("it should match the Map obtained from the expected JSON string")
           jsonAsMap should equal ( ProfiJson.deserialize[Map[String,Any]](jsonSpecif.jsonData) )         
@@ -98,7 +98,7 @@ class SerializationSpec extends AbstractSerializationSpec {
       LocatedPtm(
         definition = PtmDefinition(
           id = -1,
-          location = PtmLocation.ANYWHERE.toString(),
+          location = PtmLocation.ANYWHERE.toString,
           residue = 'M',
           names = PtmNames("Oxidation","Hydroxylation"),
           ptmEvidences = Array(

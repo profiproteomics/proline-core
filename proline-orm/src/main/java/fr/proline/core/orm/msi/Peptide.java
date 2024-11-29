@@ -33,7 +33,7 @@ import java.util.Set;
 		+ " where p.id in :ids"),
 
 	@NamedQuery(name = "findMsiPeptForSeqAndPtmStr", query = "select p from fr.proline.core.orm.msi.Peptide p"
-		+ " where (upper(p.sequence) = :seq) and (upper(p.ptmString) = :ptmStr))"),
+		+ " where (upper(p.sequence) = :seq) and (upper(p.ptmString) = :ptmStr)"),
 
 	@NamedQuery(name = "findMsiPepsForSeqWOPtm", query = "select p from fr.proline.core.orm.msi.Peptide p"
 		+ " where (upper(p.sequence) = :seq) and (p.ptmString is null)")

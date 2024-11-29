@@ -24,7 +24,7 @@ class LabelFreeEntitiesSummarizer(
   def this(lcmsMapSet: MapSet,
            spectrumIdByRsIdAndScanNumber: LongMap[LongMap[Long]],
            ms2ScanNumbersByFtId: LongMap[Array[Int]]){
-    this(lcmsMapSet, spectrumIdByRsIdAndScanNumber,ms2ScanNumbersByFtId, MqPepIonAbundanceSummarizingMethod.BEST_ION)
+    this(lcmsMapSet, spectrumIdByRsIdAndScanNumber,ms2ScanNumbersByFtId, MqPepIonAbundanceSummarizingMethod.SUM)
   }
   
   private class MQPepsComputer(
@@ -263,7 +263,7 @@ class LabelFreeEntitiesSummarizer(
               val qcBestPeptideMatch = sameChargePepMatches.maxBy(_.score)
               bestPeptideMatchIdMapBuilder += qcId -> qcBestPeptideMatch.id
               
-              if (qcBestPeptideMatch.score > bestPeptideMatchScore) {
+              if (bestPeptideMatchId.equals(0L)  || qcBestPeptideMatch.score > bestPeptideMatchScore) {
                 bestPeptideMatchScore = qcBestPeptideMatch.score
                 bestPeptideMatchId = qcBestPeptideMatch.id
               }

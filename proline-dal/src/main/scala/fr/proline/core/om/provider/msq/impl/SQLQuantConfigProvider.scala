@@ -1,6 +1,5 @@
 package fr.proline.core.om.provider.msq.impl
 
-import java.util.NoSuchElementException
 
 import fr.profi.util.serialization.ProfiJson
 import fr.proline.context.UdsDbConnectionContext
@@ -23,15 +22,33 @@ class SQLQuantConfigProvider(val udsDbCtx: UdsDbConnectionContext) extends IQuan
   private val DsObjectTreeMapTable = UdsDbDataSetObjectTreeMapTable
   private val ObjectTreeTable = UdsDbObjectTreeTable
 
+  /**
+   * Get configuration used for supplied quantitation.
+   * Warning: in case of LabelFreeQuantitation, configuration will be automatically converted into last version of LabelFreeQuantConfig!
+   *
+   * @param quantitationId Id of the quantitation dataset to get configuration for.
+   * @return
+   */
   def getQuantConfigAndMethod( quantitationId:Long ): Option[(IQuantConfig,IQuantMethod)] = {
 
     val quantConfigAsStrAndquantMethodOpt = getQuantConfigAsString(quantitationId)
 
-    if (!quantConfigAsStrAndquantMethodOpt.isDefined) return None
+    if (quantConfigAsStrAndquantMethodOpt.isEmpty)
+      return None
+
     val (quantConfigAsStr, schemaName, quantMethod) = quantConfigAsStrAndquantMethodOpt.get
+    //Create correct Quant config String
+    val quantConfigAsMap = ProfiJson.deserialize[Map[String, Object]](quantConfigAsStr)
+    val quantConfigLastStr = if(quantConfigAsMap.contains("config_version")){
+      if( quantConfigAsMap("quantConfigAsMap").toString.equals("2.0"))
+        ProfiJson.serialize(LabelFreeQuantConfigConverter.convertFromV2(quantConfigAsMap))
+      else  //should already be "3.0"
+        quantConfigAsStr
+    } else
+      ProfiJson.serialize(LabelFreeQuantConfigConverter.convertFromV1(quantConfigAsMap))
 
     val quantConfig: IQuantConfig = schemaName match {
-      case LABEL_FREE_QUANT_CONFIG => ProfiJson.deserialize[LabelFreeQuantConfig](quantConfigAsStr)
+      case LABEL_FREE_QUANT_CONFIG => ProfiJson.deserialize[LabelFreeQuantConfig](quantConfigLastStr)
       case ISOBARIC_TAGGING_QUANT_CONFIG => ProfiJson.deserialize[IsobaricTaggingQuantConfig](quantConfigAsStr)
       case AGGREGATION_QUANT_CONFIG=> ProfiJson.deserialize[AggregationQuantConfig](quantConfigAsStr)
       case _ => throw new Exception("this quant method is not supported yet")
@@ -50,8 +67,8 @@ class SQLQuantConfigProvider(val udsDbCtx: UdsDbConnectionContext) extends IQuan
 
       val schemaName = quantMethod match {
         case LabelFreeQuantMethod => LABEL_FREE_QUANT_CONFIG
-        case iqMethod: IsobaricTaggingQuantMethod => ISOBARIC_TAGGING_QUANT_CONFIG
-        case rlMethod: ResidueLabelingQuantMethod => RESIDUE_LABELING_QUANT_CONFIG
+        case _: IsobaricTaggingQuantMethod => ISOBARIC_TAGGING_QUANT_CONFIG
+        case _: ResidueLabelingQuantMethod => RESIDUE_LABELING_QUANT_CONFIG
         case _ => throw new Exception("this quant method is not supported yet")
       }
 
@@ -66,7 +83,7 @@ class SQLQuantConfigProvider(val udsDbCtx: UdsDbConnectionContext) extends IQuan
         val quantConfigAsStr = udsEzDBC.selectString(objTreeSqlQuery)
         Some((quantConfigAsStr, schemaName, quantMethod))
       } catch {
-        case e: NoSuchElementException => {   //No objectTree found. In case of label free, test for aggregation params
+        case _: NoSuchElementException => {   //No objectTree found. In case of label free, test for aggregation params
           if(schemaName.equals(LABEL_FREE_QUANT_CONFIG)) {
             val objTreeSqlQuery2 = objTreeQueryBuilder.mkSelectQuery((t1, c1, t2, c2) => List(t2.CLOB_DATA) ->
               " WHERE " ~ t1.DATA_SET_ID ~ " = " ~ quantitationId ~ " AND " ~ t1.OBJECT_TREE_ID ~ " = " ~ t2.ID ~
@@ -77,7 +94,7 @@ class SQLQuantConfigProvider(val udsDbCtx: UdsDbConnectionContext) extends IQuan
               val quantConfigAsStr = udsEzDBC.selectString(objTreeSqlQuery2)
               return Some((quantConfigAsStr, AGGREGATION_QUANT_CONFIG, quantMethod))
             } catch {
-              case e: NoSuchElementException => return None
+              case _: NoSuchElementException => return None
             }
           }
           return None

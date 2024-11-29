@@ -5,9 +5,9 @@ import fr.profi.util.misc.InMemoryIdGen
 
 // TODO: remove me when SC service use the same ExperimentalDesign than other quantifications
 case class SimplifiedExperimentalDesign(
-  val biologicalSamples: Array[BiologicalSample],
-  val biologicalGroups: Array[BiologicalGroup],
-  val masterQuantChannels: Array[MasterQuantChannel]
+  biologicalSamples: Array[BiologicalSample],
+  biologicalGroups: Array[BiologicalGroup],
+  masterQuantChannels: Array[MasterQuantChannel]
 ) {
   def toExperimentalDesign() = {
     ExperimentalDesign(
@@ -28,16 +28,16 @@ case class SimplifiedExperimentalDesign(
 
 // TODO: rename MasterQuantChannelExpDesign
 case class ExperimentalDesignSetup(
-  val expDesign: ExperimentalDesign,
-  val groupSetupNumber: Int = 1,
-  val masterQCNumber: Int
+  expDesign: ExperimentalDesign,
+  groupSetupNumber: Int = 1,
+  masterQCNumber: Int
 ) {
 
   val groupSetup = expDesign.groupSetups(groupSetupNumber-1)
   val sampleNumbersByGroupNumber = expDesign.getSampleNumbersByGroupNumber(groupSetupNumber)
   
   var minSamplesCountPerGroup = Int.MaxValue
-  for( (groupNumber, sampleNumbers) <- sampleNumbersByGroupNumber if sampleNumbers.length < minSamplesCountPerGroup ) {
+  for((_, sampleNumbers) <- sampleNumbersByGroupNumber if sampleNumbers.length < minSamplesCountPerGroup) {
     minSamplesCountPerGroup = sampleNumbers.length
   }
   
@@ -45,11 +45,11 @@ case class ExperimentalDesignSetup(
   val quantChannels = masterQC.quantChannels
   val qcIds = quantChannels.map( _.id )
   val qcCount = qcIds.length
-  val qcIdxById = qcIds.zip( qcIds.indices ).toMap
+  val qcIdxById = qcIds.zipWithIndex.toMap
   val quantChannelsBySampleNumber = quantChannels.groupBy( _.sampleNumber )
   val qcSampleNumbers = quantChannels.map(_.sampleNumber)
   lazy val runGroupNumbers = {
-    val groupNumBySampleNum = (for((gNum,sNums) <- sampleNumbersByGroupNumber; sNum <- sNums) yield sNum -> gNum)
+    val groupNumBySampleNum = for((gNum,sNums) <- sampleNumbersByGroupNumber; sNum <- sNums) yield sNum -> gNum
     val groupRunPairs = quantChannels.sortBy(_.number).map(qc => (groupNumBySampleNum(qc.sampleNumber), qc.runId.get)).distinct
     groupRunPairs .map(_._1)
   }
@@ -58,16 +58,16 @@ case class ExperimentalDesignSetup(
   val samplesQcCount = expDesign.biologicalSamples.map( s => quantChannelsBySampleNumber(s.number).length )
 
   var minQCsCountPerSample = Int.MaxValue
-  for( (sampleNumber, quantChannels) <- quantChannelsBySampleNumber if quantChannels.length < minQCsCountPerSample ) {
+  for((_, quantChannels) <- quantChannelsBySampleNumber if quantChannels.length < minQCsCountPerSample) {
     minQCsCountPerSample = quantChannels.length
   }
   
   val allSampleNumbers = expDesign.biologicalSamples.map(_.number)
     
     // Map quant channel indices by the sample number
-  val qcIndicesBySampleNum = ( allSampleNumbers ).map { sampleNum =>
+  val qcIndicesBySampleNum = allSampleNumbers.map { sampleNum =>
       sampleNum -> quantChannelsBySampleNumber(sampleNum).map( qc => qcIdxById(qc.id) )
-    } toMap
+    }.toMap
     
 }
 
@@ -77,9 +77,9 @@ case class ExperimentalDesignSetup(
  * @param masterQuantChannels
  */
 case class ExperimentalDesign(
-  val biologicalSamples: Array[BiologicalSample],
-  val groupSetups: Array[GroupSetup],
-  val masterQuantChannels: Array[MasterQuantChannel]
+  biologicalSamples: Array[BiologicalSample],
+  groupSetups: Array[GroupSetup],
+  masterQuantChannels: Array[MasterQuantChannel]
 ) {
   
   @transient lazy val groupSetupByNumber = Map() ++ groupSetups.map( gs => gs.number -> gs )
@@ -126,9 +126,9 @@ object GroupSetup extends InMemoryIdGen
  */
 case class GroupSetup(
   var id: Long = 0,
-  val number: Int,
-  val name: String,
-  val biologicalGroups: Array[BiologicalGroup],
+  number: Int,
+  name: String,
+  biologicalGroups: Array[BiologicalGroup],
   var ratioDefinitions: Array[RatioDefinition] = Array()
 ) {
   if(ratioDefinitions == null) ratioDefinitions = Array()
@@ -142,9 +142,9 @@ case class GroupSetup(
  */
 case class RatioDefinition(
   var id: Long = 0,
-  val number: Int,
-  val numeratorGroupNumber: Int,
-  val denominatorGroupNumber: Int
+  number: Int,
+  numeratorGroupNumber: Int,
+  denominatorGroupNumber: Int
 )
 
 /**
@@ -155,9 +155,9 @@ case class RatioDefinition(
  */
 case class BiologicalGroup(
   var id: Long = 0,
-  val number: Int,
-  val name: String,
-  val sampleNumbers: Array[Int]
+  number: Int,
+  name: String,
+  sampleNumbers: Array[Int]
 )
 
 object QuantChannel extends InMemoryIdGen
@@ -173,10 +173,10 @@ object QuantChannel extends InMemoryIdGen
  */
 case class QuantChannel(
   var id: Long = 0,
-  val number: Int,
+  number: Int,
   var name: String,
-  val sampleNumber: Int,
-  val identResultSummaryId: Long,
+  sampleNumber: Int,
+  identResultSummaryId: Long,
   @JsonDeserialize(contentAs = classOf[java.lang.Long] )
   var lcmsMapId: Option[Long] = None,
   @JsonDeserialize(contentAs = classOf[java.lang.Long] )

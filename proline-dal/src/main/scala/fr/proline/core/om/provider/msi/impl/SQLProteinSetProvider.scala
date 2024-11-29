@@ -26,8 +26,8 @@ class SQLProteinSetProvider(
   def getProteinSetsAsOptions(protSetIds: Seq[Long]): Array[Option[ProteinSet]] = {
     if (protSetIds.isEmpty) return Array()
 
-    val protSetById = this.getProteinSets(protSetIds).map { p => p.id -> p } toMap;
-    protSetIds.map { protSetById.get(_) } toArray
+    val protSetById = this.getProteinSets(protSetIds).map { p => p.id -> p }.toMap;
+    protSetIds.map { protSetById.get(_) }.toArray
 
   }
 

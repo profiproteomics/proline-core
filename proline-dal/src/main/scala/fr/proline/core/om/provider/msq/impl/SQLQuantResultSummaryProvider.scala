@@ -13,7 +13,6 @@ class SQLQuantResultSummaryProvider(
   
   protected val mqProtSetProvider = new SQLMasterQuantProteinSetProvider(peptideCacheExecContext)
   protected val mqPepProvider = new SQLMasterQuantPeptideProvider(peptideCacheExecContext)
-  protected val mqPepIonProvider = new SQLMasterQuantPeptideIonProvider(msiDbCtx)
   
   val MQComponentTable = MsiDbMasterQuantComponentTable
   val MQCompCols = MQComponentTable.columns
@@ -29,7 +28,7 @@ class SQLQuantResultSummaryProvider(
   }*/
   
   // TODO: find a way to handle master quant reporter ions
-  def getQuantResultSummaries( quantRsmIds: Seq[Long], quantChannelIds: Seq[Long], loadResultSet: Boolean, loadProteinMatches: Option[Boolean] = None): Array[QuantResultSummary] = {
+  def getQuantResultSummaries( quantRsmIds: Seq[Long], quantChannelIds: Seq[Long], loadResultSet: Boolean, loadProteinMatches: Option[Boolean] = None, loadReporterIons: Option[Boolean]  = None): Array[QuantResultSummary] = {
     if( quantRsmIds.isEmpty ) return Array()
     
     val rsms = this.getResultSummaries(quantRsmIds, loadResultSet, loadProteinMatches)
@@ -41,6 +40,8 @@ class SQLQuantResultSummaryProvider(
     ) yield pepInst.masterQuantComponentId -> pepInst ).toMap
     
     // Load master quant peptide ions
+    val loadRepIons =  if(loadReporterIons.isDefined) {loadReporterIons.get} else {false}
+    val mqPepIonProvider = new SQLMasterQuantPeptideIonProvider(msiDbCtx,loadRepIons)
     val mqPepIons = mqPepIonProvider.getQuantResultSummariesMQPeptideIons(quantRsmIds)
     
     // Group master quant peptides ions by the masterQuantPeptideId

@@ -30,8 +30,8 @@ import fr.proline.core.om.provider.msi.impl.SQLResultSummaryProvider
 import fr.proline.core.om.provider.msi.impl.SQLSpectrumProvider
 import fr.proline.core.orm.uds.MasterQuantitationChannel
 
-import scala.collection.JavaConversions.collectionAsScalaIterable
-import scala.collection.JavaConverters.asJavaCollectionConverter
+import scala.collection.JavaConverters._
+
 import scala.collection.mutable
 import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.LongMap
@@ -62,8 +62,8 @@ class MasterQuantChannelEntityCache(
     }
   }
   
-  val udsQuantChannels = udsMasterQuantChannel.getQuantitationChannels.toList
-  val quantChannelIds = udsQuantChannels.map { _.getId } toArray
+  val udsQuantChannels = udsMasterQuantChannel.getQuantitationChannels.asScala.toList
+  val quantChannelIds = udsQuantChannels.map { _.getId }.toArray
   val quantChannelsCount = quantChannelIds.length
   
   lazy val quantChannelRsmIds = udsQuantChannels.map { udsQuantChannel =>
@@ -88,7 +88,7 @@ class MasterQuantChannelEntityCache(
   lazy val quantChannelMsiResultSets = {
     val identRsIds = quantChannelsRsIdByRsmId.values.asJavaCollection
     msiEm.createQuery("FROM fr.proline.core.orm.msi.ResultSet WHERE id IN (:ids)", classOf[fr.proline.core.orm.msi.ResultSet])
-      .setParameter("ids", identRsIds).getResultList().toList
+      .setParameter("ids", identRsIds).getResultList().asScala.toList
   }
 
   lazy val quantChannelResultSummaries = {
@@ -205,7 +205,7 @@ class MasterQuantChannelEntityCache(
     val sortedQuantChannels = udsMasterQuantChannel.getQuantitationChannels()
 
     // Retrieve run ids
-    val runIds = sortedQuantChannels.map(_.getRun.getId).toList.distinct
+    val runIds = sortedQuantChannels.asScala.map(_.getRun.getId).toList.distinct
 
     // Load the LC-MS runs
     var runNumber = 0
@@ -351,7 +351,7 @@ class Ms2SpectrumDescriptorProvider(
       logger.warn("Spectrum table has missing first scan ids and will be now updated, cross fingers...")
       
       // Create some mappings
-      val precMZBySpecId = ms2SHs.view.map { ms2Sh => ms2Sh.id -> ms2Sh.precursorMoz } toMap
+      val precMZBySpecId = ms2SHs.view.map { ms2Sh => ms2Sh.id -> ms2Sh.precursorMoz }.toMap
       val scanIdBySpecId = new LongMap[Int]()
       
       // Iterate over quant channels to update incomplete spectra headers

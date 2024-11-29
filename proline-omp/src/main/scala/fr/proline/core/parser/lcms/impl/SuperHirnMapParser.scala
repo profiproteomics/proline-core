@@ -64,7 +64,7 @@ class SuperHirnMapParser extends ILcmsMapFileParser {
         name = lcmsScanSeq.rawFileIdentifier,
         isProcessed = false,
         creationTimestamp = new Date(),
-        features = features toArray,
+        features = features.toArray,
         runId = lcmsScanSeq.runId,
         peakPickingSoftware = new PeakPickingSoftware(
           1,

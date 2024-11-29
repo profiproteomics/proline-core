@@ -7,7 +7,7 @@ import fr.proline.core.om.model.msq.ExperimentalDesign
 import fr.proline.core.orm.uds.MasterQuantitationChannel
 import fr.proline.core.service.lcms.io.ExtractMapSet
 
-import scala.collection.JavaConversions.collectionAsScalaIterable
+import scala.collection.JavaConverters._
 
 
 class Ms2DrivenLabelFreeFeatureQuantifier(
@@ -45,7 +45,7 @@ class Ms2DrivenLabelFreeFeatureQuantifier(
     val lcMsMapIdByRunId = Map() ++ lcmsMapSet.childMaps.map( lcmsMap => lcmsMap.runId.get -> lcmsMap.id )
     
     // Update the LC-MS map id of each master quant channel
-    val udsQuantChannels = udsMasterQuantChannel.getQuantitationChannels
+    val udsQuantChannels = udsMasterQuantChannel.getQuantitationChannels.asScala
     for( (udsQc,qc) <- udsQuantChannels.zip(this.masterQc.quantChannels) ) {
       val lcMsMapIdOpt = lcMsMapIdByRunId.get( qc.runId.get )
       require( lcMsMapIdOpt.isDefined, "Can't retrieve the LC-MS map id for the run #"+ qc.runId.get)

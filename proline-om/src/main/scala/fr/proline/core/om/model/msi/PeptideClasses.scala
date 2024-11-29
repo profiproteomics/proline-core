@@ -48,13 +48,13 @@ object Peptide extends InMemoryIdGen with LazyLogging {
     
     // N-term locations are: Any N-term or Protein N-term
     if( ptmDefinition.location matches """.+N-term""" ) {
-      if( searchedResidue == '\0' || searchedResidue == residues(0) ) {
+      if( searchedResidue == '\u0000' || searchedResidue == residues(0) ) {
         tmpLocatedPtms += new LocatedPtm( ptmDefinition, 0, precursorDelta, isNTerm = true )
       }
     }
     // C-term locations are: Any C-term, Protein C-term
     else if( ptmDefinition.location matches """.+C-term""" ) {
-      if( searchedResidue == '\0' || searchedResidue == residues.last ) {
+      if( searchedResidue == '\u0000' || searchedResidue == residues.last ) {
         tmpLocatedPtms += new LocatedPtm( ptmDefinition, -1, precursorDelta, isCTerm = true )
       }
     }
@@ -434,6 +434,8 @@ case class PeptideMatchProperties (
   @BeanProperty var omssaProperties: Option[PeptideMatchOmssaProperties] = None,
   @BeanProperty var xtandemProperties: Option[PeptideMatchXtandemProperties] = None,
   @BeanProperty var ptmSiteProperties: Option[PeptideMatchPtmSiteProperties] = None,
+  @JsonDeserialize(contentAs = classOf[java.lang.Float] )
+  @BeanProperty var precursorIntensityFraction: Option[Float] = None,
   @BeanProperty var spectralCount: Option[Int] = None,
   @BeanProperty var isotopeOffset: Option[Int] = None
 )

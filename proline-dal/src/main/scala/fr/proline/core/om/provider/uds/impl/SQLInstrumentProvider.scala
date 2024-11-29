@@ -47,7 +47,7 @@ class SQLInstrumentProvider(val dbCtx: DatabaseConnectionContext) extends IInstr
 
         instrument
         
-      } toArray
+      }.toArray
     }
     
   }

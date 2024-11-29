@@ -1,7 +1,7 @@
 package fr.proline.core.service.msq
 
 import com.typesafe.scalalogging.StrictLogging
-import fr.profi.util.serialization.ProfiJson
+
 import fr.proline.core.algo.msq.config.{AbundanceComputationMethod, AggregationQuantConfig, QuantChannelMapping}
 import fr.proline.core.dal._
 import fr.proline.core.dal.context.execCtxToTxExecCtx
@@ -16,7 +16,7 @@ import fr.proline.core.service.uds.CreateQuantitation
 import fr.proline.repository.DriverType
 import org.junit.{Assert, Test}
 
-import scala.collection.JavaConversions._
+import scala.collection.JavaConverters._
 
 object AggregationQuantifierTest extends AbstractDatastoreTestCase with StrictLogging {
 
@@ -85,7 +85,7 @@ class AggregationQuantifierTest extends StrictLogging {
     Assert.assertNotNull(quantitation1)
     Assert.assertNotNull(quantitation2)
 
-    val quantChannelIds = quantitation1.getQuantitationChannels.map(qc => qc.getId)
+    val quantChannelIds = quantitation1.getQuantitationChannels.asScala.map(qc => qc.getId)
 
     val quantRSMProvider = new SQLQuantResultSummaryProvider(PeptideCacheExecutionContext(executionContext))
     val quantRSM = quantRSMProvider.getQuantResultSummary(
@@ -154,7 +154,7 @@ class AggregationQuantifierTest extends StrictLogging {
 
       // Read the quantitation dataset again
       val quantitation = udsEM.find(classOf[UdsDataset], quantiId)
-      val quantChannelIds = quantitation.getQuantitationChannels.map(qc => qc.getId)
+      val quantChannelIds = quantitation.getQuantitationChannels.asScala.map(qc => qc.getId)
       val quantRSMProvider = new SQLQuantResultSummaryProvider(PeptideCacheExecutionContext(executionContext))
       val quantRSM = quantRSMProvider.getQuantResultSummary(
         udsMasterQuantChannel.getQuantResultSummaryId,

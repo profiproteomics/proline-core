@@ -215,7 +215,7 @@ public class PtmSpecificity implements Serializable {
 		if(!PtmLocation.withName(location).equals(PtmLocation.ANYWHERE)) {
 			sb.append(" (").append(location).append(")");
 		}
-		if( residue != null && residue != '\0' ) {
+		if( residue != null && residue != '\u0000' ) {
 			sb.append(" (").append(residue).append(")");
 		}
 		return sb.toString();

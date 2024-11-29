@@ -3,6 +3,8 @@ package fr.proline.core.dal.tables
 import com.typesafe.scalalogging.LazyLogging
 import fr.proline.core.dal.tables.{ColumnEnumeration => ColEnum}
 
+import scala.language.implicitConversions
+
 trait CanBuildSelectQuery extends LazyLogging {
   
   def colsListToStrList( colsList: List[ColEnum#Column] ): List[String] = {
@@ -21,7 +23,7 @@ trait CanBuildSelectQuery extends LazyLogging {
     // Retrieve table names as strings
     val tblsAsStrList = tblsList.map(_.name)
     // Map columns names by the table name
-    val colNamesByTblName = tblsList.map( tbl => tbl.name -> tbl.columnsAsStrList ) toMap
+    val colNamesByTblName = tblsList.map( tbl => tbl.name -> tbl.columnsAsStrList ).toMap
     
     // Define some vars
     val colCountByName = new collection.mutable.HashMap[String,Int]

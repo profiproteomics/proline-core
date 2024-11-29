@@ -20,12 +20,12 @@ trait PtmNamesContainer {
   val fullName: String
 }
 
-case class PtmNames(val shortName: String, val fullName: String) extends PtmNamesContainer {
+case class PtmNames(shortName: String, fullName: String) extends PtmNamesContainer {
 
   // Requirements
   require(!isEmpty(shortName),"shortName is empty")
 
-  def sameAs(that: Any) = that match {
+  def sameAs(that: Any): Boolean = that match {
     case o : PtmNames => o.shortName==shortName && o.fullName==fullName
     case _ => false
   }
@@ -36,11 +36,11 @@ case class UnimodEntry(
   // Required fields
   override val shortName: String,
   override val fullName: String,
-  val specificities: Array[Any],
+  specificities: Array[Any],
 
   // Immutable optional fields
-  val unimodId: Long = 0,
-  val ptmEvidences: Array[PtmEvidence] = null
+  unimodId: Long = 0,
+  ptmEvidences: Array[PtmEvidence] = null
 
 ) extends PtmNamesContainer {
 
@@ -66,13 +66,13 @@ case class PtmEvidence(
 
   // Required fields
   @(JsonScalaEnumeration @field)(classOf[IonTypesTypeRef])
-  val ionType: IonTypes.IonType,
+  ionType: IonTypes.IonType,
   var composition: String,
-  val monoMass: Double,
-  val averageMass: Double, // TODO: set to Float !
+  monoMass: Double,
+  averageMass: Double, // TODO: set to Float !
 
   // Immutable optional fields
-  val isRequired: Boolean = false
+  isRequired: Boolean = false
 ) {
   // Requirements
   require(ionType != null, "ionType is null")
@@ -127,19 +127,19 @@ trait IPtmSpecificity {
 case class PtmSpecificity(
 
   // Required fields
-  val location: String,
+  location: String,
 
   // Immutable optional fields
-  val residue: Char = '\0',
-  val classification: String = null, //PtmClassification.Value = PtmClassification.UNKNOWN,
-  val id: Long = 0,
-  val ptmId: Long = 0
+  residue: Char = '\u0000',
+  classification: String = null, //PtmClassification.Value = PtmClassification.UNKNOWN,
+  id: Long = 0,
+  ptmId: Long = 0
 ) extends IPtmSpecificity {
 
   // Requirements
   require(!isEmpty(location), "location is empty")
 
-  def sameAs(that: Any) = that match {
+  def sameAs(that: Any): Boolean = that match {
     case o : PtmSpecificity => o.location==location && o.residue==residue && o.classification == classification && o.ptmId == ptmId
     case _ => false
   }
@@ -153,15 +153,15 @@ case class PtmDefinition(
 
   // Required fields
   var id: Long,
-  val location: String,
-  val names: PtmNames,
-  val ptmEvidences: Array[PtmEvidence], // TODO: remove and replace by corresponding lazy attributes ???
+  location: String,
+  names: PtmNames,
+  ptmEvidences: Array[PtmEvidence], // TODO: remove and replace by corresponding lazy attributes ???
 
   // Immutable optional fields
-  val residue: Char = '\0',
-  val classification: String = null, //PtmClassification.Value = PtmClassification.UNKNOWN,
-  val ptmId: Long = 0,
-  val unimodId: Int = 0
+  residue: Char = '\u0000',
+  classification: String = null, //PtmClassification.Value = PtmClassification.UNKNOWN,
+  ptmId: Long = 0,
+  unimodId: Int = 0
 
 ) extends IPtmSpecificity {
 
@@ -176,13 +176,13 @@ case class PtmDefinition(
   }
 
   // FIXME: set back to lazy field when jackson-module-scala issue #238 is fixed
-  @transient def neutralLosses = ptmEvidences.filter( _.ionType == IonTypes.NeutralLoss ).sortBy(_.monoMass)
-  @transient def pepNeutralLosses = ptmEvidences.find( ev => ev.ionType == IonTypes.PepNeutralLoss )
-  @transient def artefacts = ptmEvidences.find( ev => ev.ionType == IonTypes.Artefact )
+  @transient def neutralLosses: Array[PtmEvidence] = ptmEvidences.filter( _.ionType == IonTypes.NeutralLoss ).sortBy(_.monoMass)
+  @transient def pepNeutralLosses: Option[PtmEvidence] = ptmEvidences.find(ev => ev.ionType == IonTypes.PepNeutralLoss )
+  @transient def artefacts: Option[PtmEvidence] = ptmEvidences.find(ev => ev.ionType == IonTypes.Artefact )
 
-  def isCompositionDefined = !isEmpty(precursorDelta.composition)
+  def isCompositionDefined: Boolean = !isEmpty(precursorDelta.composition)
 
-  def sameAs(that: Any) = that match {
+  def sameAs(that: Any): Boolean = that match {
     case o : PtmDefinition => {
       var sameEvidences = ptmEvidences.length == o.ptmEvidences.length
       for (e <- ptmEvidences) {
@@ -199,9 +199,9 @@ case class PtmDefinition(
    * Used by PM-DatasetExporter
    * TODO: rename to "toMascotString" or something else to avoid confusion with LocatedPtm.toReadableString ?
    */
-  def toReadableString() = {
-    val loc = if( location == PtmLocation.ANYWHERE.toString() ) "" else location
-    val resAsStr = if( residue != '\0' ) residue.toString else ""
+  def toReadableString(): String = {
+    val loc = if( location == PtmLocation.ANYWHERE.toString ) "" else location
+    val resAsStr = if( residue != '\u0000' ) residue.toString else ""
     val locWithRes = Seq( loc, resAsStr ).filter( isNotEmpty(_) ).mkString(" ")
 
     "%s (%s)".format(this.names.shortName,locWithRes)
@@ -247,15 +247,15 @@ object LocatedPtm {
 
 case class LocatedPtm(
   // Required fields
-  val definition: PtmDefinition,
-  val seqPosition: Int,
-  val monoMass: Double,    // TODO: retrieve from PtmDefinition ???
-  val averageMass: Double, // TODO: retrieve from PtmDefinition ??? TODO: set to Float !
-  val composition: String, // TODO: retrieve from PtmDefinition ???
+  definition: PtmDefinition,
+  seqPosition: Int,
+  monoMass: Double,    // TODO: retrieve from PtmDefinition ???
+  averageMass: Double, // TODO: retrieve from PtmDefinition ??? TODO: set to Float !
+  composition: String, // TODO: retrieve from PtmDefinition ???
 
   // Immutable optional fields
-  val isNTerm: Boolean,
-  val isCTerm: Boolean
+  isNTerm: Boolean,
+  isCTerm: Boolean
 ) {
   
   def this(
@@ -305,7 +305,7 @@ case class LocatedPtm(
   /**
    * Convert the PTM definition into a readable string (using the Proline convention).
    */
-  def toReadableString() = {
+  def toReadableString(): String = {
     val ptmDef = this.definition
     val shortName = ptmDef.names.shortName
     
@@ -400,73 +400,78 @@ case class LocatedPtm(
 }
 
 case class PtmDataSet(
+  // model version. Default version = 1.0
+  version: String = "1.0",
   // array of of the PTMs of interest
-  val ptmIds: Array[Long],
+  ptmIds: Array[Long],
   // array of Leaf RSM
-  val leafResultSummaryIds: Array[Long],
+  leafResultSummaryIds: Array[Long],
   // array of PtmSites identified
-  val ptmSites: Array[PtmSite2],
+  ptmSites: Array[PtmSite2],
   // array of Ptm Clusters
-  val ptmClusters: Array[PtmCluster]
+  ptmClusters: Array[PtmCluster]
 )
 
 case class PtmCluster(
-    val id: Long,
+    id: Long,
     // Array of PTM site locations Ids
-    val ptmSiteLocations: Array[Long],
+    ptmSiteLocations: Array[Long],
     // Best (highest PTM probability) peptide match for this PtmSiteTuple
-    val bestPeptideMatchId: Long,
+    bestPeptideMatchId: Long,
     // The localization probability (percentage between 0 and 100)
-    val localizationConfidence: Float,
+    localizationConfidence: Float,
     // Array of clusterized peptides
-    val peptideIds: Array[Long],
+    peptideIds: Array[Long],
     // array of peptide having the same sequence and modification of a matching peptide, but with their ptm located at another position
     // those peptide did not match the ptm site, but they can confuse the quantification process
-    val isomericPeptideIds: Array[Long],
+    isomericPeptideIds: Array[Long],
     // Annotation properties
     //  Idem as for Quanti/Ident: DESELECTED_MANUAL(0) DESELECTED_AUTO(1) SELECTED_AUTO(2) SELECTED_MANUAL(3)
-    val  selectionLevel: Integer,
+    selectionLevel: Integer,
     //Notation for selection_level confidence
-    val  selectionConfidence: Integer,
+    selectionConfidence: Integer,
     //Description for selection_level reason or precision
-    val  selectionInformation: String                      
+    selectionInformation: String
 )
 
 case class PtmSite2(
-    val id: Long,
+    id: Long,
     // the protein match this ptm belongs to
-    val proteinMatchId: Long,
+    proteinMatchId: Long,
     // ptm definition
-    val ptmDefinitionId: Long,
+    ptmDefinitionId: Long,
     // position of the ptm site on the protein sequence
-    val seqPosition: Int,
+    seqPosition: Int,
     // best (higher ptm probability) peptide match for this site
-    val bestPeptideMatchId: Long,
+    bestPeptideMatchId: Long,
     // The localization probability (percentage between 0 and 100)
-    val localizationConfidence: Float,
+    localizationConfidence: Float,
     // map of peptide Ids matching that site, organized by position of the modification on the peptide sequence
-    val peptideIdsByPtmPosition: Map[Int, Array[Long]],
+    peptideIdsByPtmPosition: Map[Int, Array[Long]],
     // array of peptide having the same sequence and modification of a matching peptide, but with their ptm located at another position
     // those peptide did not match the ptm site, but they can confuse the quantification process
-    val isomericPeptideIds: Array[Long]
+    isomericPeptideIds: Array[Long],
+    //specify if modification Site is a CTerm or NTerm modification
+    isNTerminal : Boolean = false,
+    isCTerminal : Boolean = false,
 )
 
 case class PtmSite(
   // the protein match this ptm belongs to
-  val proteinMatchId: Long, 
+  proteinMatchId: Long,
   // ptm definition 
-  val ptmDefinitionId: Long,
+  ptmDefinitionId: Long,
   // position of the ptm site on the protein sequence
-  val seqPosition: Int, 
+  seqPosition: Int,
   // best (higher ptm probability) peptide match for this site
-  val bestPeptideMatchId: Long,
+  bestPeptideMatchId: Long,
   // The localization probability (percentage between 0 and 100)
-  val localizationConfidence: Float,
+  localizationConfidence: Float,
   // map of peptide Ids matching that site, organized by position of the modification on the peptide sequence
-  val peptideIdsByPtmPosition: Map[Int, Array[Long]], 
+  peptideIdsByPtmPosition: Map[Int, Array[Long]],
   // array of matching peptide instances in leaf RSM
-  val peptideInstanceIds: Array[Long], 
+  peptideInstanceIds: Array[Long],
   // array of peptide instances having the same sequence and modification of a matching peptide, but with their ptm located at another position
   // those peptide instance did not match the ptm site, but they can confuse the quantification process
-  val isomericPeptideInstanceIds: Array[Long]
+  isomericPeptideInstanceIds: Array[Long]
 )

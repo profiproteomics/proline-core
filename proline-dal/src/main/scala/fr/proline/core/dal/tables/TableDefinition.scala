@@ -1,5 +1,7 @@
 package fr.proline.core.dal.tables
 
+import scala.language.implicitConversions
+
 /**
  * The Trait TableDefinition.
  *

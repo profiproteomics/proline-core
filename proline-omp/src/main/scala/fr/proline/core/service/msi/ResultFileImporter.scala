@@ -1,7 +1,6 @@
 package fr.proline.core.service.msi
 
 import java.io.File
-
 import com.typesafe.scalalogging.LazyLogging
 import fr.profi.jdbc.easy._
 import fr.profi.util.serialization.ProfiJson
@@ -25,6 +24,7 @@ import fr.proline.core.om.provider.uds.impl.{SQLPeaklistSoftwareProvider => UdsS
 import fr.proline.core.om.storer.msi.ResultFileStorer
 import fr.proline.core.om.storer.msi.RsStorer
 import fr.proline.core.om.storer.msi.impl.StorerContext
+import fr.proline.core.om.util.PeaklistSoftwareCopyUtil
 
 class ResultFileImporter(
   executionContext: IExecutionContext,
@@ -102,8 +102,10 @@ class ResultFileImporter(
       // Retrieve the peaklist software if needed
       if (resultFile.peaklistSoftware.isEmpty) {
 
-        val peaklistSoftware = _getOrCreatePeaklistSoftware(peaklistSoftwareId)
-        if (peaklistSoftware.id < 0) peaklistSoftware.id = peaklistSoftwareId
+        val udsDbCtx = this.executionContext.getUDSDbConnectionContext
+        val peaklistSoftware = PeaklistSoftwareCopyUtil.getOrCopyPeaklistSoftware(peaklistSoftwareId, msiDbCtx, udsDbCtx )
+        if (peaklistSoftware.id < 0)
+          peaklistSoftware.id = peaklistSoftwareId
 
         resultFile.peaklistSoftware = Some(peaklistSoftware)
       }
@@ -194,36 +196,5 @@ class ResultFileImporter(
     msiTransacOk
   }
 
-  private def _getOrCreatePeaklistSoftware(peaklistSoftwareId: Long): PeaklistSoftware = {
-
-    val msiDbCtx = this.executionContext.getMSIDbConnectionContext
-    val msiPklSoftProvider = new MsiSQLPklSoftProvider(msiDbCtx)
-    val udsPklSoftProvider = new UdsSQLPklSoftProvider(this.executionContext.getUDSDbConnectionContext)
-
-    val udsPklSoftOpt = udsPklSoftProvider.getPeaklistSoftware(peaklistSoftwareId)
-    require(udsPklSoftOpt.isDefined, "can't find a peaklist software for id = " + peaklistSoftwareId)
-
-    // Try to retrieve peaklist software from the MSidb
-    val msiPklSoftOpt = msiPklSoftProvider.getPeaklistSoftware(peaklistSoftwareId)
-    if (msiPklSoftOpt.isEmpty) {
-
-      // If it doesn't exist => retrieve from the UDSdb      
-      val pklSoft = udsPklSoftOpt.get
-
-      // Then insert it in the current MSIdb
-      DoJDBCWork.withEzDBC(msiDbCtx) { msiEzDBC =>
-        val peaklistInsertQuery = MsiDbPeaklistSoftwareTable.mkInsertQuery()
-        msiEzDBC.execute(
-          peaklistInsertQuery,
-          pklSoft.id,
-          pklSoft.name,
-          pklSoft.version,
-          pklSoft.properties.map(ProfiJson.serialize(_))
-        )
-      }
-    }
-
-    udsPklSoftOpt.get
-  }
 
 }

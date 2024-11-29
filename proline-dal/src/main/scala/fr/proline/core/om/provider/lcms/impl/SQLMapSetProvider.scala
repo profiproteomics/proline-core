@@ -223,7 +223,7 @@ class SQLMapSetProvider(
     }
     
     // Map master feature by their id
-    val masterFtById = masterFeatures map { mft => ( mft.id -> mft ) } toMap
+    val masterFtById = masterFeatures.map { mft => ( mft.id -> mft ) }.toMap
     
     for( mftId <- childFtBufferByMftId.keys ) {
       

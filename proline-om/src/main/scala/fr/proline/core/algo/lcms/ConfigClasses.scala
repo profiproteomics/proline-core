@@ -29,6 +29,12 @@ object MqPepIonAbundanceSummarizingMethod extends Enumeration {
   val SUM = Value
 }
 
+class MqReporterIonAbundanceSummarizingMethodRef extends TypeReference[MqReporterIonAbundanceSummarizingMethod.type]
+
+object MqReporterIonAbundanceSummarizingMethod extends Enumeration {
+  val MEDIAN = Value
+  val SUM = Value
+}
 
 class AlnSmoothingRef extends TypeReference[AlnSmoothing.type]
 
@@ -36,6 +42,15 @@ object AlnSmoothing extends Enumeration {
   val LANDMARK_RANGE = Value("LANDMARK_RANGE")
   val LOESS = Value("LOESS")
   val TIME_WINDOW = Value("TIME_WINDOW")
+}
+
+class MozCalibrationSmoothingRef extends TypeReference[MozCalibrationSmoothing.type]
+
+object MozCalibrationSmoothing extends Enumeration{
+  val LANDMARK_RANGE = Value("LANDMARK_RANGE")
+  val LOESS = Value("LOESS")
+  val TIME_WINDOW = Value("TIME_WINDOW")
+  val MEAN = Value("MEAN") //To be defined !
 }
 
 class FeatureMappingMethodRef extends TypeReference[FeatureMappingMethod.type]
@@ -93,27 +108,50 @@ case class AlignmentConfig(
   smoothingMethodParams: Option[AlnSmoothingParams] = None,
   @(JsonScalaEnumeration @field)(classOf[FeatureMappingMethodRef])
   ftMappingMethodName: FeatureMappingMethod.Value,
-  ftMappingMethodParams: FeatureMappingParams,
-    @JsonDeserialize(contentAs = classOf[java.lang.Boolean])
+  ftMappingParams: FeatureMappingParams,
+  @JsonDeserialize(contentAs = classOf[java.lang.Boolean])
   removeOutliers: Option[Boolean] = None, // getOrElse(false)
-    @JsonDeserialize(contentAs = classOf[java.lang.Boolean])
+  @JsonDeserialize(contentAs = classOf[java.lang.Boolean])
   ignoreErrors: Option[Boolean] = None    // getOrElse(false)
   )
 
 case class CrossAssignmentConfig(
   @(JsonScalaEnumeration @field)(classOf[CrossAssignMethodRef])
   methodName : CrossAssignMethod.Value,
-  ftMappingParams: FeatureMappingParams,
+  ftMappingParams: CrossAssignFeatMappingParams,
   restrainToReliableFeatures: Boolean = true,
   ftFilter: Option[Filter] = None
 )
 
 case class FeatureMappingParams(
-  @JsonDeserialize(contentAs = classOf[java.lang.Double])
-  mozTol: Option[Double] = None,
-  mozTolUnit: Option[String] = None,
-  timeTol: Float
-)
+   @JsonDeserialize(contentAs = classOf[java.lang.Double])
+   mozTol: Option[Double] = None,
+   mozTolUnit: Option[String] = None,
+   timeTol: Float
+ )
+
+// Default value to be confirmed
+case class CrossAssignFeatMappingParams(
+ @JsonDeserialize(contentAs = classOf[java.lang.Double])
+ mozTol: Option[Double] = None,
+ mozTolUnit: Option[String] = None,
+ @JsonDeserialize(contentAs = classOf[java.lang.Float])
+ timeTol: Option[Float],
+ useMozCalibration: Boolean = true,
+ useAutomaticTimeTol: Boolean = false,
+ @JsonDeserialize(contentAs = classOf[java.lang.Double])
+ maxAutoTimeTol: Option[Float] = None,
+ @JsonDeserialize(contentAs = classOf[java.lang.Double])
+ minAutoTimeTol: Option[Float] = None
+)  {
+  if(useAutomaticTimeTol){
+    require(maxAutoTimeTol.isDefined, "Max time tolerance should be specified is Automatic time tolerance mdoe")
+    require(minAutoTimeTol.isDefined, "Min time tolerance should be specified is Automatic time tolerance mdoe")
+  } else {
+    require(timeTol.isDefined,  "time tolerance should be specified in None Automatic time tolerance mode")
+  }
+
+}
 
 case class DetectionParams(
   startFromValidatedPeptides: Option[Boolean] = None,

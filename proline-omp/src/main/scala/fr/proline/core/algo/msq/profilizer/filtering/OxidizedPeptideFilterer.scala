@@ -20,7 +20,7 @@ object OxidizedPeptideDiscardingReason extends EnhancedEnum {
   val LESS_ABUNDANT_THAN_OTHER_OXIDIZED_FORM = Value("Peptide less abundant than an other oxidized/unmodified form")
 }
 
-@deprecated
+@deprecated (message = "use generic ModifiedPeptideFilter" , since = "Proline Suite 2.0")
 object OxidizedPeptideFilterer {
   
   import fr.proline.core.algo.msq.config.profilizer.OxidizedPeptideFilteringMethod._

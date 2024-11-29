@@ -23,7 +23,7 @@ class UdsDbHelper(udsDbCtx: DatabaseConnectionContext) {
   @throws(classOf[NoSuchElementException])
   def getLastProjectIdentificationNumber(projectId: Long): Int = {
 
-    DoJDBCReturningWork.withEzDBC(udsDbCtx, { ezDBC =>
+    DoJDBCReturningWork.withEzDBC(udsDbCtx){ ezDBC =>
 
       ezDBC.selectInt(datasetQB.mkSelectQuery((t, cols) =>
         List(t.NUMBER) ->
@@ -39,19 +39,19 @@ class UdsDbHelper(udsDbCtx: DatabaseConnectionContext) {
         " ORDER BY number DESC LIMIT 1"
       )*/
 
-    })
+    } //end DoJDBCReturningWork
 
   }
 
   def getDatasetProjectId(dsId: Long): Long = {
 
-    DoJDBCReturningWork.withEzDBC(udsDbCtx, { ezDBC =>
+    DoJDBCReturningWork.withEzDBC(udsDbCtx) { ezDBC =>
 
       ezDBC.selectLong(datasetQB.mkSelectQuery((t, cols) =>
         List(t.PROJECT_ID) -> "WHERE " ~ t.ID ~ "=" ~ dsId
       ))
 
-    })
+    }//end DoJDBCReturningWork
 
   }
 
@@ -60,14 +60,14 @@ class UdsDbHelper(udsDbCtx: DatabaseConnectionContext) {
     if ((dsIds == null) || dsIds.isEmpty) {
       Array.empty[Long]
     } else {
-      DoJDBCReturningWork.withEzDBC(udsDbCtx, { ezDBC =>
+      DoJDBCReturningWork.withEzDBC(udsDbCtx) { ezDBC =>
 
         ezDBC.selectLongs(datasetQB.mkSelectQuery((t, cols) =>
           List(t.RESULT_SET_ID) ->
             " WHERE " ~ t.PARENT_DATASET_ID ~ " IN(" ~ dsIds.mkString(",") ~ ")"
         ))
 
-      })
+      }//end DoJDBCReturningWork
     }
 
   }
@@ -128,7 +128,7 @@ class UdsDbHelper(udsDbCtx: DatabaseConnectionContext) {
       Array.empty[Long]
     } else {
       // Retrieve RS ids of IDENTIFICATION datasets
-      DoJDBCReturningWork.withEzDBC(udsDbCtx, { ezDBC =>
+      DoJDBCReturningWork.withEzDBC(udsDbCtx) { ezDBC =>
 
         ezDBC.selectLongs(datasetQB.mkSelectQuery((t, cols) =>
           List(t.ID) ->
@@ -136,7 +136,7 @@ class UdsDbHelper(udsDbCtx: DatabaseConnectionContext) {
             " AND " ~ t.TYPE ~ "= '" ~ DatasetType.IDENTIFICATION ~ "'"
         ))
 
-      })
+      }//end DoJDBCReturningWork
     }
 
   }
@@ -146,23 +146,23 @@ class UdsDbHelper(udsDbCtx: DatabaseConnectionContext) {
     if ((identIds == null) || identIds.isEmpty) {
       Map.empty[Long, Long]
     } else {
-      DoJDBCReturningWork.withEzDBC(udsDbCtx, { ezDBC =>
+      DoJDBCReturningWork.withEzDBC(udsDbCtx) { ezDBC =>
 
         ezDBC.select(datasetQB.mkSelectQuery((t, cols) =>
           List(t.ID, t.RESULT_SET_ID) ->
             " WHERE " ~ t.ID ~ " IN(" ~ identIds.mkString(",") ~ ")"
         )) { r =>
           toLong(r.nextAny) -> toLong(r.nextAny)
-        } toMap
+        }.toMap
 
-      })
+      }//end DoJDBCReturningWork
     }
 
   }
 
   def getRSIdByIdentificationIdForParentDSId(parentDsId: Long): Map[Long, Long] = {
 
-    DoJDBCReturningWork.withEzDBC(udsDbCtx, { ezDBC =>
+    DoJDBCReturningWork.withEzDBC(udsDbCtx) { ezDBC =>
 
       ezDBC.select(datasetQB.mkSelectQuery((t, cols) =>
         List(t.ID, t.RESULT_SET_ID) ->
@@ -170,15 +170,15 @@ class UdsDbHelper(udsDbCtx: DatabaseConnectionContext) {
           " AND " ~ t.TYPE ~ "= '" ~ DatasetType.IDENTIFICATION ~ "'"
       )) { r =>
         toLong(r.nextAny) -> toLong(r.nextAny)
-      } toMap
+      }.toMap
 
-    })
+    }//end DoJDBCReturningWork
 
   }
 
   def getProteinMatchDecoyRegexById(): Map[Long, Regex] = {
 
-    DoJDBCReturningWork.withEzDBC(udsDbCtx, { ezDBC =>
+    DoJDBCReturningWork.withEzDBC(udsDbCtx) { ezDBC =>
 
       val sqlQuery = new SelectQueryBuilder1(UdsDbProteinMatchDecoyRuleTable).mkSelectQuery(
         (t1, c1) => List(t1.ID, t1.AC_DECOY_TAG) -> ""
@@ -186,28 +186,28 @@ class UdsDbHelper(udsDbCtx: DatabaseConnectionContext) {
 
       ezDBC.select(sqlQuery) { r =>
         toLong(r.nextAny) -> new Regex(r.nextString)
-      } toMap
+      }.toMap
 
-    })
+    }//end DoJDBCReturningWork
 
   }
 
   def getMasterQuantChannelQuantRsmId(masterQuantChannelId: Long): Option[Long] = {
 
-    DoJDBCReturningWork.withEzDBC(udsDbCtx, { ezDBC =>
+    DoJDBCReturningWork.withEzDBC(udsDbCtx) { ezDBC =>
       val sqlQuery = new SelectQueryBuilder1(UdsDbMasterQuantChannelTable).mkSelectQuery(
         (t1, c1) => List(t1.QUANT_RESULT_SUMMARY_ID) ->
           " WHERE " ~ t1.ID ~ " = " ~ masterQuantChannelId
       )
 
       ezDBC.selectHeadOption(sqlQuery) { _.nextLong }
-    })
+    }//end DoJDBCReturningWork
 
   }
 
   def getQuantChannelIds(masterQuantChannelId: Long): Array[Long] = {
 
-    DoJDBCReturningWork.withEzDBC(udsDbCtx, { ezDBC =>
+    DoJDBCReturningWork.withEzDBC(udsDbCtx) { ezDBC =>
       val quantChannelQuery = new SelectQueryBuilder1(UdsDbQuantChannelTable).mkSelectQuery(
         (t1, c1) => List(t1.ID) ->
           " WHERE " ~ t1.MASTER_QUANT_CHANNEL_ID ~ " = " ~ masterQuantChannelId ~
@@ -215,27 +215,27 @@ class UdsDbHelper(udsDbCtx: DatabaseConnectionContext) {
       )
 
       ezDBC.selectLongs(quantChannelQuery)
-    })
+    }//end DoJDBCReturningWork
 
   }
   
   def getQuantChannelIdByIdentRsmId(masterQuantChannelId: Long): Map[Long,Long] = {
 
-    DoJDBCReturningWork.withEzDBC(udsDbCtx, { ezDBC =>
+    DoJDBCReturningWork.withEzDBC(udsDbCtx) { ezDBC =>
       val rsmIdForquantChannelQuery = new SelectQueryBuilder1(UdsDbQuantChannelTable).mkSelectQuery(
         (t1, c1) => List(t1.IDENT_RESULT_SUMMARY_ID, t1.ID) ->
         " WHERE " ~ t1.MASTER_QUANT_CHANNEL_ID ~ " = " ~ masterQuantChannelId)
 
       ezDBC.select(rsmIdForquantChannelQuery) { r =>
         r.nextLong -> r.nextLong
-      } toMap
-    })
+      }.toMap
+    }// end DoJDBCReturningWork
 
   }
 
   def getMasterQuantChannelIdsForQuantId(quantDatasetId: Long): Array[Long] = {
 
-    DoJDBCReturningWork.withEzDBC(udsDbCtx, { ezDBC =>
+    DoJDBCReturningWork.withEzDBC(udsDbCtx) { ezDBC =>
       val quantChannelQuery = new SelectQueryBuilder1(UdsDbMasterQuantChannelTable).mkSelectQuery(
         (t1, c1) => List(t1.ID) ->
           " WHERE " ~ t1.QUANTITATION_ID ~ " = " ~ quantDatasetId ~
@@ -243,20 +243,20 @@ class UdsDbHelper(udsDbCtx: DatabaseConnectionContext) {
       )
 
       ezDBC.selectLongs(quantChannelQuery)
-    })
+    }//end DoJDBCReturningWork
 
   }
 
   def getQuantitationId(masterQuantChannelId: Long): Option[Long] = {
 
-    DoJDBCReturningWork.withEzDBC(udsDbCtx, { ezDBC =>
+    DoJDBCReturningWork.withEzDBC(udsDbCtx) { ezDBC =>
       val sqlQuery = new SelectQueryBuilder1(UdsDbMasterQuantChannelTable).mkSelectQuery(
         (t1, c1) => List(t1.QUANTITATION_ID) ->
           " WHERE " ~ t1.ID ~ " = " ~ masterQuantChannelId
       )
 
       ezDBC.selectHeadOption(sqlQuery) { _.nextLong }
-    })
+    }//end DoJDBCReturningWork
 
   }
 

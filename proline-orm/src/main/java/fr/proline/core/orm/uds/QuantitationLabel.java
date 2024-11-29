@@ -1,15 +1,11 @@
 package fr.proline.core.orm.uds;
 
-import java.io.Serializable;
+import fr.proline.core.orm.util.JsonSerializer;
 
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
-import javax.persistence.JoinColumn;
-import javax.persistence.ManyToOne;
-import javax.persistence.Table;
+import java.io.Serializable;
+import java.util.Map;
+
+import javax.persistence.*;
 
 /**
  * The persistent class for the quant_label database table.
@@ -39,6 +35,9 @@ public class QuantitationLabel implements Serializable {
 	@ManyToOne
 	@JoinColumn(name = "quant_method_id")
 	private QuantitationMethod method;
+
+	@Transient
+	private Map<String, Object> serializedPropertiesMap = null;
 
 	public QuantitationLabel() {
 	}
@@ -89,6 +88,28 @@ public class QuantitationLabel implements Serializable {
 
 	public void setMethod(QuantitationMethod method) {
 		this.method = method;
+	}
+
+	public java.util.Map<String, Object> getSerializedPropertiesAsMap() throws Exception {
+		if ((serializedPropertiesMap == null) && (serializedProperties != null)) {
+			serializedPropertiesMap = JsonSerializer.getMapper().readValue(
+					getSerializedProperties(), java.util.Map.class
+			);
+		}
+		return serializedPropertiesMap;
+	}
+
+	@Override
+	public int hashCode() {
+		return Long.valueOf(getId()).hashCode();
+	}
+
+	@Override
+	public boolean equals(Object o) {
+		if (this == o) return true;
+		if (o == null || getClass() != o.getClass()) return false;
+		QuantitationLabel that = (QuantitationLabel) o;
+		return id == that.id;
 	}
 
 }

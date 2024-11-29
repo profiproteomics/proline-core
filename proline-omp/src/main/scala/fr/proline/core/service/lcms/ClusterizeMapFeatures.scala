@@ -52,7 +52,7 @@ class ClusterizeMapFeatures(val lcmsDbCtx: LcMsDbConnectionContext, lcmsMap: Pro
     val processedMapId = lcmsMap.id
     val rawMapId = rawMapIds(0)
     
-    DoJDBCWork.withEzDBC( lcmsDbCtx, { ezDBC =>
+    DoJDBCWork.withEzDBC( lcmsDbCtx) { ezDBC =>
       
       val inExprLimit = ezDBC.getInExpressionCountLimit
       
@@ -117,7 +117,7 @@ class ClusterizeMapFeatures(val lcmsDbCtx: LcMsDbConnectionContext, lcmsMap: Pro
       // Update service results
       featuresWithClusters = lcmsMapWithClusters.features
     
-    })
+    }//end DoJDBCWork
     
     // Commit transaction if it was initiated locally
     if (!wasInTransaction) lcmsDbCtx.commitTransaction()

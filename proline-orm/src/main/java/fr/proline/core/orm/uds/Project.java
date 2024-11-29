@@ -230,6 +230,8 @@ public class Project implements Serializable {
 	public void addMember(final UserAccount member, boolean writePermission) {
 
 		if (member != null) {
+			if(isProjectMember(member)) //already member
+				return;
 
 			Set<ProjectUserAccountMap> localMembers = getProjectUserAccountMap();
 
@@ -252,7 +254,7 @@ public class Project implements Serializable {
 
 	}
 
-	public void removeMember(final UserAccount member) {
+	public ProjectUserAccountMap removeMember(final UserAccount member) {
 		final Set<ProjectUserAccountMap> localMembers = getProjectUserAccountMap();
 
 		ProjectUserAccountMap userMap2Rem = null;
@@ -262,12 +264,11 @@ public class Project implements Serializable {
 					userMap2Rem = nextMember;
 					break;
 				}
-
 			}
 			if (userMap2Rem != null)
 				localMembers.remove(userMap2Rem);
 		}
-
+		return userMap2Rem;
 	}
 
 	public boolean isProjectMember(UserAccount member) {

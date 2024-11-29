@@ -15,100 +15,100 @@ object PeptideCacheConstant {
   val MAXIMUM_CACHE_SIZE = 4000000
 }
 
-// Old implementation of LMN
-trait LruCache[A,B] {
-  
-  protected def calculateCacheSize(): Int
-  protected def INITIAL_CAPACITY: Int
-  protected def LOAD_FACTOR: Float
-  
-  private val CACHE_SIZE = calculateCacheSize()
-  
-  private val _cacheLock = new Object()
-
-  /* Use a Java LinkedHashMap configured as LRU cache (with access-order) ; @GuardedBy("_cacheLock") */
-  private val _lruCache = new java.util.LinkedHashMap[A, B](INITIAL_CAPACITY, LOAD_FACTOR, true) {
-    override def removeEldestEntry(eldest: java.util.Map.Entry[A, B]): Boolean = {
-      size > CACHE_SIZE
-    }
-  }
-  
-  def getOrElse(key: A)(fn: => B): B = { 
-    get(key).getOrElse {
-      val result = fn
-      put(key, result)
-      result
-    }
-  }
-
-  def get(key: A): Option[B] = _cacheLock.synchronized {
-    Option(_lruCache.get(key))
-  }
-
-  def put(key: A, value: B): B = _cacheLock.synchronized {
-    _lruCache.put(key, value)
-  }
-
-  def remove(key: A): B = _cacheLock.synchronized {
-    _lruCache.remove(key)
-  }
-
-  /**
-   * Clear (purge all entries) this static cache.
-   */
-  def clear() {
-    _cacheLock.synchronized {
-      _lruCache.clear()
-    }
-  }
-  
-}
-
-class OldPeptideCache extends LruCache[Long,Peptide] with LazyLogging {
-  
-  import PeptideCacheConstant._
-
-  // Create a static HashMap to cache loaded peptides
-  // TODO: use cache for other queries than getPeptides(peptideIds)
-  // TODO: implement cache at context level
-
-  protected val INITIAL_CAPACITY = 16 // Default Java Map  initial capacity and load factor
-  protected val LOAD_FACTOR = 0.75f
-
-  /**
-   * Clear (purge all entries) this static cache.
-   */
-  override def clear() {
-    super.clear()
-
-    logger.info("PeptideCache cache cleared")
-  }
-
-  /* Private methods */
-  protected def calculateCacheSize(): Int = {
-    val maxMemory = Runtime.getRuntime.maxMemory
-
-    val cacheSize = if (maxMemory > (4 * GIGA)) {
-      /* Big cacheSize = 200000 + (100000 for each GiB over 4 GiB) */
-      val extendedMemory = maxMemory - 4 * GIGA
-
-      val nBlocks = (extendedMemory + GIGA - 1) / GIGA // rounding up
-
-      val bigCacheSize = (INITIAL_CACHE_SIZE + nBlocks * CACHE_SIZE_INCREMENT).asInstanceOf[Int]
-
-      logger.trace("MaxMemory: " + maxMemory + "  NBlocks over 4 Gib : " + nBlocks + "  bigCacheSize: " + bigCacheSize)
-
-      bigCacheSize.min(MAXIMUM_CACHE_SIZE)
-    } else {
-      INITIAL_CACHE_SIZE
-    }
-
-    logger.info("PeptideCache size: " + cacheSize)
-
-    cacheSize
-  }
-
-}
+//// Old implementation of LMN
+//trait LruCache[A,B] {
+//
+//  protected def calculateCacheSize(): Int
+//  protected def INITIAL_CAPACITY: Int
+//  protected def LOAD_FACTOR: Float
+//
+//  private val CACHE_SIZE = calculateCacheSize()
+//
+//  private val _cacheLock = new Object()
+//
+//  /* Use a Java LinkedHashMap configured as LRU cache (with access-order) ; @GuardedBy("_cacheLock") */
+//  private val _lruCache = new java.util.LinkedHashMap[A, B](INITIAL_CAPACITY, LOAD_FACTOR, true) {
+//    override def removeEldestEntry(eldest: java.util.Map.Entry[A, B]): Boolean = {
+//      size > CACHE_SIZE
+//    }
+//  }
+//
+//  def getOrElse(key: A)(fn: => B): B = {
+//    get(key).getOrElse {
+//      val result = fn
+//      put(key, result)
+//      result
+//    }
+//  }
+//
+//  def get(key: A): Option[B] = _cacheLock.synchronized {
+//    Option(_lruCache.get(key))
+//  }
+//
+//  def put(key: A, value: B): B = _cacheLock.synchronized {
+//    _lruCache.put(key, value)
+//  }
+//
+//  def remove(key: A): B = _cacheLock.synchronized {
+//    _lruCache.remove(key)
+//  }
+//
+//  /**
+//   * Clear (purge all entries) this static cache.
+//   */
+//  def clear() {
+//    _cacheLock.synchronized {
+//      _lruCache.clear()
+//    }
+//  }
+//
+//}
+//
+//class OldPeptideCache extends LruCache[Long,Peptide] with LazyLogging {
+//
+//  import PeptideCacheConstant._
+//
+//  // Create a static HashMap to cache loaded peptides
+//  // TODO: use cache for other queries than getPeptides(peptideIds)
+//  // TODO: implement cache at context level
+//
+//  protected val INITIAL_CAPACITY = 16 // Default Java Map  initial capacity and load factor
+//  protected val LOAD_FACTOR = 0.75f
+//
+//  /**
+//   * Clear (purge all entries) this static cache.
+//   */
+//  override def clear() {
+//    super.clear()
+//
+//    logger.info("PeptideCache cache cleared")
+//  }
+//
+//  /* Private methods */
+//  protected def calculateCacheSize(): Int = {
+//    val maxMemory = Runtime.getRuntime.maxMemory
+//
+//    val cacheSize = if (maxMemory > (4 * GIGA)) {
+//      /* Big cacheSize = 200000 + (100000 for each GiB over 4 GiB) */
+//      val extendedMemory = maxMemory - 4 * GIGA
+//
+//      val nBlocks = (extendedMemory + GIGA - 1) / GIGA // rounding up
+//
+//      val bigCacheSize = (INITIAL_CACHE_SIZE + nBlocks * CACHE_SIZE_INCREMENT).asInstanceOf[Int]
+//
+//      logger.trace("MaxMemory: " + maxMemory + "  NBlocks over 4 Gib : " + nBlocks + "  bigCacheSize: " + bigCacheSize)
+//
+//      bigCacheSize.min(MAXIMUM_CACHE_SIZE)
+//    } else {
+//      INITIAL_CACHE_SIZE
+//    }
+//
+//    logger.info("PeptideCache size: " + cacheSize)
+//
+//    cacheSize
+//  }
+//
+//}
 
 
 trait KVContainer[A, B]  {

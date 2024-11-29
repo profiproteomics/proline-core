@@ -31,7 +31,7 @@ object ResultSetBuilder {
 
     val rsProtMatches = protMatchesByRsId.getOrElse(rsId, Array.empty[ProteinMatch])
     val rsPepMatches = pepMatchesByRsId.getOrElse(rsId, Array.empty[PeptideMatch])
-    val rsPeptides = rsPepMatches map { _.peptide } distinct
+    val rsPeptides = rsPepMatches.map { _.peptide }.distinct
     val rsType = r.getString(RSCols.TYPE)
     val isDecoy = rsType matches "DECOY_.*"
     val isSearchResult = rsType matches ".*SEARCH"

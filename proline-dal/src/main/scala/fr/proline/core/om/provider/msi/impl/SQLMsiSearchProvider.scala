@@ -64,9 +64,9 @@ class SQLMsiSearchProvider(
 
   def getMSISearchesAsOptions(msiSearchIds: Seq[Long]): Array[Option[MSISearch]] = {
     val msiSearches = this.getMSISearches(msiSearchIds)
-    val msiSearchById = msiSearches.map { s => s.id -> s } toMap
+    val msiSearchById = msiSearches.map { s => s.id -> s }.toMap
 
-    msiSearchIds.map { msiSearchById.get(_) } toArray
+    msiSearchIds.map { msiSearchById.get(_) }.toArray
   }
 
   def getSearchSettingsList(searchSettingsIds: Seq[Long]): Array[SearchSettings] = {

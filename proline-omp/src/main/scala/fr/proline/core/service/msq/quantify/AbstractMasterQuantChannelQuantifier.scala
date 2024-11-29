@@ -16,8 +16,7 @@ import fr.proline.core.orm.msi.repository.ObjectTreeSchemaRepository
 import fr.proline.core.orm.msi.{MasterQuantComponent => MsiMasterQuantComponent, MasterQuantPeptideIon => MsiMasterQuantPepIon, MasterQuantReporterIon => MsiMasterQuantRepIon, ObjectTree => MsiObjectTree, ObjectTreeSchema => MsiObjectTreeSchema, PeptideInstance => MsiPeptideInstance, PeptideInstancePeptideMatchMap => MsiPepInstPepMatchMap, PeptideInstancePeptideMatchMapPK => MsiPepInstPepMatchMapPK, PeptideMatch => MsiPeptideMatch, PeptideMatchRelation => MsiPeptideMatchRelation, PeptideMatchRelationPK => MsiPeptideMatchRelationPK, PeptideReadablePtmString => MsiPeptideReadablePtmString, PeptideReadablePtmStringPK => MsiPeptideReadablePtmStringPK, PeptideSet => MsiPeptideSet, PeptideSetPeptideInstanceItem => MsiPeptideSetItem, PeptideSetPeptideInstanceItemPK => MsiPeptideSetItemPK, PeptideSetProteinMatchMap => MsiPepSetProtMatchMap, PeptideSetProteinMatchMapPK => MsiPepSetProtMatchMapPK, ProteinMatch => MsiProteinMatch, ProteinSet => MsiProteinSet, ProteinSetProteinMatchItem => MsiProtSetProtMatchItem, ProteinSetProteinMatchItemPK => MsiProtSetProtMatchItemPK, ResultSet => MsiResultSet, ResultSummary => MsiResultSummary, Scoring => MsiScoring, SequenceMatch => MsiSequenceMatch}
 import fr.proline.core.orm.uds.MasterQuantitationChannel
 
-import scala.collection.JavaConversions.asScalaSet
-import scala.collection.JavaConversions.setAsJavaSet
+import scala.collection.JavaConverters._
 import scala.collection.mutable
 import scala.collection.mutable.{ArrayBuffer, HashMap, LongMap}
 
@@ -100,7 +99,7 @@ abstract class AbstractMasterQuantChannelQuantifier extends LazyLogging {
       entityCache.quantChannelMsiResultSets
     }  else {
       val identRSM = msiEm.find(classOf[MsiResultSummary], masterQc.identResultSummaryId.get)
-      identRSM.getResultSet.getChildren().toList
+      identRSM.getResultSet.getChildren().asScala.toList
     }
     _storeMsiQuantResultSet(msiIdentResultSets)
   }
@@ -116,7 +115,7 @@ abstract class AbstractMasterQuantChannelQuantifier extends LazyLogging {
     msiQuantResultSet.setName("")
     msiQuantResultSet.setType(MsiResultSet.Type.QUANTITATION)
     msiQuantResultSet.setCreationTimestamp(curSQLTime)
-    msiQuantResultSet.setChildren(childrenRS.toSet[MsiResultSet])
+    msiQuantResultSet.setChildren(childrenRS.toSet[MsiResultSet].asJava)
     msiEm.persist(msiQuantResultSet)
 
     msiQuantResultSet
@@ -130,7 +129,7 @@ abstract class AbstractMasterQuantChannelQuantifier extends LazyLogging {
     msiQuantRSM.setResultSet(msiQuantResultSet)
     // Retrieve children ResultSummary and link them to the msiQuantRSM
     val rsms: Array[MsiResultSummary] = for(rsmId <- childrenRSMIds) yield msiEm.find(classOf[MsiResultSummary],rsmId)
-    msiQuantRSM.setChildren(new java.util.HashSet(rsms.toSet))
+    msiQuantRSM.setChildren(new java.util.HashSet(rsms.toSet.asJavaCollection))
     msiEm.persist(msiQuantRSM)
 
     msiQuantRSM
@@ -142,7 +141,7 @@ abstract class AbstractMasterQuantChannelQuantifier extends LazyLogging {
         entityCache.quantChannelResultSummaries.map(_.id)
       } else {
         val identRSM = msiEm.find(classOf[MsiResultSummary], masterQc.identResultSummaryId.get)
-        identRSM.getChildren().map(_.getId).toArray
+        identRSM.getChildren().asScala.map(_.getId).toArray
       }
     }
     storeMsiQuantResultSummary(msiQuantResultSet, childrenRsmIds)
@@ -327,7 +326,8 @@ abstract class AbstractMasterQuantChannelQuantifier extends LazyLogging {
     msiMQPepIon.setMasterQuantPeptideId(mqPep.id)
     msiMQPepIon.setResultSummary(msiRSM)
 
-    if (mqPepIon.properties.isDefined) msiMQPepIon.setSerializedProperties(ProfiJson.serialize(mqPepIon.properties.get))
+    if (mqPepIon.properties.isDefined)
+      msiMQPepIon.setSerializedProperties(ProfiJson.serialize(mqPepIon.properties.get))
     if (mqPep.peptideInstance.isDefined) {
       val msiPepInst = this.msiEm.find(classOf[MsiPeptideInstance],mqPep.peptideInstance.get.id)
       msiMQPepIon.setPeptideInstance(msiPepInst)

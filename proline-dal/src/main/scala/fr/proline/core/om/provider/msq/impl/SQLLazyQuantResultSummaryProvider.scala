@@ -1,16 +1,10 @@
 package fr.proline.core.om.provider.msq.impl
 
 import fr.profi.util.collection._
-import fr.profi.util.primitives._
-import fr.proline.context._
-import fr.proline.core.dal.tables.SelectQueryBuilder._
-import fr.proline.core.dal.tables.msi.MsiDbMasterQuantComponentTable
-import fr.proline.core.dal.tables.msi.MsiDbObjectTreeTable
+import fr.proline.core.dal.tables.msi.{MsiDbMasterQuantComponentTable, MsiDbObjectTreeTable}
 import fr.proline.core.om.model.msq._
 import fr.proline.core.om.provider.PeptideCacheExecutionContext
 import fr.proline.core.om.provider.msi.impl.SQLLazyResultSummaryProvider
-import fr.proline.core.om.provider.msi.cache.PeptideCache
-import fr.proline.core.om.provider.msq.IQuantResultSummaryProvider
 
 class SQLLazyQuantResultSummaryProvider(
   override val peptideCacheExecutionContext: PeptideCacheExecutionContext,

@@ -20,12 +20,16 @@ object PeaklistSoftwareBuilder {
   def buildPeaklistSoftware(record: IValueContainer): PeaklistSoftware = {
     
     val r = record
-    
+    //Convert read properies to JSON Compatible string
+    var plSoftProp = r.getStringOption(pklSoftCols.SERIALIZED_PROPERTIES)
+    if (plSoftProp.isDefined && plSoftProp.get.contains("\\"))
+      plSoftProp = Some(plSoftProp.get.replace("\\", "\\\\"))
+
     new PeaklistSoftware(
       id = r.getLong(pklSoftCols.ID),
       name = r.getString(pklSoftCols.NAME),
       version = r.getStringOrElse(pklSoftCols.VERSION,""),
-      properties = r.getStringOption(pklSoftCols.SERIALIZED_PROPERTIES).map( ProfiJson.deserialize[PeaklistSoftwareProperties](_) )
+      properties = plSoftProp.map( ProfiJson.deserialize[PeaklistSoftwareProperties](_) )
     )
 
   }

@@ -135,11 +135,11 @@ public class PostgresDatabaseConnector extends AbstractDatabaseConnector {
 
 		final String serverName = fakeURI.getHost();
 		if (serverName != null) {
-			source.setServerName(serverName);
+			source.setServerNames(new String[]{serverName});
 		}
 		final int serverPort = fakeURI.getPort();
 		if (serverPort != -1) {
-			source.setPortNumber(serverPort);
+			source.setPortNumbers(new int[]{serverPort});
 		}
 
 		final String databasePath = extractDatabaseName(fakeURI.getPath());

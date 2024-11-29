@@ -66,7 +66,7 @@ class AuthenticationTest extends DatabaseTestCase with StrictLogging {
     val isLoginOK = service.runService()
     
     if( !isLoginOK) {
-      logger.error( service getAuthenticateResultMessage )
+      logger.error( service.getAuthenticateResultMessage() )
     }
 
     assertTrue(isLoginOK)

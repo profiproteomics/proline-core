@@ -35,7 +35,7 @@ class MapAlignmentFakeGenerator(
   amplitude: Float = 1f
   ) {
   
-  def generateMapAlignment( timeList: Array[Float], refMapId: Long, targetMapId: Long, massRange: Pair[Float,Float] ): MapAlignment = {
+  def generateMapAlignment( timeList: Array[Float], refMapId: Long, targetMapId: Long, massRange: Tuple2[Float,Float] ): MapAlignment = {
     
     val deltaTimeList = distortion( timeList ).map( _ * amplitude )
     

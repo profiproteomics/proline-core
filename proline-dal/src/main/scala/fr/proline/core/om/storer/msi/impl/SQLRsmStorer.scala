@@ -96,7 +96,7 @@ private[msi] class SQLRsmStorer() extends IRsmStorer {
             
         if(!peaklistIdSqlQuery.isEmpty()) {
             var firstTimeNullErrHappened: Boolean = false // indicates if 1 or more error of this type occurred      
-            DoJDBCWork.withEzDBC(execCtx.getMSIDbConnectionContext(), { ezDBC =>
+            DoJDBCWork.withEzDBC(execCtx.getMSIDbConnectionContext()) { ezDBC =>
           
             //val sqlQuery = "SELECT id, title, first_time FROM spectrum WHERE peaklist_id in (" + peaklistIdSqlQuery + ")"
             val sqlQuery = new SelectQueryBuilder1(MsiDbSpectrumTable).mkSelectQuery( (t,c) =>
@@ -123,7 +123,7 @@ private[msi] class SQLRsmStorer() extends IRsmStorer {
                 }
               }
             }
-          }) //END DoJDBCWork
+          } //END DoJDBCWork
         } //END peaklistIdSqlQuery not empty !
      
      } else 
@@ -195,7 +195,7 @@ private[msi] class SQLRsmStorer() extends IRsmStorer {
     // Retrieve peptide_set columns then remove id column
     val pepSetInsertQuery = MsiDbPeptideSetTable.mkInsertQuery { (c,colsList) => colsList.filter( _ != c.ID) }
         
-    DoJDBCWork.withEzDBC( msiDbCtx, { msiEzDBC =>
+    DoJDBCWork.withEzDBC( msiDbCtx) { msiEzDBC =>
       
       // Insert peptide sets
       msiEzDBC.executePrepared( pepSetInsertQuery, true ) { stmt =>
@@ -301,7 +301,7 @@ private[msi] class SQLRsmStorer() extends IRsmStorer {
           }
         }
       }
-    })
+    }//End DoJDBCReturningWork
     
     rsm.peptideSets.length
   }
@@ -317,7 +317,7 @@ private[msi] class SQLRsmStorer() extends IRsmStorer {
                              }
     val msiDbCtx = execCtx.getMSIDbConnectionContext
     
-    DoJDBCWork.withEzDBC( msiDbCtx, { msiEzDBC =>
+    DoJDBCWork.withEzDBC( msiDbCtx) { msiEzDBC =>
     
       // Insert protein sets
       msiEzDBC.executePrepared( protSetInsertQuery, true ) { stmt =>
@@ -375,7 +375,7 @@ private[msi] class SQLRsmStorer() extends IRsmStorer {
           }
         }
       }
-    }) // End of JDBC work
+    } // End of JDBC work
         
     rsm.proteinSets.length
     

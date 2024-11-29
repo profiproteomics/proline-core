@@ -16,7 +16,7 @@ import fr.proline.core.orm.msi.{ObjectTreeSchema, ResultSummary => MsiResultSumm
 import fr.proline.core.orm.uds.MasterQuantitationChannel
 import fr.proline.core.service.lcms.io.ExtractMapSet
 
-import scala.collection.JavaConversions.collectionAsScalaIterable
+import scala.collection.JavaConverters._
 
 class ResidueLabelingQuantifier(
   val executionContext: IExecutionContext,
@@ -57,7 +57,6 @@ class ResidueLabelingQuantifier(
 
     // Store the master quant result set
     val msiQuantResultSet = this.storeMsiQuantResultSet()
-    val quantRsId = msiQuantResultSet.getId
 
     // Create corresponding master quant result summary
     val msiQuantRsm = this.storeMsiQuantResultSummary(msiQuantResultSet)
@@ -73,7 +72,7 @@ class ResidueLabelingQuantifier(
     // TODO: remove code redundancy with the AbstractLabelFreeFeatureQuantifier (maybe add a dedicated method in AbstractMasterQuantChannelQuantifier)
     val rsmProvider = new SQLResultSummaryProvider(PeptideCacheExecutionContext(executionContext))
     val rsmDuplicator =  new RsmDuplicator(rsmProvider)
-    val quantRsm = rsmDuplicator.cloneAndStoreRSM(mergedResultSummary, msiQuantRsm, msiQuantResultSet, !masterQc.identResultSummaryId.isDefined, msiEm)
+    val quantRsm = rsmDuplicator.cloneAndStoreRSM(mergedResultSummary, msiQuantRsm, msiQuantResultSet, masterQc.identResultSummaryId.isEmpty, msiEm)
     
     // Compute and store quant entities (MQ Peptides, MQ ProteinSets)
     this.computeAndStoreQuantEntities(msiQuantRsm, quantRsm)
@@ -118,14 +117,14 @@ class ResidueLabelingQuantifier(
     val ms2ScanNumbersByFtId = entityCache.getMs2ScanNumbersByFtId(lcMsScans, rawMapIds)
 
 
-    val entitiesSummarizer = if(lfqConfig.pepIonSummarizingMethdd.isDefined) {
+    val entitiesSummarizer = if(lfqConfig.pepIonSummarizingMethod.isDefined) {
       new ResidueLabelingEntitiesSummarizer(
         this.qcByRSMIdAndTagId,
         this.tagByPtmId,
         lcmsMapSet,
         spectrumIdByRsIdAndScanNumber,
         ms2ScanNumbersByFtId,
-        lfqConfig.pepIonSummarizingMethdd.get)
+        lfqConfig.pepIonSummarizingMethod.get)
     } else {
       new ResidueLabelingEntitiesSummarizer(
         this.qcByRSMIdAndTagId,
@@ -146,7 +145,7 @@ class ResidueLabelingQuantifier(
 
     val lcMsMapIdByRunId = Map() ++ lcmsMapSet.childMaps.map( lcmsMap => lcmsMap.runId.get -> lcmsMap.id )
     // Update the LC-MS map id of each master quant channel
-    val udsQuantChannels = udsMasterQuantChannel.getQuantitationChannels
+    val udsQuantChannels = udsMasterQuantChannel.getQuantitationChannels.asScala
     for( (udsQc,qc) <- udsQuantChannels.zip(this.masterQc.quantChannels) ) {
       val lcMsMapIdOpt = lcMsMapIdByRunId.get( qc.runId.get )
       require( lcMsMapIdOpt.isDefined, "Can't retrieve the LC-MS map id for the run #"+ qc.runId.get)
