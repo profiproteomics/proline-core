@@ -54,7 +54,6 @@ object PeaklistSoftwareCopyUtil {
         val jdbcWork = new JDBCWork {
 
           override def execute(con: Connection) {
-
             val pStmt = con.prepareStatement("insert into " + MsiDbPeaklistSoftwareTable.name + " (" + MsiDbPeaklistSoftwareTable.columnsAsStrList.filter(_ != MsiDbPeaklistSoftwareTable.columns.SERIALIZED_PROPERTIES.toString()).mkString(",") + ") VALUES (?,?,?)")
             pStmt.setLong(1, pklSoft.id)
             pStmt.setString(2, pklSoft.name)

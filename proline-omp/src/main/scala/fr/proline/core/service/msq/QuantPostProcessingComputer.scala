@@ -92,7 +92,7 @@ class QuantPostProcessingComputer(
 
     this.logger.info("Running service Quant Post Processing Computer.")
     experimentalDesign.masterQuantChannels(0).quantChannels.foreach(qCh => {
-      logger.debug("  --TEST PP :  next QCH - nbr " +qCh.name+" - "+qCh.number+" has label "+qCh.quantLabelId)
+      logger.trace("  --TEST PP :  next QCH - " +qCh.name+" - nbr: "+qCh.number+" has label id: "+qCh.quantLabelId)
     })
     QuantPostProcessingComputer.nbPifError = 0 //reset nb error
 
@@ -109,25 +109,26 @@ class QuantPostProcessingComputer(
 
     val isIsobaricQuant = udsMasterQuantChannel.getDataset.getMethod.getType.equals(QuantitationMethod.Type.ISOBARIC_TAGGING.toString)
     var isValidQuantMethod  = isIsobaricQuant
-    logger.debug("  --TEST PP :  isIsobaricQuant " +isIsobaricQuant)
+
     val qChIdsSorted: Seq[ArrayBuffer[Long]] = if (isIsobaricQuant) {
 
       val qChannelsByLabelId = mutable.Map.empty[Long, Array[QuantitationChannel]] ++ udsMasterQuantChannel.getQuantitationChannels.asScala.toArray.groupBy(_.getQuantitationLabel.getId)
+      //VDS : getMethod.getLabels return labels in 'number' order and toSeq keep order ...  methodLabelIds is ordered by QuantLabel.number order !
       val methodLabelIds: Seq[Long] = udsMasterQuantChannel.getDataset.getMethod.getLabels.asScala.map(l => l.getId).toSeq
       val fullOrderedQChannels = new ArrayBuffer[ArrayBuffer[Long]]() //Get grouped qCh; qch for each label from Quant Method
 
       if( qChannelsByLabelId.count(qchLabelId => methodLabelIds.contains(qchLabelId._1))!= qChannelsByLabelId.size){//some qChannel label don't belong to quant method
         isValidQuantMethod = false
-        logger.debug("  --TEST PP : NOT isValidQuantMethod  => some qChannel label don't belong to quant method")
+        logger.debug("  -- PP IsobaricQuant : NOT ValidQuantMethod  => some qChannel label don't belong to quant method")
       } else {
         var isRemainingQCh = true
         while(isRemainingQCh) {
           val orderedQChannels = new ArrayBuffer[Long]() //Get one group of qChannels representing label, in Quant Method order
           for (lid <- methodLabelIds.sorted) {
-            var addedElem = "" //for --TEST PP todo remove it
+//            var addedElem = "" //for --TEST PP todo remove it
             if (qChannelsByLabelId.contains(lid)) {
               val qChsForLabel = qChannelsByLabelId(lid).to[ArrayBuffer]
-              addedElem += "-qChid "+qChsForLabel(0).getId//for --TEST PP todo remove it
+//              addedElem += "-qChid "+qChsForLabel(0).getId//for --TEST PP todo remove it
               orderedQChannels += qChsForLabel(0).getId
               qChsForLabel.remove(0)
               if(qChsForLabel.isEmpty)
@@ -135,13 +136,13 @@ class QuantPostProcessingComputer(
               else
                 qChannelsByLabelId.put(lid,qChsForLabel.toArray)
             }
-            logger.debug("  --TEST PP :  Label pass " +orderedQChannels.size+" => "+addedElem)
+//            logger.debug("  --TEST PP :  Label pass " +orderedQChannels.size+" => "+addedElem)
           }
           fullOrderedQChannels += orderedQChannels
           if(qChannelsByLabelId.isEmpty)
             isRemainingQCh = false
         }
-        logger.debug("  --TEST PP :  Label NB pass " +fullOrderedQChannels.size)
+        logger.trace("  --TEST PP :  Label NB pass " +fullOrderedQChannels.size)
       }
       fullOrderedQChannels
     }
@@ -289,7 +290,7 @@ class QuantPostProcessingComputer(
       if (pmOpt.isEmpty) { //try to read PIF values
         val nbPepMatchModified = PepMatchPropertiesUtil.readPIFValuesForResultSummary(peptdeMatchBySpecId, quantRSM.resultSummary, udsDbCtx, msiDbCtx)
         val end = System.currentTimeMillis()
-        logger.info(" ------ READ PIF for " + nbPepMatchModified + " from" + peptdeMatchBySpecId.size + " pepMatches in " + (end - start) + "ms")
+        logger.debug(" ------ READ PIF for " + nbPepMatchModified + " from" + peptdeMatchBySpecId.size + " pepMatches in " + (end - start) + "ms")
       }
     }
     peptdeMatchBySpecId.clear()
@@ -617,7 +618,7 @@ class QuantPostProcessingComputer(
 
         } else {
           if(QuantPostProcessingComputer.nbPifError < 10) {
-            logger.debug(" **PIF** TRY DISCARD PSM regarding its PIF VALUE BUT NO PROPERTIES DEFINED !!! - Show only 10 first")
+            logger.info(" **PIF** TRY DISCARD PSM regarding its PIF VALUE BUT NO PROPERTIES DEFINED !!! - Show only 10 first")
             QuantPostProcessingComputer.nbPifError = QuantPostProcessingComputer.nbPifError +1
           }
         }
