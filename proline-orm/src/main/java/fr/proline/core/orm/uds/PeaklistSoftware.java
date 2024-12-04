@@ -106,7 +106,8 @@ public class PeaklistSoftware implements Serializable {
 		PROTEO_WIZARD_2_0("ProteoWizard", "2.0", null),
 		PROTEO_WIZARD_2_1("ProteoWizard", "2.1", null),
 		PROTEO_WIZARD_3_0("ProteoWizard", "3.0", null),
-		SPECTRUM_MILL("Spectrum Mill", null, null);
+		SPECTRUM_MILL("Spectrum Mill", null, null),
+		MGF_BOOST("MgfBoost", "1.3", "{\"pif_reg_exp\":\"pif:(\\-?\\d+\\.\\d+);\"}");
 
 		private final String m_name;
 		private final String m_version;
