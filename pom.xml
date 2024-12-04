@@ -9,7 +9,7 @@
   </parent>
 
   <artifactId>proline-core</artifactId>
-  <version>2.3.1-SNAPSHOT</version>
+  <version>2.3.1</version>
   <packaging>pom</packaging>
 
   <name>${project.artifactId}</name>
@@ -118,7 +118,7 @@
     <dependency>
       <groupId>fr.profi.util</groupId>
       <artifactId>profi-commons-java</artifactId>
-      <version>${commons.version}</version> <!-- Snapshot Trunk version -->
+      <version>${commons.version}</version>
     </dependency>
 
     <!-- JUnit tests -->
