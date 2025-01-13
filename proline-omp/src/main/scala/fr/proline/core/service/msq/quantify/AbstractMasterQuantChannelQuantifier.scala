@@ -15,6 +15,7 @@ import fr.proline.core.orm.msi.ObjectTreeSchema.SchemaName
 import fr.proline.core.orm.msi.repository.ObjectTreeSchemaRepository
 import fr.proline.core.orm.msi.{MasterQuantComponent => MsiMasterQuantComponent, MasterQuantPeptideIon => MsiMasterQuantPepIon, MasterQuantReporterIon => MsiMasterQuantRepIon, ObjectTree => MsiObjectTree, ObjectTreeSchema => MsiObjectTreeSchema, PeptideInstance => MsiPeptideInstance, PeptideInstancePeptideMatchMap => MsiPepInstPepMatchMap, PeptideInstancePeptideMatchMapPK => MsiPepInstPepMatchMapPK, PeptideMatch => MsiPeptideMatch, PeptideMatchRelation => MsiPeptideMatchRelation, PeptideMatchRelationPK => MsiPeptideMatchRelationPK, PeptideReadablePtmString => MsiPeptideReadablePtmString, PeptideReadablePtmStringPK => MsiPeptideReadablePtmStringPK, PeptideSet => MsiPeptideSet, PeptideSetPeptideInstanceItem => MsiPeptideSetItem, PeptideSetPeptideInstanceItemPK => MsiPeptideSetItemPK, PeptideSetProteinMatchMap => MsiPepSetProtMatchMap, PeptideSetProteinMatchMapPK => MsiPepSetProtMatchMapPK, ProteinMatch => MsiProteinMatch, ProteinSet => MsiProteinSet, ProteinSetProteinMatchItem => MsiProtSetProtMatchItem, ProteinSetProteinMatchItemPK => MsiProtSetProtMatchItemPK, ResultSet => MsiResultSet, ResultSummary => MsiResultSummary, Scoring => MsiScoring, SequenceMatch => MsiSequenceMatch}
 import fr.proline.core.orm.uds.MasterQuantitationChannel
+import org.apache.commons.lang3.StringUtils
 
 import scala.collection.JavaConverters._
 import scala.collection.mutable
@@ -135,7 +136,7 @@ abstract class AbstractMasterQuantChannelQuantifier extends LazyLogging {
     // Retrieve children ResultSummary and link them to the msiQuantRSM
     val rsms: Array[MsiResultSummary] = for (rsmId <- childrenRSMIds) yield msiEm.find(classOf[MsiResultSummary], rsmId)
     msiQuantRSM.setChildren(new java.util.HashSet(rsms.toSet.asJavaCollection))
-    if(identRsmOpt.isDefined){
+    if(identRsmOpt.isDefined && StringUtils.isNotEmpty(identRsmOpt.get.getSerializedProperties)){
       val props =  identRsmOpt.get.getSerializedPropertiesAsMap
       props.keySet().forEach( key => {
         if(key.equals("is_coverage_updated"))
