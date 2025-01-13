@@ -122,7 +122,8 @@ public class SpectrumTitleParsingRule implements Serializable {
 		PROTEO_WIZARD_2_0_RULE(SoftwareRelease.PROTEO_WIZARD_2_0,null,null,null,"scan=(\\d+)","scan=(\\d+)",null,null),
 		PROTEO_WIZARD_2_1_RULE(SoftwareRelease.PROTEO_WIZARD_2_1,"(.+)\\.\\d+\\.\\d+\\.\\d+$",null,null,".+\\.(\\d+)\\.\\d+\\.\\d+$",".+\\.\\d+\\.(\\d+)\\.\\d+$",null,null),
 		PROTEO_WIZARD_3_0_RULE(SoftwareRelease.PROTEO_WIZARD_3_0,"File:\"(.+?)\\..+\",",null,null,"scan=(\\d+)","scan=(\\d+)",null,null),
-		SPECTRUM_MILL_RULE(SoftwareRelease.SPECTRUM_MILL,null,null,null,null,null,"Cmpd.+MSn.+, (\\d+\\.\\d+) min","Cmpd.+MSn.+, (\\d+\\.\\d+) min");
+		SPECTRUM_MILL_RULE(SoftwareRelease.SPECTRUM_MILL,null,null,null,null,null,"Cmpd.+MSn.+, (\\d+\\.\\d+) min","Cmpd.+MSn.+, (\\d+\\.\\d+) min"),
+		MGFBOOST_RULE(SoftwareRelease.MGF_BOOST,"raw_file_identifier:(\\w+?);","first_cycle:(\\d+);","last_cycle:(\\d+);","first_scan:(\\d+);","last_scan:(\\d+);","first_time:(\\d+\\.\\d+);","last_time:(\\d+\\.\\d+);");
 
 		private final PeaklistSoftware.SoftwareRelease m_peaklistSoftware;
 		private final String m_rawFileIdentifierRegex;
