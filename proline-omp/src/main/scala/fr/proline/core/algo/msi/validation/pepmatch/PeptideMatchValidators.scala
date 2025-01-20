@@ -53,24 +53,24 @@ class TDPepMatchValidator(
   val expectedFdr: Option[Float] = None
 
   def validatePeptideMatches( pepMatches: Seq[PeptideMatch], decoyPepMatches: Option[Seq[PeptideMatch]] = None, tdAnalyzer: Option[ITargetDecoyAnalyzer] = None): ValidationResults = {
-        
+
     // Apply validation filter
     validationFilter.filterPeptideMatches(pepMatches ++ decoyPepMatches.getOrElse(Seq.empty[PeptideMatch]), true, true)
-    
+
     // Calculate statistics after filter have been applied
     val valResult = if (decoyPepMatches.isDefined && tdAnalyzer.isDefined) {
       tdAnalyzer.get.calcTDStatistics(pepMatches, decoyPepMatches.get)
     } else {
       ValidationResult( pepMatches.count(_.isValidated), Try(decoyPepMatches.get.count(_.isValidated)).toOption)
     }
-    
+
     // Add validation filter properties to validation results
     valResult.addProperties( validationFilter.getFilterProperties )
 
     // Return validation results
     ValidationResults( valResult )
   }
-  
+
 }
 
 

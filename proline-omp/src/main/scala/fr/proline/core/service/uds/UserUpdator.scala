@@ -45,27 +45,57 @@ class UserUpdator(
 	   _updatorErrorMsg = super.getAuthenticateResultMessage
 	   return _updatorResult
 	 }
-    
-    //Old password OK, change with new password
+
+
+    var localUDSTransaction: Boolean = false
+    var transacOk: Boolean = false
+
+   try {
+
+     // Check if a transaction is already initiated
+     if (!udsConnectionCtxt.isInTransaction) {
+       udsConnectionCtxt.beginTransaction()
+       localUDSTransaction = true
+       transacOk = false
+     }
+
+     //Old password OK, change with new password
      val jdbcUpdateWork = new JDBCWork() {
-      override def execute(con: Connection) {
+       override def execute(con: Connection) {
 
-        val updateUserQuery = "Update user_account set password_hash = ? where login = ? "
-        val pStmt = con.prepareStatement(updateUserQuery)
-        pStmt.setString(1, newHashPassword)
-        pStmt.setString(2, name)
-        val sqlResult = pStmt.executeUpdate()
-        if (sqlResult != 1 ){
-           _updatorErrorMsg = "Invalid number updated row ("+sqlResult+") !";  
+         val updateUserQuery = "Update user_account set password_hash = ? where login = ? "
+         val pStmt = con.prepareStatement(updateUserQuery)
+         pStmt.setString(1, newHashPassword)
+         pStmt.setString(2, name)
+         val sqlResult = pStmt.executeUpdate()
+         if (sqlResult != 1) {
+           _updatorErrorMsg = "Invalid number updated row (" + sqlResult + ") !";
            _updatorResult = false
-        }
-        pStmt.close()
-      }
+         }
+         pStmt.close()
+       }
 
-    } // End of jdbcWork anonymous inner class
-     
+     } // End of jdbcWork anonymous inner class
+
      udsConnectionCtxt.doWork(jdbcUpdateWork, false)
-     return _updatorResult
+     // Commit transaction if it was initiated locally
+     if (localUDSTransaction) {
+       udsConnectionCtxt.commitTransaction()
+     }
+     transacOk = true
+   } finally {
+     if (localUDSTransaction && !transacOk) {
+       logger.info("Rollbacking UDS Db Transaction")
+
+       try {
+         udsConnectionCtxt.rollbackTransaction()
+       } catch {
+         case ex: Exception => logger.error("Error rollbacking MSI Db Transaction", ex)
+       }
+
+     }
+   }
+   return _updatorResult
   }
   
   def getUpdatorResultMessage() : String = {
