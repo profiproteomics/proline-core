@@ -15,6 +15,7 @@ import fr.proline.core.orm.msi.ObjectTreeSchema.SchemaName
 import fr.proline.core.orm.msi.repository.ObjectTreeSchemaRepository
 import fr.proline.core.orm.msi.{MasterQuantComponent => MsiMasterQuantComponent, MasterQuantPeptideIon => MsiMasterQuantPepIon, MasterQuantReporterIon => MsiMasterQuantRepIon, ObjectTree => MsiObjectTree, ObjectTreeSchema => MsiObjectTreeSchema, PeptideInstance => MsiPeptideInstance, ProteinSet => MsiProteinSet, ResultSet => MsiResultSet, ResultSummary => MsiResultSummary}
 import fr.proline.core.orm.uds.MasterQuantitationChannel
+import org.apache.commons.lang3.StringUtils
 
 import scala.collection.JavaConverters._
 import scala.collection.mutable
@@ -124,27 +125,43 @@ abstract class AbstractMasterQuantChannelQuantifier extends LazyLogging {
 
   protected def storeMsiQuantResultSummary(msiQuantResultSet: MsiResultSet, childrenRSMIds: Array[Long]) : MsiResultSummary = {
 
+    storeMsiQuantResultSummary(msiQuantResultSet, childrenRSMIds, None)
+  }
+
+  protected def storeMsiQuantResultSummary(msiQuantResultSet: MsiResultSet, childrenRSMIds: Array[Long], identRsmOpt : Option[MsiResultSummary]): MsiResultSummary = {
+
     val msiQuantRSM = new MsiResultSummary()
     msiQuantRSM.setModificationTimestamp(curSQLTime)
     msiQuantRSM.setResultSet(msiQuantResultSet)
     // Retrieve children ResultSummary and link them to the msiQuantRSM
-    val rsms: Array[MsiResultSummary] = for(rsmId <- childrenRSMIds) yield msiEm.find(classOf[MsiResultSummary],rsmId)
+    val rsms: Array[MsiResultSummary] = for (rsmId <- childrenRSMIds) yield msiEm.find(classOf[MsiResultSummary], rsmId)
     msiQuantRSM.setChildren(new java.util.HashSet(rsms.toSet.asJavaCollection))
+    if(identRsmOpt.isDefined && StringUtils.isNotEmpty(identRsmOpt.get.getSerializedProperties)){
+      val props =  identRsmOpt.get.getSerializedPropertiesAsMap
+      props.keySet().forEach( key => {
+        if(key.equals("is_coverage_updated"))
+          props.remove(key)
+      })
+      msiQuantRSM.setSerializedPropertiesAsMap(props)
+    }
+
     msiEm.persist(msiQuantRSM)
 
     msiQuantRSM
   }
 
   protected def storeMsiQuantResultSummary(msiQuantResultSet: MsiResultSet) : MsiResultSummary = {
+    var identRsmOpt : Option[MsiResultSummary] = None
     val childrenRsmIds = {
       if (masterQc.identResultSummaryId.isEmpty) {
         entityCache.quantChannelResultSummaries.map(_.id)
       } else {
         val identRSM = msiEm.find(classOf[MsiResultSummary], masterQc.identResultSummaryId.get)
+        identRsmOpt = Some(identRSM)
         identRSM.getChildren().asScala.map(_.getId).toArray
       }
     }
-    storeMsiQuantResultSummary(msiQuantResultSet, childrenRsmIds)
+    storeMsiQuantResultSummary(msiQuantResultSet, childrenRsmIds, identRsmOpt)
   }
 
   // TODO: rename into storeMasterQuantEntities
