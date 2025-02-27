@@ -26,10 +26,10 @@ import fr.proline.core.service.lcms.CreateMapSet
 import rx.lang.scala.subjects.PublishSubject
 import rx.lang.scala.{Observable, Scheduler, Subject, schedulers}
 
-import java.io.File
+import java.io.{File, PrintWriter}
 import java.util.concurrent.{Executors, LinkedBlockingQueue}
 import scala.collection.mutable
-import scala.collection.mutable.{ArrayBuffer, HashMap, HashSet, LongMap}
+import scala.collection.mutable.{ArrayBuffer, HashMap, LongMap}
 import scala.concurrent._
 import scala.concurrent.duration.Duration
 import scala.util.control.Breaks._
@@ -396,6 +396,11 @@ class PeakelsDetector(
         val multiMatchedMzDbPeakelIdsByPutativeFtId = new LongMap[ArrayBuffer[Int]]()
 
         this.logger.info("Predicting missing features coordinates...")
+        logger.info("dump missing features file")
+        val missingFile = File.createTempFile(s"Missing_ions", ".csv",PeakelsDetector.tempDir)
+        val printWriter = new PrintWriter(missingFile)
+        printWriter.println("from_run;to_run;sequence;ptms;mz;charge;predicted_rt;predicted_rtTolerance")
+
 
         // Iterate create master features to predict missing ones
         for (((peptide, charge), mftBuilder) <- mftBuilderByPeptideAndCharge) {
@@ -490,7 +495,6 @@ class PeakelsDetector(
                 evidenceMsLevel = 2,
                 isPredicted = true
             )
-
             // retrieve predicted elution time tolerance
             pf.elutionTimeTolerance = predictedTimeOpt.getOrElse((refFt.elutionTime, 0.0f))._2
 
@@ -524,9 +528,16 @@ class PeakelsDetector(
             peptideByPutativeFtId(pf.id) = peptide
             multiMatchedMzDbPeakelIdsByPutativeFtId(pf.id) = multiMatchedMzDbPeakelIds
 
+            // dump missing
+            val t = List(bestFtLcMsRun.getRawFileName, lcMsRun.getRawFileName, peptide.sequence, "\""+peptide.readablePtmString+"\"", pf.mz, pf.charge, pf.elutionTime/60.0, pf.elutionTimeTolerance)
+            printWriter.println(t.mkString(";"))
+
           }
 
         } // ends for (((peptide, charge), mftBuilder) <- mftBuilderByPeptideAndCharge)
+
+        printWriter.flush()
+        printWriter.close()
 
         //
         //    Then search for missing features
