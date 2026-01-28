@@ -138,10 +138,7 @@ abstract class AbstractMasterQuantChannelQuantifier extends LazyLogging {
     msiQuantRSM.setChildren(new java.util.HashSet(rsms.toSet.asJavaCollection))
     if(identRsmOpt.isDefined && StringUtils.isNotEmpty(identRsmOpt.get.getSerializedProperties)){
       val props =  identRsmOpt.get.getSerializedPropertiesAsMap
-      props.keySet().forEach( key => {
-        if(key.equals("is_coverage_updated"))
-          props.remove(key)
-      })
+      props.remove("is_coverage_updated")
       msiQuantRSM.setSerializedPropertiesAsMap(props)
     }
 
