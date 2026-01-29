@@ -1681,8 +1681,9 @@ class PeakelsDetector(
     ms2SpectrumIds: Array[Long]
   ): MzDbFeature = {
 
-    val isotopes = this._findFeatureIsotopes(peakelFileConnection, rTreeOpt, peakel, charge)
-    
+    val isotopes = PeakelDbHelper.findFeatureIsotopes(peakelFileConnection, rTreeOpt, peakel, charge, quantConfig.detectionParams.get.isotopeMatchingParams.get.mozTol)
+
+
     //println(s"found ${isotopes.length} isotopes")
 
     MzDbFeature(
@@ -1774,71 +1775,5 @@ class PeakelsDetector(
       Some(nearestPeakelInTime)
     }
   }
-
-  private def _findFeatureIsotopes(
-    sqliteConn: SQLiteConnection,
-    rTreeOpt: Option[RTree[java.lang.Integer,geometry.Point]],
-    peakel: MzDbPeakel,
-    charge: Int
-  ): Array[MzDbPeakel] = {
-
-    val peakelMz = peakel.getMz
-    val mozTolInDa = MsUtils.ppmToDa(peakelMz, quantConfig.detectionParams.get.isotopeMatchingParams.get.mozTol)
-    
-    val peakelRt = peakel.getElutionTime
-    val peakelDurationTol = 1 + math.min(peakel.getElutionTime - peakel.getFirstElutionTime, peakel.getLastElutionTime - peakel.getElutionTime)
-    val minRt = peakelRt - peakelDurationTol
-    val maxRt = peakelRt + peakelDurationTol
-    
-    val pattern = IsotopePatternEstimator.getTheoreticalPattern(peakelMz, charge)
-    val intensityScalingFactor = peakel.getApexIntensity / pattern.mzAbundancePairs(0)._2
-    
-    val isotopes = new ArrayBuffer[MzDbPeakel](pattern.isotopeCount)
-    isotopes += peakel
-
-    breakable {
-      // Note: skip first isotope because it is already included in the isotopes array
-      for (isotopeIdx <- 1 until pattern.isotopeCount) {
-        
-        val prevIsotope = isotopes.last
-        val ipMoz = prevIsotope.getMz + (avgIsotopeMassDiff / charge)
-        
-        // Search for peakels corresponding to second isotope
-        val foundPeakels = PeakelDbHelper.findPeakelsInRange(
-          sqliteConn,
-          rTreeOpt,
-          ipMoz - mozTolInDa,
-          ipMoz + mozTolInDa,
-          minRt,
-          maxRt
-        )
-
-        if (foundPeakels.nonEmpty) {
-
-          val isotopePeakel = PeakelDbHelper.findCorrelatingPeakel(peakel, foundPeakels)
-
-          val expectedIntensity = pattern.mzAbundancePairs(isotopeIdx)._2 * intensityScalingFactor
-          if (isotopePeakel.isDefined) {
-            // Gentle constraint on the observed intensity: no more than 4 times the expected intensity
-            if (isotopePeakel.get.getApexIntensity() < 4 * expectedIntensity) {
-              isotopes += isotopePeakel.get
-            } else {
-              // TODO: compute statistics of the observed ratios
-              logger.trace(s"Isotope intensity is too high: is ${isotopePeakel.get.getApexIntensity()} but expected $expectedIntensity")
-              break
-            }
-          } else {
-            logger.trace("Isotope peakel not found")
-            break
-          }
-        } else {
-          break
-        }
-      }
-    }
-
-    isotopes.toArray
-  }
-
 }
 
