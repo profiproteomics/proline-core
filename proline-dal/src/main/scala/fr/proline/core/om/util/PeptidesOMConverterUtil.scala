@@ -395,8 +395,9 @@ class PeptidesOMConverterUtil(useCachedObject: Boolean = true) {
       names = ptmNames,
       ptmEvidences = ptmEvidences.toArray,
       residue = characterToScalaChar(msiPtmSpecificity.getResidue),
-      classification = msiPtmSpecificity.getClassification().getName().toString(),
-      ptmId = msiPtmSpecificity.getPtm().getId()
+      classification = msiPtmSpecificity.getClassification().getName(),
+      ptmId = msiPtmSpecificity.getPtm().getId(),
+      unimodId = if(msiPtmSpecificity.getPtm().getUnimodId() == null) 0 else msiPtmSpecificity.getPtm().getUnimodId().intValue()
     )
     
     if (useCachedObject)

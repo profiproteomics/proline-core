@@ -259,7 +259,19 @@ class MsiDbPsDatasetParser( psRecordByTableName: Map[String, Seq[StringMap]] ) e
   def getPtmId(shortName: String): Option[Long] = {
     this.ptmIdByName.get(shortName)
   }
-  
+
+  /**
+   * Get PtmDefinition (wrapped in Option) with specified Unimod Id.
+   * If no PtmDefinition is defined for specified Unimod id, Option.None will be returned.
+   *
+   * @param unimodID  : Uimod id of PtmDefinition to search for
+   * @return Option[PtmDefinition] corresponding to found PtmDefinition
+   */
+  override def getUnimodPtmDefinition(unimodID: Int): Array[PtmDefinition] = {
+    val allFoundPtms = this.ptmDefinitionById.values.filter(ptmdef => { unimodID.equals(ptmdef.unimodId)})
+    allFoundPtms.toArray
+  }
+
   def getPtmDefinition(ptmMonoMass: Double, ptmMonoMassMargin: Double, ptmResidue: Char, ptmLocation: PtmLocation.Location): Option[PtmDefinition] = {
     var ptmToReturn: PtmDefinition = null
     this.ptmDefinitionById.values.foreach(ptm => {

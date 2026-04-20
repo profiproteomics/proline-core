@@ -74,6 +74,7 @@ class ORMPTMProvider(val msiDbCtx: MsiDbConnectionContext) extends IPTMProvider 
     foundPtmDefBuilder.toMap
     
   }
+
   def getPtmDefinition(ptmMonoMass: Double, ptmMonoMassMargin: Double, ptmResidue: Char, ptmLocation: PtmLocation.Location): Option[PtmDefinition] = {
     var ptmToReturn: PtmDefinition = null
     this.ptmDefinitionById.values.foreach(ptm => {
@@ -87,6 +88,7 @@ class ORMPTMProvider(val msiDbCtx: MsiDbConnectionContext) extends IPTMProvider 
     })
     Some(ptmToReturn)
   }
+
   def getPtmId(shortName: String): Option[Long] = {
     val foundPtm = MsiPtmRepo.findPtmForShortName(msiDbCtx.getEntityManager, shortName)
 
@@ -97,5 +99,8 @@ class ORMPTMProvider(val msiDbCtx: MsiDbConnectionContext) extends IPTMProvider 
     }
 
   }
-
+  override def getUnimodPtmDefinition(unimodID: Int): Array[PtmDefinition] = {
+    val allFoundPtms = this.ptmDefinitionById.values.filter(ptmdef => { unimodID.equals(ptmdef.unimodId)})
+    allFoundPtms.toArray
+  }
 }

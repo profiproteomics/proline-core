@@ -122,4 +122,8 @@ class SQLPTMProvider(val msiDbCtx: MsiDbConnectionContext) extends IPTMProvider 
     this.ptmIdByName.get(shortName)
   }
 
+  override def getUnimodPtmDefinition(unimodID: Int):  Array[PtmDefinition] = {
+    val allFoundPtms = this.ptmDefinitionById.values.filter(ptmdef => { unimodID.equals(ptmdef.unimodId)})
+    allFoundPtms.toArray
+  }
 }

@@ -36,7 +36,16 @@ trait IPTMProvider {
    *  @return Option[PtmDefinition] corresponding to found PtmDefinition
    */
   def getPtmDefinition( ptmDefID: Long ): Option[PtmDefinition] = { getPtmDefinitionsAsOptions( Array(ptmDefID) )(0) }
-    
+
+  /**
+   *  Get PtmDefinitions with specified Unimod Id. There may be many PtmDefinition with same unimodID but different residue
+   *  If no PtmDefinition is defined for specified Unimod id, Option.None will be returned.
+   *
+   *  @param unimodID: Uimod id of PtmDefinition to search for
+   *  @return Option[PtmDefinition] corresponding to found PtmDefinition
+   */
+  def getUnimodPtmDefinition( unimodID: Int ): Array[PtmDefinition]
+
   /**
    * Search for a PtmDefinition with specified features
    * - ptmShortName : Associated PtmNames have ptmShortName as short name
@@ -72,7 +81,6 @@ trait IPTMProvider {
  */
 object PTMFakeProvider extends IPTMProvider { 
   
-  val psDbCtx = null
 
   var ptmDefByName:HashMap[String, PtmDefinition] = new HashMap[String, PtmDefinition]()
     
@@ -158,6 +166,9 @@ object PTMFakeProvider extends IPTMProvider {
     Option.empty[Long]
   }
 
+  override def getUnimodPtmDefinition(unimodID: Int): Array[PtmDefinition] = {
+    Array.empty[PtmDefinition]
+  }
 }
 
 
@@ -193,6 +204,10 @@ object EmptyPTMProvider extends IPTMProvider {
   
   def getPtmId(shortName: String): Option[Long] = {
      Option.empty[Long]
+  }
+
+  override def getUnimodPtmDefinition(unimodID: Int): Array[PtmDefinition] = {
+    return  Array.empty[PtmDefinition]
   }
  
 }
