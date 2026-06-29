@@ -4,12 +4,11 @@ import com.typesafe.scalalogging.LazyLogging
 import fr.profi.util.collection._
 import fr.profi.util.math.median
 import fr.profi.util.primitives.isZeroOrNaN
-import fr.proline.core.algo.msq.config.profilizer.{MqPeptideAbundanceSummarizingMethod, MissingAbundancesInferenceMethod, MqPeptidesClusteringMethod, MqPeptidesSelectionConfig, MqPeptidesSelectionMethod, PostProcessingConfig, ProfilizerStatConfig, QuantComponentItem, RazorStrategyMethod}
+import fr.proline.core.algo.msq.config.profilizer._
 import fr.proline.core.algo.msq.profilizer._
 import fr.proline.core.algo.msq.profilizer.filtering._
 import fr.proline.core.algo.msq.summarizing.BuildMasterQuantPeptide
 import fr.proline.core.om.model.SelectionLevel
-import fr.proline.core.om.model.msq.MasterQuantComponent
 import fr.proline.core.om.model.msq._
 import org.apache.commons.math3.stat.StatUtils
 
@@ -24,8 +23,7 @@ class Profilizer( expDesign: ExperimentalDesign, groupSetupNumber: Int = 1, mast
   val errorModelBinsCount = 1
   
   private val expDesignSetup = ExperimentalDesignSetup(expDesign, groupSetupNumber, masterQCNumber)
-  private var minAbundanceByQcIds = Array.emptyFloatArray
-  
+
   /**
    * Computes MasterQuantPeptide profiles.
    */
@@ -101,15 +99,7 @@ class Profilizer( expDesign: ExperimentalDesign, groupSetupNumber: Int = 1, mast
       absoluteErrorModelOpt,
       config.peptideStatConfig
     )
-    
-    minAbundanceByQcIds = filledMatrix.transpose.map { abundanceCol =>
-       val abundanceForAQch =  abundanceCol.filter( !isZeroOrNaN(_))
-       if(abundanceForAQch.isEmpty)
-         Float.NaN
-       else
-         abundanceForAQch.reduceLeft(_ min _)
-    }
-     
+
     // Update master quant component abundances after normalization and missing values inference
     //
     for( (mqQuantComponent, abundances) <- mqPepIonsAfterAllFilters.zip(filledMatrix) ) {
@@ -612,7 +602,7 @@ class Profilizer( expDesign: ExperimentalDesign, groupSetupNumber: Int = 1, mast
 
     // If the method is not median profile
     val summarizedAbundances = if (finalAbSumMethod == MEDIAN_RATIO_FITTING) {
-      LFQSummarizer.summarize(abundanceMatrix, minAbundanceByQcIds)
+      LFQSummarizer.summarize(abundanceMatrix)
       
     } else if (!AbundanceSummarizer.advancedMethods.contains(finalAbSumMethod)) {
       AbundanceSummarizer.summarizeAbundanceMatrix(

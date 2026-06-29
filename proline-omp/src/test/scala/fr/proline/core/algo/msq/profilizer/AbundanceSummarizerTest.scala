@@ -1,10 +1,10 @@
 package fr.proline.core.algo.msq.profilizer
 
+import fr.proline.core.algo.msq.config.profilizer.MqPeptideAbundanceSummarizingMethod
+import fr.proline.core.algo.msq.profilizer.AbundanceSummarizer._
 import org.junit.Assert._
 import org.junit.Test
 import org.scalatest.Assertions._
-import AbundanceSummarizer._
-import fr.proline.core.algo.msq.config.profilizer.MqPeptideAbundanceSummarizingMethod
 
 @Test
 class AbundanceSummarizerTest {
@@ -90,11 +90,10 @@ class AbundanceSummarizerTest {
       Array(Float.NaN, Float.NaN, Float.NaN, Float.NaN, Float.NaN, Float.NaN, Float.NaN, Float.NaN, Float.NaN, Float.NaN, Float.NaN, Float.NaN, Float.NaN, Float.NaN, Float.NaN, Float.NaN, Float.NaN, Float.NaN, 57135000.0f, 47513000.0f, 47813000.0f, 93092300.0f, 90913300.0f, 76993000.0f, 268421100.0f, 234361000.0f, 196204300.0f, 530790000.0f, 468827000.0f, 446146800)
     )
 
-    val minima = Array(89960.0f, 262950, 123000, 55282, 122390, 133610, 100230, 134400, 143320, 39389, 122290, 99359, 86382, 80750, 136560, 76271, 88697, 57473, 57670, 92502, 126580, 68421, 69176, 55047, 112040, 83939, 120880, 89696, 146100, 71153)
     val singleRow = summarizeAbundanceMatrix(matrix, MqPeptideAbundanceSummarizingMethod.MEDIAN_RATIO_FITTING)
     //println(singleRow.mkString(","))
 
-    val abundances = LFQSummarizer.summarize(matrix, minima)
+    val abundances = LFQSummarizer.summarize(matrix)
     //println(abundances.mkString(","))
     //  val expectedResult = Array(Float.NaN,1602700.1f,Float.NaN,Float.NaN,778955.7f,2380288.0f,Float.NaN,863202.5f,Float.NaN,Float.NaN,Float.NaN,Float.NaN,Float.NaN,Float.NaN,2094279.0f,1942052.1f,785008.0f,1003444.2f,2.9862658E7f,1.5233927E7f,9.5460544E7f,1.77231632E8f,1.8071296E8f,1.7775504E8f,8.3922182E8f,7.5434694E8f,6.3843834E8f,1.51518618E9f,1.52327923E9f,1.42865254E9f)
     //  assertArrayEquals(expectedResult, abundances, 0.01f)
@@ -128,12 +127,10 @@ class AbundanceSummarizerTest {
       Array(Float.NaN, Float.NaN, Float.NaN, Float.NaN, Float.NaN, Float.NaN, Float.NaN, Float.NaN, Float.NaN, Float.NaN, Float.NaN, Float.NaN, Float.NaN, Float.NaN, Float.NaN, Float.NaN, Float.NaN, 284589.69f, Float.NaN, 211231.73f, Float.NaN, Float.NaN, 369282.72f, 460202.38f, 1546577.62f, 1550205.75f, 2044952.88f, 1746801.62f, 3756856.75f, 3191910.75f, 3590192.5f, 3262603.25f, 9352253f, 7802708.5f, 8760880f, 7608008f, 17974998f, 14402801f, 16835652f, 9511200f),
       Array(Float.NaN, Float.NaN, Float.NaN, Float.NaN, Float.NaN, Float.NaN, Float.NaN, Float.NaN, Float.NaN, Float.NaN, Float.NaN, Float.NaN, Float.NaN, Float.NaN, Float.NaN, Float.NaN, 295942.03f, Float.NaN, Float.NaN, Float.NaN, Float.NaN, Float.NaN, Float.NaN, Float.NaN, 1443086.62f, 1549341.88f, 2023095.62f, 1787515.62f, 2932503f, 3134476.25f, 3017354f, 3464977f, 8588721f, 6620410f, 7940824.5f, 7590247.5f, 18144848f, 13698668f, 16097925f, 10412950f))
 
-    val minima = Array(65103.14f, 44433.3f, 41141.32f, 34050.16f, 41769.55f, 41895.92f, 45705.4f, 34983.64f, 46035.12f, 12798.28f, 59004.55f, 44714.9f, 45638.9f, 40969.52f, 50311.71f, 20606.43f, 44591.68f, 46987.13f, 57538.86f, 36557.04f, 50714.55f, 37531.32f, 42057.8f, 32675.03f, 49524.7f, 27701.68f, 31676.29f, 36779.82f, 47594.77f, 42314.23f, 41511.98f, 39256.61f, 52328.61f, 42462.69f, 33200.38f, 44446.32f, 92678.65f, 45918.39f, 61418.64f, 46060.56f)
-
     val singleRow = summarizeAbundanceMatrix(matrix, MqPeptideAbundanceSummarizingMethod.MEDIAN_RATIO_FITTING)
     println(singleRow.mkString(","))
 
-    val abundances = LFQSummarizer.summarize(matrix, minima)
+    val abundances = LFQSummarizer.summarize(matrix)
     println(abundances.mkString(","))
 
     //  val expectedResult = Array(Float.NaN,1602700.1f,Float.NaN,Float.NaN,778955.7f,2380288.0f,Float.NaN,863202.5f,Float.NaN,Float.NaN,Float.NaN,Float.NaN,Float.NaN,Float.NaN,2094279.0f,1942052.1f,785008.0f,1003444.2f,2.9862658E7f,1.5233927E7f,9.5460544E7f,1.77231632E8f,1.8071296E8f,1.7775504E8f,8.3922182E8f,7.5434694E8f,6.3843834E8f,1.51518618E9f,1.52327923E9f,1.42865254E9f)
