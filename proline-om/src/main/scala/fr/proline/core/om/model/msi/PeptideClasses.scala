@@ -434,10 +434,17 @@ case class PeptideMatchProperties (
   @BeanProperty var omssaProperties: Option[PeptideMatchOmssaProperties] = None,
   @BeanProperty var xtandemProperties: Option[PeptideMatchXtandemProperties] = None,
   @BeanProperty var ptmSiteProperties: Option[PeptideMatchPtmSiteProperties] = None,
+  @BeanProperty var diannProperties: Option[PeptideMatchDiaNNProperties] = None,
   @JsonDeserialize(contentAs = classOf[java.lang.Float] )
   @BeanProperty var precursorIntensityFraction: Option[Float] = None,
   @BeanProperty var spectralCount: Option[Int] = None,
   @BeanProperty var isotopeOffset: Option[Int] = None
+)
+
+case class PeptideMatchDiaNNProperties (
+  @BeanProperty var qValue: Double,
+  //@JsonDeserialize( keyAs = classOf[java.lang.String], contentAs = classOf[java.lang.Double] )
+  @BeanProperty var allQvalues: Option[Map[String, java.lang.Double]]  = None,
 )
 
 case class PeptideMatchMascotProperties (

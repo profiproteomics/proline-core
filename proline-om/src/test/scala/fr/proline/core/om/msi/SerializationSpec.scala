@@ -189,7 +189,7 @@ class SerializationSpec extends AbstractSerializationSpec {
       "A PeptideMatchProperties object",
       profiDeserializer = Some( jsonData => ProfiJson.deserialize[PeptideMatchProperties](jsonData) ),
       pepMatchProperties,
-      """{"mascot_properties":{"expectation_value":0.001,"readable_var_mods":"Oxidation (M)"}},"ms_query_id":-1,"peptide_id":-1}"""
+      """{"mascot_properties":{"expectation_value":0.001,"readable_var_mods":"Oxidation (M)"}}"""
     ),
     SerializationSpecif(
       "A ProteinMatch object without properties",
