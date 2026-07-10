@@ -5,7 +5,7 @@
   <parent>
     <artifactId>profi-pom</artifactId>
     <groupId>fr.proline</groupId>
-    <version>1.3.0</version>
+    <version>1.4.0-SNAPSHOT</version>
   </parent>
 
   <artifactId>proline-core</artifactId>
