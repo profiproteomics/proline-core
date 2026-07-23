@@ -8,7 +8,7 @@
     <version>2.5.0-SNAPSHOT</version>
   </parent>
 
-  <artifactId>proline-dal_${scala.compat.version}</artifactId>
+  <artifactId>proline-dal</artifactId>
 
   <name>${project.artifactId}</name>
 
@@ -17,14 +17,16 @@
     <!-- ProFi Commons -->
     <dependency>
       <groupId>fr.profi.util</groupId>
-      <artifactId>profi-commons-scala_${scala.compat.version}</artifactId>
+      <artifactId>profi-commons-scala</artifactId>
+      <classifier>${scala.compat.version}</classifier>
       <!-- Version inherited from parent POM -->
     </dependency>
 
     <!-- "Proline" modules -->
     <dependency>
       <groupId>fr.proline</groupId>
-      <artifactId>proline-om_${scala.compat.version}</artifactId>
+      <artifactId>proline-om</artifactId>
+      <classifier>${scala.compat.version}</classifier>
     </dependency>
 
     <dependency>
@@ -39,12 +41,14 @@
 
     <dependency>
       <groupId>fr.profi</groupId>
-      <artifactId>mzdb-processing_${scala.compat.version}</artifactId>
+      <artifactId>mzdb-processing</artifactId>
+      <classifier>${scala.compat.version}</classifier>
     </dependency>
 
     <dependency>
       <groupId>fr.profi</groupId>
-      <artifactId>profi-proteomics_${scala.compat.version}</artifactId>
+      <artifactId>profi-proteomics</artifactId>
+      <classifier>${scala.compat.version}</classifier>
     </dependency>
 
     <!-- Direct dependencies -->
@@ -174,9 +178,10 @@
 
     <dependency>
       <groupId>fr.proline</groupId>
-      <artifactId>proline-om_${scala.compat.version}</artifactId>
+      <artifactId>proline-om</artifactId>
       <!-- <version>${core.version}</version> -->
       <type>test-jar</type>
+      <classifier>${scala.compat.version}-tests</classifier>
       <scope>test</scope>
     </dependency>
 
@@ -213,15 +218,30 @@
   <build>
     <plugins>
       <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-jar-plugin</artifactId>
         <executions>
           <execution>
+            <id>scala-jar</id>
+            <phase>package</phase>
+            <goals>
+              <goal>jar</goal>
+            </goals>
+            <configuration>
+              <classifier>${scala.compat.version}</classifier>
+            </configuration>
+          </execution>
+          <execution>
+            <id>test-jar</id>
+            <phase>package</phase>
             <goals>
               <goal>test-jar</goal>
             </goals>
+            <configuration>
+              <classifier>${scala.compat.version}-tests</classifier>
+            </configuration>
           </execution>
         </executions>
-
       </plugin>
 
       <!-- Build Scala sources -->
