@@ -48,7 +48,7 @@ class IsobaricTaggingQuantifier(
   }
   private val maxMassToUse = quantMethod.quantLabels.map(_.reporterMz).max + 1
 
-  private val peptdeMatchBySpecId: LongMap[PeptideMatch] = mutable.LongMap[PeptideMatch]()
+  private val peptdeMatchesBySpecId = mutable.Map.empty[Long, List[PeptideMatch]]
 
   protected def quantifyMasterChannel(): Unit = {
 
@@ -160,7 +160,7 @@ class IsobaricTaggingQuantifier(
 
     logger.info("save peptide match modification...") //** VDS Pas les bons psms sauvegardés -> ? toujours ??
     val pepProvider = PeptideWriter.apply(msiDbCtx.getDriverType)
-    pepProvider.updatePeptideMatchProperties(peptdeMatchBySpecId.values.toSeq, msiDbCtx)
+    pepProvider.updatePeptideMatchProperties(peptdeMatchesBySpecId.values.flatten.toSeq, msiDbCtx)
 
     
     logger.info("summarizing quant entities...")
@@ -204,9 +204,11 @@ class IsobaricTaggingQuantifier(
 
     //Get Quant result_summary's PSMs
     quantRsm.resultSet.get.peptideMatches.foreach(pepM => {
-      peptdeMatchBySpecId += (pepM.getMs2Query().spectrumId -> pepM)
+      val specId = pepM.getMs2Query().spectrumId
+      val existingMatches = peptdeMatchesBySpecId.getOrElse(specId, Nil)
+      peptdeMatchesBySpecId.put(specId, pepM :: existingMatches)
     })
-    
+
     val tagInfoTuples = identRsmQuantChannels.map { qc =>
       val tag = tagByQcId(qc.id)
       (qc.id, tag, msnMozTolInDaByTagId(tag.id))
@@ -215,7 +217,7 @@ class IsobaricTaggingQuantifier(
     
     val masterQuantReporterIons = new ArrayBuffer[MasterQuantReporterIon](identMs2QueryBySpecId.size)
 
-    _foreachIdentifiedSpectrum(peaklistId, identMs2QueryBySpecId, peptdeMatchBySpecId) { case (specId, spectrum, identMs2Query) =>
+    _foreachIdentifiedSpectrum(peaklistId, identMs2QueryBySpecId, peptdeMatchesBySpecId) { case (specId, spectrum, identMs2Query) =>
       
       // Keep only peaks having a low m/z value
       val mozListToUse = spectrum.getMozList().takeWhile( _ <= maxMassToUse )
@@ -264,13 +266,13 @@ class IsobaricTaggingQuantifier(
   private def _foreachIdentifiedSpectrum(
     peaklistId: Long,
     identifiedMs2QueryBySpectrumId: mutable.LongMap[Ms2Query],
-    peptdeMatchBySpecId : LongMap[PeptideMatch]
+    peptdeMatchesBySpecId : mutable.Map[Long, List[PeptideMatch]]
   )( onEachSpectrum: (Long, IsobaricTaggingQuantifier.ISpectrum, Ms2Query) => Unit ): Unit = {
 
     val reporterIonDataSource = quantConfig.reporterIonDataSource
     val isProlineDataSource = reporterIonDataSource == ReporterIonDataSource.PROLINE_SPECTRUM
 
-    //Get PeaklostSoftware to be able to read pif from spectrum title if reg exp specified
+    //Get PeaklistSoftware to be able to read pif from spectrum title if reg exp specified
     var peaklistSoftware : Option[PeaklistSoftware] = None
     val pklistProvider = new SQLPeaklistProvider(msiDbCtx)
     val pklList =pklistProvider.getPeaklists(Seq(peaklistId))
@@ -339,7 +341,7 @@ class IsobaricTaggingQuantifier(
           }
 
           if (readPif) {
-            PepMatchPropertiesUtil.readSinglePIFValue(spectrum,peptdeMatchBySpecId, peaklistSoftware.get)
+            PepMatchPropertiesUtil.readSinglePIFValue(spectrum, peptdeMatchesBySpecId, peaklistSoftware.get)
           }
         } // ends if (identifiedMs2QueryOpt.isDefined)
       } // ends foreachPeaklistSpectrum

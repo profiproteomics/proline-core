@@ -65,12 +65,12 @@ class IsobaricTaggingEntitiesSummarizer(
       for( (charge,sameChargePepMatches) <- pepMatchesGroupedByCharge ) {
         
         val msQueryIds = sameChargePepMatches.map(_.msQueryId).toArray
-        val mqReporterIons = msQueryIds.flatMap( mqReporterIonByMsQueryId.get(_) )
+        val mqReporterIonsForQueryId = msQueryIds.flatMap( mqReporterIonByMsQueryId.get(_) )
         
-        if( mqReporterIons.nonEmpty) {
+        if( mqReporterIonsForQueryId.nonEmpty) {
         
           // Compute the matrix of raw abundances for the MQ reporter ions corresponding to this charge state
-          val mqReporterIonRawAbundanceMatrix = mqReporterIons.map { mqReporterIon =>
+          val mqReporterIonRawAbundanceMatrix = mqReporterIonsForQueryId.map { mqReporterIon =>
             require(
               mqReporterIon.charge == charge,
               "invalid master quant reporter ion charge for ms query with id="+ mqReporterIon.msQueryId
@@ -81,7 +81,7 @@ class IsobaricTaggingEntitiesSummarizer(
           }
           
           // Take minimum elution time as a reference for all quant peptide ions
-          val firstMqReporterIon = mqReporterIons.minBy(_.scanNumber)
+          val firstMqReporterIon = mqReporterIonsForQueryId.minBy(_.scanNumber)
           val firstElutionTime = firstMqReporterIon.elutionTime
           val firstScanNumber = firstMqReporterIon.scanNumber
           
@@ -136,7 +136,7 @@ class IsobaricTaggingEntitiesSummarizer(
             selectionLevel = 2,
             quantPeptideIonMap = qPepIonByQcId,
             properties = None,
-            masterQuantReporterIons = mqReporterIons
+            masterQuantReporterIons = mqReporterIonsForQueryId
           )
         } //End mqReporterIons.nonEmpty
       } //End for each (charge-[pepMatch])

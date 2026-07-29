@@ -18,20 +18,20 @@ object PepMatchPropertiesUtil {
    * This is done for all PeptideMap in the Map which should belong to specified peaklist
    * Parsing rule to extract PIF value from spectrum title is read in Peaklist software
    *
-   * @param peptdeMatchBySpecId : All PeptideMatch, referenced by their spectrum Id, to get PIF value for
+   * @param peptdeMatchesBySpecId : All PeptideMatch, referenced by their spectrum Id, to get PIF value for
    * @param peaklistId peaklist to which all spectrum should belong to
    * @param peaklistSoftware peaklist Software to get PIF parsing rule regExp.
    * @param msiDbCtx connection to MSI db to read and save info to.
    * @return number of PeptideMatch which have been updated
    */
-  def readPIFValuesForPeaklist(peptdeMatchBySpecId:  LongMap[PeptideMatch], peaklistId: Long, peaklistSoftware: PeaklistSoftware, msiDbCtx: MsiDbConnectionContext): Int = {
+  def readPIFValuesForPeaklist(peptdeMatchesBySpecId:  mutable.Map[Long, List[PeptideMatch]], peaklistId: Long, peaklistSoftware: PeaklistSoftware, msiDbCtx: MsiDbConnectionContext): Int = {
 
     val spectrumProvider = new SQLSpectrumProvider(msiDbCtx)
     val peptideMatchToSave = new ArrayBuffer[PeptideMatch]()
     spectrumProvider.foreachPeaklistSpectrum(peaklistId, loadPeaks = false) { spectrum =>
-      val pepMatchOpt = readSinglePIFValue(spectrum, peptdeMatchBySpecId, peaklistSoftware)
-      if(pepMatchOpt.isDefined)
-        peptideMatchToSave += pepMatchOpt.get
+      val pepMatches = readSinglePIFValue(spectrum, peptdeMatchesBySpecId, peaklistSoftware)
+      if(pepMatches.nonEmpty)
+        peptideMatchToSave ++= pepMatches
     }
     if (!peptideMatchToSave.isEmpty) {
       val pepProvider = PeptideWriter.apply(msiDbCtx.getDriverType)
@@ -46,13 +46,13 @@ object PepMatchPropertiesUtil {
    * This is done for all PeptideMap in the Map which should belong to resultsummary peaklist (or resultsummary's child peaklist)
    * Parsing rule to extract PIF value from spectrum title is read in Peaklist software associated to peaklist
    *
-   * @param peptdeMatchBySpecId : All PeptideMatch, referenced by their spectrum Id, to get PIF value for
+   * @param peptdeMatchesBySpecId : All PeptideMatch, referenced by their spectrum Id, to get PIF value for
    * @param resultSummary  ResultSummary to search peaklist and associated spectrum to read
    * @param udsDbCtx  connection to UDS db to read info from.
    * @param msiDbCtx  connection to MSI db to read and save info to.
    * @return number of PeptideMatch which have been updated
    */
-  def readPIFValuesForResultSummary(peptdeMatchBySpecId: LongMap[PeptideMatch], resultSummary: ResultSummary, udsDbCtx: UdsDbConnectionContext, msiDbCtx: MsiDbConnectionContext): Int = {
+  def readPIFValuesForResultSummary(peptdeMatchesBySpecId: mutable.Map[Long, List[PeptideMatch]], resultSummary: ResultSummary, udsDbCtx: UdsDbConnectionContext, msiDbCtx: MsiDbConnectionContext): Int = {
 
     val msiDbHelper = new MsiDbHelper(msiDbCtx)
     val allMsiSearchesIds = msiDbHelper.getResultSetsMsiSearchIds(Seq(resultSummary.getResultSetId))
@@ -76,9 +76,9 @@ object PepMatchPropertiesUtil {
     val spectrumProvider = new SQLSpectrumProvider(msiDbCtx)
     val peptideMatchToSave = new ArrayBuffer[PeptideMatch]()
     spectrumProvider.foreachPeaklistsSpectrum(peakListIds, loadPeaks = false) { spectrum =>
-      val pepMatchOpt = readSinglePIFValue(spectrum, peptdeMatchBySpecId, peaklistSoftwareByPklId(spectrum.peaklistId))
-      if (pepMatchOpt.isDefined) {
-        peptideMatchToSave += pepMatchOpt.get
+      val pepMatches = readSinglePIFValue(spectrum, peptdeMatchesBySpecId, peaklistSoftwareByPklId(spectrum.peaklistId))
+      if (pepMatches.nonEmpty) {
+        peptideMatchToSave ++= pepMatches
 
       }
     }
@@ -90,18 +90,18 @@ object PepMatchPropertiesUtil {
     peptideMatchToSave.size
   }
 
-  def readSinglePIFValue(spectrum: Spectrum, peptdeMatchBySpecId: LongMap[PeptideMatch], peaklistSoftware: PeaklistSoftware): Option[PeptideMatch] = {
-    var peptideMatchToSave: Option[PeptideMatch] = None
+  def readSinglePIFValue(spectrum: Spectrum, peptdeMatchesBySpecId: mutable.Map[Long, List[PeptideMatch]], peaklistSoftware: PeaklistSoftware): List[PeptideMatch] = {
     val pifValue = peaklistSoftware.parsePIFValue(spectrum.title)
     if (!pifValue.isNaN) {
-      val peptideMatchOpt = peptdeMatchBySpecId.get(spectrum.id)
-      if (peptideMatchOpt.isDefined) {
-        peptideMatchToSave = peptideMatchOpt
-        val pmProp = peptideMatchOpt.get.properties.getOrElse(new PeptideMatchProperties())
+      val peptideMatches = peptdeMatchesBySpecId.getOrElse(spectrum.id, Nil)
+      peptideMatches.foreach { pm =>
+        val pmProp = pm.properties.getOrElse(new PeptideMatchProperties())
         pmProp.precursorIntensityFraction = Some(pifValue)
-        peptideMatchOpt.get.properties = Some(pmProp)
+        pm.properties = Some(pmProp)
       }
+      peptideMatches
+    } else {
+      Nil
     }
-    peptideMatchToSave
   }
 }

@@ -95,7 +95,6 @@ class AggregationQuantifier(
     val udsDbHelper = new UdsDbHelper(udsDbCtx)
     val childQuantRSMbychildMQCId = new mutable.HashMap[Long, QuantResultSummary]
     val isIsobaric = childQuantMethodType.isDefined && childQuantMethodType.get.equals(QuantitationMethod.Type.ISOBARIC_TAGGING)
-    logger.info("  --TEST Agg : isIsobaric ? "+isIsobaric)
     for (udsMasterQuantChannel <- childMasterQuantitationChannels) {
       val quantRsmId = udsMasterQuantChannel.getQuantResultSummaryId
       val qcIds = udsDbHelper.getQuantChannelIds(udsMasterQuantChannel.getId)
@@ -107,14 +106,16 @@ class AggregationQuantifier(
     //Test if need & can Read PIF values
     val start = System.currentTimeMillis()
     if(isIsobaric) { //Read PIF only for  Isobaric tag quantitation
-      val peptdeMatchBySpecId: mutable.LongMap[PeptideMatch] = mutable.LongMap[PeptideMatch]()
+      val peptdeMatchesBySpecId = mutable.Map.empty[Long, List[PeptideMatch]]
       aggregateQuantRSM.resultSet.get.peptideMatches.foreach(pepM => {
-        peptdeMatchBySpecId += (pepM.getMs2Query().spectrumId -> pepM)
+        val specId = pepM.getMs2Query().spectrumId
+        val existingMatches = peptdeMatchesBySpecId.getOrElse(specId, Nil)
+        peptdeMatchesBySpecId.put(specId, pepM :: existingMatches)
       })
 
-      val nbPepMatchModified = PepMatchPropertiesUtil.readPIFValuesForResultSummary(peptdeMatchBySpecId, aggregateQuantRSM, udsDbCtx, msiDbCtx)
+      val nbPepMatchModified = PepMatchPropertiesUtil.readPIFValuesForResultSummary(peptdeMatchesBySpecId, aggregateQuantRSM, udsDbCtx, msiDbCtx)
       val end = System.currentTimeMillis()
-      logger.info(" ------ READ PIF for " + nbPepMatchModified+ " from"+  peptdeMatchBySpecId.size + " pepMatches in " + (end - start) + "ms")
+      logger.trace(" ------ READ PIF for " + nbPepMatchModified+ " from"+  peptdeMatchesBySpecId.size + " spectrum in " + (end - start) + "ms")
     }
 
     val childQChIdToparentQCh = new mutable.HashMap[Long, QuantChannel]()

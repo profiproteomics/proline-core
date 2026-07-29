@@ -91,9 +91,11 @@ class QuantPostProcessingComputer(
   def runService(): Boolean = {
 
     this.logger.info("Running service Quant Post Processing Computer.")
-    experimentalDesign.masterQuantChannels(0).quantChannels.foreach(qCh => {
-      logger.trace("  --TEST PP :  next QCH - " +qCh.name+" - nbr: "+qCh.number+" has label id: "+qCh.quantLabelId)
-    })
+    logger.whenTraceEnabled(
+      experimentalDesign.masterQuantChannels(0).quantChannels.foreach(qCh => {
+      logger.trace("  --TEST PP :  next QCH - " + qCh.name + " - nbr: " + qCh.number + " has label id: " + qCh.quantLabelId)
+    }))
+
     QuantPostProcessingComputer.nbPifError = 0 //reset nb error
 
     // Get entity manager
@@ -162,7 +164,7 @@ class QuantPostProcessingComputer(
     }
 
     val quantRsmId = udsMasterQuantChannel.getQuantResultSummaryId
-    val qcIds = udsDbHelper.getQuantChannelIds(masterQuantChannelId)
+    val qcIds = udsDbHelper.getQuantChannelIds(masterQuantChannelId) //VDS Pq ne pas utiliser :  udsMasterQuantChannel.getQuantitationChannels.asScala.toList.map(_.getId)
     
     // --- 1.1 Load the Quant RSM --- //
     logger.info("Loading the quantitative result summary #"+quantRsmId)
@@ -271,13 +273,15 @@ class QuantPostProcessingComputer(
 //      quantRSM.masterQuantPeptides
 //
 //    } // end of summarizeFeatures
-    var peptdeMatchBySpecId : mutable.LongMap[PeptideMatch]= mutable.LongMap[PeptideMatch]()
+    val peptdeMatchesBySpecId = mutable.Map.empty[Long, List[PeptideMatch]]
     val pepMatchByPepInsMSQIds = mutable.Map.empty[String,PeptideMatch]
     quantRSM.resultSummary.peptideInstances.foreach(pepI =>{
       pepI.peptideMatches.foreach( pepM => {
         val keyMap = pepI.id+"_"+pepM.msQueryId
         pepMatchByPepInsMSQIds.put(keyMap, pepM)
-        peptdeMatchBySpecId += (pepM.getMs2Query().spectrumId -> pepM)
+        val specId = pepM.getMs2Query().spectrumId
+        val existingMatches = peptdeMatchesBySpecId.getOrElse(specId, Nil)
+        peptdeMatchesBySpecId.put(specId, pepM :: existingMatches)
       })
     })
 
@@ -288,12 +292,12 @@ class QuantPostProcessingComputer(
       })
 
       if (pmOpt.isEmpty) { //try to read PIF values
-        val nbPepMatchModified = PepMatchPropertiesUtil.readPIFValuesForResultSummary(peptdeMatchBySpecId, quantRSM.resultSummary, udsDbCtx, msiDbCtx)
+        val nbPepMatchModified = PepMatchPropertiesUtil.readPIFValuesForResultSummary(peptdeMatchesBySpecId, quantRSM.resultSummary, udsDbCtx, msiDbCtx)
         val end = System.currentTimeMillis()
-        logger.debug(" ------ READ PIF for " + nbPepMatchModified + " from" + peptdeMatchBySpecId.size + " pepMatches in " + (end - start) + "ms")
+        logger.debug(" ------ READ PIF for " + nbPepMatchModified + " from" + peptdeMatchesBySpecId.size + " spectrum in " + (end - start) + "ms")
       }
     }
-    peptdeMatchBySpecId.clear()
+    peptdeMatchesBySpecId.clear()
 
     //
     // Reset mq peptide selection level, only for AUTO values

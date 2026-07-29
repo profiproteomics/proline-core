@@ -33,7 +33,7 @@ class AggregationEntitiesSummarizer(
       val newMasterQuantPeptides = new ArrayBuffer[MasterQuantPeptide](childMQPeptidesByPeptideId.size)
 
       if(isIsobaricTaggingMethod)
-        logger.debug(" ---- AggregationEntitiesSummarizer for isobaric ! ")
+        logger.trace(" ---- AggregationEntitiesSummarizer for isobaric ! ")
 
       for ((peptideId, masterPepInst) <- masterPepInstByPepId) {
 
@@ -55,7 +55,7 @@ class AggregationEntitiesSummarizer(
           }
         }
       }
-      logger.debug(" ---- NBR newMasterQuantPeptides "+newMasterQuantPeptides.size)
+      logger.trace(" ---- NBR newMasterQuantPeptides "+newMasterQuantPeptides.size)
       newMasterQuantPeptides.toArray
     }
 
@@ -118,12 +118,12 @@ class AggregationEntitiesSummarizer(
               val firstScanNumber = firstMqReporterIon.scanNumber
               val msQueryIds = filteredMQRepIons.map(_.msQueryId)
 
-              val quantPepIonRawAbList = filteredQRepIons.map(_.rawAbundance).filter(!_.equals(Float.NaN))
-              val quantPepIonAbList = filteredQRepIons.map(_.abundance).filter(!_.equals(Float.NaN))
+              val quantRepIonRawAbList = filteredQRepIons.map(_.rawAbundance).filter(!_.equals(Float.NaN))
+              val quantRepIonAbList = filteredQRepIons.map(_.abundance).filter(!_.equals(Float.NaN))
 
               newQuantPepIons += QuantPeptideIon(
-                rawAbundance = if (quantPepIonRawAbList.nonEmpty) quantPepIonRawAbList.sum else Float.NaN,
-                abundance = if (quantPepIonAbList.nonEmpty) quantPepIonAbList.sum else Float.NaN,
+                rawAbundance = if (quantRepIonRawAbList.nonEmpty) quantRepIonRawAbList.sum else Float.NaN,
+                abundance = if (quantRepIonAbList.nonEmpty) quantRepIonAbList.sum else Float.NaN,
                 moz = templateQPepIon.get.moz,
                 elutionTime = firstElutionTime,
                 duration = 0,
