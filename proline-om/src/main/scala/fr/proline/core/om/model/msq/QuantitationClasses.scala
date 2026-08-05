@@ -201,13 +201,25 @@ case class MasterQuantReporterIon(
     this.updateOrCreateComponentForQuantChannels(
       abundances,
       quantChannelIds,
-      (abundance,qcId) => QuantReporterIon(
-        moz = Double.NaN,
-        rawAbundance = Float.NaN,
-        abundance = abundance,
-        selectionLevel = 2,
-        quantChannelId = qcId
-      )
+      (abundance,qcId) =>{
+        if(abundance.isNaN)
+          QuantReporterIon(
+            moz = Double.NaN,
+            rawAbundance = Float.NaN,
+            abundance = abundance,
+            selectionLevel = 2,
+            peptideMatchesCount = 0,
+            quantChannelId = qcId
+          )
+        else
+          QuantReporterIon(
+            moz = Double.NaN,
+            rawAbundance = Float.NaN,
+            abundance = abundance,
+            selectionLevel = 2,
+            quantChannelId = qcId
+          )
+      }
     )
   }
   
@@ -367,6 +379,28 @@ case class MasterQuantPeptideIon(
         scanNumber = 0,
         peptideMatchesCount = 0,
         ms2MatchingFrequency = None,
+        quantChannelId = qcId
+      )
+    )
+  }
+
+  def setAbundancesAndPsmCountForQuantChannels( abundances: Seq[Float], psmCounts: Seq[Int], quantChannelIds: Seq[Long] ) {
+    assert(abundances.size.equals(quantChannelIds.size) && psmCounts.size.equals(quantChannelIds.size))
+
+    this.updateOrCreateComponentForQuantChannels(
+      abundances,
+      psmCounts,
+      quantChannelIds,
+      (abundance,psmCount, qcId) => QuantPeptideIon(
+        rawAbundance = Float.NaN,
+        abundance = abundance,
+        moz = Double.NaN,
+        elutionTime = Float.NaN,
+        duration = 0,
+        correctedElutionTime = Float.NaN,
+        scanNumber = 0,
+        ms2MatchingFrequency = None,
+        peptideMatchesCount = psmCount,
         quantChannelId = qcId
       )
     )

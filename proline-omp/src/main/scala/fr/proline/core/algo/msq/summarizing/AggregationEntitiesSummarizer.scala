@@ -3,6 +3,7 @@ package fr.proline.core.algo.msq.summarizing
 import com.typesafe.scalalogging.LazyLogging
 import fr.profi.util.collection._
 import fr.proline.core.algo.msq.config.AbundanceComputationMethod
+import fr.proline.core.om.model.SelectionLevel
 import fr.proline.core.om.model.msi.{PeptideInstance, ResultSummary}
 import fr.proline.core.om.model.msq._
 
@@ -118,8 +119,9 @@ class AggregationEntitiesSummarizer(
               val firstScanNumber = firstMqReporterIon.scanNumber
               val msQueryIds = filteredMQRepIons.map(_.msQueryId)
 
-              val quantRepIonRawAbList = filteredQRepIons.map(_.rawAbundance).filter(!_.equals(Float.NaN))
-              val quantRepIonAbList = filteredQRepIons.map(_.abundance).filter(!_.equals(Float.NaN))
+              val quantRepIonRawAbList = filteredQRepIons.filter(_.selectionLevel>=SelectionLevel.SELECTED_AUTO).map(_.rawAbundance).filter(!_.equals(Float.NaN))
+              val quantRepIonAbList = filteredQRepIons.filter(_.selectionLevel>=SelectionLevel.SELECTED_AUTO).map(_.abundance).filter(!_.equals(Float.NaN))
+              val quantRepPSMCountList = filteredQRepIons.filter(_.selectionLevel>=SelectionLevel.SELECTED_AUTO).map(_.peptideMatchesCount)
 
               newQuantPepIons += QuantPeptideIon(
                 rawAbundance = if (quantRepIonRawAbList.nonEmpty) quantRepIonRawAbList.sum else Float.NaN,
@@ -129,7 +131,7 @@ class AggregationEntitiesSummarizer(
                 duration = 0,
                 correctedElutionTime = firstElutionTime,
                 scanNumber = firstScanNumber,
-                peptideMatchesCount = filteredMQRepIons.size,
+                peptideMatchesCount = quantRepPSMCountList.sum,
                 ms2MatchingFrequency = None,
                 bestPeptideMatchScore = templateQPepIon.get.bestPeptideMatchScore,
                 predictedElutionTime = None,

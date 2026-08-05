@@ -9,6 +9,7 @@ import fr.proline.core.om.model.lcms.MapSet
 import fr.proline.core.om.model.msi._
 import fr.proline.core.om.model.msq._
 
+import scala.collection.mutable
 import scala.collection.mutable.{ArrayBuffer, LongMap}
 
 /**
@@ -37,14 +38,9 @@ class IsobaricTaggingEntitiesSummarizer(
     
     // Define some mappings
     val masterPepInstByPepId = quantMergedRSM.peptideInstances.toLongMapWith( pi => pi.peptide.id -> pi )
-    val mqReportersCount = mqReporterIons.length
     val mqReporterIonByMsQueryId = mqReporterIons.mapByLong(_.msQueryId)
-    /*if( qPeptideIonsByIdentRsmId.isEmpty ) {
-      val allMqReporterIons = mqReporterIonsByIdentRsmId.values.flatten
-      allMqReporterIons.groupBy(_.scanNumber)
-    }*/
-    
-    val mqPepIonsByPeptideId = new LongMap[Array[MasterQuantPeptideIon]](resultSummaries.head.peptideInstances.length)
+
+    val mqPepIonsByPeptideId = new mutable.LongMap[Array[MasterQuantPeptideIon]](resultSummaries.head.peptideInstances.length)
     
     // Iterate over validated peptide instances
     for(
@@ -58,7 +54,6 @@ class IsobaricTaggingEntitiesSummarizer(
       
       val pepInstIdOpt = Some(pepInst.id)
       val peptideIdOpt = Some(pepInst.peptideId)
-      //val masterPepInstOpt = masterPepInstByPepId.get(pepInst.peptideId)
       val masterPepInstIdOpt = Some(masterPepInst.id)
       
       val mqPepIons = new ArrayBuffer[MasterQuantPeptideIon](pepMatchesGroupedByCharge.size)
@@ -94,9 +89,14 @@ class IsobaricTaggingEntitiesSummarizer(
           // Retrieve the best peptide match
           val bestPepMatch = sameChargePepMatches.maxBy(_.score)
           val moz = bestPepMatch.msQuery.moz
-          val pepMatchesCount = sameChargePepMatches.length
-          
+
           val qPepIonByQcId = qcIds.zip(summarizedRawAbundanceMatrix).toLongMapWith { case (qcId,rawAbundance) =>
+            
+            // Count quantReporterIon for current quantChannel where Abundance is not 0 or Nan
+            val pepMatchesCount = mqReporterIonsForQueryId.count { mqRepIon =>
+              mqRepIon.quantReporterIonMap.get(qcId).map(qri => !fr.profi.util.primitives.isZeroOrNaN(qri.rawAbundance)).getOrElse(false)
+            }
+            
             qcId -> new QuantPeptideIon(
               rawAbundance = rawAbundance,
               abundance = rawAbundance,
@@ -120,12 +120,13 @@ class IsobaricTaggingEntitiesSummarizer(
             )
           }
           
+          val mastePepMatchesCount = sameChargePepMatches.length
           mqPepIons += new MasterQuantPeptideIon(
             id = MasterQuantPeptideIon.generateNewId(),
             unlabeledMoz = moz,
             charge = charge,
             elutionTime = firstElutionTime,
-            peptideMatchesCount = pepMatchesCount,
+            peptideMatchesCount = mastePepMatchesCount,
             calculatedMoz = None,
             masterQuantPeptideId = 0,
             resultSummaryId = mergedRsmId,

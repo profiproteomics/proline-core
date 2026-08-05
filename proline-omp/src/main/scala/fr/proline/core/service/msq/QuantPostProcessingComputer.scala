@@ -574,6 +574,10 @@ class QuantPostProcessingComputer(
     val tPurityCorrectionMatrix = if(config.usePurityCorrectionMatrix) MathUtils.transposeMatrix(purityCorrectionMatrix.get.getData) else Array.empty[Array[Double]]
 
     var maxRepIonSelLevel = SelectionLevel.DESELECTED_MANUAL
+    
+    // Create a Map of count quantRepIon with valid Abundance and selectionLevel for each quantChannel
+    val validRepIonCountByQcId = mutable.LongMap[Int]()
+
     // If reporter ions, reset values
     mqPepIon.masterQuantReporterIons.foreach(mqRepIon => {
 
@@ -618,6 +622,10 @@ class QuantPostProcessingComputer(
           if(pepMOp.get.properties.get.precursorIntensityFraction.get <= config.discardPeptideMatchesPifValue.get){
 //            logger.trace(" **PIF** DISCARD PSM regarding its PIF VALUE :  " + pepMOp.get.properties.get.precursorIntensityFraction)
             mqRepIon.selectionLevel= SelectionLevel.DESELECTED_AUTO
+            //Invalidate all associated qRepIon also
+            mqRepIon.quantReporterIonMap.foreach(entry =>{
+              entry._2.selectionLevel = SelectionLevel.DESELECTED_AUTO
+            })
           }
 
         } else {
@@ -631,6 +639,13 @@ class QuantPostProcessingComputer(
       if(mqRepIon.selectionLevel >= SelectionLevel.SELECTED_AUTO ) {
         val qRepIonMap = mqRepIon.quantReporterIonMap
         mqReporterIonAbundanceMatrix += allQChIdsSorted.map(qRepIonMap.get(_).map(_.abundance).getOrElse(Float.NaN)).toArray
+        allQChIdsSorted.foreach { qcId =>
+          qRepIonMap.get(qcId).foreach { qRepIon =>
+            if (!qRepIon.abundance.isNaN && qRepIon.abundance != 0f) {
+              validRepIonCountByQcId.put(qcId, validRepIonCountByQcId.getOrElse(qcId, 0) + 1)
+            }
+          }
+        }
       }
 
       if(mqRepIon.selectionLevel>maxRepIonSelLevel)
@@ -650,7 +665,9 @@ class QuantPostProcessingComputer(
         mqReporterIonAbundanceMatrix.toArray,
         summarizingMethod
       )
-      mqPepIon.setAbundancesForQuantChannels(summarizedRawAbundanceMatrix, allQChIdsSorted)
+
+      val psmCountArray = allQChIdsSorted.map(qcId => validRepIonCountByQcId.getOrElse(qcId, 0)).toArray
+      mqPepIon.setAbundancesAndPsmCountForQuantChannels(summarizedRawAbundanceMatrix,psmCountArray, allQChIdsSorted)
     }
     mqPepIon.selectionLevel = maxRepIonSelLevel
   }
