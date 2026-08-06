@@ -11,6 +11,10 @@ The Maven Proline-Core parent project is composed of 5 subproject :
   * Proline-OM: Object Model for Proline algorithm and servcies
   * Proline-OMP: Proline processing defining computational services implementation
 
+# Release Note
+
+Changes note is accessible in [ReleaseNote](ReleaseNote.md) file
+
 # License
 
 This project is licensed under the [CeCILL License V2.1](http://www.cecill.info/licences/Licence_CeCILL_V2.1-en.html)
