@@ -1,4 +1,4 @@
-# Proline-Core Release Note
+# Proline-Core Release Notes
 
 ## Version 2.5.0 (Snapshot)
 
