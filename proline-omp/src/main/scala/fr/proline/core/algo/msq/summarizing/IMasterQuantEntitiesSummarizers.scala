@@ -46,7 +46,7 @@ trait IMQProteinSetSummarizer {
       .toLongMapWith { mqp => mqp.peptideInstance.get.id -> mqp }
     
     val mqProtSets = new ArrayBuffer[MasterQuantProteinSet](quantMergedRSM.proteinSets.length)
-    for( mergedProtSet <- quantMergedRSM.proteinSets ) {
+    for (mergedProtSet <- quantMergedRSM.proteinSets; if mergedProtSet.isValidated && mergedProtSet.selectionLevel >= 2) {
       
       val mergedPepInsts = mergedProtSet.peptideSet.getPeptideInstances()
       
@@ -59,7 +59,7 @@ trait IMQProteinSetSummarizer {
       val pepMatchesCountByQcId = new LongMap[Int](qcCount)
       val pepCountByQcId = new LongMap[Int](qcCount)
       
-      for( mergedPepInst <- mergedPepInsts ) {
+      for (mergedPepInst <- mergedPepInsts) {
         
         // If the peptide has been quantified
         val mqPepOpt = mqPepByPepInstId.get(mergedPepInst.id)

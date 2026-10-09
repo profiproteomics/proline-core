@@ -1,7 +1,6 @@
 package fr.proline.core.service.uds
 
 import javax.persistence.EntityManager
-
 import scala.collection.JavaConversions.collectionAsScalaIterable
 import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.LongMap
@@ -24,6 +23,7 @@ import fr.proline.core.om.provider.msi.impl.SQLResultSetProvider
 import fr.proline.core.orm.uds.{Dataset => UdsDataset}
 import fr.proline.core.service.msi.{ResultSetMerger, ResultSetValidator, ResultSummaryMerger, ValidationConfig}
 import fr.proline.core.om.provider.msi.ResultSetFilter
+import fr.proline.core.om.storer.msi.impl.StorerContext
 
 // Singleton for Proline-Cortex
 object IdentificationTreeValidator {
@@ -49,7 +49,7 @@ object IdentificationTreeValidator {
           useTdCompetition = useTdCompetition,
           pepMatchFilters = validationConfig.pepMatchPreFilters,
           pepMatchValidator = validationConfig.pepMatchValidator,
-          peptideSetScoring = Some( validationConfig.pepSetScoring.getOrElse(PepSetScoring.MASCOT_MODIFIED_MUDPIT_SCORE) ),
+          peptideSetScoring = Some( validationConfig.pepSetScoring.getOrElse(PepSetScoring.MASCOT_STANDARD_SCORE) ),
           protSetFilters = validationConfig.protSetFilters,
           protSetValidator = validationConfig.protSetValidator
         )
@@ -162,15 +162,17 @@ class IdentificationTreeValidator(
           
           // Replace the result set by the validated one
           rsm.resultSet = validatedRsOpt
-          
-          val decoyRsm = rsm.decoyResultSummary.get
-          val validatedDecoyRsOpt = decoyRsm.getValidatedResultSet()
-          
-          // Set the decoy result set as the validated decoy one
-          validatedRsOpt.get.decoyResultSet = validatedDecoyRsOpt
-          
-          // Do the same in the decoy result summary
-          decoyRsm.resultSet = validatedDecoyRsOpt
+
+          if (rsm.decoyResultSummary.isDefined) {
+            val decoyRsm = rsm.decoyResultSummary.get
+            val validatedDecoyRsOpt = decoyRsm.getValidatedResultSet()
+
+            // Set the decoy result set as the validated decoy one
+            validatedRsOpt.get.decoyResultSet = validatedDecoyRsOpt
+
+            // Do the same in the decoy result summary
+            decoyRsm.resultSet = validatedDecoyRsOpt
+          }
         }
         
         rsmByRsId += targetRsId -> rsm
@@ -236,7 +238,7 @@ class IdentificationTreeValidator(
    * Validates dataset tree recursively from leaves to root
    */
   private def _validateDatasetTree(udsEM: EntityManager, udsDatasets: List[UdsDataset], rsmByRsId: LongMap[ResultSummary]) {
-    if (udsDatasets.length == 1 && udsDatasets.head.getParentDataset == null) return
+    if (udsDatasets.head.getParentDataset == null) return
 
     this.logger.info(s"Validating tree node with ${udsDatasets.length} dataset(s)")
 
@@ -278,72 +280,92 @@ class IdentificationTreeValidator(
 
   private def _mergeAndValidateDatasets(rsms: Seq[ResultSummary]): ResultSummary = {
 
-    if (this.mergeResultSets) {
+    val mergedRs = if (this.mergeResultSets) {
 
-      //val targetRsIds = rsmIds.map { rsIdByRsmId(_) }
       val targetRsList = rsms.map(_.resultSet.get)
-      val decoyRsList = for (rs <- targetRsList; if rs.decoyResultSet.isDefined) yield rs.decoyResultSet.get
+      val decoyRsList = targetRsList.withFilter(_.decoyResultSet.isDefined).map(_.decoyResultSet.get)
 
-      // Merge result set
+      // Merge target result sets
       val targetRsMerger = new ResultSetMerger(execContext, None, Some(targetRsList), Some(AdditionMode.AGGREGATION))
       targetRsMerger.runService()
+
       val mergedTargetRs = targetRsMerger.mergedResultSet
 
+      // Merge decoy result sets
       if (decoyRsList.nonEmpty) {
         val decoyRsMerger = new ResultSetMerger(execContext, None, Some(decoyRsList), Some(AdditionMode.AGGREGATION))
         decoyRsMerger.runService()
         mergedTargetRs.decoyResultSet = Some(decoyRsMerger.mergedResultSet)
       }
 
-      // Build Target/Decoy analyzer
-      val tdAnalyzer = if (pepMatchValidator.isDefined && pepMatchValidator.get.validationFilter.isInstanceOf[IPeptideMatchSorter]) {
-        BuildTDAnalyzer(useTdCompetition, mergedTargetRs, Some(pepMatchValidator.get.validationFilter.asInstanceOf[IPeptideMatchSorter]))
-      } else {
-        BuildTDAnalyzer(useTdCompetition, mergedTargetRs, None)
-      }
-      
-      val linkTargetRsToFilter = (filter: IPeptideMatchFilter) => _linkTargetRsToFilter(filter, mergedTargetRs)
-
-      // Test if there are some IFilterNeedingResultSet in Filters
-      if (pepMatchFilters.isDefined) {
-        pepMatchFilters.get.foreach( linkTargetRsToFilter )
-      }
-      if (pepMatchValidator.isDefined) {
-        linkTargetRsToFilter(pepMatchValidator.get.validationFilter)
-      }
-      
-      // Instantiate a result set validator
-      val rsValidator = new ResultSetValidator(
-        execContext = execContext,
-        targetRs = mergedTargetRs,
-        tdAnalyzer = tdAnalyzer,
-        pepMatchPreFilters = pepMatchFilters,
-        pepMatchValidator = pepMatchValidator,
-        protSetFilters = protSetFilters,
-        protSetValidator = protSetValidator,
-        peptideSetScoring = peptideSetScoring,
-        storeResultSummary = true
-      )
-
-      rsValidator.run()
-
-      rsValidator.validatedTargetRsm
+      mergedTargetRs
 
     } else {
-      
-      // Merge result summaries
+
+      // Merge target result summaries
       val rsmMerger = new ResultSummaryMerger(
         execCtx = execContext,
         None,
         resultSummaries = Some(rsms),
         aggregationMode = Some(AdditionMode.AGGREGATION),
+        storeRsm = false,
         useJPA = false
       )
       rsmMerger.runService()
 
-      rsmMerger.mergedResultSummary
+      val mergedRs = rsmMerger.mergedResultSummary.resultSet.get
+
+      mergedRs.decoyResultSet = rsmMerger.mergedResultSummary.decoyResultSummary.flatMap(_.resultSet)
+
+      mergedRs
     }
 
+    // Build Target/Decoy analyzer
+    val tdAnalyzer = if (pepMatchValidator.isDefined && pepMatchValidator.get.validationFilter.isInstanceOf[IPeptideMatchSorter]) {
+      BuildTDAnalyzer(useTdCompetition, mergedRs, Some(pepMatchValidator.get.validationFilter.asInstanceOf[IPeptideMatchSorter]))
+    } else {
+      BuildTDAnalyzer(useTdCompetition, mergedRs, None)
+    }
+
+    val linkTargetRsToFilter = (filter: IPeptideMatchFilter) => _linkTargetRsToFilter(filter, mergedRs)
+
+    // Test if there are some IFilterNeedingResultSet in Filters
+    if (pepMatchFilters.isDefined) {
+      pepMatchFilters.get.foreach( linkTargetRsToFilter )
+    }
+    if (pepMatchValidator.isDefined) {
+      linkTargetRsToFilter(pepMatchValidator.get.validationFilter)
+    }
+
+    // Instantiate a result set validator
+    val rsValidator = new ResultSetValidator(
+      execContext = execContext,
+      targetRs = mergedRs,
+      tdAnalyzer = tdAnalyzer,
+      pepMatchPreFilters = pepMatchFilters,
+      pepMatchValidator = pepMatchValidator,
+      protSetFilters = protSetFilters,
+      protSetValidator = protSetValidator,
+      peptideSetScoring = peptideSetScoring,
+      storeResultSummary = false
+    )
+    rsValidator.run()
+
+    val validatedTargetRsm = rsValidator.validatedTargetRsm
+    assert(validatedTargetRsm.decoyResultSummary.isDefined, "the decoy RSM must be defined")
+
+    val storerContext = StorerContext(execContext)
+    val childTargetRsmIds = rsms.map(_.id)
+    val childTargetRsIds = rsms.map(_.getResultSetId)
+
+    ResultSummaryMerger.storeResultSetAndSummary(
+      storerContext,
+      validatedTargetRsm,
+      childTargetRsmIds,
+      childTargetRsIds
+    )(execContext)
+
+    rsValidator.validatedTargetRsm
   }
 
 }
