@@ -2,9 +2,7 @@ package fr.proline.core.service.uds
 
 import javax.persistence.EntityManager
 import scala.collection.JavaConversions.collectionAsScalaIterable
-import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.LongMap
-import scala.collection.mutable.HashMap
 import com.typesafe.scalalogging.LazyLogging
 import fr.profi.util.collection._
 import fr.profi.util.primitives._
@@ -23,6 +21,7 @@ import fr.proline.core.om.provider.msi.impl.SQLResultSetProvider
 import fr.proline.core.orm.uds.{Dataset => UdsDataset}
 import fr.proline.core.service.msi.{ResultSetMerger, ResultSetValidator, ResultSummaryMerger, ValidationConfig}
 import fr.proline.core.om.provider.msi.ResultSetFilter
+import fr.proline.core.om.storer.msi.RsmStorer
 import fr.proline.core.om.storer.msi.impl.StorerContext
 
 // Singleton for Proline-Cortex
@@ -187,8 +186,9 @@ class IdentificationTreeValidator(
       udsEM.persist(udsIdentDataset)
     }
 
-    // Validate datasets recursively from leaves to the root
-    this._validateDatasetTree(udsEM, udsIdentDatasets.toList, rsmByRsId)
+    // Validate the dataset tree recursively (children before their parent), starting from the selected dataset
+    val leafDsIds = udsIdentDatasets.map(_.getId).toSet
+    this._validateDatasetNode(udsEM, udsIdentTreeDS, leafDsIds, rsmByRsId)
 
     true
   }
@@ -235,70 +235,76 @@ class IdentificationTreeValidator(
   }
 
   /**
-   * Validates dataset tree recursively from leaves to root
+   * Validates a dataset node recursively: its children are processed first,
+   * then their result summaries are merged and validated into the node (see _mergeAndValidateDatasets).
+   *
+   * The leaf datasets (identification datasets, as returned by getIdentificationDatasets) are not validated here:
+   * - their result sets have already been validated by _validateResultSet,
+   * - rsmByRsId maps each leaf result set id to the resulting result summary.
+   * A leaf result summary is removed from this map as soon as it is consumed by the parent merge, so that it can be garbage collected.
+   *
+   * Processing is driven by the dataset tree itself, not by the depth of the leaves, so unbalanced trees
+   * (leaves at different depths) are supported, and datasets above the selected one are never modified.
+   * Nodes without any leaf below them (e.g. empty aggregates) are skipped and left unchanged.
+   *
+   * @return the result summary of the node, or None if the node has no leaf below it
    */
-  private def _validateDatasetTree(udsEM: EntityManager, udsDatasets: List[UdsDataset], rsmByRsId: LongMap[ResultSummary]) {
-    if (udsDatasets.head.getParentDataset == null) return
+  private def _validateDatasetNode(
+    udsEM: EntityManager,
+    udsDataset: UdsDataset,
+    leafDsIds: Set[Long],
+    rsmByRsId: LongMap[ResultSummary]
+  ): Option[ResultSummary] = {
 
-    this.logger.info(s"Validating tree node with ${udsDatasets.length} dataset(s)")
+    // Leaf: retrieve the result summary produced by _validateResultSet
+    // (removed from rsmByRsId, so that it is only referenced by the parent call until the parent merge is done)
+    if (leafDsIds.contains(udsDataset.getId)) {
+      val rsId = udsDataset.getResultSetId
+      val rsmOpt = rsmByRsId.remove(rsId.longValue)
+      require(rsmOpt.isDefined, s"no validated result summary found for result set #$rsId (dataset #${udsDataset.getId})")
 
-    // Group RSMs by parent DS id
-    val rsmsByUdsParentDs = new HashMap[UdsDataset, ArrayBuffer[ResultSummary]]
-    for (dataset <- udsDatasets) {
-      val udsParentDs = dataset.getParentDataset
-      val rsm = rsmByRsId(dataset.getResultSetId)
-      rsmsByUdsParentDs.getOrElseUpdate(udsParentDs, new ArrayBuffer[ResultSummary]()) += rsm
+      return rsmOpt
     }
 
-    // Define some vars
-    val newUdsParentDatasets = new ArrayBuffer[UdsDataset]
-    val newRsmByRsId = new LongMap[ResultSummary]
+    // Node: process the children first, then merge and validate their result summaries
+    // (childRsms is local to this call: the child result summaries are released when this call returns)
+    val udsChildren = Option(udsDataset.getChildren).map(_.toList).getOrElse(Nil)
+    val childRsms = udsChildren.flatMap( this._validateDatasetNode(udsEM, _, leafDsIds, rsmByRsId) )
 
-    // Iterate over each group of result summaries to merge them
-    for ((udsParentDs, rsms) <- rsmsByUdsParentDs) {
-
-      newUdsParentDatasets += udsParentDs
-
-      // Validate dataset child result summaries
-      val mergedRsm = this._mergeAndValidateDatasets(rsms)
-      newRsmByRsId += mergedRsm.getResultSetId -> mergedRsm
-
-      // Replace existing result set/summary ids
-      // Note: to preserve existing mappings it is needed to clone the tree in a previous step      
-      udsParentDs.setResultSetId(mergedRsm.getResultSetId)
-      udsParentDs.setResultSummaryId(mergedRsm.id)
-
-      // TODO: store properties (do this in the merge RS/RSM service)
-      //val mergedDataType = if( mergeResultSets ) "result_set" else "result_summary"
-      //udsParentDs.setSerializedProperties() // merged_data_type = mergedDataType
-
-      udsEM.persist(udsParentDs)
+    if (childRsms.isEmpty) {
+      this.logger.warn(s"Dataset #${udsDataset.getId} has no identification dataset below it and will be ignored")
+      return None
     }
 
-    this._validateDatasetTree(udsEM, newUdsParentDatasets.toList, newRsmByRsId)
+    this.logger.info(s"Merging and validating ${childRsms.length} child dataset(s) into dataset #${udsDataset.getId}")
+    val mergedRsm = this._mergeAndValidateDatasets(childRsms)
+
+    // Replace existing result set/summary ids
+    // Note: to preserve existing mappings it is needed to clone the tree in a previous step
+    udsDataset.setResultSetId(mergedRsm.getResultSetId)
+    udsDataset.setResultSummaryId(mergedRsm.id)
+
+    // TODO: store properties (do this in the merge RS/RSM service)
+    //val mergedDataType = if( mergeResultSets ) "result_set" else "result_summary"
+    //udsDataset.setSerializedProperties() // merged_data_type = mergedDataType
+
+    udsEM.persist(udsDataset)
+
+    Some(mergedRsm)
   }
 
   private def _mergeAndValidateDatasets(rsms: Seq[ResultSummary]): ResultSummary = {
 
     val mergedRs = if (this.mergeResultSets) {
 
-      val targetRsList = rsms.map(_.resultSet.get)
-      val decoyRsList = targetRsList.withFilter(_.decoyResultSet.isDefined).map(_.decoyResultSet.get)
+      val rsList = rsms.map(_.resultSet.get)
 
-      // Merge target result sets
-      val targetRsMerger = new ResultSetMerger(execContext, None, Some(targetRsList), Some(AdditionMode.AGGREGATION))
-      targetRsMerger.runService()
+      // Merge result sets
+      // (the ResultSetMerger merges both target and decoy result sets, stores them and links the merged decoy to the merged target)
+      val rsMerger = new ResultSetMerger(execContext, None, Some(rsList), Some(AdditionMode.AGGREGATION))
+      rsMerger.runService()
 
-      val mergedTargetRs = targetRsMerger.mergedResultSet
-
-      // Merge decoy result sets
-      if (decoyRsList.nonEmpty) {
-        val decoyRsMerger = new ResultSetMerger(execContext, None, Some(decoyRsList), Some(AdditionMode.AGGREGATION))
-        decoyRsMerger.runService()
-        mergedTargetRs.decoyResultSet = Some(decoyRsMerger.mergedResultSet)
-      }
-
-      mergedTargetRs
+      rsMerger.mergedResultSet
 
     } else {
 
@@ -352,20 +358,42 @@ class IdentificationTreeValidator(
     rsValidator.run()
 
     val validatedTargetRsm = rsValidator.validatedTargetRsm
-    assert(validatedTargetRsm.decoyResultSummary.isDefined, "the decoy RSM must be defined")
+    val validatedDecoyRsmOpt = Option(validatedTargetRsm.decoyResultSummary).flatten
 
-    val storerContext = StorerContext(execContext)
-    val childTargetRsmIds = rsms.map(_.id)
-    val childTargetRsIds = rsms.map(_.getResultSetId)
+    // Store the validated RSMs (decoy first, so that the target RSM can reference it)
+    if (this.mergeResultSets) {
+      // The merged result sets have already been stored by the ResultSetMerger
+      val rsmStorer = RsmStorer(execContext.getMSIDbConnectionContext)
+      validatedDecoyRsmOpt.foreach(rsmStorer.storeResultSummary(_, execContext))
+      rsmStorer.storeResultSummary(validatedTargetRsm, execContext)
+    } else {
+      // The merged result sets are still in memory: store them with the RSMs
+      val storerContext = StorerContext(execContext)
 
-    ResultSummaryMerger.storeResultSetAndSummary(
-      storerContext,
-      validatedTargetRsm,
-      childTargetRsmIds,
-      childTargetRsIds
-    )(execContext)
+      if (validatedDecoyRsmOpt.isDefined) {
+        val childDecoyRsms = rsms.flatMap(rsm => Option(rsm.decoyResultSummary).flatten.toSeq)
 
-    rsValidator.validatedTargetRsm
+        if (childDecoyRsms.isEmpty) {
+          logger.warn("Merged decoy ResultSummary will not be stored: no child decoy ResultSummary found")
+        } else {
+          ResultSummaryMerger.storeResultSetAndSummary(
+            storerContext,
+            validatedDecoyRsmOpt.get,
+            childDecoyRsms.map(_.id),
+            childDecoyRsms.map(_.getResultSetId)
+          )(execContext)
+        }
+      }
+
+      ResultSummaryMerger.storeResultSetAndSummary(
+        storerContext,
+        validatedTargetRsm,
+        rsms.map(_.id),
+        rsms.map(_.getResultSetId)
+      )(execContext)
+    }
+
+    validatedTargetRsm
   }
 
 }

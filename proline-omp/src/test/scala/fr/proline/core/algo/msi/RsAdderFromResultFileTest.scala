@@ -6,9 +6,10 @@ import fr.proline.core.algo.msi.filtering.pepmatch.ScorePSMFilter
 import fr.proline.core.algo.msi.validation.{BasicTDAnalyzer, TargetDecoyModes}
 import fr.proline.core.dal.AbstractDatastoreTestCase
 import fr.proline.core.dbunit.{DbUnitResultFileLocation, STR_F122817_Mascot_v2_3}
-import fr.proline.core.om.model.msi.ResultSet
+import fr.proline.core.om.model.msi.{ResultSet, SequenceMatch}
 import fr.proline.core.om.provider.PeptideCacheExecutionContext
-import fr.proline.core.om.provider.msi.impl.SQLResultSummaryProvider
+import fr.proline.core.om.provider.msi.ResultSetFilter
+import fr.proline.core.om.provider.msi.impl.{SQLResultSetProvider, SQLResultSummaryProvider}
 import fr.proline.core.service.msi.ResultSetValidator
 import fr.proline.repository.DriverType
 import org.junit.Assert._
@@ -62,6 +63,42 @@ class RsAdderFromResultFileTest extends StrictLogging with RsAdderFromResultFile
     val builtRS = rsAddAlgo.toResultSet()
     
     checkBuiltResultSet(builtRS)
+
+    storeBuiltResultSet(builtRS)
+  }
+
+  @Test
+  def addRankFilteredRS() {
+
+    // Load the result set with a pretty rank filter, as IdentificationTreeValidator does:
+    // only the peptide matches are filtered, the protein and sequence matches are all kept
+    val rsProvider = new SQLResultSetProvider(PeptideCacheExecutionContext(executionContext))
+    val rsFilter = ResultSetFilter(maxPeptideMatchPrettyRank = Some(1))
+    val filteredRS = rsProvider.getResultSets(Seq(RsAdderFromResultFileTest.targetRSId), Some(rsFilter)).head
+
+    val keptPepIds = filteredRS.peptideMatches.map(_.peptide.id).toSet
+    val isKeptSeqMatch = (seqMatch: SequenceMatch) => keptPepIds.contains(seqMatch.getPeptideId)
+    assertTrue(
+      "some sequence matches of the filtered result set should reference a filtered out peptide",
+      filteredRS.proteinMatches.flatMap(_.sequenceMatches).exists(!isKeptSeqMatch(_))
+    )
+
+    val rsAddAlgo = new ResultSetAdder(resultSetId = ResultSet.generateNewId())
+    rsAddAlgo.addResultSet(filteredRS)
+
+    val builtRS = rsAddAlgo.toResultSet()
+
+    // Sequence matches of filtered out peptides are removed, and the other ones reference a merged peptide match
+    val builtPepMatchIds = builtRS.peptideMatches.map(_.id).toSet
+    val builtSeqMatches = builtRS.proteinMatches.flatMap(_.sequenceMatches)
+    assertTrue("sequence matches of filtered out peptides should be removed", builtSeqMatches.forall(isKeptSeqMatch))
+    assertTrue("sequence matches should reference a merged peptide match", builtSeqMatches.forall(sm => builtPepMatchIds.contains(sm.bestPeptideMatchId)))
+
+    // Protein matches having only sequence matches of filtered out peptides are removed
+    val expectedProtMatchesCount = filteredRS.proteinMatches.count { protMatch =>
+      protMatch.sequenceMatches.isEmpty || protMatch.sequenceMatches.exists(isKeptSeqMatch)
+    }
+    assertEquals("merged protein matches count", expectedProtMatchesCount, builtRS.proteinMatches.length)
 
     storeBuiltResultSet(builtRS)
   }

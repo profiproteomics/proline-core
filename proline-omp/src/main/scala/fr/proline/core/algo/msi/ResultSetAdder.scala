@@ -136,8 +136,13 @@ class ResultSetAdder(
     val pepMatchesByPepId = mergedPeptideMatches.groupBy(_.peptide.id)
     
     // Build protein matches
-    val mergedProteinMatches = protMatchAdderByKey.values.map { proteinMatchAdder =>
+    // (protein matches whose sequence matches have no peptide match left are removed, see ProteinMatchAdder.toProteinMatch)
+    val mergedProteinMatches = protMatchAdderByKey.values.flatMap { proteinMatchAdder =>
       proteinMatchAdder.toProteinMatch(pepMatchesByPepId)
+    }
+    val removedProtMatchesCount = protMatchAdderByKey.size - mergedProteinMatches.size
+    if (removedProtMatchesCount > 0) {
+      logger.warn(s"$removedProtMatchesCount protein matches have been removed because their peptide matches have been filtered out")
     }
 
     // Create merged result set
@@ -336,11 +341,21 @@ private[this] class ProteinMatchAdder( newResultSetId: Long ) extends LazyLoggin
     }
   }
   
-  def toProteinMatch( pepMatchesByPepId: Map[Long, Array[PeptideMatch]]): ProteinMatch = {
+  /**
+   * Builds the merged protein match.
+   *
+   * Sequence matches whose peptide has no merged peptide match are ignored:
+   * this happens when the added result sets have been loaded with a filter on peptide matches (e.g. pretty rank filter).
+   *
+   * @return the merged protein match, or None if all its sequence matches have been ignored
+   */
+  def toProteinMatch(pepMatchesByPepId: Map[Long, Array[PeptideMatch]]): Option[ProteinMatch] = {
     require( firstAddedProteinMatch != null, "at least one protein match must be added")
-    
-    // Retrieve all parent SequenceMatch and sort them by protein sequence location
-    val parentSeqMatches = childSeqMatchByUniqueKey.values.toArray.sortBy(_.start)
+
+    // Retrieve all parent SequenceMatch having peptide matches and sort them by protein sequence location
+    val allParentSeqMatches = childSeqMatchByUniqueKey.values.toArray
+    val parentSeqMatches = allParentSeqMatches.filter(seqMatch => pepMatchesByPepId.contains(seqMatch.getPeptideId)).sortBy(_.start)
+    if (allParentSeqMatches.nonEmpty && parentSeqMatches.isEmpty) return None
 
     // Retrieve protein id for coverage computation
 //    val proteinId = firstAddedProteinMatch.getProteinId
@@ -364,7 +379,7 @@ private[this] class ProteinMatchAdder( newResultSetId: Long ) extends LazyLoggin
     }
     
     // Clone firstAddedProteinMatch while setting some values computed using the merged protein matches
-    firstAddedProteinMatch.copy(
+    Some(firstAddedProteinMatch.copy(
       description = proteinMatchDescription,
       id = ProteinMatch.generateNewId,
       score = proteinMatchScore,
@@ -372,7 +387,7 @@ private[this] class ProteinMatchAdder( newResultSetId: Long ) extends LazyLoggin
       sequenceMatches = parentSeqMatches,
       seqDatabaseIds = seqDatabaseIdSet.toArray,
       resultSetId = newResultSetId
-    )
+    ))
   }
   
 }

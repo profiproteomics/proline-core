@@ -164,8 +164,8 @@ class ResultSummaryMerger(
   resultSummaryIds: Option[Seq[Long]],
   resultSummaries: Option[Seq[ResultSummary]],
   aggregationMode: Option[AdditionMode.Value] = None,
-  storeRsm: Boolean = true,
-  useJPA: Boolean = false
+  useJPA: Boolean = false,
+  storeRsm: Boolean = true
 ) extends IService with LazyLogging {
   
   var mergedResultSummary: ResultSummary = _
@@ -357,6 +357,7 @@ class ResultSummaryMerger(
       if (storeRsm) {
         logger.info("Storing DECOY ResultSummary ...")
         ResultSummaryMerger.storeResultSetAndSummary(storerContext, decoyRsm, decoyRsmIds, childDecoyRsIds)(execCtx)
+        executeOnProgress() //execute registered action during progress
       }
 
       // Update decoy RSM / RS ids
@@ -418,6 +419,7 @@ class ResultSummaryMerger(
     if (storeRsm) {
       logger.info("Storing TARGET ResultSummary ...")
       ResultSummaryMerger.storeResultSetAndSummary(storerContext, mergedTargetRsm, targetRsmIds, childTargetRsIds)(execCtx)
+      executeOnProgress() //execute registered action during progress
     }
 
     mergedTargetRsm
