@@ -2,12 +2,12 @@ jdk:
   - openjdk17
 before_install:
   - sdk install maven 3.9.9 && sdk use maven 3.9.9
-  - COMMONS_REF=develop; MZDB_REF=develop
-  - git clone --depth 1 --branch $COMMONS_REF https://github.com/profiproteomics/profi-commons.git $HOME/profi-commons
+  - BRANCH_NAME=develop
+  - git clone --depth 1 --branch $BRANCH_NAME https://github.com/profiproteomics/profi-commons.git $HOME/profi-commons
   - (cd $HOME/profi-commons && mvn -q -f profi_pom/pom.xml install && mvn -q install -DskipTests)
   - curl -sSfL -o $HOME/sgfilter-1.2.jar https://repo.clojars.org/mr/go/sgfilter/sgfilter/1.2/sgfilter-1.2.jar
   - mvn -q install:install-file -Dfile=$HOME/sgfilter-1.2.jar -DgroupId=mr.go.sgfilter -DartifactId=sgfilter -Dversion=1.2 -Dpackaging=jar
-  - git clone --depth 1 --branch $MZDB_REF https://github.com/profiproteomics/mzdb.git $HOME/mzdb
+  - git clone --depth 1 --branch $BRANCH_NAME https://github.com/profiproteomics/mzdb.git $HOME/mzdb
   - (cd $HOME/mzdb && mvn -q install -DskipTests)
 install:
-  - mvn install -DskipTests
+  - mvn install -Dmaven.test.skip=true
