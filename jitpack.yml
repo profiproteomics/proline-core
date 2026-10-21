@@ -10,4 +10,4 @@ before_install:
   - git clone --depth 1 --branch $BRANCH_NAME https://github.com/profiproteomics/mzdb.git $HOME/mzdb
   - (cd $HOME/mzdb && mvn -q install -DskipTests)
 install:
-  - mvn install -Dmaven.test.skip=true
+  - mvn install -Dmaven.test.skip.exec=true
