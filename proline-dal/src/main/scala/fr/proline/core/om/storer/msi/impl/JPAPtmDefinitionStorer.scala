@@ -29,7 +29,7 @@ object JPAPtmDefinitionStorer extends IPtmDefinitionStorer with LazyLogging {
   /**
    * Instantiates the PtmDefinition writer and call the insertPtmDefinitions method.
    */
-  def storePtmDefinitions(ptmDefs: Seq[PtmDefinition], execCtx: IExecutionContext): Int = {
+  def storePtmDefinitions(ptmDefs: collection.Seq[PtmDefinition], execCtx: IExecutionContext): Int = {
     val writer = new JPAPtmDefinitionWriter(execCtx)
     writer.insertPtmDefinitions(ptmDefs)
   }
@@ -70,7 +70,7 @@ object JPAPtmDefinitionStorer extends IPtmDefinitionStorer with LazyLogging {
      *
      * TODO: create custom Exception classes ???
      */
-    def insertPtmDefinitions(ptmDefs: Seq[PtmDefinition]): Int = {
+    def insertPtmDefinitions(ptmDefs: collection.Seq[PtmDefinition]): Int = {
       require(ptmDefs != null, "ptmDefs must not be null")
 
       var insertedPtmDefs = 0

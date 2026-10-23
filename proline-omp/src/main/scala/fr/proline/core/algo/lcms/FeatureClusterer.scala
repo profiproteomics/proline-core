@@ -29,13 +29,13 @@ object ClusterizeFeatures extends LazyLogging {
     def apply(a: Feature, b: Feature): Boolean = if (a.elutionTime < b.elutionTime) true else false
   }
   
-  def apply(lcmsMap: ILcMsMap, scans: Seq[LcMsScan], params: ClusteringParams): ProcessedMap = {    
+  def apply(lcmsMap: ILcMsMap, scans: collection.Seq[LcMsScan], params: ClusteringParams): ProcessedMap = {    
     val ftClusterer = new FeatureClusterer(lcmsMap,scans,params)
     ftClusterer.clusterizeFeatures()
   }
   
   def buildFeatureCluster(
-    ftGroup: Seq[Feature],
+    ftGroup: collection.Seq[Feature],
     rawMapId: Long,
     procMapId: Long,
     intensityComputationMethod: ClusterIntensityComputation.Value,
@@ -159,7 +159,7 @@ object ClusterizeFeatures extends LazyLogging {
 
 class FeatureClusterer(
   lcmsMap: ILcMsMap,
-  scans: Seq[LcMsScan],
+  scans: collection.Seq[LcMsScan],
   params: ClusteringParams
 ) extends LazyLogging {
   
@@ -188,7 +188,7 @@ class FeatureClusterer(
   // Retrieve some vars
   private val scanById = scans.map { scan => (scan.id -> scan) }.toMap
   
-  def buildFeatureCluster( ftGroup: Seq[Feature] ): Feature = {
+  def buildFeatureCluster( ftGroup: collection.Seq[Feature] ): Feature = {
     ClusterizeFeatures.buildFeatureCluster(ftGroup, rawMapId, procMapId, intensityComputationMethod, timeComputationMethod, scanById)
   }
 
@@ -330,7 +330,7 @@ class FeatureClusterer(
     newLcmsMap
   }
 
-  private def _splitFtGroupByTime(ftGroup: Seq[Feature]): ArrayBuffer[ArrayBuffer[Feature]] = {
+  private def _splitFtGroupByTime(ftGroup: collection.Seq[Feature]): ArrayBuffer[ArrayBuffer[Feature]] = {
 
     // Sort features by first scan time
     val nbFts = ftGroup.length
@@ -386,10 +386,10 @@ class FeatureClusterer(
 
   }
 
-  private def _splitFtGroupByMoz(ftGroup: Seq[Feature], mozTolInDalton: Double): ArrayBuffer[Seq[Feature]] = {
+  private def _splitFtGroupByMoz(ftGroup: collection.Seq[Feature], mozTolInDalton: Double): ArrayBuffer[collection.Seq[Feature]] = {
 
     val nbFeatures = ftGroup.length
-    if (nbFeatures == 0) return ArrayBuffer.empty[Seq[Feature]]
+    if (nbFeatures == 0) return ArrayBuffer.empty[collection.Seq[Feature]]
 
     // Sort features by m/z
     val sortedFts = ftGroup.sortBy( _.moz )
@@ -397,7 +397,7 @@ class FeatureClusterer(
     // Check if first ft moz is too far from last ft moz
     val firstFt = sortedFts.head
     val lastFt = sortedFts.last
-    var ftsGroupedByMz = new ArrayBuffer[Seq[Feature]]
+    var ftsGroupedByMz = new ArrayBuffer[collection.Seq[Feature]]
     
     // If there is only one feature in the group or if the features are close in m/z
     if (nbFeatures == 1 || math.abs(firstFt.moz - lastFt.moz) < mozTolInDalton) {

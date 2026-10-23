@@ -46,8 +46,8 @@ object ResultSummaryMerger {
 
 class ResultSummaryMerger(
   execCtx: IExecutionContext,
-  resultSummaryIds: Option[Seq[Long]],
-  resultSummaries: Option[Seq[ResultSummary]],
+  resultSummaryIds: Option[collection.Seq[Long]],
+  resultSummaries: Option[collection.Seq[ResultSummary]],
   aggregationMode: Option[AdditionMode.Value] = None,
   useJPA: Boolean = false
 ) extends IService with LazyLogging {
@@ -89,7 +89,7 @@ class ResultSummaryMerger(
   }
 
   private def _mergeFromResultSummaries(
-    resultSummaries: Seq[ResultSummary],
+    resultSummaries: collection.Seq[ResultSummary],
     aggregationMode: Option[AdditionMode.Value],
     storerContext: StorerContext
   ): ResultSummary = {
@@ -127,7 +127,7 @@ class ResultSummaryMerger(
   }
 
   private def _mergeFromResultSummaryIds(
-    resultSummaryIds: Seq[Long],
+    resultSummaryIds: collection.Seq[Long],
     aggregationMode: Option[AdditionMode.Value],
     storerContext: StorerContext
   ): ResultSummary = {
@@ -145,8 +145,8 @@ class ResultSummaryMerger(
   }
   
   private def _mergeAndStoreResultSummaries(
-    targetRsmIds: Seq[Long],
-    decoyRsmIds: Seq[Long],
+    targetRsmIds: collection.Seq[Long],
+    decoyRsmIds: collection.Seq[Long],
     resultSummaryProvider: Long => ResultSummary,
     aggregationMode: Option[AdditionMode.Value],
     storerContext: StorerContext
@@ -340,7 +340,7 @@ class ResultSummaryMerger(
     } //End DoJDBCWork
   }
 
- private def _loadReadablePtmString( storerContext: StorerContext, rsIds: Seq[Long]): mutable.Map[Long,PeptideReadablePtmString] ={
+ private def _loadReadablePtmString( storerContext: StorerContext, rsIds: collection.Seq[Long]): mutable.Map[Long,PeptideReadablePtmString] ={
     val pepReadablePtmStringByPepId : mutable.Map[Long,PeptideReadablePtmString] = storerContext.getEntityCache(classOf[PeptideReadablePtmString])
     //clear previous data
     pepReadablePtmStringByPepId.clear()
@@ -352,8 +352,8 @@ class ResultSummaryMerger(
   private def _storeResultSummary(
     storerContext: StorerContext,
     tmpMergedResultSummary: ResultSummary,
-    childRsmIds: Seq[Long],
-    childRsIds: Seq[Long]
+    childRsmIds: collection.Seq[Long],
+    childRsIds: collection.Seq[Long]
   ) {
     
     require( childRsmIds.nonEmpty, "childRsmIds is empty")

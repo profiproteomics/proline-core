@@ -88,14 +88,14 @@ class SQLPTMProvider(val msiDbCtx: MsiDbConnectionContext) extends IPTMProvider 
     this.ptmDefinitionById.values.map { p => p.names.shortName -> p.id }.toMap
   }
 
-  def getPtmDefinitionsAsOptions(ptmDefIds: Seq[Long]): Array[Option[PtmDefinition]] = {
+  def getPtmDefinitionsAsOptions(ptmDefIds: collection.Seq[Long]): Array[Option[PtmDefinition]] = {
     if (ptmDefIds.isEmpty) return Array()
     
     val ptmDefById = this.ptmDefinitionById
     ptmDefIds.map { ptmDefById.get(_) }.toArray
   }
 
-  def getPtmDefinitions(ptmDefIds: Seq[Long]): Array[PtmDefinition] = {
+  def getPtmDefinitions(ptmDefIds: collection.Seq[Long]): Array[PtmDefinition] = {
     if (ptmDefIds.isEmpty) return Array()
     
     this.getPtmDefinitionsAsOptions(ptmDefIds).filter(_.isDefined).map(_.get)

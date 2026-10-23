@@ -10,9 +10,9 @@ import scala.collection.mutable.{ArrayBuffer, HashMap, LongMap}
 class ComprehensiveMapAligner extends AbstractLcmsMapAligner {
 
   def computeMapAlignmentsUsingCustomFtMapper(
-    lcmsMaps: Seq[ProcessedMap],
+    lcmsMaps: collection.Seq[ProcessedMap],
     alnConfig: AlignmentConfig
-  )(ftMapper: (Seq[Feature],Seq[Feature]) => LongMap[_ <: Seq[Feature]]): AlignmentResult = {
+  )(ftMapper: (collection.Seq[Feature],collection.Seq[Feature]) => LongMap[_ <: collection.Seq[Feature]]): AlignmentResult = {
     
     val nbMaps = lcmsMaps.length
     
@@ -43,8 +43,8 @@ class ComprehensiveMapAligner extends AbstractLcmsMapAligner {
   }
   
   def determineAlnReferenceMap(
-    lcmsMaps: Seq[ProcessedMap], 
-    mapAlnSets: Seq[MapAlignmentSet],
+    lcmsMaps: collection.Seq[ProcessedMap], 
+    mapAlnSets: collection.Seq[MapAlignmentSet],
     currentRefMap: ProcessedMap = null
   ): ProcessedMap = {
     require(lcmsMaps.nonEmpty, "lcmsMaps is empty")

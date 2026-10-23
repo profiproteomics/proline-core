@@ -1,7 +1,7 @@
 package fr.proline.core.service.uds
 
 import java.util.HashSet
-import scala.collection.JavaConversions.collectionAsScalaIterable
+import scala.jdk.CollectionConverters._
 import scala.collection.mutable.HashMap
 import fr.profi.api.service.IService
 import fr.proline.core.om.model.msq._

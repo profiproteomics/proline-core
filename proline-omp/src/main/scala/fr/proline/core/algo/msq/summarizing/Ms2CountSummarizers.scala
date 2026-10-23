@@ -3,7 +3,7 @@ package fr.proline.core.algo.msq.summarizing
 import collection.mutable.ArrayBuffer
 import scala.collection.mutable.LongMap
 import scala.collection.mutable.HashMap
-import collection.JavaConversions.iterableAsScalaIterable
+import scala.jdk.CollectionConverters._
 import com.typesafe.scalalogging.LazyLogging
 import fr.proline.core.om.model.msi._
 import fr.proline.core.om.model.msq._
@@ -14,7 +14,7 @@ object Ms2CountEntitiesSummarizer extends IMqPepAndProtEntitiesSummarizer with L
   def computeMasterQuantPeptides(
     masterQuantChannel: MasterQuantChannel,
     quantMergedRSM: ResultSummary,
-    resultSummaries: Seq[ResultSummary]
+    resultSummaries: collection.Seq[ResultSummary]
   ): Array[MasterQuantPeptide] = {
     
     // Map some values
@@ -208,9 +208,9 @@ object Ms2CountEntitiesSummarizer extends IMqPepAndProtEntitiesSummarizer with L
   
   override def computeMasterQuantProteinSets(
     masterQuantChannel: MasterQuantChannel,
-    masterQuantPeptides: Seq[MasterQuantPeptide],
+    masterQuantPeptides: collection.Seq[MasterQuantPeptide],
     mergedRSM: ResultSummary,
-    resultSummaries: Seq[ResultSummary]
+    resultSummaries: collection.Seq[ResultSummary]
   ): Array[MasterQuantProteinSet] = {
     
     val mqPepByPepInstId = masterQuantPeptides.map { mqp => mqp.peptideInstance.get.id -> mqp }.toMap

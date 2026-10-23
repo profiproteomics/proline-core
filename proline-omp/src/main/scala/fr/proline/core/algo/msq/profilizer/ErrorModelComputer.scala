@@ -14,7 +14,7 @@ import scala.math.log
 
 
 trait IErrorModel {
-  val errorDistribution: Seq[IErrorBin]
+  val errorDistribution: collection.Seq[IErrorBin]
   require(errorDistribution.length > 0, "at least one value must be present in the error distribution")  
 }
 
@@ -22,7 +22,7 @@ trait IErrorBin { val abundance: Float }
 case class AbsoluteErrorBin( abundance: Float, stdDev: Float ) extends IErrorBin
 case class RelativeErrorBin( abundance: Float, ratioQuartiles: Tuple3[Float,Float,Float] ) extends IErrorBin
 
-class AbsoluteErrorModel( val errorDistribution: Seq[AbsoluteErrorBin] ) extends IErrorModel {
+class AbsoluteErrorModel( val errorDistribution: collection.Seq[AbsoluteErrorBin] ) extends IErrorModel {
   
   val ERROR_FACTOR = 3.0f
   
@@ -105,7 +105,7 @@ class AbsoluteErrorModel( val errorDistribution: Seq[AbsoluteErrorBin] ) extends
   
 }
 
-class RelativeErrorModel( val errorDistribution: Seq[RelativeErrorBin] ) extends IErrorModel {
+class RelativeErrorModel( val errorDistribution: collection.Seq[RelativeErrorBin] ) extends IErrorModel {
   
   private val abundanceRatioBoundsPairs = errorDistribution.map( bin => bin.abundance -> bin.ratioQuartiles )
   private val abundanceQ1Pairs = abundanceRatioBoundsPairs.map( pair => pair._1 -> pair._2._1 )
@@ -213,7 +213,7 @@ object ErrorModelComputer {
   
   val percentileComputer = new Percentile()
   
-  protected def computeErrorHistogram( errorObservations: Seq[IErrorObservation], nbins: Option[Int] ): Array[(Bin, Seq[IErrorObservation])] = {
+  protected def computeErrorHistogram( errorObservations: collection.Seq[IErrorObservation], nbins: Option[Int] ): Array[(Bin, collection.Seq[IErrorObservation])] = {
     
     // Filter and sort observations
     val sortedObservations = errorObservations.filter( _.abundance > 0 ).sortBy(_.abundance)
@@ -228,7 +228,7 @@ object ErrorModelComputer {
     errorHistoComputer.calcHistogram( nbins = nbinsAsInt )
   }
   
-  protected def summarizeErrorObsGroup(errorObsGroup: Seq[IErrorObservation] ): (Double,Seq[Double]) = {
+  protected def summarizeErrorObsGroup(errorObsGroup: collection.Seq[IErrorObservation] ): (Double,collection.Seq[Double]) = {
     
     var( abLogSum, errorValues ) = (0.0,new ArrayBuffer[Double])
     
@@ -242,7 +242,7 @@ object ErrorModelComputer {
     (abLogSum,errorValues)
   }
   
-  def computeAbsoluteErrorModel( errorObservations: Seq[AbsoluteErrorObservation], nbins: Option[Int] = None ): AbsoluteErrorModel = {
+  def computeAbsoluteErrorModel( errorObservations: collection.Seq[AbsoluteErrorObservation], nbins: Option[Int] = None ): AbsoluteErrorModel = {
     
     val errorDistribution = new ArrayBuffer[AbsoluteErrorBin](errorObservations.length)
     
@@ -265,7 +265,7 @@ object ErrorModelComputer {
     new AbsoluteErrorModel( errorDistribution )
   }
   
-  def computeRelativeErrorModel( errorObservations: Seq[RelativeErrorObservation], nbins: Option[Int] = None ): RelativeErrorModel = {
+  def computeRelativeErrorModel( errorObservations: collection.Seq[RelativeErrorObservation], nbins: Option[Int] = None ): RelativeErrorModel = {
     
     val errorDistribution = new ArrayBuffer[RelativeErrorBin](errorObservations.length)
     

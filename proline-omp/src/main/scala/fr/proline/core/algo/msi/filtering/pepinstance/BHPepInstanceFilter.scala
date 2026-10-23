@@ -14,7 +14,7 @@ class BHPepInstanceFilter(var adjPValueTreshold: Float = 0.01f) extends IPeptide
   val filterParameter = PepInstanceFilterParams.BH_ADJUSTED_PVALUE.toString
   val filterDescription = "peptide filter based on BH adjusted pValue"
 
-  def filterPeptideInstances(pepInstances: Seq[PeptideInstance]): Unit = {
+  def filterPeptideInstances(pepInstances: collection.Seq[PeptideInstance]): Unit = {
 
     val filteredPeptideInstances = pepInstances.filter(_.isValidated)
     val (decoyPepInstances, targetPepInstances) = filteredPeptideInstances.partition(_.isDecoy)

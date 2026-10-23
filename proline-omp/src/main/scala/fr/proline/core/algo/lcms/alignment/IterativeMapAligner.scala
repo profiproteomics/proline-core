@@ -9,9 +9,9 @@ import fr.proline.core.om.model.lcms._
 class IterativeMapAligner extends AbstractLcmsMapAligner with LazyLogging {
 
   def computeMapAlignmentsUsingCustomFtMapper(
-    lcmsMaps: Seq[ProcessedMap],
+    lcmsMaps: collection.Seq[ProcessedMap],
     alnConfig: AlignmentConfig
-  )(ftMapper: (Seq[Feature],Seq[Feature]) => LongMap[_ <: Seq[Feature]]): AlignmentResult = {
+  )(ftMapper: (collection.Seq[Feature],collection.Seq[Feature]) => LongMap[_ <: collection.Seq[Feature]]): AlignmentResult = {
 
     // Select randomly a reference map
     val refMapRandomIndex = (math.random * lcmsMaps.length).toInt
@@ -27,8 +27,8 @@ class IterativeMapAligner extends AbstractLcmsMapAligner with LazyLogging {
   }
 
   private def findBestMapAlignments(
-    lcmsMaps: Seq[ProcessedMap],
-    ftMapper: (Seq[Feature],Seq[Feature]) => LongMap[_ <: Seq[Feature]],
+    lcmsMaps: collection.Seq[ProcessedMap],
+    ftMapper: (collection.Seq[Feature],collection.Seq[Feature]) => LongMap[_ <: collection.Seq[Feature]],
     alnRefMap: ProcessedMap,
     alnConfig: AlignmentConfig,
     iterationNum: Int
@@ -66,11 +66,11 @@ class IterativeMapAligner extends AbstractLcmsMapAligner with LazyLogging {
   }
 
   private def computeMapAlnSets(
-    lcmsMaps: Seq[ProcessedMap],
-    ftMapper: (Seq[Feature],Seq[Feature]) => LongMap[_ <: Seq[Feature]],
+    lcmsMaps: collection.Seq[ProcessedMap],
+    ftMapper: (collection.Seq[Feature],collection.Seq[Feature]) => LongMap[_ <: collection.Seq[Feature]],
     alnRefMap: ProcessedMap,
     alnConfig: AlignmentConfig
-  ): Seq[MapAlignmentSet] = {
+  ): collection.Seq[MapAlignmentSet] = {
     //print "computing feature alignments...\n"
 
     // Iterate over maps to compute alignments with the random or new reference map
@@ -82,8 +82,8 @@ class IterativeMapAligner extends AbstractLcmsMapAligner with LazyLogging {
   }
 
   def determineAlnReferenceMap(
-    lcmsMaps: Seq[ProcessedMap],
-    mapAlnSets: Seq[MapAlignmentSet],
+    lcmsMaps: collection.Seq[ProcessedMap],
+    mapAlnSets: collection.Seq[MapAlignmentSet],
     currentRefMap: ProcessedMap
   ): ProcessedMap = {
     require(lcmsMaps.nonEmpty, "lcmsMaps is empty")

@@ -71,7 +71,7 @@ class JPARsStorer(override val pklWriter: Option[IPeaklistWriter] = None) extend
    * @param msQueries Sequence of MsQuery object, the sequence must not be {{{null}}}.
    *
    */
-  override def storeMsQueries(msiSearchId: Long, msQueries: Seq[MsQuery], storerContext: StorerContext): StorerContext = {
+  override def storeMsQueries(msiSearchId: Long, msQueries: collection.Seq[MsQuery], storerContext: StorerContext): StorerContext = {
 
     require(msQueries != null, "MsQueries seq is null")
 

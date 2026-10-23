@@ -13,7 +13,7 @@ class BHPeptideInstanceValidator(
   val validatorName = "BH peptide validator"
   val validatorDescription = "Peptide validator optimizing FDR value based on BH"
 
-  def validatePeptideMatches( pepInstances: Seq[PeptideInstance], decoyPepInstances: Option[Seq[PeptideInstance]] = None, tdAnalyzer: Option[ITargetDecoyAnalyzer] = None): ValidationResults = {
+  def validatePeptideMatches( pepInstances: collection.Seq[PeptideInstance], decoyPepInstances: Option[collection.Seq[PeptideInstance]] = None, tdAnalyzer: Option[ITargetDecoyAnalyzer] = None): ValidationResults = {
         
     // Apply validation filter
     validationFilter.filterPeptideInstances(pepInstances ++ decoyPepInstances.getOrElse(Seq.empty[PeptideInstance]))
@@ -41,7 +41,7 @@ class TDPeptideInstanceValidator(
 
   val expectedFdr: Option[Float] = None
 
-  def validatePeptideMatches( pepInstances: Seq[PeptideInstance], decoyPepInstances: Option[Seq[PeptideInstance]] = None, tdAnalyzer: Option[ITargetDecoyAnalyzer] = None): ValidationResults = {
+  def validatePeptideMatches( pepInstances: collection.Seq[PeptideInstance], decoyPepInstances: Option[collection.Seq[PeptideInstance]] = None, tdAnalyzer: Option[ITargetDecoyAnalyzer] = None): ValidationResults = {
 
     // Apply validation filter
     validationFilter.filterPeptideInstances(pepInstances ++ decoyPepInstances.getOrElse(Seq.empty[PeptideInstance]))

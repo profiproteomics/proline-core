@@ -21,7 +21,7 @@ import fr.profi.util.StringUtils
 
 object ImportScanSequence { // extends String2FileConverter
 
-  def parseMsScans(file: File): Seq[LcMsScan] = {
+  def parseMsScans(file: File): collection.Seq[LcMsScan] = {
     val it = fromFile(file).getLines()
     val header = it.next().split("\t") //skip the first header line
 
@@ -54,7 +54,7 @@ object ImportScanSequence { // extends String2FileConverter
     this.buildScanSequence(this.parseMsScans(file), pps, rawFile)
   }
 
-  def buildScanSequence(scans: Seq[LcMsScan], pps: PeakPickingSoftware, rawFile: RawFile): LcMsScanSequence = {
+  def buildScanSequence(scans: collection.Seq[LcMsScan], pps: PeakPickingSoftware, rawFile: RawFile): LcMsScanSequence = {
 
     val ms1Count = scans.filter(_.msLevel == 1).length
     val ms2Count = scans.length - ms1Count
@@ -63,7 +63,7 @@ object ImportScanSequence { // extends String2FileConverter
   }
 
   def buildScanSequence(
-    scans: Seq[LcMsScan],
+    scans: collection.Seq[LcMsScan],
     pps: PeakPickingSoftware,
     rawFile: RawFile,
     ms1Count: Int,
@@ -85,7 +85,7 @@ object ImportScanSequence { // extends String2FileConverter
 
 class ImportScanSequence(lcmsDbCtx: LcMsDbConnectionContext, lcmsScanSeq: LcMsScanSequence) extends IService {
 
-  def this(lcmsDbCtx: LcMsDbConnectionContext, scans: Seq[LcMsScan], pps: PeakPickingSoftware, rawfile: RawFile) {
+  def this(lcmsDbCtx: LcMsDbConnectionContext, scans: collection.Seq[LcMsScan], pps: PeakPickingSoftware, rawfile: RawFile) {
     this(lcmsDbCtx, ImportScanSequence.buildScanSequence(scans, pps, rawfile))
   }
 

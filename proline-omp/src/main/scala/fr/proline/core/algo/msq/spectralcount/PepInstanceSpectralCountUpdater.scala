@@ -164,7 +164,7 @@ class PepInstanceFilteringLeafSCUpdater extends IPepInstanceSpectralCountUpdater
    *
    *
    */
-  def updatePepInstanceSC(rsms: Seq[IResultSummaryLike], execContext: IExecutionContext): Unit = {
+  def updatePepInstanceSC(rsms: collection.Seq[IResultSummaryLike], execContext: IExecutionContext): Unit = {
 
     val lazyRsms = rsms.map { rsmLike =>
       val lazyRsm = rsmLike match {
@@ -233,7 +233,7 @@ class PepInstanceFilteringLeafSCUpdater extends IPepInstanceSpectralCountUpdater
 
       //VDS comment :Could get info from PeptideInstance.peptideMatches.filter on isValidated... but should be sure
       // PeptideInstance.peptideMatches != null ...
-      val validPepMatchesSet = rsm.peptideMatchesByPeptideSetId.flatMap(_._2).toSet
+      val validPepMatchesSet = rsm.peptideMatchesByPeptideSetId.values.flatten.toSet
       logger.trace(" GOT validPepMatchesSet SC for RSM "+rsmID)
 
       // Peptide Instance SC = PepMatch Count
@@ -322,9 +322,9 @@ class PepInstanceFilteringLeafSCUpdater extends IPepInstanceSpectralCountUpdater
 
 
 
-  def getRSMChildsID(rsmID: Long, execContext: IExecutionContext): Option[Seq[Long]] = {
+  def getRSMChildsID(rsmID: Long, execContext: IExecutionContext): Option[collection.Seq[Long]] = {
 
-    var childRSMIdsOp: Option[Seq[Long]] = null
+    var childRSMIdsOp: Option[collection.Seq[Long]] = null
     val jdbcWork = new JDBCWork() {
 
       override def execute(con: Connection) {
@@ -350,11 +350,11 @@ class PepInstanceFilteringLeafSCUpdater extends IPepInstanceSpectralCountUpdater
     childRSMIdsOp
   }
 
-  def getLeavesRS(rsmID: Long, execContext: IExecutionContext): Seq[LazyResultSet] = {
+  def getLeavesRS(rsmID: Long, execContext: IExecutionContext): collection.Seq[LazyResultSet] = {
     val providerContext = ProviderDecoratedExecutionContext(execContext) // Use Object factory
 
     val rsId = getRSIdForRsmID(rsmID, execContext)
-    var leavesRsIds: Seq[Long] = getRSLeafChildsID(rsId, providerContext)
+    var leavesRsIds: collection.Seq[Long] = getRSLeafChildsID(rsId, providerContext)
     var leavesRsBuilder = Seq.newBuilder[LazyResultSet]
 
     val provider: IResultSetProvider = providerContext.getProvider(classOf[IResultSetProvider])
@@ -382,7 +382,7 @@ class PepInstanceFilteringLeafSCUpdater extends IPepInstanceSpectralCountUpdater
     leavesRsBuilder.result
   }
 
-  def getRSLeafChildsID(rsId: Long, execContext: IExecutionContext): Seq[Long] = {
+  def getRSLeafChildsID(rsId: Long, execContext: IExecutionContext): collection.Seq[Long] = {
     var allRSIds = Seq.newBuilder[Long]
     if(loadedRSByID.contains(rsId) && (loadedRSByID(rsId).descriptor.isSearchResult)){
        allRSIds += rsId

@@ -29,7 +29,7 @@ class SQLFeatureProvider(
 
   /** Returns a list of processed features  */
   // TODO: reduce code redundancy with SQLProcessedMapProvider
-  def getProcessedFeatures( featureIds: Seq[Long], loadSubFeatures: Boolean = false ): Array[Feature] = {
+  def getProcessedFeatures( featureIds: collection.Seq[Long], loadSubFeatures: Boolean = false ): Array[Feature] = {
     if( featureIds.isEmpty ) return Array()
 
     DoJDBCReturningWork.withEzDBC(lcmsDbCtx) { ezDBC =>
@@ -152,7 +152,7 @@ class SQLFeatureProvider(
 
   /** Returns a map of sub features feature keyed by its id */
   // TODO : remove code redundancy with SQLProcessedMapProvider (only the SQL Query changes)
-  def getSubFtIdsByClusterFtId( featureIds: Seq[Long] ): Map[Long,Array[Long]] = {
+  def getSubFtIdsByClusterFtId( featureIds: collection.Seq[Long] ): Map[Long,Array[Long]] = {
     if( featureIds.isEmpty ) return Map()
 
     val subFtIdBufferByClusterFtId = new HashMap[Long,ArrayBuffer[Long]]
@@ -182,7 +182,7 @@ class SQLFeatureProvider(
 
   }
 
-  def eachProcessedFeatureRecord( featureIds: Seq[Long], onEachFt: ResultSetRow => Unit ): Unit = {
+  def eachProcessedFeatureRecord( featureIds: collection.Seq[Long], onEachFt: ResultSetRow => Unit ): Unit = {
     if( featureIds.isEmpty ) return ()
 
     DoJDBCWork.withEzDBC(lcmsDbCtx) { ezDBC =>

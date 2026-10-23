@@ -25,7 +25,7 @@ class SQLRawFileProvider(val udsDbCtx: UdsDbConnectionContext, val pathConverter
     getRawFiles( Seq(rawFileIdentifier) ).headOption
   }
 
-  def getRawFiles( rawFileIdentifiers: Seq[String] ): Array[RawFile] = {
+  def getRawFiles( rawFileIdentifiers: collection.Seq[String] ): Array[RawFile] = {
     if( rawFileIdentifiers.isEmpty ) return Array()
     
     DoJDBCReturningWork.withEzDBC(udsDbCtx) { ezDBC =>
@@ -79,7 +79,7 @@ class SQLRunProvider(
   protected val RawFileCols = UdsDbRawFileTable.columns
   protected val RunCols = UdsDbRunTable.columns
   
-  def getRuns( runIds: Seq[Long], loadScanSequence: Boolean = false ): Array[LcMsRun] = {
+  def getRuns( runIds: collection.Seq[Long], loadScanSequence: Boolean = false ): Array[LcMsRun] = {
     if( runIds.isEmpty ) return Array()
     
     // Remove duplicated run ids

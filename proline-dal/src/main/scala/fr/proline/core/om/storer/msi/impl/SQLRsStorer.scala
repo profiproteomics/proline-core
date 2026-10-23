@@ -452,7 +452,7 @@ class SQLRsStorer(
 
   }
 
-  def storeMsQueries(msiSearchID: Long, msQueries: Seq[MsQuery], context: StorerContext): StorerContext = {
+  def storeMsQueries(msiSearchID: Long, msQueries: collection.Seq[MsQuery], context: StorerContext): StorerContext = {
     require(msiSearchWriter.isDefined, "A MSI search writer must be provided")
 
     this.msiSearchWriter.get.insertMsQueries(msiSearchID, msQueries, context)

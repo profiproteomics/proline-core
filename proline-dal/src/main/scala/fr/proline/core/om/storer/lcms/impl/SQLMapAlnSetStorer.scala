@@ -10,7 +10,7 @@ import fr.proline.core.om.model.lcms.MapAlignmentSet
   
 class SQLMapAlnSetStorer( val lcmsDbCtx: LcMsDbConnectionContext ) extends IMapAlnSetStorer {
   
-  def storeMapAlnSets( mapAlnSets: Seq[MapAlignmentSet], mapSetId: Long, alnRefMapId: Long): Unit = {
+  def storeMapAlnSets( mapAlnSets: collection.Seq[MapAlignmentSet], mapSetId: Long, alnRefMapId: Long): Unit = {
     
     DoJDBCWork.withEzDBC(lcmsDbCtx) { ezDBC =>
       

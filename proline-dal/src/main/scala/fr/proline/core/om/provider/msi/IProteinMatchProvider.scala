@@ -5,13 +5,13 @@ import fr.proline.context.DatabaseConnectionContext
 
 trait IProteinMatchProvider {
   
-  def getProteinMatchesAsOptions( protMatchIds: Seq[Long] ): Array[Option[ProteinMatch]]
+  def getProteinMatchesAsOptions( protMatchIds: collection.Seq[Long] ): Array[Option[ProteinMatch]]
 
-  def getProteinMatches( protMatchIds: Seq[Long] ): Array[ProteinMatch]
+  def getProteinMatches( protMatchIds: collection.Seq[Long] ): Array[ProteinMatch]
   
-  def getResultSetsProteinMatches( resultSetIds: Seq[Long] ): Array[ProteinMatch]
+  def getResultSetsProteinMatches( resultSetIds: collection.Seq[Long] ): Array[ProteinMatch]
   
-  def getResultSummariesProteinMatches( rsmIds: Seq[Long] ): Array[ProteinMatch]
+  def getResultSummariesProteinMatches( rsmIds: collection.Seq[Long] ): Array[ProteinMatch]
   
   
   def getProteinMatch( protMatchId:Long ): Option[ProteinMatch] = {

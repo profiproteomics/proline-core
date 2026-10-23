@@ -22,10 +22,10 @@ class SQLProcessedMapProvider(
   val ProcMapCols = LcmsDbProcessedMapTable.columns
   
   /** Returns a list of LC-MS maps corresponding to a given list of processed map ids */
-  def getLcMsMaps(mapIds: Seq[Long], loadPeakels: Boolean): Seq[ILcMsMap] = this.getProcessedMaps(mapIds)
+  def getLcMsMaps(mapIds: collection.Seq[Long], loadPeakels: Boolean): collection.Seq[ILcMsMap] = this.getProcessedMaps(mapIds)
   
   /** Returns a list of features corresponding to a given list of processed map ids */
-  def getProcessedMaps( processedMapIds: Seq[Long], loadPeakels: Boolean = false ): Array[ProcessedMap] = {
+  def getProcessedMaps( processedMapIds: collection.Seq[Long], loadPeakels: Boolean = false ): Array[ProcessedMap] = {
     if( processedMapIds.isEmpty ) return Array()
     
     // Retrieve raw map ids mapped by processes map id
@@ -95,7 +95,7 @@ class SQLProcessedMapProvider(
     
   }
   
-  def getRawMapIdsByProcessedMapId( processedMapIds: Seq[Long] ): Map[Long,Array[Long]] = {
+  def getRawMapIdsByProcessedMapId( processedMapIds: collection.Seq[Long] ): Map[Long,Array[Long]] = {
     if( processedMapIds.isEmpty ) return Map()
     
     val rawMapIdBufferByProcessedMapId = new HashMap[Long,ArrayBuffer[Long]]
@@ -129,7 +129,7 @@ class SQLProcessedMapProvider(
   /** Returns a list of features corresponding to a given list of processed map ids */
   // TODO: rename to getProcessedMapsFeatures
   // TODO: move to Feature provider
-  def getFeatures( processedMapIds: Seq[Long], loadPeakels: Boolean = false ): Array[Feature] = {
+  def getFeatures( processedMapIds: collection.Seq[Long], loadPeakels: Boolean = false ): Array[Feature] = {
     if( processedMapIds.isEmpty ) return Array()
  
     DoJDBCReturningWork.withEzDBC(lcmsDbCtx) { ezDBC =>
@@ -236,7 +236,7 @@ class SQLProcessedMapProvider(
     
   }
   
-  def eachProcessedFeatureRecord( processedMapIds: Seq[Long], onEachFt: ResultSetRow => Unit ): Unit = {
+  def eachProcessedFeatureRecord( processedMapIds: collection.Seq[Long], onEachFt: ResultSetRow => Unit ): Unit = {
     if( processedMapIds.isEmpty ) return ()
     
     DoJDBCWork.withEzDBC(lcmsDbCtx) { ezDBC =>
@@ -262,7 +262,7 @@ class SQLProcessedMapProvider(
   }
   
   /** Returns a map of sub features feature keyed by its id */
-  def getSubFtIdsByClusterFtId( processedMapIds: Seq[Long] ): Map[Long,Array[Long]] = {
+  def getSubFtIdsByClusterFtId( processedMapIds: collection.Seq[Long] ): Map[Long,Array[Long]] = {
     if( processedMapIds.isEmpty ) return Map()
     
     val subFtIdBufferByClusterFtId = new HashMap[Long,ArrayBuffer[Long]]

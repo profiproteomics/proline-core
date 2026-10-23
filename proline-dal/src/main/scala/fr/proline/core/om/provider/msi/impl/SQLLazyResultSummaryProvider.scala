@@ -40,7 +40,7 @@ class SQLLazyResultSummaryProvider(
   }
   
   def getLazyResultSummaries(
-    rsmIds: Seq[Long],
+    rsmIds: collection.Seq[Long],
     loadFullResultSet: Boolean = false,
     linkPeptideSets: Boolean = false,
     linkResultSetEntities: Boolean = false
@@ -159,7 +159,7 @@ class SQLLazyResultSummaryProvider(
   }
   
   protected def getResultSummaryDescriptors(
-    rsmIds: Seq[Long]
+    rsmIds: collection.Seq[Long]
   ): Array[ResultSummaryDescriptor] = {
     
     // Execute SQL query to load result summaries
@@ -198,9 +198,9 @@ class SQLLazyResultSummaryProvider(
    * Load result sets validated entities (corresponding to the result summaries).
    */
   protected def getResultSummariesLazyResultSets(
-    rsmIds: Seq[Long],
-    decoyRsmIds: Seq[Long],
-    rsIds: Seq[Long]
+    rsmIds: collection.Seq[Long],
+    decoyRsmIds: collection.Seq[Long],
+    rsIds: collection.Seq[Long]
   ): Array[LazyResultSet] = {
     
     val rsDescriptors = this.getResultSetDescriptors(rsIds)

@@ -21,7 +21,7 @@ object ORMResultSetProviderTest extends AbstractDatastoreTestCase with StrictLog
 
 class ORMResultSetProviderTest extends StrictLogging {
 
-  private def getLeafChildsID(rsId: Long): Seq[Long] = {
+  private def getLeafChildsID(rsId: Long): collection.Seq[Long] = {
     var allRSIds = Seq.newBuilder[Long]
     val jdbcWork = new JDBCWork() {
 
@@ -48,7 +48,7 @@ class ORMResultSetProviderTest extends StrictLogging {
    
   @Test
   def getReadResultSet() = {
-    val leavesRsIds: Seq[Long] = getLeafChildsID(ORMResultSetProviderTest.targetRSId)
+    val leavesRsIds: collection.Seq[Long] = getLeafChildsID(ORMResultSetProviderTest.targetRSId)
     Assert.assertEquals(2,leavesRsIds.length)
       
 	  val rsProvider=  new ORMResultSetProvider(

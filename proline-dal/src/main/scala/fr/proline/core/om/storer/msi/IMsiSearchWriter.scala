@@ -28,7 +28,7 @@ trait IMsiSearchWriter {
    * @return StorerContext with updated references
    *
    */
-  def insertMsQueries(msiSearchId: Long, msQueries: Seq[MsQuery], context: StorerContext): StorerContext
+  def insertMsQueries(msiSearchId: Long, msQueries: collection.Seq[MsQuery], context: StorerContext): StorerContext
 }
 
 /** A factory object for implementations of the IMsiSearchStorer trait */

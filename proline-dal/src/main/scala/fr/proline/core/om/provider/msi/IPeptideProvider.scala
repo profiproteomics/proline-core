@@ -15,16 +15,16 @@ trait IPeptideProvider {
    *  @param peptideIds: Sequence of ids of Peptide to search for
    *  @return Array of Option[Peptide] corresponding to found Peptide
    */
-  def getPeptidesAsOptions( peptideIds: Seq[Long] ): Array[Option[Peptide]]
+  def getPeptidesAsOptions( peptideIds: collection.Seq[Long] ): Array[Option[Peptide]]
   
   /**
    *  Get Peptides with specified Ids.
    *  @param peptideIds: Sequence of ids of Peptide to search for
    *  @return Array of Peptide corresponding to found Peptide
    */
-  def getPeptides( peptideIds: Seq[Long] ): Array[Peptide]
+  def getPeptides( peptideIds: collection.Seq[Long] ): Array[Peptide]
   
-  //def getPeptidesForSequences( peptideSeqs: Seq[String] ): Array[Peptide]
+  //def getPeptidesForSequences( peptideSeqs: collection.Seq[String] ): Array[Peptide]
   
   def getPeptide( peptideId: Long ): Option[Peptide] = getPeptidesAsOptions( Array(peptideId) )(0)
   
@@ -38,7 +38,7 @@ trait IPeptideProvider {
    */
   def getPeptide(peptideSeq:String, pepPtms:Array[LocatedPtm] ) : Option[Peptide]
   
-  def getPeptidesAsOptionsBySeqAndPtms(peptideSeqsAndPtms: Seq[(String, Array[LocatedPtm])]): Array[Option[Peptide]] = {
+  def getPeptidesAsOptionsBySeqAndPtms(peptideSeqsAndPtms: collection.Seq[(String, Array[LocatedPtm])]): Array[Option[Peptide]] = {
     Array() ++ peptideSeqsAndPtms.map(entry => {
       this.getPeptide(entry._1, entry._2)
     })
@@ -58,7 +58,7 @@ object PeptideFakeProvider extends IPeptideProvider {
    * or create a new fake one with specified ID + seq = "X", no ptm, calcularedMass = Double.MaxValue
    *  
    */
-  def getPeptidesAsOptions(peptideIds: Seq[Long] ): Array[Option[Peptide]] = {    
+  def getPeptidesAsOptions(peptideIds: collection.Seq[Long] ): Array[Option[Peptide]] = {    
     var peptidesLst = List[Option[Peptide]]()
         
 	peptideIds foreach (id => {
@@ -73,7 +73,7 @@ object PeptideFakeProvider extends IPeptideProvider {
     return peptidesLst.toArray 
   }
   
-  def getPeptides(peptideIds: Seq[Long] ): Array[Peptide] = {
+  def getPeptides(peptideIds: collection.Seq[Long] ): Array[Peptide] = {
     this.getPeptidesAsOptions( peptideIds ).filter { _ != None }.map { _.get }
   }
   

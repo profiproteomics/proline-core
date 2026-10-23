@@ -49,7 +49,7 @@ object MascotValidationHelper extends LazyLogging {
     -10.0 * log10(prob / probRef)
   }
 
-  def sumPeptideMatchesScoreOffsets(peptideMatches: Seq[PeptideMatch], mascotThresholdsByPepMatchId: Map[Long, MascotIonsScoreThresholds]): Float = {
+  def sumPeptideMatchesScoreOffsets(peptideMatches: collection.Seq[PeptideMatch], mascotThresholdsByPepMatchId: Map[Long, MascotIonsScoreThresholds]): Float = {
 
     var (sumOfScoreOffsets, substractedThresholds) = (0.0f, 0.0f)
     for (peptideMatch <- peptideMatches) {
@@ -71,11 +71,11 @@ object MascotValidationHelper extends LazyLogging {
     sumOfScoreOffsets
   }
 
-  def sumPeptideMatchesScoreOffsets(peptideMatches: Seq[PeptideMatch]): Float = {
+  def sumPeptideMatchesScoreOffsets(peptideMatches: collection.Seq[PeptideMatch]): Float = {
     this.sumPeptideMatchesScoreOffsets(peptideMatches, this.getMascotThresholdsByPepMatchId(peptideMatches))
   }
 
-  def sumPeptideMatchesScoreOffsets(peptideMatches: Seq[PeptideMatch], scoreThresholdOffset: Float): Float = {
+  def sumPeptideMatchesScoreOffsets(peptideMatches: collection.Seq[PeptideMatch], scoreThresholdOffset: Float): Float = {
 
     val pepMatchThresholdsMap = this.getMascotThresholdsByPepMatchId(peptideMatches)
     val pmThresholdsMapBuilder = collection.immutable.Map.newBuilder[Long, MascotIonsScoreThresholds]
@@ -93,7 +93,7 @@ object MascotValidationHelper extends LazyLogging {
     this.sumPeptideMatchesScoreOffsets(peptideMatches, pmThresholdsMapBuilder.result())
   }
 
-  def calcMascotMudpitScore(peptideMatches: Seq[PeptideMatch], pepMatchThresholdsMap: Map[Long, MascotIonsScoreThresholds]): Float = {
+  def calcMascotMudpitScore(peptideMatches: collection.Seq[PeptideMatch], pepMatchThresholdsMap: Map[Long, MascotIonsScoreThresholds]): Float = {
 
     var (mudpitScore, substractedThresholds, nbValidPepMatches) = (0.0f, 0.0f, 0)
 
@@ -123,11 +123,11 @@ object MascotValidationHelper extends LazyLogging {
     mudpitScore
   }
 
-  def calcMascotMudpitScore(peptideMatches: Seq[PeptideMatch]): Float = {
+  def calcMascotMudpitScore(peptideMatches: collection.Seq[PeptideMatch]): Float = {
     this.calcMascotMudpitScore(peptideMatches, this.getMascotThresholdsByPepMatchId(peptideMatches))
   }
 
-  def getMascotThresholdsByPepMatchId(peptideMatches: Seq[PeptideMatch]): Map[Long, MascotIonsScoreThresholds] = {
+  def getMascotThresholdsByPepMatchId(peptideMatches: collection.Seq[PeptideMatch]): Map[Long, MascotIonsScoreThresholds] = {
 
     val pmThresholdsMapBuilder = collection.immutable.Map.newBuilder[Long, MascotIonsScoreThresholds]
     for (peptideMatch <- peptideMatches) {

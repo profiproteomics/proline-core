@@ -1,5 +1,7 @@
 package fr.proline.core.service.lcms.io
 
+import scala.collection.parallel.CollectionConverters._
+
 import com.almworks.sqlite4java.SQLiteConnection
 import com.github.davidmoten.rtree._
 import com.typesafe.scalalogging.LazyLogging
@@ -78,7 +80,7 @@ object PeakelsDetector {
 class PeakelsDetector(
   lcmsDbCtx: LcMsDbConnectionContext,
   mapSetName: String,
-  lcMsRuns: Seq[LcMsRun],
+  lcMsRuns: collection.Seq[LcMsRun],
   val masterQcExpDesign: ExperimentalDesignSetup,
   quantConfig: ILcMsQuantConfig,
   val peptideMatchByRunIdAndScanNumber: LongMap[LongMap[ArrayBuffer[PeptideMatch]]]
@@ -105,7 +107,7 @@ class PeakelsDetector(
   )
 
    private class LcMsMapDetectorEntityCache(
-    val lcMsRuns: Seq[LcMsRun],
+    val lcMsRuns: collection.Seq[LcMsRun],
     val mzDbFileByLcMsRunId: LongMap[File],
     val mapSetId: Long
   ) {
@@ -158,7 +160,7 @@ class PeakelsDetector(
 
     private val isomericPeptidesMap = new HashMap[Peptide, Array[Peptide]]()
 
-    def buildIsomericPeptidesMap(peptides: Seq[Peptide]): Unit = {
+    def buildIsomericPeptidesMap(peptides: collection.Seq[Peptide]): Unit = {
       val peptidesBySeqPtmsKey = peptides.groupBy(peptide => peptide.sequence + peptide.ptms.map(_.definition.names.shortName).sorted.mkString)
       for((key, isomericPeptides) <- peptidesBySeqPtmsKey) {
         isomericPeptides.foreach(peptide => isomericPeptidesMap += (peptide -> isomericPeptides.toArray))
@@ -173,7 +175,7 @@ class PeakelsDetector(
       if (r.isEmpty){ None } else { Some(r) }
     }
 
-    def addConflictingPeptides(peptideAndCharge: (Peptide, Int), peptides: Seq[Peptide]) {
+    def addConflictingPeptides(peptideAndCharge: (Peptide, Int), peptides: collection.Seq[Peptide]) {
       conflictingPeptidesMap_lock.synchronized {
         conflictingPeptidesMap.getOrElseUpdate(peptideAndCharge, ArrayBuffer[Peptide]()) ++= peptides
       }
@@ -570,7 +572,7 @@ class PeakelsDetector(
       } // End of Future
 
       var mapSetDetectionExceptionOpt = Option.empty[Throwable]
-      mapSetDetectionFuture.onFailure { case t: Throwable =>
+      mapSetDetectionFuture.failed.foreach { case t: Throwable =>
 
         // Terminate the peakel queue
         isLastPublishedPeakel = true
@@ -960,7 +962,7 @@ class PeakelsDetector(
   }
 
   private def _detectMapsFromPeakels(
-    rawMaps: Seq[RawMap],
+    rawMaps: collection.Seq[RawMap],
     entityCache: LcMsMapDetectorEntityCache,
     peakelPublisher: Subject[(Peakel,Long)],
     rxCompScheduler: Scheduler
@@ -1074,7 +1076,7 @@ class PeakelsDetector(
           }
         }
 
-        peakelProducerFuture.onFailure {
+        peakelProducerFuture.failed.foreach {
           case t: Throwable => {
             this.logger.trace(" *************** peakelProducerFuture.onFailure ==> resultPromise.failure")
             resultPromise.failure(t)
@@ -1091,7 +1093,7 @@ class PeakelsDetector(
 
           val observablePeakels = Observable[Array[MzDbPeakel]] { subscriber =>
             //Verify peakel producer was successful or not
-            peakelProducerFuture.onFailure {
+            peakelProducerFuture.failed.foreach {
               case t: Throwable => {
                 this.logger.trace(" *************** peakelProducerFuture.onFailure ==> subscriber.onError")
                 subscriber.onError( t )
@@ -1420,12 +1422,12 @@ class PeakelsDetector(
     processedMapByRunId: LongMap[ProcessedMap],
     peakelPublisher: Subject[(Peakel,Long)],
     mftBuilderByPeptideAndCharge: HashMap[(Peptide, Int), MasterFeatureBuilder],
-    putativeFtsByLcMsRunId: LongMap[_ <: Seq[PutativeFeature]],
-    putativeFtsByPeptideAndRunId: HashMap[(Peptide, Long), _ <: Seq[PutativeFeature]],
+    putativeFtsByLcMsRunId: LongMap[_ <: collection.Seq[PutativeFeature]],
+    putativeFtsByPeptideAndRunId: HashMap[(Peptide, Long), _ <: collection.Seq[PutativeFeature]],
     peptideByPutativeFtId: LongMap[Peptide],
     multiMatchedMzDbPeakelIdsByPutativeFtId: LongMap[ArrayBuffer[Int]],
     entityCache: LcMsMapDetectorEntityCache
-  ): Seq[RawMap] = {
+  ): collection.Seq[RawMap] = {
 
     val halfMzWindow = PeakelsDetector.ISOTOPE_PATTERN_HALF_MZ_WINDOW
 
@@ -1698,7 +1700,7 @@ class PeakelsDetector(
 
   
   private def _findUnidentifiedPeakel(
-    coelutingPeakels: Seq[MzDbPeakel],
+    coelutingPeakels: collection.Seq[MzDbPeakel],
     peakelMz: Double,
     charge: Int,
     minTime: Float,
@@ -1706,7 +1708,7 @@ class PeakelsDetector(
     maxTime: Float,
     expectedDuration: Float,
     assignedMzDbPeakelIdSet: HashSet[Int],
-    multimatchedMzDbPeakelIds: Seq[Int],
+    multimatchedMzDbPeakelIds: collection.Seq[Int],
     metric: Metric
     //benchmarkMap: HashMap[String,Long]
   ): Option[(MzDbPeakel,Boolean)] = {

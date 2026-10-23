@@ -15,7 +15,7 @@ import scala.collection.mutable.LongMap
 abstract class AbstractMapSetDetector (
   val lcmsDbCtx: LcMsDbConnectionContext,
   val mapSetName: String,
-  val lcMsRuns: Seq[LcMsRun],
+  val lcMsRuns: collection.Seq[LcMsRun],
   val quantConfig: ILcMsQuantConfig
 ) extends LazyLogging {
 

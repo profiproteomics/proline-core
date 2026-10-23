@@ -6,9 +6,9 @@ trait IAlnSmoother {
   
   import fr.proline.core.om.model.lcms._
   
-  def smoothLandmarks( landmarks: Seq[Landmark], smoothingParams: Option[AlnSmoothingParams]): Seq[Landmark]
+  def smoothLandmarks( landmarks: collection.Seq[Landmark], smoothingParams: Option[AlnSmoothingParams]): collection.Seq[Landmark]
 
-  protected def computeMedianLandmark( landmarkGroup: Seq[Landmark] ): Landmark = {
+  protected def computeMedianLandmark( landmarkGroup: collection.Seq[Landmark] ): Landmark = {
     
     val lmSortedByDx = landmarkGroup.sortBy( _.dx)
     val lmSortedByX = landmarkGroup.sortBy( _.x)

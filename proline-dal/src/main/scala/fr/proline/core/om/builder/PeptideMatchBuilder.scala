@@ -18,7 +18,7 @@ object PeptideMatchBuilder {
   protected val PepMatchCols = MsiDbPeptideMatchColumns
   
   def buildPeptideMatches(
-    pmRecords: Seq[IValueContainer],
+    pmRecords: collection.Seq[IValueContainer],
     msQueries: Array[MsQuery],
     scoreTypeById: LongMap[String],
     peptideProvider: IPeptideProvider

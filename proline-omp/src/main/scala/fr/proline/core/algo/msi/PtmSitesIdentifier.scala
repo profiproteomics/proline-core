@@ -153,7 +153,7 @@ class PtmSitesIdentifier(
               val isomericPeptideInstanceIds = peptideInstances.flatMap(piptm => peptideInstanceIdsBySeqPtm(_getAASequenceAndPTMsAsString(piptm.peptideInstance))).distinct
               isomericPeptideInstanceIds --= peptideInstances.map(_.peptideInstance.id)
               val isomericPeptideInstances = isomericPeptideInstanceIds.map(id => peptideInstancesById(id))
-              val peptideIdsBySeqPosition = peptideInstances.groupBy(_.ptm.seqPosition).mapValues(_.map(_.peptideInstance.peptide.id).toArray)
+              val peptideIdsBySeqPosition = peptideInstances.groupBy(_.ptm.seqPosition).mapValues(_.map(_.peptideInstance.peptide.id).toArray).toMap
 
               PtmSite(
                 proteinMatchId = proteinMatchId,
@@ -265,7 +265,7 @@ class  PtmSitesIdentifierV2(resultSummary: ResultSummary, proteinMatches: Array[
           val site = proteinMatchSites.map {
             case (ptmDefinitionPositionTuple, peptideInstPtmTuple) =>
 
-              var peptideIdsBySeqPosition = peptideInstPtmTuple.groupBy(_.ptm.seqPosition).mapValues(_.map(_.peptideInstance.peptide.id).toArray)
+              var peptideIdsBySeqPosition = peptideInstPtmTuple.groupBy(_.ptm.seqPosition).mapValues(_.map(_.peptideInstance.peptide.id).toArray).toMap
 
               // -- Search for the best PeptideMatch & get SeqPostion correction N/CTerm modif
               var seqCorrection  = 0
@@ -443,7 +443,7 @@ object PtmSiteClusterer extends LazyLogging {
           }
         }
     }
-    sitesBySequenceMatch.toMap.mapValues(_.toArray)
+    sitesBySequenceMatch.toMap.mapValues(_.toArray).toMap
   }
 
 }
@@ -480,7 +480,7 @@ class PtmSiteExactClusterer(
         clusterizedPeptides.getOrElseUpdate(PtmStatus.Isomorphic, new ArrayBuffer[Peptide]) += peptideById(sequenceMatch.getPeptideId());
 
         // retrieve all peptide id matching at least one of the sequenceMatch's sites
-        var matchingSequenceMatches = sitesBySequenceMatch(sequenceMatch).flatMap(_.peptideIdsByPtmPosition.flatMap(_._2)).distinct.flatMap(sequenceMatchesByPeptideId(_)).toArray
+        var matchingSequenceMatches = sitesBySequenceMatch(sequenceMatch).flatMap(_.peptideIdsByPtmPosition.values.flatten).distinct.flatMap(sequenceMatchesByPeptideId(_)).toArray
         // keep only sequence matches with bounds (start,stop) intersecting the reference sequenceMatch (this could not be the case for peptide repeated in the protein sequence
         matchingSequenceMatches = matchingSequenceMatches.filter(sm => (sm.start <= sequenceMatch.end) && (sm.end >= sequenceMatch.start ))
         // keep only sequenceMatches that are not already clusterized. IS THIS NECESSARY ??

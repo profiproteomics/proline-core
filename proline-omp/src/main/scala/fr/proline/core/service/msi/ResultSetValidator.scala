@@ -26,13 +26,13 @@ import scala.collection.mutable.ArrayBuffer
 
 case class ValidationConfig(
   var tdAnalyzerBuilder: Option[TDAnalyzerBuilder] = None,
-  var pepMatchPreFilters: Option[Seq[IPeptideMatchFilter]] = None,
+  var pepMatchPreFilters: Option[collection.Seq[IPeptideMatchFilter]] = None,
   var pepMatchValidator: Option[IPeptideMatchValidator] = None,
   var peptideBuilder: IPeptideInstanceBuilder = BuildPeptideInstanceBuilder(PeptideInstanceBuilders.STANDARD),
-  var peptideFilters: Option[Seq[IPeptideInstanceFilter]] = None,
+  var peptideFilters: Option[collection.Seq[IPeptideInstanceFilter]] = None,
   var peptideValidator: Option[IPeptideInstanceValidator] = None,
   var pepSetScoring: Option[PepSetScoring.Value] = Some(PepSetScoring.MASCOT_STANDARD_SCORE),
-  var protSetFilters: Option[Seq[IProteinSetFilter]] = None,
+  var protSetFilters: Option[collection.Seq[IProteinSetFilter]] = None,
   var protSetValidator: Option[IProteinSetValidator] = None
 )
 
@@ -283,7 +283,7 @@ class ResultSetValidator protected(
     true
   }
 
-  private def _propagateToChilds(propagatedPSMFilters: Option[Seq[IPeptideMatchFilter]], propagatedProtSetFilters: Option[Seq[IProteinSetFilter]], parentId: Long) {
+  private def _propagateToChilds(propagatedPSMFilters: Option[collection.Seq[IPeptideMatchFilter]], propagatedProtSetFilters: Option[collection.Seq[IProteinSetFilter]], parentId: Long) {
     val childRsId = _getChildRS(targetRs.id)
     logger.debug(  " --  _propagateToChilds for parentId " + parentId+"; nbr child "+childRsId.length)
 
@@ -333,7 +333,7 @@ class ResultSetValidator protected(
    *
    * All applied IPeptideMatchFilter are returned
    */
-  private def _validatePeptideMatches(targetRs: ResultSet, rsmValProperties: RsmValidationProperties): (Seq[IPeptideMatchFilter],Option[MsiRocCurve]) = {
+  private def _validatePeptideMatches(targetRs: ResultSet, rsmValProperties: RsmValidationProperties): (collection.Seq[IPeptideMatchFilter],Option[MsiRocCurve]) = {
 
     var appliedFilters = Seq.newBuilder[IPeptideMatchFilter]
     val filterDescriptors = new ArrayBuffer[FilterDescriptor](validationConfig.pepMatchPreFilters.map(_.length).getOrElse(0))
@@ -413,7 +413,7 @@ class ResultSetValidator protected(
     (appliedFilters.result, rocCurveOpt)
   }
 
-  private def _validatePeptideInstances(peptideInstances: Seq[PeptideInstance]): Unit = {
+  private def _validatePeptideInstances(peptideInstances: collection.Seq[PeptideInstance]): Unit = {
 
     if (validationConfig.peptideFilters.isDefined) {
       validationConfig.peptideFilters.get.foreach(f => f.filterPeptideInstances(peptideInstances));

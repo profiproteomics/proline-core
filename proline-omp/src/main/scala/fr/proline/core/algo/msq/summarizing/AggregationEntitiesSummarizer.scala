@@ -181,7 +181,7 @@ class AggregationEntitiesSummarizer(
 
     private def _buildMasterQuantPeptideIon(newMQPepIonId: Long,
       mqPepIonTemplate: MasterQuantPeptideIon,
-      qPepIons: Seq[QuantPeptideIon],
+      qPepIons: collection.Seq[QuantPeptideIon],
       masterPepInstAsOpt: Option[PeptideInstance],
       newMasterQuantReporterIons: Option[Array[MasterQuantReporterIon]]
     ): MasterQuantPeptideIon = {
@@ -209,7 +209,7 @@ class AggregationEntitiesSummarizer(
 
   override def computeMasterQuantPeptides(masterQuantChannel: MasterQuantChannel,
     quantMergedRSM: ResultSummary,
-    resultSummaries: Seq[ResultSummary]): Array[MasterQuantPeptide] = {
+    resultSummaries: collection.Seq[ResultSummary]): Array[MasterQuantPeptide] = {
     val mqPepsComputer = new MQPepsComputer(masterQuantChannel, quantMergedRSM)
     mqPepsComputer.computeMasterQuantPeptides()
   }

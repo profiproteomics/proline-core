@@ -22,7 +22,7 @@ class SQLMasterQuantReporterIonProvider(val msiDbCtx: MsiDbConnectionContext) {
   val MQComponentTable = MsiDbMasterQuantComponentTable
   val ObjectTreeTable = MsiDbObjectTreeTable
   
-  def getMasterQuantReporterIons(mqRepIonIds: Seq[Long]): Array[MasterQuantReporterIon] = {    
+  def getMasterQuantReporterIons(mqRepIonIds: collection.Seq[Long]): Array[MasterQuantReporterIon] = {    
     require( mqRepIonIds != null, "mqRepIonIds is null")
     if (mqRepIonIds.isEmpty) return Array()
     
@@ -38,7 +38,7 @@ class SQLMasterQuantReporterIonProvider(val msiDbCtx: MsiDbConnectionContext) {
     this.loadMasterQuantReporterIons(mqRepIonQuery)
   }
   
-  def getMQPeptideIonsMQReporterIons(mqPepIonIds: Seq[Long]): Array[MasterQuantReporterIon] = {    
+  def getMQPeptideIonsMQReporterIons(mqPepIonIds: collection.Seq[Long]): Array[MasterQuantReporterIon] = {    
     require( mqPepIonIds != null, "mqPepIonIds is null")
     if (mqPepIonIds.isEmpty) return Array()
     
@@ -54,7 +54,7 @@ class SQLMasterQuantReporterIonProvider(val msiDbCtx: MsiDbConnectionContext) {
     this.loadMasterQuantReporterIons(mqRepIonQuery)
   }
 
-  def getQuantResultSummariesMQReporterIons(quantRsmIds: Seq[Long]): Array[MasterQuantReporterIon] = {
+  def getQuantResultSummariesMQReporterIons(quantRsmIds: collection.Seq[Long]): Array[MasterQuantReporterIon] = {
     require(quantRsmIds != null, "quantRsmIds is null")
     if( quantRsmIds.isEmpty ) return Array()
     

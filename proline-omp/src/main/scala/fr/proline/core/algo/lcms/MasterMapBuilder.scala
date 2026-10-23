@@ -11,7 +11,7 @@ object BuildMasterMap {
   
   def apply(
     mapSet: MapSet,
-    scanSeqs: Seq[LcMsScanSequence],
+    scanSeqs: collection.Seq[LcMsScanSequence],
     masterFtFilter: Option[Filter],
     ftMappingParams: FeatureMappingParams,
     ftClusteringParams: ClusteringParams // used to clusterize ambiguous ft mappings
@@ -34,7 +34,7 @@ object BuildMasterMap {
 
 class MasterMapBuilder(
     mapSet: MapSet,
-    scanSeqs: Seq[LcMsScanSequence],
+    scanSeqs: collection.Seq[LcMsScanSequence],
     masterFtFilter: Option[Filter],
     ftMappingParams: FeatureMappingParams,
     ftClusteringParams: ClusteringParams // used to clusterize ambiguous ft mappings
@@ -129,7 +129,7 @@ class MasterMapBuilder(
     masterMap
   }
   
-  private def _buildMasterFeaturesUsingBestChild( mftBuilders: Seq[MasterFeatureBuilder] ): Seq[Feature] = {
+  private def _buildMasterFeaturesUsingBestChild( mftBuilders: collection.Seq[MasterFeatureBuilder] ): collection.Seq[Feature] = {
     
     val masterFeatures = new ArrayBuffer[Feature](mftBuilders.length)
     for( mftBuilder <- mftBuilders ) {
@@ -353,7 +353,7 @@ class MasterMapBuilder(
   }
   
   // Clusterize master features sharing at last a child feature
-  private def _cluterizeMasterFeatures( mftBuilders: Seq[MasterFeatureBuilder] ): Seq[MasterFeatureBuilder] = {
+  private def _cluterizeMasterFeatures( mftBuilders: collection.Seq[MasterFeatureBuilder] ): collection.Seq[MasterFeatureBuilder] = {
     
     def eachMftBuilderAndSubfFt( onEachMftBuilderAndChildFt: (MasterFeatureBuilder,Feature) => Unit ) {
       for( mftBuilder <- mftBuilders ) {

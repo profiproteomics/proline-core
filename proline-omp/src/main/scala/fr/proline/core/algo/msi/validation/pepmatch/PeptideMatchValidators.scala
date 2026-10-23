@@ -20,7 +20,7 @@ class BHPepMatchValidator(
 
   val validationFilter = new ScorePSMFilter()
 
-  def validatePeptideMatches( pepMatches: Seq[PeptideMatch], decoyPepMatches: Option[Seq[PeptideMatch]] = None, tdAnalyzer: Option[ITargetDecoyAnalyzer] = None): ValidationResults = {
+  def validatePeptideMatches( pepMatches: collection.Seq[PeptideMatch], decoyPepMatches: Option[collection.Seq[PeptideMatch]] = None, tdAnalyzer: Option[ITargetDecoyAnalyzer] = None): ValidationResults = {
 
     val bhFilter = BuildPeptideMatchFilter(PepMatchFilterParams.BH_AJUSTED_PVALUE.toString, expectedFdr.get/100.0f)
 
@@ -52,7 +52,7 @@ class TDPepMatchValidator(
   val validatorDescription = "Peptide match validator that count the number of validated target and decoy matches "
   val expectedFdr: Option[Float] = None
 
-  def validatePeptideMatches( pepMatches: Seq[PeptideMatch], decoyPepMatches: Option[Seq[PeptideMatch]] = None, tdAnalyzer: Option[ITargetDecoyAnalyzer] = None): ValidationResults = {
+  def validatePeptideMatches( pepMatches: collection.Seq[PeptideMatch], decoyPepMatches: Option[collection.Seq[PeptideMatch]] = None, tdAnalyzer: Option[ITargetDecoyAnalyzer] = None): ValidationResults = {
 
     // Apply validation filter
     validationFilter.filterPeptideMatches(pepMatches ++ decoyPepMatches.getOrElse(Seq.empty[PeptideMatch]), true, true)
@@ -88,7 +88,7 @@ class TDPepMatchValidatorWithFDROptimization(
   val validatorDescription = "Peptide match validator optimizing FDR value based on Target/Decoy counts"
 
 
-  def validatePeptideMatches( pepMatches: Seq[PeptideMatch], decoyPepMatches: Option[Seq[PeptideMatch]] = None, tdAnalyzer: Option[ITargetDecoyAnalyzer] = None): ValidationResults = {
+  def validatePeptideMatches( pepMatches: collection.Seq[PeptideMatch], decoyPepMatches: Option[collection.Seq[PeptideMatch]] = None, tdAnalyzer: Option[ITargetDecoyAnalyzer] = None): ValidationResults = {
 
     require(tdAnalyzer.isDefined, "a target/decoy analyzer must be provided")
     require(decoyPepMatches.isDefined, "decoy peptide matches must be provided")

@@ -12,7 +12,7 @@ trait IProteinSetInferer {
    * Only validated peptideMatch will be considered while inferring Protein Sets
    *
    */
-  def computeResultSummary( resultSet: ResultSet, keepSubsummableSubsets: Boolean, peptideInstanceFilteringFunction: Option[(Seq[PeptideInstance]) => Unit] = None) : ResultSummary
+  def computeResultSummary( resultSet: ResultSet, keepSubsummableSubsets: Boolean, peptideInstanceFilteringFunction: Option[(collection.Seq[PeptideInstance]) => Unit] = None) : ResultSummary
 
 }
 

@@ -228,7 +228,7 @@ class Decon2LSMapParser extends ILcmsMapFileParser {
 
   }
 
-  def calcArea(data: Seq[(Float, Float)]): Float = {
+  def calcArea(data: collection.Seq[(Float, Float)]): Float = {
     if (data.length == 0) return 0f
     
     var i = 0

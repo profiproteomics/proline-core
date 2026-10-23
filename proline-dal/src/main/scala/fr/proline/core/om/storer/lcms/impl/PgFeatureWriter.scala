@@ -35,7 +35,7 @@ class PgFeatureWriter(lcmsDbCtx: LcMsDbConnectionContext) extends IFeatureWriter
   
   private val ftPeakelItemTableCols = LcmsDbFeaturePeakelItemTable.columnsAsStrList.mkString(",")
 
-  def insertFeatures(features: Seq[Feature], rawMapId: Long, linkToPeakels: Boolean): Seq[Feature] = {
+  def insertFeatures(features: collection.Seq[Feature], rawMapId: Long, linkToPeakels: Boolean): collection.Seq[Feature] = {
     
     val flattenedFeatures = new ArrayBuffer[Feature](features.length)
     
@@ -185,7 +185,7 @@ class PgFeatureWriter(lcmsDbCtx: LcMsDbConnectionContext) extends IFeatureWriter
   }
   
   private def _linkFeaturesToOverlappingFeatures(
-    features: Seq[Feature],
+    features: collection.Seq[Feature],
     rawMapId: Long,
     bulkCopyManager: CopyManager
   ): Unit = {
@@ -215,7 +215,7 @@ class PgFeatureWriter(lcmsDbCtx: LcMsDbConnectionContext) extends IFeatureWriter
     val nbInsertedRecords = pgBulkLoader.endCopy()
   }
   
-  private def _linkFeaturesToMs2Scans(flattenedFeatures: Seq[Feature], rawMapId: Long, bulkCopyManager: CopyManager): Unit = {
+  private def _linkFeaturesToMs2Scans(flattenedFeatures: collection.Seq[Feature], rawMapId: Long, bulkCopyManager: CopyManager): Unit = {
 
     val pgBulkLoader = bulkCopyManager.copyIn(s"COPY ${LcmsDbFeatureMs2EventTable.name} ( $ftMs2EventTableCols ) FROM STDIN")
     
@@ -241,7 +241,7 @@ class PgFeatureWriter(lcmsDbCtx: LcMsDbConnectionContext) extends IFeatureWriter
     val nbInsertedRecords = pgBulkLoader.endCopy()
   }
   
-  def linkFeaturesToPeakels(features: Seq[Feature], rawMapId: Long): Unit = {
+  def linkFeaturesToPeakels(features: collection.Seq[Feature], rawMapId: Long): Unit = {
     
     DoJDBCWork.withConnection(lcmsDbCtx) { con =>
       val bulkCopyManager = PostgresUtils.getCopyManager(con)
@@ -251,7 +251,7 @@ class PgFeatureWriter(lcmsDbCtx: LcMsDbConnectionContext) extends IFeatureWriter
     ()
   }
 
-  private def _linkFeaturesToPeakels(features: Seq[Feature], rawMapId: Long, bulkCopyManager: CopyManager): Unit = {
+  private def _linkFeaturesToPeakels(features: collection.Seq[Feature], rawMapId: Long, bulkCopyManager: CopyManager): Unit = {
 
     // Link features to peakels
     logger.info(s"Linking features to peakels...")
@@ -333,7 +333,7 @@ class PgFeatureWriter(lcmsDbCtx: LcMsDbConnectionContext) extends IFeatureWriter
     ()
   }
   
-  def insertFeatureClusters( features: Seq[Feature] ): Unit = {
+  def insertFeatureClusters( features: collection.Seq[Feature] ): Unit = {
     
     DoJDBCWork.withEzDBC(lcmsDbCtx) { ezDBC =>
     

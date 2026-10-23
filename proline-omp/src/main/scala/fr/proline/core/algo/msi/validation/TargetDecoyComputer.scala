@@ -13,7 +13,7 @@ object TargetDecoyComputer {
   val TARGET_KEY = "TARGET"
   val DECOY_KEY = "DECOY"
 
-  def buildPeptideMatchJointTable( peptideMatches: Seq[PeptideMatch] ): Array[Tuple2[PeptideMatch,PeptideMatch]] = {
+  def buildPeptideMatchJointTable( peptideMatches: collection.Seq[PeptideMatch] ): Array[Tuple2[PeptideMatch,PeptideMatch]] = {
     
     // Filter peptide matches to have only first rank ones
     val firstRankPSMs = peptideMatches.filter { _.rank == 1 }
@@ -54,7 +54,7 @@ object TargetDecoyComputer {
    * PeptideMatches are sorted by their score. 
    *  
    */
-  def buildPeptideMatchJointMap( targetPeptideMatches: Seq[PeptideMatch], decoyPeptideMatches: Option[Seq[PeptideMatch]] ): Map[Long, Seq[PeptideMatch]] = {
+  def buildPeptideMatchJointMap( targetPeptideMatches: collection.Seq[PeptideMatch], decoyPeptideMatches: Option[collection.Seq[PeptideMatch]] ): Map[Long, collection.Seq[PeptideMatch]] = {
     
     val peptideMatches = targetPeptideMatches ++ decoyPeptideMatches.getOrElse(Seq())
     
@@ -73,7 +73,7 @@ object TargetDecoyComputer {
    *    
    */
   def computeTdCompetition(
-    scoreJointTable: Seq[Tuple2[Double,Double]],
+    scoreJointTable: collection.Seq[Tuple2[Double,Double]],
     scoreThreshold: Double 
   ): Tuple2[TDCompetitionCounts,TDCompetitionCounts] = {
 
@@ -107,7 +107,7 @@ object TargetDecoyComputer {
    *  No filtering is done !   
    */
   def computeTdCompetition(
-    pmJointMap: Map[Long, Seq[PeptideMatch]],
+    pmJointMap: Map[Long, collection.Seq[PeptideMatch]],
     sorter: IPeptideMatchSorter
   ): Tuple2[TDCompetitionCounts,TDCompetitionCounts] = {
     
@@ -158,7 +158,7 @@ object TargetDecoyComputer {
 //   *  No filtering is done !
 //   */
 //  def createCompetitionBasedValidationResult(
-//    pmJointMap: Map[Long, Seq[PeptideMatch]],
+//    pmJointMap: Map[Long, collection.Seq[PeptideMatch]],
 //    pepMatchSorter: IPeptideMatchSorter
 //  ): ValidationResult = {
 //

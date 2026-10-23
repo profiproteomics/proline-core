@@ -10,7 +10,7 @@ import scala.collection.mutable.ArrayBuffer
 
 class LoessSmoother extends IAlnSmoother {
 
-  def smoothLandmarks( landmarks: Seq[Landmark], smoothingParams: Option[AlnSmoothingParams]): Seq[Landmark] = {
+  def smoothLandmarks( landmarks: collection.Seq[Landmark], smoothingParams: Option[AlnSmoothingParams]): collection.Seq[Landmark] = {
 
     // Create an array of landmarks
     val filteredLandmarks = landmarks.groupBy(_.x).map { lmg => computeMedianLandmark(lmg._2) }.toArray
@@ -41,7 +41,7 @@ class LoessSmoother extends IAlnSmoother {
     val filteredVals = (xVals, yVals, smoothedYVals).zipped.filter{ case(x, y, ys) => !ys.isNaN }
     xVals = filteredVals._1
     yVals = filteredVals._2
-    smoothedYVals = filteredVals._3
+    smoothedYVals = filteredVals._3.toArray
 
     val residuals = yVals.zip(smoothedYVals).map{ yy => (yy._1-yy._2)*(yy._1-yy._2) }
     // procedure similar to loess.sd to compute the standard deviation and 3.890*standard_deviation is for 99.99% confidence interval

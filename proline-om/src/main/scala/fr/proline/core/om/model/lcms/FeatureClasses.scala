@@ -183,7 +183,7 @@ case class PeakelShapeProperties()
 
 object Feature extends InMemoryIdGen {
 
-  /*def buildPeakels(ips: Seq[IsotopicPatternLike]): Array[Peakel] = {
+  /*def buildPeakels(ips: collection.Seq[IsotopicPatternLike]): Array[Peakel] = {
 
     // Determine the maximum number of peaks
     val maxNbPeaks = ips.map(_.peaks.length).max
@@ -204,7 +204,7 @@ object Feature extends InMemoryIdGen {
     peakels.toArray
   }*/
 
-  /*protected def _buildPeakel(ips: Seq[IsotopicPatternLike], peakelIdx: Int): Option[Peakel] = {
+  /*protected def _buildPeakel(ips: collection.Seq[IsotopicPatternLike], peakelIdx: Int): Option[Peakel] = {
 
     val lcMsPeaks = new ArrayBuffer[LcMsPeak]()
 

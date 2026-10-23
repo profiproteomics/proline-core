@@ -49,7 +49,7 @@ case class ExperimentalDesignSetup(
   val quantChannelsBySampleNumber = quantChannels.groupBy( _.sampleNumber )
   val qcSampleNumbers = quantChannels.map(_.sampleNumber)
   lazy val runGroupNumbers = {
-    val groupNumBySampleNum = for((gNum,sNums) <- sampleNumbersByGroupNumber; sNum <- sNums) yield sNum -> gNum
+    val groupNumBySampleNum = for((gNum,sNums) <- sampleNumbersByGroupNumber; sNum <- sNums.iterator) yield sNum -> gNum
     val groupRunPairs = quantChannels.sortBy(_.number).map(qc => (groupNumBySampleNum(qc.sampleNumber), qc.runId.get)).distinct
     groupRunPairs .map(_._1)
   }

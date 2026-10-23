@@ -5,7 +5,7 @@ import fr.proline.core.om.model.msi.PeptideInstance
 
 trait IMasterQuantPeptideFiltering {
   
-  def discardPeptides( masterQuantPeptides: Seq[MasterQuantPeptide] ): Unit
+  def discardPeptides( masterQuantPeptides: collection.Seq[MasterQuantPeptide] ): Unit
   
   def discardPeptide( masterQuantPeptide: MasterQuantPeptide, reason: String ): Unit = {
     if( masterQuantPeptide.selectionLevel == 2 ) {
@@ -14,7 +14,7 @@ trait IMasterQuantPeptideFiltering {
     }
   }
   
-  def foreachIdentifiedAndSelectedPeptide( masterQuantPeptides: Seq[MasterQuantPeptide])(callback: (MasterQuantPeptide,PeptideInstance) => Unit ): Unit = {
+  def foreachIdentifiedAndSelectedPeptide( masterQuantPeptides: collection.Seq[MasterQuantPeptide])(callback: (MasterQuantPeptide,PeptideInstance) => Unit ): Unit = {
     for(
       mqPep <- masterQuantPeptides;
       if mqPep.selectionLevel >= 2;
@@ -25,7 +25,7 @@ trait IMasterQuantPeptideFiltering {
   }
   
   protected def discardPeptideSequences(
-    masterQuantPeptides: Seq[MasterQuantPeptide],
+    masterQuantPeptides: collection.Seq[MasterQuantPeptide],
     discardedPepSeqSet: Set[String],
     reason: String
   ) {

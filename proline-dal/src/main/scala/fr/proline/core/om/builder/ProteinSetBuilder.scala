@@ -15,9 +15,9 @@ object ProteinSetBuilder {
   protected val ProtSetItemCols = MsiDbProteinSetProteinMatchItemColumns
   
   def buildProteinSets(
-    protSetRecords: Seq[IValueContainer],
-    protSetItemRecords: Seq[IValueContainer],
-    peptideSets: Seq[PeptideSet]
+    protSetRecords: collection.Seq[IValueContainer],
+    protSetItemRecords: collection.Seq[IValueContainer],
+    peptideSets: collection.Seq[PeptideSet]
   ): Array[ProteinSet] = {
 
     // Map peptide set by protein set id
@@ -52,7 +52,7 @@ object ProteinSetBuilder {
   
   def buildProteinSet(
     protSetRecord: IValueContainer,
-    protSetItemRecords: Seq[IValueContainer],
+    protSetItemRecords: collection.Seq[IValueContainer],
     pepSet: PeptideSet
     ): ProteinSet = {
     

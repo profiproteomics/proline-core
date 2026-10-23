@@ -29,46 +29,46 @@ object MsiSearchBuilder {
   protected val usedPtmCols = MsiDbUsedPtmColumns  
   protected val usedEnzCols = MsiDbUsedEnzymeColumns
   
-  def selectRecords[T]( recordIds: Seq[Long], recordById: Map[Long,IValueContainer] ): ( (IValueContainer => Unit) => Unit ) = {
+  def selectRecords[T]( recordIds: collection.Seq[Long], recordById: Map[Long,IValueContainer] ): ( (IValueContainer => Unit) => Unit ) = {
     unitMapper: (IValueContainer => Unit) => {
       recordIds.withFilter(recordById.contains(_)).foreach( id => unitMapper(recordById(id)) )
     }
   }
   
-  def selectGroupedRecords[T]( recordIds: Seq[Long], recordsById: Map[Long,Seq[IValueContainer]] ): ( (IValueContainer => Unit) => Unit ) = {
+  def selectGroupedRecords[T]( recordIds: collection.Seq[Long], recordsById: Map[Long,collection.Seq[IValueContainer]] ): ( (IValueContainer => Unit) => Unit ) = {
     unitMapper: (IValueContainer => Unit) => {
       recordIds.withFilter(recordsById.contains(_)).flatMap( id => recordsById(id) ).foreach( unitMapper )
     }
   }
   
-  def selectAndMapRecords[T]( recordIds: Seq[Long], recordById: Map[Long,IValueContainer] ): ( (IValueContainer => T) => Seq[T] ) = {
+  def selectAndMapRecords[T]( recordIds: collection.Seq[Long], recordById: Map[Long,IValueContainer] ): ( (IValueContainer => T) => collection.Seq[T] ) = {
     mapper: (IValueContainer => T) => {
       val s = recordIds.withFilter(recordById.contains(_)).map( id => mapper(recordById(id)) )
       s
     }
   }
   
-  def selectAndMapGroupedRecords[T]( recordIds: Seq[Long], recordsById: Map[Long,Seq[IValueContainer]] ): ( (IValueContainer => T) => Seq[T] ) = {
+  def selectAndMapGroupedRecords[T]( recordIds: collection.Seq[Long], recordsById: Map[Long,collection.Seq[IValueContainer]] ): ( (IValueContainer => T) => collection.Seq[T] ) = {
     mapper: (IValueContainer => T) => recordIds.withFilter(recordsById.contains(_)).flatMap( id => recordsById(id).map(mapper(_) ) )
   }
   
   // TODO: use LongMap instead of HashMap
   def buildMsiSearches(
-    msiSearchRecords: Seq[IValueContainer],
+    msiSearchRecords: collection.Seq[IValueContainer],
     peaklistRecordById: Map[Long,IValueContainer],
     pklSoftRecordById: Map[Long,IValueContainer],
     searchSettingsRecordById: Map[Long,IValueContainer],
     pmfSearchSettingsRecordById: Map[Long,IValueContainer],
     msmsSearchSettingsRecordById: Map[Long,IValueContainer],
-    searchedSeqDbRecordsBySSId: Map[Long,Seq[IValueContainer]],
-    usedEnzymeRecordsBySSId: Map[Long,Seq[IValueContainer]],
-    usedPtmRecordsBySSId: Map[Long,Seq[IValueContainer]],
+    searchedSeqDbRecordsBySSId: Map[Long,collection.Seq[IValueContainer]],
+    usedEnzymeRecordsBySSId: Map[Long,collection.Seq[IValueContainer]],
+    usedPtmRecordsBySSId: Map[Long,collection.Seq[IValueContainer]],
     enzymeRecordById: Map[Long,IValueContainer],
     enzymeCleavageRecordsByEnzymeId: Map[Long,IValueContainer],
     instConfigRecordById: Map[Long,IValueContainer],
     instrumentRecordById: Map[Long,IValueContainer],
     fragmentationRuleSetById: Map[Long, IValueContainer],
-    fragmentationSeriesListByFragmentationRuleSetId: Map[Long,Seq[IValueContainer]],
+    fragmentationSeriesListByFragmentationRuleSetId: Map[Long,collection.Seq[IValueContainer]],
     ptmProvider: IPTMProvider
   ): Array[MSISearch] = {
     
@@ -94,21 +94,21 @@ object MsiSearchBuilder {
   }
 
   def buildMsiSearches(
-    eachMsiSearchRecord: (IValueContainer => MSISearch) => Seq[MSISearch],
-    eachPeaklistRecordSelector: Array[Long] => ( (IValueContainer => Peaklist) => Seq[Peaklist] ),
-    eachPklSoftRecordSelector: Array[Long] => ( (IValueContainer => PeaklistSoftware) => Seq[PeaklistSoftware] ),
-    eachSearchSettingsRecordSelector: Array[Long] => ( (IValueContainer => SearchSettings) => Seq[SearchSettings] ),
+    eachMsiSearchRecord: (IValueContainer => MSISearch) => collection.Seq[MSISearch],
+    eachPeaklistRecordSelector: Array[Long] => ( (IValueContainer => Peaklist) => collection.Seq[Peaklist] ),
+    eachPklSoftRecordSelector: Array[Long] => ( (IValueContainer => PeaklistSoftware) => collection.Seq[PeaklistSoftware] ),
+    eachSearchSettingsRecordSelector: Array[Long] => ( (IValueContainer => SearchSettings) => collection.Seq[SearchSettings] ),
     eachPMFSearchSettingsRecordSelector: Array[Long] => ( (IValueContainer => Unit) => Unit ),
     eachMSMSSearchSettingsRecordSelector: Array[Long] => ( (IValueContainer => Unit) => Unit ),
-    eachSearchedSeqDbRecordSelector: Long => ( (IValueContainer => SeqDatabase) => Seq[SeqDatabase] ),
+    eachSearchedSeqDbRecordSelector: Long => ( (IValueContainer => SeqDatabase) => collection.Seq[SeqDatabase] ),
     eachUsedEnzymeRecordSelector: Array[Long] => ( (IValueContainer => Unit) => Unit ),
     eachUsedPtmRecordSelector: Array[Long] => ( (IValueContainer => Unit) => Unit ),
-    eachEnzymeRecordSelector: Array[Long] => ( (IValueContainer => Enzyme) => Seq[Enzyme] ),
-    eachEnzymeCleavageRecordSelector: Long => ( (IValueContainer => EnzymeCleavage) => Seq[EnzymeCleavage] ),
-    eachInstConfigRecordSelector: Array[Long] => ( (IValueContainer => InstrumentConfig) => Seq[InstrumentConfig] ),
-    eachInstrumentRecordSelector: Array[Long] => ( (IValueContainer => Instrument) => Seq[Instrument] ),
-    eachFragRuleSetRecordSelector: Array[Long] => ( (IValueContainer => FragmentationRuleSet) => Seq[FragmentationRuleSet] ),
-    eachFragSeriesRecordSelector: Array[Long] => ( (IValueContainer => FragmentIonType) => Seq[FragmentIonType] ),
+    eachEnzymeRecordSelector: Array[Long] => ( (IValueContainer => Enzyme) => collection.Seq[Enzyme] ),
+    eachEnzymeCleavageRecordSelector: Long => ( (IValueContainer => EnzymeCleavage) => collection.Seq[EnzymeCleavage] ),
+    eachInstConfigRecordSelector: Array[Long] => ( (IValueContainer => InstrumentConfig) => collection.Seq[InstrumentConfig] ),
+    eachInstrumentRecordSelector: Array[Long] => ( (IValueContainer => Instrument) => collection.Seq[Instrument] ),
+    eachFragRuleSetRecordSelector: Array[Long] => ( (IValueContainer => FragmentationRuleSet) => collection.Seq[FragmentationRuleSet] ),
+    eachFragSeriesRecordSelector: Array[Long] => ( (IValueContainer => FragmentIonType) => collection.Seq[FragmentIonType] ),
     ptmProvider: IPTMProvider
   ): Array[MSISearch] = {
     
@@ -187,18 +187,18 @@ object MsiSearchBuilder {
   }
 
   def buildSearchSettingsList(
-    eachSearchSettingsRecord: (IValueContainer => SearchSettings) => Seq[SearchSettings],
+    eachSearchSettingsRecord: (IValueContainer => SearchSettings) => collection.Seq[SearchSettings],
     eachPMFSearchSettingsRecord: (IValueContainer => Unit) => Unit,
     eachMSMSSearchSettingsRecord: (IValueContainer => Unit) => Unit,
     eachUsedEnzymeRecord: (IValueContainer => Unit) => Unit,
     eachUsedPtmRecord: (IValueContainer => Unit) => Unit,
-    eachEnzymeRecordSelector: Array[Long] => ( (IValueContainer => Enzyme) => Seq[Enzyme] ),
-    eachEnzymeCleavageRecordSelector: Long => ( (IValueContainer => EnzymeCleavage) => Seq[EnzymeCleavage] ),
-    eachInstConfigRecordSelector: Array[Long] => ( (IValueContainer => InstrumentConfig) => Seq[InstrumentConfig] ),
-    eachInstrumentRecordSelector: Array[Long] => ( (IValueContainer => Instrument) => Seq[Instrument] ),
-    eachFragRuleSetRecordSelector: Array[Long] => ( (IValueContainer => FragmentationRuleSet) => Seq[FragmentationRuleSet] ),
-    eachFragmentationSeriesSelector: Array[Long] => ( (IValueContainer => FragmentIonType) => Seq[FragmentIonType] ),
-    eachSearchedSeqDbRecordSelector: Long => ( (IValueContainer => SeqDatabase) => Seq[SeqDatabase] ),
+    eachEnzymeRecordSelector: Array[Long] => ( (IValueContainer => Enzyme) => collection.Seq[Enzyme] ),
+    eachEnzymeCleavageRecordSelector: Long => ( (IValueContainer => EnzymeCleavage) => collection.Seq[EnzymeCleavage] ),
+    eachInstConfigRecordSelector: Array[Long] => ( (IValueContainer => InstrumentConfig) => collection.Seq[InstrumentConfig] ),
+    eachInstrumentRecordSelector: Array[Long] => ( (IValueContainer => Instrument) => collection.Seq[Instrument] ),
+    eachFragRuleSetRecordSelector: Array[Long] => ( (IValueContainer => FragmentationRuleSet) => collection.Seq[FragmentationRuleSet] ),
+    eachFragmentationSeriesSelector: Array[Long] => ( (IValueContainer => FragmentIonType) => collection.Seq[FragmentIonType] ),
+    eachSearchedSeqDbRecordSelector: Long => ( (IValueContainer => SeqDatabase) => collection.Seq[SeqDatabase] ),
     ptmProvider: IPTMProvider
   ): Array[SearchSettings] = {
     
@@ -328,7 +328,7 @@ object MsiSearchBuilder {
     )
   }
   
-  def buildSeqDatabases( eachRecord: (IValueContainer => SeqDatabase) => Seq[SeqDatabase] ): Array[SeqDatabase] = {
+  def buildSeqDatabases( eachRecord: (IValueContainer => SeqDatabase) => collection.Seq[SeqDatabase] ): Array[SeqDatabase] = {
     eachRecord( buildSearchedSeqDatabase ).toArray
   }
   
@@ -347,7 +347,7 @@ object MsiSearchBuilder {
     )
   }
   
-  def buildSearchedSeqDatabases( eachRecord: (IValueContainer => SeqDatabase) => Seq[SeqDatabase] ): Array[SeqDatabase] = {    
+  def buildSearchedSeqDatabases( eachRecord: (IValueContainer => SeqDatabase) => collection.Seq[SeqDatabase] ): Array[SeqDatabase] = {    
     eachRecord( buildSearchedSeqDatabase ).toArray
   }
   

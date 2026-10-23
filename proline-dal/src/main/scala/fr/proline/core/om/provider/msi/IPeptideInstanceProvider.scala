@@ -12,14 +12,14 @@ trait IPeptideInstanceProvider {
    *  @param pepInstIds: Sequence of ids of PeptideInstance to search for
    *  @return Array of Option[PeptideInstance] corresponding to found PeptideInstance
    */
-  def getPeptideInstancesAsOptions( pepInstIds: Seq[Long] ): Array[Option[PeptideInstance]]
+  def getPeptideInstancesAsOptions( pepInstIds: collection.Seq[Long] ): Array[Option[PeptideInstance]]
   
   /**
    *  Get PeptideInstances with specified Ids.
    *  @param pepInstIds: Sequence of ids of PeptideInstance to search for
    *  @return Array of PeptideInstance corresponding to found PeptideInstance
    */
-  def getPeptideInstances( pepInstIds: Seq[Long] ): Array[PeptideInstance]
+  def getPeptideInstances( pepInstIds: collection.Seq[Long] ): Array[PeptideInstance]
   
   /**
    *  Get PeptideInstance (wrapped in Option) with specified Id.
@@ -36,7 +36,7 @@ trait IPeptideInstanceProvider {
    *  @param resultSummaryIds: Sequence of ResultSummary ids to get PeptideInstance for
    *  @return Array of Option[PeptideInstance]belonging to specified one of the specified ResultSummary
    */
-  def getResultSummariesPeptideInstances( resultSummaryIds: Seq[Long] ): Array[PeptideInstance]
+  def getResultSummariesPeptideInstances( resultSummaryIds: collection.Seq[Long] ): Array[PeptideInstance]
   
   /**
    *  Get PeptideInstance (wrapped in Option) associated to ResultSummary with specified Id.

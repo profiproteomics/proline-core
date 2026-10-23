@@ -19,7 +19,7 @@ class ScorePSMFilter(var scoreThreshold: Float = 0.0f, var thresholdStartValue :
     
   def getPeptideMatchValueForFiltering(pepMatch: PeptideMatch): Any = pepMatch.score
   
-  def filterPeptideMatches( pepMatches: Seq[PeptideMatch], incrementalValidation: Boolean, traceability: Boolean ): Unit = {
+  def filterPeptideMatches( pepMatches: collection.Seq[PeptideMatch], incrementalValidation: Boolean, traceability: Boolean ): Unit = {
     
     // Reset validation status if validation is not incremental
     if( !incrementalValidation ) PeptideMatchFiltering.resetPepMatchValidationStatus(pepMatches)

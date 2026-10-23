@@ -53,7 +53,7 @@ class ORMResultSetProvider(
   /* OM Entity caches */
   private val entityCaches = mutable.Map.empty[Class[_], mutable.Map[Long, _]]
 
-  def getResultSetsAsOptions(resultSetIds: Seq[Long], resultSetFilter: Option[ResultSetFilter] = None): Array[Option[ResultSet]] = {
+  def getResultSetsAsOptions(resultSetIds: collection.Seq[Long], resultSetFilter: Option[ResultSetFilter] = None): Array[Option[ResultSet]] = {
     val resultSets = Array.newBuilder[Option[ResultSet]]
 
     for (resultSetId <- resultSetIds) {
@@ -63,7 +63,7 @@ class ORMResultSetProvider(
     resultSets.result
   }
 
-  def getResultSets(resultSetIds: Seq[Long], resultSetFilter: Option[ResultSetFilter] = None): Array[ResultSet] = {
+  def getResultSets(resultSetIds: collection.Seq[Long], resultSetFilter: Option[ResultSetFilter] = None): Array[ResultSet] = {
     val resultSets = Array.newBuilder[ResultSet]
 
     for (resultSetId <- resultSetIds) {

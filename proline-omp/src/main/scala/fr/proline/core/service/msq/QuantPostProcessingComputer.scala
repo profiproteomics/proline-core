@@ -112,11 +112,11 @@ class QuantPostProcessingComputer(
     val isIsobaricQuant = udsMasterQuantChannel.getDataset.getMethod.getType.equals(QuantitationMethod.Type.ISOBARIC_TAGGING.toString)
     var isValidQuantMethod  = isIsobaricQuant
 
-    val qChIdsSorted: Seq[ArrayBuffer[Long]] = if (isIsobaricQuant) {
+    val qChIdsSorted: collection.Seq[ArrayBuffer[Long]] = if (isIsobaricQuant) {
 
       val qChannelsByLabelId = mutable.Map.empty[Long, Array[QuantitationChannel]] ++ udsMasterQuantChannel.getQuantitationChannels.asScala.toArray.groupBy(_.getQuantitationLabel.getId)
       //VDS : getMethod.getLabels return labels in 'number' order and toSeq keep order ...  methodLabelIds is ordered by QuantLabel.number order !
-      val methodLabelIds: Seq[Long] = udsMasterQuantChannel.getDataset.getMethod.getLabels.asScala.map(l => l.getId).toSeq
+      val methodLabelIds: collection.Seq[Long] = udsMasterQuantChannel.getDataset.getMethod.getLabels.asScala.map(l => l.getId).toSeq
       val fullOrderedQChannels = new ArrayBuffer[ArrayBuffer[Long]]() //Get grouped qCh; qch for each label from Quant Method
 
       if( qChannelsByLabelId.count(qchLabelId => methodLabelIds.contains(qchLabelId._1))!= qChannelsByLabelId.size){//some qChannel label don't belong to quant method
@@ -129,7 +129,7 @@ class QuantPostProcessingComputer(
           for (lid <- methodLabelIds.sorted) {
 //            var addedElem = "" //for --TEST PP todo remove it
             if (qChannelsByLabelId.contains(lid)) {
-              val qChsForLabel = qChannelsByLabelId(lid).to[ArrayBuffer]
+              val qChsForLabel = qChannelsByLabelId(lid).to(ArrayBuffer)
 //              addedElem += "-qChid "+qChsForLabel(0).getId//for --TEST PP todo remove it
               orderedQChannels += qChsForLabel(0).getId
               qChsForLabel.remove(0)
@@ -565,7 +565,7 @@ class QuantPostProcessingComputer(
     } // END OF tryTransactionWithEzDBC
   }
 
-  private def _resetAndComputeIonsAbundance(mqPepIon: MasterQuantPeptideIon, qChIdsSorted :Seq[ArrayBuffer[Long]], purityCorrectionMatrix : Option[RealMatrix], pepMatchByPepInstQueryIds : mutable.Map[String,PeptideMatch]  ) : Unit = {
+  private def _resetAndComputeIonsAbundance(mqPepIon: MasterQuantPeptideIon, qChIdsSorted :collection.Seq[ArrayBuffer[Long]], purityCorrectionMatrix : Option[RealMatrix], pepMatchByPepInstQueryIds : mutable.Map[String,PeptideMatch]  ) : Unit = {
     val values  = new ArrayBuffer[Array[Double]](1)
     values += Array.empty[Double]
 

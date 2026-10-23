@@ -37,7 +37,7 @@ class SQLMasterQuantProteinSetProvider(
   val ObjectTreeTable = MsiDbObjectTreeTable
   val ObjectTreeCols = ObjectTreeTable.columns
   
-  def getMasterQuantProteinSets( mqProtSetIds: Seq[Long], loadMQPeptides: Boolean = true ): Array[MasterQuantProteinSet] = {
+  def getMasterQuantProteinSets( mqProtSetIds: collection.Seq[Long], loadMQPeptides: Boolean = true ): Array[MasterQuantProteinSet] = {
     if( mqProtSetIds.isEmpty ) return Array()
     
     val protSets = protSetProvider.getProteinSets(mqProtSetIds)
@@ -78,7 +78,7 @@ class SQLMasterQuantProteinSetProvider(
   }
   
   def getMasterQuantProteinSets(
-    mqProtSetIds: Seq[Long],
+    mqProtSetIds: collection.Seq[Long],
     protSetById: Map[Long,ProteinSet],
     mqPepByPepInstId: Map[Long,MasterQuantPeptide]
   ): Array[MasterQuantProteinSet] = {
@@ -96,8 +96,8 @@ class SQLMasterQuantProteinSetProvider(
 
   }
 
-  // TODO: factorize code with method getMasterQuantProteinSets( mqProtSetIds: Seq[Long], loadMQPeptides: Boolean = true )
-  def getQuantResultSummariesMQProteinSets( quantRsmIds: Seq[Long], loadMQPeptides: Boolean = true ): Array[MasterQuantProteinSet] = {
+  // TODO: factorize code with method getMasterQuantProteinSets( mqProtSetIds: collection.Seq[Long], loadMQPeptides: Boolean = true )
+  def getQuantResultSummariesMQProteinSets( quantRsmIds: collection.Seq[Long], loadMQPeptides: Boolean = true ): Array[MasterQuantProteinSet] = {
     if( quantRsmIds.isEmpty ) return Array()
 
     val protSets = protSetProvider.getResultSummariesProteinSets(quantRsmIds)
@@ -138,7 +138,7 @@ class SQLMasterQuantProteinSetProvider(
   }
   
   def getQuantResultSummariesMQProteinSets(
-    quantRsmIds: Seq[Long],
+    quantRsmIds: collection.Seq[Long],
     protSetById: Map[Long,ProteinSet],
     mqPepByPepInstId: Map[Long,MasterQuantPeptide]
   ): Array[MasterQuantProteinSet] = {
@@ -158,8 +158,8 @@ class SQLMasterQuantProteinSetProvider(
   
   def selectMasterQuantProteinSets(
     msiEzDBC: EasyDBC,
-    mqProtSetIds: Seq[Long]
-  ): (IValueContainer => MasterQuantProteinSet) => Seq[MasterQuantProteinSet] = {
+    mqProtSetIds: collection.Seq[Long]
+  ): (IValueContainer => MasterQuantProteinSet) => collection.Seq[MasterQuantProteinSet] = {
     
     val mqProtSetCompQueryBuilder = new SelectQueryBuilder3(MsiDbProteinSetTable,MQComponentTable,ObjectTreeTable)
     val mqProtSetCompQuery = mqProtSetCompQueryBuilder.mkSelectQuery(
@@ -174,8 +174,8 @@ class SQLMasterQuantProteinSetProvider(
   
   def selectQuantResultSummariesMasterQuantProteinSets(
     msiEzDBC: EasyDBC,
-    quantRsmIds: Seq[Long]
-  ): (IValueContainer => MasterQuantProteinSet) => Seq[MasterQuantProteinSet] = {
+    quantRsmIds: collection.Seq[Long]
+  ): (IValueContainer => MasterQuantProteinSet) => collection.Seq[MasterQuantProteinSet] = {
     
     val mqProtSetCompQueryBuilder = new SelectQueryBuilder3(MsiDbProteinSetTable,MQComponentTable,ObjectTreeTable)
     val mqProtSetCompQuery = mqProtSetCompQueryBuilder.mkSelectQuery(
@@ -189,7 +189,7 @@ class SQLMasterQuantProteinSetProvider(
   }
   
   def buildMasterQuantProteinSets(
-    eachMQProtSetRecord: (IValueContainer => MasterQuantProteinSet) => Seq[MasterQuantProteinSet],
+    eachMQProtSetRecord: (IValueContainer => MasterQuantProteinSet) => collection.Seq[MasterQuantProteinSet],
     protSetById: Map[Long,ProteinSet],
     mqPepByPepInstId: Map[Long,MasterQuantPeptide] = Map()
   ): Array[MasterQuantProteinSet] = {

@@ -116,7 +116,7 @@ trait SQLLazyResultSetLoader extends LazyLogging {
   }
   
   protected def getResultSetDescriptors(
-    rsIds: Seq[Long]
+    rsIds: collection.Seq[Long]
   ): Array[ResultSetDescriptor] = {
 
     // Execute SQL query to load result sets
@@ -143,7 +143,7 @@ class SQLLazyResultSetProvider(
   override val udsDbCtx: UdsDbConnectionContext = peptideCacheExecContext.getUDSDbConnectionContext
 
   def getLazyResultSets(
-    rsIds: Seq[Long],
+    rsIds: collection.Seq[Long],
     resultSetFilter: Option[ResultSetFilter] = None
   ): Array[LazyResultSet] = {
     if (rsIds.isEmpty) return Array()

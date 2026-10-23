@@ -11,7 +11,6 @@ import org.scalatest.Assertions._
 import fr.proline.core.om.model.msi._
 import fr.proline.core.om.model.msq._
 
-import scala.collection.breakOut
 
 @Test
 class MasterQuantPeptidesClustererTest {

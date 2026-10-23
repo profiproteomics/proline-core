@@ -13,14 +13,14 @@ import fr.proline.core.om.provider.msi.IPeaklistSoftwareProvider
 
 class SQLPeaklistSoftwareProvider(val dbCtx: DatabaseConnectionContext) extends IPeaklistSoftwareProvider {
   
-  def getPeaklistSoftwareListAsOptions( pklSoftIds: Seq[Long] ): Array[Option[PeaklistSoftware]] = {
+  def getPeaklistSoftwareListAsOptions( pklSoftIds: collection.Seq[Long] ): Array[Option[PeaklistSoftware]] = {
     if( pklSoftIds.isEmpty ) return Array()
     
     val pklSoftById = Map() ++ this.getPeaklistSoftwareList(pklSoftIds).map( ps => ps.id -> ps )
     pklSoftIds.toArray.map( pklSoftById.get(_) )
   }
   
-  def getPeaklistSoftwareList(pklSoftIds: Seq[Long]): Array[PeaklistSoftware] = {
+  def getPeaklistSoftwareList(pklSoftIds: collection.Seq[Long]): Array[PeaklistSoftware] = {
     if( pklSoftIds.isEmpty ) return Array()
     
     DoJDBCReturningWork.withEzDBC(dbCtx) { msiEzDBC =>
@@ -41,7 +41,7 @@ class SQLPeaklistSoftwareProvider(val dbCtx: DatabaseConnectionContext) extends 
 
 object SQLPeaklistSoftwareProvider {
   
-  def selectPklSoftRecords(ezDBC: EasyDBC, pklSoftIds: Seq[Long]): (IValueContainer => PeaklistSoftware) => Seq[PeaklistSoftware] = {
+  def selectPklSoftRecords(ezDBC: EasyDBC, pklSoftIds: collection.Seq[Long]): (IValueContainer => PeaklistSoftware) => collection.Seq[PeaklistSoftware] = {
     
     val pklSoftQuery = new SelectQueryBuilder1(MsiDbPeaklistSoftwareTable).mkSelectQuery( (t,c) =>
       List(t.*) -> "WHERE "~ t.ID ~" IN("~ pklSoftIds.mkString(",") ~")"

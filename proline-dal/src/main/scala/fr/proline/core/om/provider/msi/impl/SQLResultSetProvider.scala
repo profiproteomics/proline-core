@@ -35,7 +35,7 @@ trait SQLResultSetLoader extends LazyLogging {
   }
 
   protected def getResultSets(
-    rsIds: Seq[Long],
+    rsIds: collection.Seq[Long],
     isValidatedContent: Boolean,
     pepMatches: Array[PeptideMatch],
     protMatches: Array[ProteinMatch]
@@ -118,7 +118,7 @@ class SQLResultSetProvider(
   protected val msiDbCtx: MsiDbConnectionContext = peptideCacheExecContext.getMSIDbConnectionContext
 
   def getResultSets(
-    rsIds: Seq[Long],
+    rsIds: collection.Seq[Long],
     resultSetFilter: Option[ResultSetFilter] = None
   ): Array[ResultSet] = {
     if (rsIds.isEmpty) return Array()
@@ -146,7 +146,7 @@ class SQLResultSetProvider(
   }
 
   def getResultSetsAsOptions(
-    resultSetIds: Seq[Long],
+    resultSetIds: collection.Seq[Long],
     resultSetFilter: Option[ResultSetFilter] = None
   ): Array[Option[ResultSet]] = {
     if (resultSetIds.isEmpty) return Array()

@@ -64,7 +64,7 @@ class PtmSitesClustererTest extends StrictLogging {
     }
 
     val clusterizer = new PtmSiteExactClusterer(rsm,rsm.resultSet.get.proteinMatches, clusterizePartiallyIsomorphicPep=clusterizeMC)
-    sitesByProteinMatchIds.flatMap{ case(protMatchId, sites) => clusterizer.clusterize(protMatchId, sites, _getPeptideMatchesByPeptideIds, IdGenerator) }.toArray
+    sitesByProteinMatchIds.toSeq.flatMap{ case(protMatchId, sites) => clusterizer.clusterize(protMatchId, sites, _getPeptideMatchesByPeptideIds, IdGenerator) }.toArray
   }
 
   @Test
@@ -135,7 +135,7 @@ class PtmSitesClustererTest extends StrictLogging {
 //    }
 //
 //    val clusterizer = new PtmSiteExactClusterer(rsm,rsm.resultSet.get.proteinMatches)
-//    val clusters = sitesByProteinMatchIds.flatMap{ case(protMatchId, sites) => clusterizer.clusterize(protMatchId, sites, _getPeptideMatchesByPeptideIds, IdGenerator) }
+//    val clusters = sitesByProteinMatchIds.toSeq.flatMap{ case(protMatchId, sites) => clusterizer.clusterize(protMatchId, sites, _getPeptideMatchesByPeptideIds, IdGenerator) }
 
     assert(clusters.length == 8)
   }

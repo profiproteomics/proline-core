@@ -15,7 +15,7 @@ class PepSeqLengthPSMFilter( var minSeqLength: Int = 0 ) extends IPeptideMatchFi
   
   def getPeptideMatchValueForFiltering(pepMatch: PeptideMatch): Any = getPeptideMatchSequenceLength(pepMatch)
     
-  def filterPeptideMatches(pepMatches: Seq[PeptideMatch],incrementalValidation: Boolean,traceability: Boolean ): Unit = {
+  def filterPeptideMatches(pepMatches: collection.Seq[PeptideMatch],incrementalValidation: Boolean,traceability: Boolean ): Unit = {
 
     for ( peptideMatch <- pepMatches ) {
       
@@ -40,7 +40,7 @@ class PepSeqLengthPSMFilter( var minSeqLength: Int = 0 ) extends IPeptideMatchFi
     minSeqLength = toInt(currentVal)
   }
    
-  def sortPeptideMatches( pepMatches: Seq[PeptideMatch] ): Seq[PeptideMatch] = {
+  def sortPeptideMatches( pepMatches: collection.Seq[PeptideMatch] ): collection.Seq[PeptideMatch] = {
     pepMatches.sortWith( _.peptide.sequence.length > _.peptide.sequence.length )
   }
 }

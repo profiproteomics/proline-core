@@ -24,7 +24,7 @@ abstract class AbstractSQLRsWriter() extends IRsWriter {
   
   object CustomSerializer extends ProfiJSMSerialization with CustomDoubleJacksonSerializer
 
-  def fetchExistingPeptidesIdByUniqueKey(pepSequences: Seq[String], msiDbCtx: MsiDbConnectionContext): Map[String, Long] = {
+  def fetchExistingPeptidesIdByUniqueKey(pepSequences: collection.Seq[String], msiDbCtx: MsiDbConnectionContext): Map[String, Long] = {
     
     val peptideMapBuilder = scala.collection.immutable.Map.newBuilder[String, Long]
 
@@ -57,7 +57,7 @@ abstract class AbstractSQLRsWriter() extends IRsWriter {
     peptideMapBuilder.result()
   }
 
-  /*def insertNewPeptides(peptides: Seq[Peptide], peptideByUniqueKey: HashMap[String,Peptide], msiDbCtx: MsiDbConnectionContext): Unit = {
+  /*def insertNewPeptides(peptides: collection.Seq[Peptide], peptideByUniqueKey: HashMap[String,Peptide], msiDbCtx: MsiDbConnectionContext): Unit = {
     
     DoJDBCWork.withEzDBC(msiDbCtx) { msiEzDBC =>
       
@@ -84,13 +84,13 @@ abstract class AbstractSQLRsWriter() extends IRsWriter {
 
   }*/
 
-  def fetchProteinIdentifiers(accessions: Seq[String]): Array[Any] = null
+  def fetchProteinIdentifiers(accessions: collection.Seq[String]): Array[Any] = null
 
-  def fetchExistingProteins(protCRCs: Seq[String]): Array[Protein] = {
+  def fetchExistingProteins(protCRCs: collection.Seq[String]): Array[Protein] = {
     new Array[Protein](0)
   }
 
-  def insertNewProteins(proteins: Seq[Protein], proteinBySequence: HashMap[String,Protein], msiDbCtx: MsiDbConnectionContext): Array[Protein] = {
+  def insertNewProteins(proteins: collection.Seq[Protein], proteinBySequence: HashMap[String,Protein], msiDbCtx: MsiDbConnectionContext): Array[Protein] = {
 
     val newProteins = new ArrayBuffer[Protein](proteins.length)
 

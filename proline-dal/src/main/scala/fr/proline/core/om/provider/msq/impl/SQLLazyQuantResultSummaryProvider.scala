@@ -25,7 +25,7 @@ class SQLLazyQuantResultSummaryProvider(
   // TODO: find a way to handle master quant reporter ions
   def getLazyQuantResultSummaries(
     quantitationId: Long,
-    quantRsmIds: Seq[Long], // TODO: remove me and add a masterQuantChannelId filter ???
+    quantRsmIds: collection.Seq[Long], // TODO: remove me and add a masterQuantChannelId filter ???
     loadFullResultSet: Boolean = false,
     linkPeptideSets: Boolean = false,
     linkResultSetEntities: Boolean = false

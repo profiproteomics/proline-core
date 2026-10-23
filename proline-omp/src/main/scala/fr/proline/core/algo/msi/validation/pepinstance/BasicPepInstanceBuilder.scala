@@ -65,11 +65,11 @@ class BasicPepInstanceBuilder extends IPeptideInstanceBuilder with LazyLogging {
         BigDecimal(1.0, BasicPepInstanceBuilder.DECIMAL256) - (BigDecimal(1.0, BasicPepInstanceBuilder.DECIMAL256) - BigDecimal(math.pow(10, -bestPepMatch.score / 10.0), BasicPepInstanceBuilder.DECIMAL256)).pow(pepMatchGroup.length)
       }
 
-      val score = (-10.0 * BasicPepInstanceBuilder.log10(pvalue, pvalue.scale)).doubleValue()
+      val score = (-10.0 * BasicPepInstanceBuilder.log10(pvalue, pvalue.scale)).doubleValue
 
       Some(PeptideInstanceProperties(
         Some(ScoringProperties(
-          pValue = pvalue.doubleValue(),
+          pValue = pvalue.doubleValue,
           score = score,
           scoreType = Some("Dunn-Sidak corrected")))))
       } else {

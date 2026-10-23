@@ -21,7 +21,7 @@ abstract class AbstractPepMatchRulesValidator extends IProteinSetValidator {
   val validationRules = Array( ValidationRule(1,pepMatchFilterRule1), ValidationRule(2,pepMatchFilterRule2) )
   
   protected def _validateProteinSets(
-    proteinSets: Seq[ProteinSet],
+    proteinSets: collection.Seq[ProteinSet],
     bestPepMatchesByPepSetId: Map[Long,Array[PeptideMatch]],
     rules: Array[ValidationRule]
   ): Unit = {

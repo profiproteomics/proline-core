@@ -140,7 +140,7 @@ class RsmPtmSitesIdentifier(
   private def _getOrIdentifyPtmSites(resultSummary: ResultSummary, onPtmSites: (PtmSitesIdentifier, PtmResult) => Unit): PtmResult = {
 
     val existingObjectTreeId = RsmPtmSitesIdentifier.getPtmSitesObjectTreeID(resultSummary.id, schemaName, msiDbContext)
-    var ptmSites = Array.empty[PtmSite].toIterable
+    var ptmSites: Iterable[PtmSite] = Array.empty[PtmSite]
 
     if (existingObjectTreeId.isDefined && !force) {
       logger.info(s"Read already defined PtmSites for ResultSummary #${resultSummary.id} ")
@@ -306,7 +306,7 @@ class RsmPtmSitesIdentifierV2(
     val clusterizer = PtmSiteClusterer(clusteringConfigAsMap("method_name").toString,result.resultSummary, proteinMatches)
     val sitesByProteinMatchIds = sites.filter { s => ptmIds.contains(ptmDefinitionById(s.ptmDefinitionId).ptmId) }.groupBy(_.proteinMatchId)
 
-    val clusters = sitesByProteinMatchIds.flatMap{ case (protMatchId, sites) => clusterizer.clusterize(protMatchId, sites, _getPeptideMatchesByPeptideIds, this) }
+    val clusters = sitesByProteinMatchIds.iterator.flatMap{ case (protMatchId, sites) => clusterizer.clusterize(protMatchId, sites, _getPeptideMatchesByPeptideIds, this) }
     clusters.toArray
   }
 
@@ -405,14 +405,14 @@ class RsmPtmSitesIdentifierV3( val execContext: IExecutionContext,
     val clusterizer = PtmSiteClusterer(clusteringConfigAsMap("method_name").toString,result.resultSummary, proteinMatches)
     val sitesByProteinMatchIds = sites.filter { s => ptmIds.contains(ptmDefinitionById(s.ptmDefinitionId).ptmId) }.groupBy(_.proteinMatchId)
 
-    val clusters = sitesByProteinMatchIds.flatMap{ case (protMatchId, sites) => clusterizer.clusterize(protMatchId, sites, _getPeptideMatchesByPeptideIds, this) }
+    val clusters = sitesByProteinMatchIds.iterator.flatMap{ case (protMatchId, sites) => clusterizer.clusterize(protMatchId, sites, _getPeptideMatchesByPeptideIds, this) }
     clusters.toArray
   }
 
   private def _getOrIdentifyPtmSites(resultSummary: ResultSummary, onPtmSites: (PtmSitesIdentifierV2, PtmResultV2) => Unit): PtmResultV2 = {
 
     val existingObjectTreeId = RsmPtmSitesIdentifier.getPtmSitesObjectTreeID(resultSummary.id, schemaName, msiDbContext)
-    var ptmSites = Array.empty[PtmSite2].toIterable
+    var ptmSites: Iterable[PtmSite2] = Array.empty[PtmSite2]
 
     if (existingObjectTreeId.isDefined && !force) {
       logger.info(s"Read already defined PtmSites for ResultSummary #${resultSummary.id} ")

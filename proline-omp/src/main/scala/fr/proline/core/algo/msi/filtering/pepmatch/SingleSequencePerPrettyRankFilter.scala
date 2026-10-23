@@ -41,7 +41,7 @@ class SingleSequencePerPrettyRankFilter(var targetRs: IResultSetLike = null) ext
     * @param traceability Specify if filter could saved information in peptideMatch properties
     *
     */
-  def filterPeptideMatches(pepMatches: Seq[PeptideMatch], incrementalValidation: Boolean, traceability: Boolean): Unit = {
+  def filterPeptideMatches(pepMatches: collection.Seq[PeptideMatch], incrementalValidation: Boolean, traceability: Boolean): Unit = {
     require(targetRs != null, " Target Search Result Should be specified before running this filter.")
 
     // Reset validation status if validation is not incremental
@@ -70,7 +70,7 @@ class SingleSequencePerPrettyRankFilter(var targetRs: IResultSetLike = null) ext
 
     // Filter query per query
     pepMatchesByMsqId.foreach(entry => {
-      var psmsByRank: Map[Int, Seq[PeptideMatch]] = entry._2.groupBy(_.rank)
+      var psmsByRank: Map[Int, collection.Seq[PeptideMatch]] = entry._2.groupBy(_.rank)
 
       // Filter rank per rank
       psmsByRank.foreach(sameRankPSMs => {

@@ -11,15 +11,15 @@ object PrettyRankPSMFilter {
   
   val scoreTol = 0.1f
   
-  def getPeptideMatchesRankMap( pepMatches: Seq[PeptideMatch] ): Map[Long,Int] = {
+  def getPeptideMatchesRankMap( pepMatches: collection.Seq[PeptideMatch] ): Map[Long,Int] = {
     pepMatches.map( pm => pm.id -> pm.rank ).toMap
   }
   
-  def restorePeptideMatchesRank( pepMatches: Seq[PeptideMatch], pepMatchRankMap: Map[Long,Int] ): Unit = {
+  def restorePeptideMatchesRank( pepMatches: collection.Seq[PeptideMatch], pepMatchRankMap: Map[Long,Int] ): Unit = {
     pepMatches.foreach( pm => pm.rank = pepMatchRankMap(pm.id) )
   }
   
-  def rerankPeptideMatches(pepMatches: Seq[PeptideMatch] ) {
+  def rerankPeptideMatches(pepMatches: collection.Seq[PeptideMatch] ) {
     
     // Group peptide matches by MS query
     val pepMatchesByMsqId = pepMatches.groupBy(_.msQueryId)
@@ -61,7 +61,7 @@ class PrettyRankPSMFilter( var maxPrettyRank: Int = 1 ) extends IPeptideMatchFil
   def getPeptideMatchValueForFiltering(pepMatch: PeptideMatch): Any = pepMatch.rank
 
   // TODO: rerank outside the filter ???
-  def filterPeptideMatches( pepMatches: Seq[PeptideMatch], incrementalValidation: Boolean, traceability: Boolean ): Unit = {
+  def filterPeptideMatches( pepMatches: collection.Seq[PeptideMatch], incrementalValidation: Boolean, traceability: Boolean ): Unit = {
     
     // Reset validation status if validation is not incremental
     if( !incrementalValidation ) PeptideMatchFiltering.resetPepMatchValidationStatus(pepMatches)
@@ -80,7 +80,7 @@ class PrettyRankPSMFilter( var maxPrettyRank: Int = 1 ) extends IPeptideMatchFil
     
   }
   
-  def sortPeptideMatches( pepMatches: Seq[PeptideMatch] ): Seq[PeptideMatch] = {
+  def sortPeptideMatches( pepMatches: collection.Seq[PeptideMatch] ): collection.Seq[PeptideMatch] = {
         
     // Memorize peptide matches rank
     val pepMatchRankMap = PrettyRankPSMFilter.getPeptideMatchesRankMap(pepMatches)

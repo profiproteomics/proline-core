@@ -66,15 +66,15 @@ class TDAnalyzerBuilder(
 
 abstract class ITargetDecoyAnalyzer {
 
-  def calcTDStatistics(targetPepMatches: Seq[PeptideMatch], decoyPepMatches: Seq[PeptideMatch]): ValidationResult
+  def calcTDStatistics(targetPepMatches: collection.Seq[PeptideMatch], decoyPepMatches: collection.Seq[PeptideMatch]): ValidationResult
 
-  def calcTDStatistics(pepMatchJointMap: Map[Long, Seq[PeptideMatch]]): ValidationResult
+  def calcTDStatistics(pepMatchJointMap: Map[Long, collection.Seq[PeptideMatch]]): ValidationResult
 
   def calcTDStatistics(targetMatchesCount: Int, decoyMatchesCount: Int): ValidationResult
 
   def performROCAnalysis(
-    targetPepMatches: Seq[PeptideMatch],
-    decoyPepMatches: Seq[PeptideMatch],
+    targetPepMatches: collection.Seq[PeptideMatch],
+    decoyPepMatches: collection.Seq[PeptideMatch],
     validationFilter: IOptimizablePeptideMatchFilter
   ): Array[ValidationResult]
 
@@ -88,8 +88,8 @@ abstract class AbstractTargetDecoyAnalyzer extends ITargetDecoyAnalyzer with Laz
   // Revert change : get threshold start Value from  getThresholdStartValue instead of Initialize filterThreshold to the worst decoy value
 
   def performROCAnalysisV1(
-    targetPepMatches: Seq[PeptideMatch],
-    decoyPepMatches: Seq[PeptideMatch],
+    targetPepMatches: collection.Seq[PeptideMatch],
+    decoyPepMatches: collection.Seq[PeptideMatch],
     validationFilter: IOptimizablePeptideMatchFilter
   ): Array[ValidationResult] = {
 
@@ -162,8 +162,8 @@ abstract class AbstractTargetDecoyAnalyzer extends ITargetDecoyAnalyzer with Laz
 
 
   def performROCAnalysis(
-    targetPepMatches: Seq[PeptideMatch],
-    decoyPepMatches: Seq[PeptideMatch],
+    targetPepMatches: collection.Seq[PeptideMatch],
+    decoyPepMatches: collection.Seq[PeptideMatch],
     validationFilter: IOptimizablePeptideMatchFilter
   ): Array[ValidationResult] = {
 
@@ -303,7 +303,7 @@ object RocPointsFilter {
 
 class BasicTDAnalyzer(tdComputer: (Int, Int) => Float) extends AbstractTargetDecoyAnalyzer {
 
-  def calcTDStatistics(targetPepMatches: Seq[PeptideMatch], decoyPepMatches: Seq[PeptideMatch] ): ValidationResult = {
+  def calcTDStatistics(targetPepMatches: collection.Seq[PeptideMatch], decoyPepMatches: collection.Seq[PeptideMatch] ): ValidationResult = {
 
     val targetMatchesCount = targetPepMatches.count(_.isValidated)
     val decoyMatchesCount = decoyPepMatches.count(_.isValidated)
@@ -323,7 +323,7 @@ class BasicTDAnalyzer(tdComputer: (Int, Int) => Float) extends AbstractTargetDec
 
   }
 
-  def calcTDStatistics(pepMatchJointMap: Map[Long, Seq[PeptideMatch]]): ValidationResult = {
+  def calcTDStatistics(pepMatchJointMap: Map[Long, collection.Seq[PeptideMatch]]): ValidationResult = {
     val allPepMatches = pepMatchJointMap.flatMap(_._2).toSeq
     val (decoyPepMatches, targetPepMatches) = allPepMatches.partition(_.isDecoy)
 
@@ -331,8 +331,8 @@ class BasicTDAnalyzer(tdComputer: (Int, Int) => Float) extends AbstractTargetDec
   }
 
   override def performROCAnalysis(
-      targetPepMatches: Seq[PeptideMatch],
-      decoyPepMatches: Seq[PeptideMatch],
+      targetPepMatches: collection.Seq[PeptideMatch],
+      decoyPepMatches: collection.Seq[PeptideMatch],
       validationFilter: IOptimizablePeptideMatchFilter): Array[ValidationResult] = {
 
     val rocPoints = super.performROCAnalysis(targetPepMatches, decoyPepMatches, validationFilter)
@@ -361,14 +361,14 @@ object GorshkovTDAnalyzer {
 
 class GorshkovTDAnalyzer(dbSizeRatio: Float = 1.0f) extends AbstractTargetDecoyAnalyzer with LazyLogging {
 
-  override def calcTDStatistics(targetPepMatches: Seq[PeptideMatch], decoyPepMatches: Seq[PeptideMatch]): ValidationResult = {
+  override def calcTDStatistics(targetPepMatches: collection.Seq[PeptideMatch], decoyPepMatches: collection.Seq[PeptideMatch]): ValidationResult = {
     val targetMatchesCount = targetPepMatches.count(_.isValidated)
     val decoyMatchesCount = decoyPepMatches.count(_.isValidated)
 
     this.calcTDStatistics(targetMatchesCount, decoyMatchesCount)
   }
 
-  override def calcTDStatistics(pepMatchJointMap: Map[Long, Seq[PeptideMatch]]): ValidationResult = {
+  override def calcTDStatistics(pepMatchJointMap: Map[Long, collection.Seq[PeptideMatch]]): ValidationResult = {
     val allPepMatches = pepMatchJointMap.flatMap(_._2).toSeq
     val (decoyPepMatches, targetPepMatches) = allPepMatches.partition(_.isDecoy)
 
@@ -385,8 +385,8 @@ class GorshkovTDAnalyzer(dbSizeRatio: Float = 1.0f) extends AbstractTargetDecoyA
   }
 
   override def performROCAnalysis(
-    targetPepMatches: Seq[PeptideMatch],
-    decoyPepMatches: Seq[PeptideMatch],
+    targetPepMatches: collection.Seq[PeptideMatch],
+    decoyPepMatches: collection.Seq[PeptideMatch],
     validationFilter: IOptimizablePeptideMatchFilter): Array[ValidationResult] = {
 
     val rocPoints = super.performROCAnalysis(targetPepMatches, decoyPepMatches, validationFilter)

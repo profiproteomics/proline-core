@@ -13,7 +13,7 @@ trait ISeqDatabaseProvider {
    *  @param seqDBIds: Sequence of ids of SeqDatabase to search for
    *  @return Array of Option[SeqDatabase] corresponding to found SeqDatabases
    */
-  def getSeqDatabasesAsOptions( seqDBIds: Seq[Long] ): Array[Option[SeqDatabase]]
+  def getSeqDatabasesAsOptions( seqDBIds: collection.Seq[Long] ): Array[Option[SeqDatabase]]
   
   /**
    * Get SeqDatabases with specified Ids.
@@ -21,7 +21,7 @@ trait ISeqDatabaseProvider {
    *  @param seqDBIds: Sequence of ids of SeqDatabase to search for
    *  @return Array of SeqDatabase corresponding to found SeqDatabases
    */
-  def getSeqDatabases( seqDBIds: Seq[Long] ): Array[SeqDatabase]
+  def getSeqDatabases( seqDBIds: collection.Seq[Long] ): Array[SeqDatabase]
   
   /**
    * Get SeqDatabase (wrapped in Option) with specified Id.
@@ -48,13 +48,13 @@ object SeqDbFakeProvider extends ISeqDatabaseProvider {
   
   val pdiDbCtx = null
   
-  def getSeqDatabasesAsOptions(seqDBIds: Seq[Long]): Array[Option[SeqDatabase]] = { 
+  def getSeqDatabasesAsOptions(seqDBIds: collection.Seq[Long]): Array[Option[SeqDatabase]] = { 
 	  var result = new Array[Option[SeqDatabase]](1)
 	  result(0) = None
 	  result
 	}
 	
-  def getSeqDatabases(seqDBIds: Seq[Long]): Array[SeqDatabase] = { 
+  def getSeqDatabases(seqDBIds: collection.Seq[Long]): Array[SeqDatabase] = { 
     this.getSeqDatabasesAsOptions(seqDBIds).filter( _ != None ).map( _.get )
   }
 	
@@ -75,13 +75,13 @@ object SeqDbFakeProvider extends ISeqDatabaseProvider {
 
 object SeqDbEmptyFakeProvider extends ISeqDatabaseProvider {
   
-   def getSeqDatabasesAsOptions(seqDBIds: Seq[Long]): Array[Option[SeqDatabase]] = { 
+   def getSeqDatabasesAsOptions(seqDBIds: collection.Seq[Long]): Array[Option[SeqDatabase]] = { 
 	  var result = new Array[Option[SeqDatabase]](1)
 	  result(0) = None
 	  result
 	}
 	
-  def getSeqDatabases(seqDBIds: Seq[Long]): Array[SeqDatabase] = { 
+  def getSeqDatabases(seqDBIds: collection.Seq[Long]): Array[SeqDatabase] = { 
     this.getSeqDatabasesAsOptions(seqDBIds).filter( _ != None ).map( _.get )
   }
 	

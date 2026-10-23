@@ -17,7 +17,7 @@ class SQLPeakelProvider(val lcmsDbCtx: LcMsDbConnectionContext) {
   val PeakelCols = LcmsDbPeakelColumns
   val PeakelItemCols = LcmsDbFeaturePeakelItemColumns
   
-  def getPeakels( peakelIds: Seq[Long] ): Array[Peakel] = {
+  def getPeakels( peakelIds: collection.Seq[Long] ): Array[Peakel] = {
     if( peakelIds.isEmpty ) return Array()
 
     DoJDBCReturningWork.withEzDBC(lcmsDbCtx) { ezDBC =>
@@ -33,7 +33,7 @@ class SQLPeakelProvider(val lcmsDbCtx: LcMsDbConnectionContext) {
 
   }
 
-  def getRawMapPeakels(rawMapIds: Seq[Long]): Array[Peakel] = {
+  def getRawMapPeakels(rawMapIds: collection.Seq[Long]): Array[Peakel] = {
     if( rawMapIds.isEmpty ) return Array()
 
     DoJDBCReturningWork.withEzDBC(lcmsDbCtx) { ezDBC =>
@@ -88,7 +88,7 @@ class SQLPeakelProvider(val lcmsDbCtx: LcMsDbConnectionContext) {
     
   }
   
-  def getPeakelItems( peakelIds: Seq[Long], loadPeakels: Boolean = true ): Array[FeaturePeakelItem] = {
+  def getPeakelItems( peakelIds: collection.Seq[Long], loadPeakels: Boolean = true ): Array[FeaturePeakelItem] = {
     if( peakelIds.isEmpty ) return Array()
     
     DoJDBCReturningWork.withEzDBC(lcmsDbCtx) { ezDBC =>
@@ -117,7 +117,7 @@ class SQLPeakelProvider(val lcmsDbCtx: LcMsDbConnectionContext) {
 
   }
   
-  def getFeaturePeakelItems( featureIds: Seq[Long], loadPeakels: Boolean = true ): Array[FeaturePeakelItem] = {
+  def getFeaturePeakelItems( featureIds: collection.Seq[Long], loadPeakels: Boolean = true ): Array[FeaturePeakelItem] = {
     if( featureIds.isEmpty ) return Array()
     
     DoJDBCReturningWork.withEzDBC(lcmsDbCtx) { ezDBC =>
@@ -148,7 +148,7 @@ class SQLPeakelProvider(val lcmsDbCtx: LcMsDbConnectionContext) {
 
   }
   
-  def getRawMapPeakelItems(rawMapIds: Seq[Long], loadPeakels: Boolean = true): Array[FeaturePeakelItem] = {
+  def getRawMapPeakelItems(rawMapIds: collection.Seq[Long], loadPeakels: Boolean = true): Array[FeaturePeakelItem] = {
     if( rawMapIds.isEmpty ) return Array()
     
     DoJDBCReturningWork.withEzDBC(lcmsDbCtx) { ezDBC =>

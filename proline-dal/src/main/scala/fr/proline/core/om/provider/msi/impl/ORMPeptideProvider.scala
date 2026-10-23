@@ -20,7 +20,7 @@ class ORMPeptideProvider(val msiDbCtx: MsiDbConnectionContext) extends IPeptideP
 
   val converter: PeptidesOMConverterUtil = new PeptidesOMConverterUtil()
 
-  def getPeptidesAsOptions(peptideIds: Seq[Long]): Array[Option[Peptide]] = {
+  def getPeptidesAsOptions(peptideIds: collection.Seq[Long]): Array[Option[Peptide]] = {
     
     val foundOmPeps = new ArrayBuffer[Option[Peptide]](peptideIds.length)
     for (pepId <- peptideIds ) {
@@ -32,7 +32,7 @@ class ORMPeptideProvider(val msiDbCtx: MsiDbConnectionContext) extends IPeptideP
     foundOmPeps.toArray
   }
 
-  def getPeptides(peptideIds: Seq[Long]): Array[Peptide] = {
+  def getPeptides(peptideIds: collection.Seq[Long]): Array[Peptide] = {
     this.getPeptidesAsOptions(peptideIds).filter(_.isDefined).map(_.get)
   }
 

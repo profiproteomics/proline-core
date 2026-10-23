@@ -14,18 +14,18 @@ case class AlignmentResult( alnRefMapId: Long, mapAlnSets: Array[MapAlignmentSet
 abstract class AbstractLcmsMapAligner extends LazyLogging {
 
   def computeMapAlignmentsUsingCustomFtMapper(
-    lcmsMaps: Seq[ProcessedMap],
+    lcmsMaps: collection.Seq[ProcessedMap],
     alnConfig: AlignmentConfig
-  )(ftMapper: (Seq[Feature],Seq[Feature]) => LongMap[_ <: Seq[Feature]]): AlignmentResult
+  )(ftMapper: (collection.Seq[Feature],collection.Seq[Feature]) => LongMap[_ <: collection.Seq[Feature]]): AlignmentResult
 
   def determineAlnReferenceMap(
-    lcmsMaps: Seq[ProcessedMap],
-    mapAlnSets: Seq[MapAlignmentSet],
+    lcmsMaps: collection.Seq[ProcessedMap],
+    mapAlnSets: collection.Seq[MapAlignmentSet],
     currentRefMap: ProcessedMap
   ): ProcessedMap
 
   def computeMapAlignments(
-    lcmsMaps: Seq[ProcessedMap],
+    lcmsMaps: collection.Seq[ProcessedMap],
     alnConfig: AlignmentConfig
   ): AlignmentResult = {
     this.computeMapAlignmentsUsingCustomFtMapper(lcmsMaps,alnConfig) { (map1Features, map2Features) =>
@@ -36,7 +36,7 @@ abstract class AbstractLcmsMapAligner extends LazyLogging {
   protected def computePairwiseAlnSet(
     map1: ProcessedMap,
     map2: ProcessedMap,
-    ftMapper: (Seq[Feature],Seq[Feature]) => LongMap[_ <: Seq[Feature]],
+    ftMapper: (collection.Seq[Feature],collection.Seq[Feature]) => LongMap[_ <: collection.Seq[Feature]],
     alnConfig: AlignmentConfig
   ): Option[MapAlignmentSet] = {
 

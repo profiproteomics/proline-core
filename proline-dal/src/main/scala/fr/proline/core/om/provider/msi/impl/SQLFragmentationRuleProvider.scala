@@ -11,12 +11,12 @@ import fr.proline.core.om.provider.msi.IFragmentationRuleProvider
 
 class SQLFragmentationRuleProvider(val udsDbCtx: UdsDbConnectionContext) extends IFragmentationRuleProvider {
 
-  override def getFragmentationRuleSetsAsOptions(fragRuleSetIds: Seq[Long]): Array[Option[FragmentationRuleSet]]  = {
+  override def getFragmentationRuleSetsAsOptions(fragRuleSetIds: collection.Seq[Long]): Array[Option[FragmentationRuleSet]]  = {
     val fragRuleSetById = Map() ++ this.getFragmentationRuleSets(fragRuleSetIds).map( frs => frs.id -> frs )
     fragRuleSetIds.toArray.map( fragRuleSetById.get(_) )
   }
 
-  override def getFragmentationRuleSets(fragRuleSetIds: Seq[Long]): Array[FragmentationRuleSet] = {
+  override def getFragmentationRuleSets(fragRuleSetIds: collection.Seq[Long]): Array[FragmentationRuleSet] = {
     if(fragRuleSetIds.isEmpty) return Array()
 
     DoJDBCReturningWork.withEzDBC(udsDbCtx) { udsEzDBC =>

@@ -31,7 +31,7 @@ class SQLPeptideSetProvider(
   // Retrieve score type map
   val scoreTypeById = msiDbHelper.getScoringTypeById
 
-  def getPeptideSetsAsOptions(pepSetIds: Seq[Long]): Array[Option[PeptideSet]] = {
+  def getPeptideSetsAsOptions(pepSetIds: collection.Seq[Long]): Array[Option[PeptideSet]] = {
     if (pepSetIds.isEmpty) return Array()
 
     val pepSets = this.getPeptideSets(pepSetIds)
@@ -41,7 +41,7 @@ class SQLPeptideSetProvider(
 
   }
 
-  def getPeptideSets(pepSetIds: Seq[Long]): Array[PeptideSet] = {
+  def getPeptideSets(pepSetIds: collection.Seq[Long]): Array[PeptideSet] = {
     if (pepSetIds.isEmpty) return Array()
     
     DoJDBCReturningWork.withEzDBC(msiDbCtx) { msiEzDBC =>
@@ -61,7 +61,7 @@ class SQLPeptideSetProvider(
     }
   }
 
-  def getResultSummariesPeptideSets(rsmIds: Seq[Long]): Array[PeptideSet] = {
+  def getResultSummariesPeptideSets(rsmIds: collection.Seq[Long]): Array[PeptideSet] = {
     if (rsmIds.isEmpty) return Array()
     
     DoJDBCReturningWork.withEzDBC(msiDbCtx) { msiEzDBC =>
@@ -78,52 +78,52 @@ class SQLPeptideSetProvider(
     }
   }
 
-  private def _getRSMsPepSetRecords(msiEzDBC: EasyDBC, rsmIds: Seq[Long]): Array[AnyMap] = {
+  private def _getRSMsPepSetRecords(msiEzDBC: EasyDBC, rsmIds: collection.Seq[Long]): Array[AnyMap] = {
     msiEzDBC.selectAllRecords( new SelectQueryBuilder1(MsiDbPeptideSetTable).mkSelectQuery( (t,c) =>
       List(t.*) -> "WHERE "~ t.RESULT_SUMMARY_ID ~" IN("~ rsmIds.mkString(",") ~")"
     ) )
   }
 
-  private def _getPepSetRecords(msiEzDBC: EasyDBC, pepSetIds: Seq[Long]): Array[AnyMap] = {
+  private def _getPepSetRecords(msiEzDBC: EasyDBC, pepSetIds: collection.Seq[Long]): Array[AnyMap] = {
     // TODO: use max nb iterations
     msiEzDBC.selectAllRecords( new SelectQueryBuilder1(MsiDbPeptideSetTable).mkSelectQuery( (t,c) =>
       List(t.*) -> "WHERE "~ t.ID ~" IN("~ pepSetIds.mkString(",") ~")"
     ) )
   }
 
-  private def _getRSMsPepSetRelationRecords(msiEzDBC: EasyDBC, rsmIds: Seq[Long]): Array[AnyMap] = {
+  private def _getRSMsPepSetRelationRecords(msiEzDBC: EasyDBC, rsmIds: collection.Seq[Long]): Array[AnyMap] = {
     msiEzDBC.selectAllRecords( new SelectQueryBuilder1(MsiDbPeptideSetRelationTable).mkSelectQuery( (t,c) =>
       List(t.*) -> "WHERE "~ t.RESULT_SUMMARY_ID ~" IN("~ rsmIds.mkString(",") ~")"
     ) )
   }
 
-  private def _getPepSetRelationRecords(msiEzDBC: EasyDBC, pepSetIds: Seq[Long]): Array[AnyMap] = {
+  private def _getPepSetRelationRecords(msiEzDBC: EasyDBC, pepSetIds: collection.Seq[Long]): Array[AnyMap] = {
     // TODO: use max nb iterations
     msiEzDBC.selectAllRecords( new SelectQueryBuilder1(MsiDbPeptideSetRelationTable).mkSelectQuery( (t,c) =>
       List(t.*) -> "WHERE "~ t.PEPTIDE_OVERSET_ID ~" IN("~ pepSetIds.mkString(",") ~")"
     ) )
   }
 
-  private def _getRSMsPepSetItemRecords(msiEzDBC: EasyDBC, rsmIds: Seq[Long]): Array[AnyMap] = {
+  private def _getRSMsPepSetItemRecords(msiEzDBC: EasyDBC, rsmIds: collection.Seq[Long]): Array[AnyMap] = {
     msiEzDBC.selectAllRecords( new SelectQueryBuilder1(MsiDbPeptideSetPeptideInstanceItemTable).mkSelectQuery( (t,c) =>
       List(t.*) -> "WHERE "~ t.RESULT_SUMMARY_ID ~" IN("~ rsmIds.mkString(",") ~")"
     ) )
   }
 
-  private def _getPepSetItemRecords(msiEzDBC: EasyDBC, pepSetIds: Seq[Long]): Array[AnyMap] = {
+  private def _getPepSetItemRecords(msiEzDBC: EasyDBC, pepSetIds: collection.Seq[Long]): Array[AnyMap] = {
     // TODO: use max nb iterations
     msiEzDBC.selectAllRecords( new SelectQueryBuilder1(MsiDbPeptideSetPeptideInstanceItemTable).mkSelectQuery( (t,c) =>
       List(t.*) -> "WHERE "~ t.PEPTIDE_SET_ID ~" IN("~ pepSetIds.mkString(",") ~")"
     ) )
   }
 
-  private def _getRSMsPepSetProtMatchMapRecords(msiEzDBC: EasyDBC, rsmIds: Seq[Long]): Array[AnyMap] = {
+  private def _getRSMsPepSetProtMatchMapRecords(msiEzDBC: EasyDBC, rsmIds: collection.Seq[Long]): Array[AnyMap] = {
     msiEzDBC.selectAllRecords( new SelectQueryBuilder1(MsiDbPeptideSetProteinMatchMapTable).mkSelectQuery( (t,c) =>
       List(t.*) -> "WHERE "~ t.RESULT_SUMMARY_ID ~" IN("~ rsmIds.mkString(",") ~")"
     ) )
   }
 
-  private def _getPepSetProtMatchMapRecords(msiEzDBC: EasyDBC, pepSetIds: Seq[Long]): Array[AnyMap] = {
+  private def _getPepSetProtMatchMapRecords(msiEzDBC: EasyDBC, pepSetIds: collection.Seq[Long]): Array[AnyMap] = {
     // TODO: use max nb iterations
     msiEzDBC.selectAllRecords( new SelectQueryBuilder1(MsiDbPeptideSetProteinMatchMapTable).mkSelectQuery( (t,c) =>
       List(t.*) -> "WHERE "~ t.PEPTIDE_SET_ID ~" IN("~ pepSetIds.mkString(",") ~")"

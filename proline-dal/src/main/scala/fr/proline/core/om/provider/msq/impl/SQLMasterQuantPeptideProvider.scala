@@ -41,7 +41,7 @@ class SQLMasterQuantPeptideProvider(
   private val spectralCountQuantPeptidesSchema = SchemaName.SPECTRAL_COUNTING_QUANT_PEPTIDES.toString
   
   def getMasterQuantPeptides(
-    mqPepIds: Seq[Long]
+    mqPepIds: collection.Seq[Long]
   ): Array[MasterQuantPeptide] = {
     if( mqPepIds.isEmpty ) return Array()
     
@@ -59,7 +59,7 @@ class SQLMasterQuantPeptideProvider(
   }
   
   def getMasterQuantPeptides(
-    mqPepIds: Seq[Long],
+    mqPepIds: collection.Seq[Long],
     pepInstByMQPepId: Map[Long,PeptideInstance],
     mqPepIonsByMQPepId: Map[Long,Array[MasterQuantPeptideIon]]
   ): Array[MasterQuantPeptide] = {
@@ -77,9 +77,9 @@ class SQLMasterQuantPeptideProvider(
     
   }
 
-  // TODO: factorize code with method getMasterQuantPeptides( mqPepIds: Seq[Long] )
+  // TODO: factorize code with method getMasterQuantPeptides( mqPepIds: collection.Seq[Long] )
   def getQuantResultSummariesMQPeptides(
-    quantRsmIds: Seq[Long]
+    quantRsmIds: collection.Seq[Long]
   ): Array[MasterQuantPeptide] = {
     if( quantRsmIds.isEmpty ) return Array()
 
@@ -97,7 +97,7 @@ class SQLMasterQuantPeptideProvider(
   }
   
   def getQuantResultSummariesMQPeptides(
-    quantRsmIds: Seq[Long],
+    quantRsmIds: collection.Seq[Long],
     pepInstByMQPepId: Map[Long,PeptideInstance],
     mqPepIonsByMQPepId: Map[Long,Array[MasterQuantPeptideIon]]
   ): Array[MasterQuantPeptide] = {
@@ -117,8 +117,8 @@ class SQLMasterQuantPeptideProvider(
   
   def selectMasterQuantPeptides(
     msiEzDBC: EasyDBC,
-    mqPepIds: Seq[Long]
-  ): (IValueContainer => MasterQuantPeptide) => Seq[MasterQuantPeptide] = {
+    mqPepIds: collection.Seq[Long]
+  ): (IValueContainer => MasterQuantPeptide) => collection.Seq[MasterQuantPeptide] = {
     
     val mqPepCompQueryBuilder = new SelectQueryBuilder2(MQComponentTable,ObjectTreeTable)
     val mqPepCompQuery = mqPepCompQueryBuilder.mkSelectQuery(
@@ -132,8 +132,8 @@ class SQLMasterQuantPeptideProvider(
   
   def selectQuantResultSummariesMasterQuantPeptides(
     msiEzDBC: EasyDBC,
-    quantRsmIds: Seq[Long]
-  ): (IValueContainer => MasterQuantPeptide) => Seq[MasterQuantPeptide] = {
+    quantRsmIds: collection.Seq[Long]
+  ): (IValueContainer => MasterQuantPeptide) => collection.Seq[MasterQuantPeptide] = {
     
     // TODO: index master_quant_component table and/or object_tree table on schema name
     val mqPepCompQueryBuilder = new SelectQueryBuilder2(MQComponentTable,ObjectTreeTable)
@@ -150,7 +150,7 @@ class SQLMasterQuantPeptideProvider(
   }
   
   def buildMasterQuantPeptides(
-    eachMQPepRecord: (IValueContainer => MasterQuantPeptide) => Seq[MasterQuantPeptide],
+    eachMQPepRecord: (IValueContainer => MasterQuantPeptide) => collection.Seq[MasterQuantPeptide],
     pepInstByMQPepId: Map[Long,PeptideInstance],
     mqPepIonsByMQPepId: Map[Long,Array[MasterQuantPeptideIon]]
   ): Array[MasterQuantPeptide] = {

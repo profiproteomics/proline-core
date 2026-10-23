@@ -68,10 +68,10 @@ class IdentificationTreeValidator(
   identTreeId: Long,
   mergeResultSets: Boolean,
   useTdCompetition: Boolean,
-  pepMatchFilters: Option[Seq[IPeptideMatchFilter]] = None,
+  pepMatchFilters: Option[collection.Seq[IPeptideMatchFilter]] = None,
   pepMatchValidator: Option[IPeptideMatchValidator] = None,
   peptideSetScoring: Option[PepSetScoring.Value] = Some(PepSetScoring.MASCOT_STANDARD_SCORE),
-  protSetFilters: Option[Seq[IProteinSetFilter]] = None,
+  protSetFilters: Option[collection.Seq[IProteinSetFilter]] = None,
   protSetValidator: Option[IProteinSetValidator] = None
 ) extends IService with LazyLogging {
   
@@ -282,7 +282,7 @@ class IdentificationTreeValidator(
     this._validateDatasetTree(udsEM, newUdsParentDatasets.toList, newRsmByRsId)
   }
 
-  private def _mergeAndValidateDatasets(rsms: Seq[ResultSummary]): ResultSummary = {
+  private def _mergeAndValidateDatasets(rsms: collection.Seq[ResultSummary]): ResultSummary = {
 
     if (this.mergeResultSets) {
 

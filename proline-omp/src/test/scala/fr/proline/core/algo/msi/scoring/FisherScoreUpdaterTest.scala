@@ -76,7 +76,7 @@ class FisherScoreUpdaterTest extends JUnitSuite with StrictLogging {
     val logBd = BasicPepInstanceBuilder.log10( bd, bd.scale)
 
     logger.info("bigdecimal log10 = "+logBd.toString())
-    logger.info("math.log10 = "+math.log10(bd.doubleValue()))
+    logger.info("math.log10 = "+math.log10(bd.doubleValue))
 
   }
 
@@ -90,7 +90,7 @@ class FisherScoreUpdaterTest extends JUnitSuite with StrictLogging {
     var start = System.currentTimeMillis()
 
     val pvalue = 1.0d - (1.0d - BigDecimal(math.pow(10, -bestPepMatchScore / 10.0))).pow(q)
-    val score = (-10.0 * BasicPepInstanceBuilder.log10(pvalue, pvalue.scale)).doubleValue()
+    val score = (-10.0 * BasicPepInstanceBuilder.log10(pvalue, pvalue.scale)).doubleValue
 
     logger.info("Score calculated in {} ms ", (System.currentTimeMillis() - start))
     logger.info("pepScore = "+score)
@@ -98,7 +98,7 @@ class FisherScoreUpdaterTest extends JUnitSuite with StrictLogging {
     start = System.currentTimeMillis()
 
     val pvalueBD = BigDecimal(1.0, MathContext.UNLIMITED) - (BigDecimal(1.0, MathContext.UNLIMITED) - BigDecimal(math.pow(10, -bestPepMatchScore / 10.0), MathContext.UNLIMITED)).pow(q)
-    val scoreBD = (-10.0 * BasicPepInstanceBuilder.log10(pvalueBD, pvalueBD.scale)).doubleValue()
+    val scoreBD = (-10.0 * BasicPepInstanceBuilder.log10(pvalueBD, pvalueBD.scale)).doubleValue
 
     logger.info("Score calculated in {} ms ",(System.currentTimeMillis() - start))
     logger.info("pepScore = "+scoreBD)
@@ -124,8 +124,8 @@ class FisherScoreUpdaterTest extends JUnitSuite with StrictLogging {
     val bpValue = BigDecimal(math.pow(10, -score / 10.0))
 
 //    val bsidak = (1.0d - (BigDecimal(1.0d) - bpValue).pow(q))
-//    val bScore = (-10.0 * BasicPepInstanceBuilder.log10(bsidak, bsidak.scale)).doubleValue()
-    val bsidak = (1.0d - math.exp(q*math.log((BigDecimal(1.0d) - bpValue).doubleValue())))
+//    val bScore = (-10.0 * BasicPepInstanceBuilder.log10(bsidak, bsidak.scale)).doubleValue
+    val bsidak = (1.0d - math.exp(q*math.log((BigDecimal(1.0d) - bpValue).doubleValue)))
     val bScore = (-10.0 * math.log10(bsidak))
     logger.info("BigDecimal pValue = "+bpValue)
     logger.info("BigDecimal sidak = "+bsidak)
@@ -139,7 +139,7 @@ class FisherScoreUpdaterTest extends JUnitSuite with StrictLogging {
     logger.info("ApFloat pValue = "+appValue)
     logger.info("ApFloat sidak = "+apSidak)
     logger.info("ApFloat score = "+ aPScore2)
-    logger.info("ApFloat score (as double) = "+ aPScore2.doubleValue())
+    logger.info("ApFloat score (as double) = "+ aPScore2.doubleValue)
 
   }
 

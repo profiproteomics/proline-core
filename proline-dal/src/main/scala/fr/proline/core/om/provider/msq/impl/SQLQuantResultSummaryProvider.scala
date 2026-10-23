@@ -19,7 +19,7 @@ class SQLQuantResultSummaryProvider(
   val ObjectTreeTable = MsiDbObjectTreeTable
   val ObjectTreeCols = ObjectTreeTable.columns
   
-  /*def getQuantResultSummariesAsOptions( quantRsmIds: Seq[Long], quantChannelIds: Seq[Long], loadResultSet: Boolean ): Array[Option[QuantResultSummary]] = {
+  /*def getQuantResultSummariesAsOptions( quantRsmIds: collection.Seq[Long], quantChannelIds: collection.Seq[Long], loadResultSet: Boolean ): Array[Option[QuantResultSummary]] = {
     if( quantRsmIds.isEmpty ) return Array()
     
     val rsms = this.getQuantResultSummaries(quantRsmIds, quantChannelIds, loadResultSet)
@@ -28,7 +28,7 @@ class SQLQuantResultSummaryProvider(
   }*/
   
   // TODO: find a way to handle master quant reporter ions
-  def getQuantResultSummaries( quantRsmIds: Seq[Long], quantChannelIds: Seq[Long], loadResultSet: Boolean, loadProteinMatches: Option[Boolean] = None, loadReporterIons: Option[Boolean]  = None): Array[QuantResultSummary] = {
+  def getQuantResultSummaries( quantRsmIds: collection.Seq[Long], quantChannelIds: collection.Seq[Long], loadResultSet: Boolean, loadProteinMatches: Option[Boolean] = None, loadReporterIons: Option[Boolean]  = None): Array[QuantResultSummary] = {
     if( quantRsmIds.isEmpty ) return Array()
     
     val rsms = this.getResultSummaries(quantRsmIds, loadResultSet, loadProteinMatches)

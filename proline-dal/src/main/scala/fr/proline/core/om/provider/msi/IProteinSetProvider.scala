@@ -5,15 +5,15 @@ import fr.proline.context.DatabaseConnectionContext
 
 trait IProteinSetProvider {
   
-  def getProteinSetsAsOptions( protSetIds: Seq[Long] ): Array[Option[ProteinSet]]
+  def getProteinSetsAsOptions( protSetIds: collection.Seq[Long] ): Array[Option[ProteinSet]]
   
-  def getProteinSets( protSetIds: Seq[Long] ): Array[ProteinSet]
+  def getProteinSets( protSetIds: collection.Seq[Long] ): Array[ProteinSet]
   
   def getProteinSet( protSetId:Long ): Option[ProteinSet] = {
     getProteinSetsAsOptions( Array(protSetId) )(0)
   }
   
-  def getResultSummariesProteinSets( resultSummaryIds: Seq[Long] ): Array[ProteinSet]
+  def getResultSummariesProteinSets( resultSummaryIds: collection.Seq[Long] ): Array[ProteinSet]
   
   def getResultSummaryProteinSets( resultSummaryId: Long ): Array[ProteinSet] = {
     getResultSummariesProteinSets( Array(resultSummaryId) )

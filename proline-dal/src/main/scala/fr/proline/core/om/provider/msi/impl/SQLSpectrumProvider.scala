@@ -16,7 +16,7 @@ class SQLSpectrumProvider(val msiDbCtx: MsiDbConnectionContext) extends ISpectru
 
   require(msiDbCtx.getProlineDatabaseType == ProlineDatabaseType.MSI, "MsiDb connection required")
 
-  def getSpectra(spectrumIds: Seq[Long], loadPeaks: Boolean = true): Array[Spectrum] = {
+  def getSpectra(spectrumIds: collection.Seq[Long], loadPeaks: Boolean = true): Array[Spectrum] = {
     if (spectrumIds.isEmpty) return Array()
 
     DoJDBCReturningWork.withEzDBC(msiDbCtx,flushEM = false) { msiEzDBC =>
@@ -29,7 +29,7 @@ class SQLSpectrumProvider(val msiDbCtx: MsiDbConnectionContext) extends ISpectru
     }
   }
   
-  def getPeaklistsSpectra( peaklistIds: Seq[Long], loadPeaks: Boolean = true ): Array[Spectrum] = {
+  def getPeaklistsSpectra( peaklistIds: collection.Seq[Long], loadPeaks: Boolean = true ): Array[Spectrum] = {
     if (peaklistIds.isEmpty) return Array()
 
     DoJDBCReturningWork.withEzDBC(msiDbCtx,flushEM = false) { msiEzDBC =>
@@ -45,7 +45,7 @@ class SQLSpectrumProvider(val msiDbCtx: MsiDbConnectionContext) extends ISpectru
     this.foreachPeaklistsSpectrum(List(peaklistId), loadPeaks)(onEachSpectrum)
   }
   
-  def foreachPeaklistsSpectrum( peaklistIds: Seq[Long], loadPeaks: Boolean = true )( onEachSpectrum: Spectrum => Unit ) {
+  def foreachPeaklistsSpectrum( peaklistIds: collection.Seq[Long], loadPeaks: Boolean = true )( onEachSpectrum: Spectrum => Unit ) {
     if (peaklistIds.isEmpty) return ()
 
     DoJDBCReturningWork.withEzDBC(msiDbCtx,flushEM = false) { msiEzDBC =>

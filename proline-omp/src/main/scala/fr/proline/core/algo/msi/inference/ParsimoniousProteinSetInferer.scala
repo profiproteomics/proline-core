@@ -14,7 +14,7 @@ class ParsimoniousProteinSetInferer(
 ) extends IProteinSetInferer with LazyLogging {
 
 
-  def computeResultSummary( resultSet: ResultSet, keepSubsummableSubsets: Boolean = true, peptideInstanceFilteringFunction: Option[(Seq[PeptideInstance]) => Unit] = None): ResultSummary = {
+  def computeResultSummary( resultSet: ResultSet, keepSubsummableSubsets: Boolean = true, peptideInstanceFilteringFunction: Option[(collection.Seq[PeptideInstance]) => Unit] = None): ResultSummary = {
     
     // Retrieve some vars
     val proteinMatches = resultSet.proteinMatches
@@ -43,8 +43,8 @@ class ParsimoniousProteinSetInferer(
     peptideInstances = peptideInstances.filter(_.isValidated)
 
     // Convert some ArrayBuffers into LongMaps
-    val pepInstanceById = LongMap(peptideInstances.map(p => (p.id, p)): _*)
-    val pepInstanceByPepId = LongMap(peptideInstances.map(p => (p.peptide.id, p)): _*)
+    val pepInstanceById = LongMap.from(peptideInstances.map(p => (p.id, p)))
+    val pepInstanceByPepId = LongMap.from(peptideInstances.map(p => (p.peptide.id, p)))
     
     // Map peptide instance ids by protein match id
     val peptideIdSetByProtMatchIdPairs = new ArrayBuffer[(Long,Set[Long])](proteinMatches.length)
@@ -79,7 +79,7 @@ class ParsimoniousProteinSetInferer(
     }
     
     // Clusterize peptides
-    val peptideIdSetByProtMatchId = LongMap( peptideIdSetByProtMatchIdPairs: _* )
+    val peptideIdSetByProtMatchId = LongMap.from(peptideIdSetByProtMatchIdPairs)
     val distinctPepIdsByProtMatchId = for( (a,b) <- peptideIdSetByProtMatchId ) yield a -> b.toArray
     val clusters = SetClusterer.clusterizeMappedSets[Long,Long]( peptideIdSetByProtMatchId )
     
@@ -97,7 +97,7 @@ class ParsimoniousProteinSetInferer(
     }
     
     // Convert ArrayBuffer into LongMap
-    val peptideSetIdByClusterId = LongMap( peptideSetIdByClusterIdPairs: _* )
+    val peptideSetIdByClusterId = LongMap.from(peptideSetIdByClusterIdPairs)
     
     // Create a protein set count for each peptide instance
     val proteinSetCountByPepInstanceId = new HashMap[Long,Int]()

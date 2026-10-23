@@ -4,9 +4,9 @@ import fr.proline.core.om.model.msi.FragmentationRuleSet
 
 trait IFragmentationRuleProvider {
 
-  def getFragmentationRuleSetsAsOptions( fragRuleSetIds: Seq[Long] ): Array[Option[FragmentationRuleSet]]
+  def getFragmentationRuleSetsAsOptions( fragRuleSetIds: collection.Seq[Long] ): Array[Option[FragmentationRuleSet]]
 
-  def getFragmentationRuleSets( fragRuleSetIds: Seq[Long] ): Array[FragmentationRuleSet]
+  def getFragmentationRuleSets( fragRuleSetIds: collection.Seq[Long] ): Array[FragmentationRuleSet]
 
   def getFragmentationRuleSet( fragRuleSetIds: Long ): Option[FragmentationRuleSet] = { getFragmentationRuleSetsAsOptions( Seq(fragRuleSetIds) )(0) }
 

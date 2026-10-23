@@ -176,7 +176,7 @@ object LabelFreeQuantConfigConverter {
       alignmentConfig += ("ft_mapping_method_params" -> alnFtMappingParams.get)
     } else if(alnFtMappingParams.isDefined){
       // for PEPTIDE_IDENTITY method remove mozXXX parameters
-      alignmentConfig += ("ft_mapping_method_params" -> alnFtMappingParams.get.asInstanceOf[Map[String, Any]].filterKeys(!_.startsWith("moz")))
+      alignmentConfig += ("ft_mapping_method_params" -> alnFtMappingParams.get.asInstanceOf[Map[String, Any]].filterKeys(!_.startsWith("moz")).toMap)
     }
     if (alnRemoveOutliers.isDefined)
       alignmentConfig += ("remove_outliers" -> alnRemoveOutliers.get)

@@ -22,7 +22,7 @@ object PgMsiSearchWriter extends AbstractSQLMsiSearchWriter() with LazyLogging {
   )
   private val msQueryTableColsWithoutPK = MsiDbMsQueryTable.columnsAsStrList.filter(_ != "id").mkString(",")
 
-  override def insertMsQueries(msiSearchId: Long, msQueries: Seq[MsQuery], context: StorerContext): StorerContext = {
+  override def insertMsQueries(msiSearchId: Long, msQueries: collection.Seq[MsQuery], context: StorerContext): StorerContext = {
 
     DoJDBCWork.withEzDBC(context.getMSIDbConnectionContext) { msiEzDBC =>
       

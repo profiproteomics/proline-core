@@ -23,7 +23,7 @@ class IsotopeOffsetPSMFilter(var offsetThreshold: Int = 1) extends IPeptideMatch
     * @param traceability          Specify if filter could saved information in peptideMatch properties
     *
     */
-  override def filterPeptideMatches(pepMatches: Seq[PeptideMatch], incrementalValidation: Boolean, traceability: Boolean): Unit = {
+  override def filterPeptideMatches(pepMatches: collection.Seq[PeptideMatch], incrementalValidation: Boolean, traceability: Boolean): Unit = {
 
     // Reset validation status if validation is not incremental
     if( !incrementalValidation ) PeptideMatchFiltering.resetPepMatchValidationStatus(pepMatches)

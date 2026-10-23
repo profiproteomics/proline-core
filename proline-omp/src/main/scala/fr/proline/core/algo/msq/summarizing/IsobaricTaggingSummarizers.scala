@@ -23,7 +23,7 @@ class IsobaricTaggingEntitiesSummarizer(
   def computeMasterQuantPeptides(
     masterQuantChannel: MasterQuantChannel,
     quantMergedRSM: ResultSummary,
-    resultSummaries: Seq[ResultSummary]
+    resultSummaries: collection.Seq[ResultSummary]
   ): Array[MasterQuantPeptide] = {
     
     require(
@@ -167,7 +167,7 @@ class IsobaricTaggingEntitiesSummarizer(
   }
   
   private def _buildMasterQuantPeptideIon(
-    sameChargePepMatches: Seq[PeptideMatch],
+    sameChargePepMatches: collection.Seq[PeptideMatch],
     mqReporterIons: Array[MasterQuantReporterIon]
   ) {
     
@@ -200,7 +200,7 @@ class IsobaricTaggingWithLabelFreeEntitiesSummarizer(
   def computeMasterQuantPeptides(
     masterQuantChannel: MasterQuantChannel,
     quantMergedRSM: ResultSummary,
-    resultSummaries: Seq[ResultSummary]
+    resultSummaries: collection.Seq[ResultSummary]
   ): Array[MasterQuantPeptide] = {
     
     require( resultSummaries.length == childMapsCount, "invalid number of result summaries")

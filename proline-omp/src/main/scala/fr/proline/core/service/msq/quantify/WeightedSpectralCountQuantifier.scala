@@ -249,7 +249,7 @@ class WeightedSpectralCountQuantifier(
   
       /*****  Use RSM  hierarchy to create Map  ****/
   
-  private def getAllowedRSMIdsList(parentId: ArrayBuffer[Long]): Seq[Long] = {
+  private def getAllowedRSMIdsList(parentId: ArrayBuffer[Long]): collection.Seq[Long] = {
 
     val childs = new ArrayBuffer[Long]()
     DoJDBCReturningWork.withEzDBC( msiDbCtx) { msiEzDBC =>
@@ -267,7 +267,7 @@ class WeightedSpectralCountQuantifier(
     childs
   }
     
-  private def createWeightRsmMapUsingRsms(childsRsmIds: Seq[Long], rsmIdsInHierarchy: ArrayBuffer[Long], tmpChildPerParentMap : mutable.HashMap[Long, ArrayBuffer[Long]] = new mutable.HashMap[Long, ArrayBuffer[Long]]()) : mutable.HashMap[Long, ArrayBuffer[Long]] = {
+  private def createWeightRsmMapUsingRsms(childsRsmIds: collection.Seq[Long], rsmIdsInHierarchy: ArrayBuffer[Long], tmpChildPerParentMap : mutable.HashMap[Long, ArrayBuffer[Long]] = new mutable.HashMap[Long, ArrayBuffer[Long]]()) : mutable.HashMap[Long, ArrayBuffer[Long]] = {
     logger.trace("*** START createWeightRsmMapUsingRsms")
     val resultMap = new mutable.HashMap[Long, ArrayBuffer[Long]]()
 		val childToSearchIdsBuilder = Seq.newBuilder[Long]
@@ -530,14 +530,14 @@ class WeightedSpectralCountQuantifier(
       //--- Get RSM Peptide Match/Protein Match information 	     
       // map : list of ProtMatch Id,accession by PeptideSet
       //VDS TODO : SHOULD be done once !
-      val protMatchesAccListByPepSet: Map[PeptideSet, Seq[(Long, String)]] = createProtMatchesAccByPeptideSet(rsm)
+      val protMatchesAccListByPepSet: Map[PeptideSet, collection.Seq[(Long, String)]] = createProtMatchesAccByPeptideSet(rsm)
 
 	  var peptideSetForPM: PeptideSet = null
 	  var foundPMIDandAcc: (Long, String) = null
 
 	  val pepSetByPMIt = protMatchesAccListByPepSet.iterator
 	  while (pepSetByPMIt.hasNext) { // && peptideSetForPM == null) {
-          val nextEntry: (PeptideSet, Seq[(Long, String)]) = pepSetByPMIt.next
+          val nextEntry: (PeptideSet, collection.Seq[(Long, String)]) = pepSetByPMIt.next
           nextEntry._2.foreach(pmIdAndAcc => {
             if (pmIdAndAcc._2.equals(typicalProteinAcc)) {
               if (peptideSetForPM != null)
@@ -626,7 +626,7 @@ class WeightedSpectralCountQuantifier(
    */
   def computeMasterQuantValues(
     udsMasterQuantChannel: MasterQuantitationChannel,
-    resultSummaries: Seq[ResultSummary],
+    resultSummaries: collection.Seq[ResultSummary],
     identRSMsByPepRefRSM: mutable.HashMap[Long, ArrayBuffer[Long]],
     protSetWeightStructsByProtSetId: Map[Long, ProteinSetSCDescription]
   ): (Array[MasterQuantPeptide], Array[MasterQuantProteinSet]) = {
@@ -667,7 +667,7 @@ class WeightedSpectralCountQuantifier(
       //--- Get RSM Peptide Match/Protein Match information 	     
       // map   list of ProtMatch accession by PeptideSet
       //      logger.trace("  --- map   list of ProtMatch accession by PeptideSet for rsm "+rsm.id)
-      val protMatchesAccListByPepSet: Map[PeptideSet, Seq[(Long, String)]] = createProtMatchesAccByPeptideSet(rsm)
+      val protMatchesAccListByPepSet: Map[PeptideSet, collection.Seq[(Long, String)]] = createProtMatchesAccByPeptideSet(rsm)
 
       var unidentifiedProteinsInRSM: Int = 0
 
@@ -684,7 +684,7 @@ class WeightedSpectralCountQuantifier(
 
         val protMatchAccByPepSetIt = protMatchesAccListByPepSet.iterator
         while (protMatchAccByPepSetIt.hasNext && !foundTypical) { // Once same prot match as typical found, can exit !
-          val nextEntry: (PeptideSet, Seq[(Long, String)]) = protMatchAccByPepSetIt.next
+          val nextEntry: (PeptideSet, collection.Seq[(Long, String)]) = protMatchAccByPepSetIt.next
           nextEntry._2.foreach(pmIdAndAcc => {
             if (pmIdAndAcc._2.equals(currentProteinSetWeightStruct.typicalPMAcc)) {
               if (peptideSetForPM != null ) {
@@ -839,11 +839,11 @@ class WeightedSpectralCountQuantifier(
     0L
   } // End searchProtSetOf method definition
 
-  private def createProtMatchesAccByPeptideSet(rsm: ResultSummary): Map[PeptideSet, Seq[(Long, String)]] = {
+  private def createProtMatchesAccByPeptideSet(rsm: ResultSummary): Map[PeptideSet, collection.Seq[(Long, String)]] = {
     logger.trace(" *** START  createProtMatchesAccByPeptideSet for rsm "+rsm.id)
      val rs = rsm.resultSet.get
     val protMById = rs.getProteinMatchById()
-    val result = scala.collection.mutable.Map[PeptideSet, Seq[(Long, String)]]()
+    val result = scala.collection.mutable.Map[PeptideSet, collection.Seq[(Long, String)]]()
     val pepSetById = rsm.peptideSets.map(pepSet => pepSet.id -> pepSet).toMap
 
 //    rsm.proteinSets.withFilter(_.isValidated).foreach(protSet => {

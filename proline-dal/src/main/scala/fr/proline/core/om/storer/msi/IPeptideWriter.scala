@@ -7,8 +7,8 @@ import fr.proline.core.om.storer.msi.impl.SQLPeptideWriter
 import fr.proline.core.om.storer.msi.impl.StorerContext
 
 trait IPeptideWriter {
-  def insertPeptides(peptides: Seq[Peptide], context: StorerContext): Unit
-  def updatePeptideMatchProperties(pepMatches: Seq[PeptideMatch], msiDbConCtxt : MsiDbConnectionContext): Unit
+  def insertPeptides(peptides: collection.Seq[Peptide], context: StorerContext): Unit
+  def updatePeptideMatchProperties(pepMatches: collection.Seq[PeptideMatch], msiDbConCtxt : MsiDbConnectionContext): Unit
 }
 
 

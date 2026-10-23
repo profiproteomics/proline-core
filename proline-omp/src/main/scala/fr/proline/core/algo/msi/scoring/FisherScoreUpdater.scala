@@ -46,7 +46,7 @@ class FisherScoreUpdater extends IPeptideSetScoreUpdater with LazyLogging {
     }
   }
 
-  def peptideSetScore(scores: Seq[Double]) : (Double, Int) = {
+  def peptideSetScore(scores: collection.Seq[Double]) : (Double, Int) = {
     val cumscores = scores.sorted.reverse.scanLeft(0.0D)(_ + _*math.log(10)/5).tail
     var proteinScores = ArrayBuffer.empty[(Double,Int)]
     var nPep = 1

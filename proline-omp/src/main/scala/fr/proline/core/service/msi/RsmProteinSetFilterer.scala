@@ -23,7 +23,7 @@ import scala.collection.mutable.ArrayBuffer
 
 object RsmProteinSetFilterer {
   
-  def apply(execCtx: IExecutionContext,targetRsmId: Long, protSetFilters: Seq[IProteinSetFilter]  ) : RsmProteinSetFilterer = {
+  def apply(execCtx: IExecutionContext,targetRsmId: Long, protSetFilters: collection.Seq[IProteinSetFilter]  ) : RsmProteinSetFilterer = {
    	  val targetRsm = _loadResultSummary(targetRsmId, execCtx)
 
    	    // Load decoy result set if needed
@@ -57,7 +57,7 @@ object RsmProteinSetFilterer {
 class RsmProteinSetFilterer (  
 	execCtx: IExecutionContext,
 	targetRsm: ResultSummary, 
-	protSetFilters: Seq[IProteinSetFilter] 
+	protSetFilters: collection.Seq[IProteinSetFilter] 
 ) extends IService with LazyLogging {
   
    val msiEM: EntityManager = execCtx.getMSIDbConnectionContext.getEntityManager

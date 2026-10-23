@@ -34,7 +34,7 @@ class ResidueLabelingQuantifier(
   private val qcByRSMIdAndTagId = {
     val qcsByRsmId = masterQc.quantChannels.groupBy(_.identResultSummaryId)
     for ((rsmId, qcs) <- qcsByRsmId;
-         qc <- qcs) yield (rsmId, qc.quantLabelId.get) -> qc
+         qc <- qcs.iterator) yield (rsmId, qc.quantLabelId.get) -> qc
   }
 
   private val tagByPtmId = {

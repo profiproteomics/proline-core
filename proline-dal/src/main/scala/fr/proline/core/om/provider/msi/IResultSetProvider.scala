@@ -10,9 +10,9 @@ case class ResultSetFilter(
 
 trait IResultSetProvider {
 
-  def getResultSetsAsOptions( resultSetIds: Seq[Long], resultSetFilter: Option[ResultSetFilter] = None ): Array[Option[ResultSet]]
+  def getResultSetsAsOptions( resultSetIds: collection.Seq[Long], resultSetFilter: Option[ResultSetFilter] = None ): Array[Option[ResultSet]]
   
-  def getResultSets( resultSetIds: Seq[Long], resultSetFilter: Option[ResultSetFilter] = None ): Array[ResultSet]
+  def getResultSets( resultSetIds: collection.Seq[Long], resultSetFilter: Option[ResultSetFilter] = None ): Array[ResultSet]
   
   def getResultSet( resultSetId:Long, resultSetFilter: Option[ResultSetFilter] = None ): Option[ResultSet] = {
     getResultSetsAsOptions( Array(resultSetId), resultSetFilter )(0)

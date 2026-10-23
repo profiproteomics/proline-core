@@ -11,15 +11,15 @@ class InMemoryPeptideInstanceProvider( peptideInstances: Array[PeptideInstance] 
   protected lazy val peptideInstanceById = peptideInstances.mapByLong( _.id )
   protected lazy val peptideInstancesByRsmId = peptideInstances.groupByLong( _.resultSummaryId )
 
-  def getPeptideInstancesAsOptions( pepSetIds: Seq[Long] ): Array[Option[PeptideInstance]] = {
+  def getPeptideInstancesAsOptions( pepSetIds: collection.Seq[Long] ): Array[Option[PeptideInstance]] = {
     pepSetIds.map { this.peptideInstanceById.get(_) }.toArray
   }
   
-  def getPeptideInstances( pepSetIds: Seq[Long] ): Array[PeptideInstance] = {
+  def getPeptideInstances( pepSetIds: collection.Seq[Long] ): Array[PeptideInstance] = {
     this.getPeptideInstancesAsOptions( pepSetIds ).withFilter( _.isDefined ).map( _.get )
   }
   
-  def getResultSummariesPeptideInstances( rsmIds: Seq[Long] ): Array[PeptideInstance] = {
+  def getResultSummariesPeptideInstances( rsmIds: collection.Seq[Long] ): Array[PeptideInstance] = {
     rsmIds.toArray.flatMap { i => this.peptideInstancesByRsmId.getOrElse( i, Array.empty[PeptideInstance] ) }
   }
   

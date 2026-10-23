@@ -23,11 +23,11 @@ object MissCleavedPeptideFilterer {
   
   import MissCleavedPeptideFilteringMethod._
 
-  def discardPeptides( masterQuantPeptides: Seq[MasterQuantPeptide], methodName: String ): Unit = {
+  def discardPeptides( masterQuantPeptides: collection.Seq[MasterQuantPeptide], methodName: String ): Unit = {
     discardPeptides(masterQuantPeptides, MissCleavedPeptideFilteringMethod.withName(methodName))
   }
 
-  def discardPeptides( masterQuantPeptides: Seq[MasterQuantPeptide], filteringMethod: MissCleavedPeptideFilteringMethod.Value ): Unit = {
+  def discardPeptides( masterQuantPeptides: collection.Seq[MasterQuantPeptide], filteringMethod: MissCleavedPeptideFilteringMethod.Value ): Unit = {
     filteringMethod match {
       case DISCARD_ALL_FORMS => AllCleavageFormsFilterer.discardPeptides(masterQuantPeptides)
       case DISCARD_MISS_CLEAVED_FORMS => MissCleavedFormFilterer.discardPeptides(masterQuantPeptides)
@@ -42,7 +42,7 @@ trait IMissCleavedPeptideFilterer extends IMasterQuantPeptideFiltering with Stri
   // FIXME: we assume here that Trypsin has been used => retrieve the right enzyme to apply this filter correctly
   val regex = ".*?[R|K]".r
   
-  def foreachMissCleavedPeptide( masterQuantPeptides: Seq[MasterQuantPeptide])(callback: (MasterQuantPeptide,Array[String]) => Unit ): Unit = {
+  def foreachMissCleavedPeptide( masterQuantPeptides: collection.Seq[MasterQuantPeptide])(callback: (MasterQuantPeptide,Array[String]) => Unit ): Unit = {
     
     this.foreachIdentifiedAndSelectedPeptide(masterQuantPeptides) { (mqPep,pepInst) =>
       
@@ -61,7 +61,7 @@ trait IMissCleavedPeptideFilterer extends IMasterQuantPeptideFiltering with Stri
 
 object AllCleavageFormsFilterer extends IMissCleavedPeptideFilterer {
   
-  def discardPeptides( masterQuantPeptides: Seq[MasterQuantPeptide] ): Unit = {
+  def discardPeptides( masterQuantPeptides: collection.Seq[MasterQuantPeptide] ): Unit = {
     
     val detectedMCSeqParts = new ArrayBuffer[String]()
     
@@ -89,7 +89,7 @@ object AllCleavageFormsFilterer extends IMissCleavedPeptideFilterer {
 
 object MissCleavedFormFilterer extends IMissCleavedPeptideFilterer {
   
-  def discardPeptides( masterQuantPeptides: Seq[MasterQuantPeptide] ): Unit = {
+  def discardPeptides( masterQuantPeptides: collection.Seq[MasterQuantPeptide] ): Unit = {
     this.foreachMissCleavedPeptide(masterQuantPeptides) { (mqPep,seqParts) =>
       // Discard detected miss-cleaved peptide
       this.discardPeptide(mqPep, MissCleavedPeptideDiscardingReason.MC_SEQUENCE)
@@ -100,7 +100,7 @@ object MissCleavedFormFilterer extends IMissCleavedPeptideFilterer {
 
 object LowestAbundantCleavageFormFilterer extends IMissCleavedPeptideFilterer {
   
-  def discardPeptides( masterQuantPeptides: Seq[MasterQuantPeptide] ): Unit = {
+  def discardPeptides( masterQuantPeptides: collection.Seq[MasterQuantPeptide] ): Unit = {
     
     val mcMqPepsByMcSeqPart = new HashMap[String,ArrayBuffer[MasterQuantPeptide]]()
     

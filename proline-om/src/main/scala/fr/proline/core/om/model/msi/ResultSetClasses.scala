@@ -283,7 +283,7 @@ object ResultSummary extends InMemoryIdGen {
     val rsPepMatches = peptideMatches.filter(_.isValidated == true)
 
     // Retrieve object maps
-    val peptideMatchesByPepId = rsPepMatches.view.groupByLong(_.peptide.id)
+    val peptideMatchesByPepId = rsPepMatches.groupByLong(_.peptide.id)
     val peptideMatchById = rsPepMatches.mapByLong(_.id)
 
     val bestPepMatchesByPepSetIdBuilder = collection.immutable.Map.newBuilder[Long, Array[PeptideMatch]]

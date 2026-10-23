@@ -20,7 +20,7 @@ class SQLMsQueryProvider(val msiDbCtx: MsiDbConnectionContext) extends IMsQueryP
   
   val MsQueryCols = MsiDbMsQueryTable.columns
   
-  def getUnassignedMsQueries( msiSearchIds: Seq[Long] ): Array[MsQuery] = {
+  def getUnassignedMsQueries( msiSearchIds: collection.Seq[Long] ): Array[MsQuery] = {
     
     DoJDBCReturningWork.withEzDBC(msiDbCtx) { msiEzDBC =>
 
@@ -40,7 +40,7 @@ class SQLMsQueryProvider(val msiDbCtx: MsiDbConnectionContext) extends IMsQueryP
 
   }
 
-  def getMsiSearchesMsQueries(msiSearchIds: Seq[Long]): Array[MsQuery] = {
+  def getMsiSearchesMsQueries(msiSearchIds: collection.Seq[Long]): Array[MsQuery] = {
     if( msiSearchIds == null || msiSearchIds.isEmpty ) return Array.empty[MsQuery]
     
     DoJDBCReturningWork.withEzDBC(msiDbCtx) { msiEzDBC =>
@@ -99,7 +99,7 @@ class SQLMsQueryProvider(val msiDbCtx: MsiDbConnectionContext) extends IMsQueryP
 
   }
 
-  def getMsQueries( msQueryIds: Seq[Long] ): Array[MsQuery] = {
+  def getMsQueries( msQueryIds: collection.Seq[Long] ): Array[MsQuery] = {
     if( msQueryIds.isEmpty ) return Array()
     
     DoJDBCReturningWork.withEzDBC(msiDbCtx) { msiEzDBC =>

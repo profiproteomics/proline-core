@@ -20,7 +20,7 @@ object CreateMapSet {
   def apply(
     lcmsDbCtx: LcMsDbConnectionContext,
     mapSetName: String,
-    processedMaps: Seq[ProcessedMap]
+    processedMaps: collection.Seq[ProcessedMap]
     //clusteringParams: ClusteringParams
   ): MapSet = {
     
@@ -36,8 +36,8 @@ object CreateMapSet {
 class CreateMapSet(
   val lcmsDbCtx: LcMsDbConnectionContext,
   mapSetName: String,
-  processedMaps: Seq[ProcessedMap]
-  //rawMaps: Seq[RawMap],
+  processedMaps: collection.Seq[ProcessedMap]
+  //rawMaps: collection.Seq[RawMap],
   //clusteringParams: ClusteringParams
 ) extends ILcMsService {
 

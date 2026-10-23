@@ -5,8 +5,8 @@ import scala.collection.mutable.ArrayBuffer
 
 class SelectQuery private[tables](
   val queryString: String,
-  val columns: Seq[ColumnEnumeration#Column],
-  val colsAsStrList: Seq[String]
+  val columns: collection.Seq[ColumnEnumeration#Column],
+  val colsAsStrList: collection.Seq[String]
 ) {
   
   //val colStrByCol = columns.view.zip( colsAsStrList ).toMap
@@ -22,7 +22,7 @@ class SelectQuery private[tables](
    * @param params are the optional parameters used in the query
    * @param block is a function converting the row to something else
    */
-  def select[T](queryExecutor: SQLQueryExecution, params: ISQLFormattable*)(block: SelectQueryResult => T): Seq[T] = {
+  def select[T](queryExecutor: SQLQueryExecution, params: ISQLFormattable*)(block: SelectQueryResult => T): collection.Seq[T] = {
     queryExecutor.select(queryString, params: _*) { resultSetRow =>
       block( new SelectQueryResult(resultSetRow, colIdxByCol) )
     }

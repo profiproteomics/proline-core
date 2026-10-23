@@ -118,15 +118,15 @@ object PeptideMatchFiltering {
   /**
    * Resets the validation status of peptide matches.
    */
-  def resetPepMatchValidationStatus(pepMatches: Seq[PeptideMatch]) {
+  def resetPepMatchValidationStatus(pepMatches: collection.Seq[PeptideMatch]) {
     pepMatches.foreach(_.isValidated = true)
   }
 
-  def getPepMatchValidationStatusMap(pepMatches: Seq[PeptideMatch]): Map[Long, Boolean] = {
+  def getPepMatchValidationStatusMap(pepMatches: collection.Seq[PeptideMatch]): Map[Long, Boolean] = {
     Map() ++ pepMatches.map(pm => pm.id -> pm.isValidated)
   }
 
-  def restorePepMatchValidationStatus(pepMatches: Seq[PeptideMatch], pepMatchValStatusMap: Map[Long, Boolean]) {
+  def restorePepMatchValidationStatus(pepMatches: collection.Seq[PeptideMatch], pepMatchValStatusMap: Map[Long, Boolean]) {
     pepMatches.foreach { pm => pm.isValidated = pepMatchValStatusMap(pm.id) }
   }
 }
@@ -136,7 +136,7 @@ trait IPeptideMatchSorter {
    * Sorts peptide matches in the order corresponding to the filter parameter,
    * from the "best" peptide match to the "worst".
    */
-  def sortPeptideMatches(pepMatches: Seq[PeptideMatch]): Seq[PeptideMatch]
+  def sortPeptideMatches(pepMatches: collection.Seq[PeptideMatch]): collection.Seq[PeptideMatch]
 }
 
 trait IPeptideMatchFilter extends IFilter  {
@@ -156,7 +156,7 @@ trait IPeptideMatchFilter extends IFilter  {
    * @param traceability Specify if filter could saved information in peptideMatch properties
    *
    */
-  def filterPeptideMatches(pepMatches: Seq[PeptideMatch], incrementalValidation: Boolean, traceability: Boolean): Unit
+  def filterPeptideMatches(pepMatches: collection.Seq[PeptideMatch], incrementalValidation: Boolean, traceability: Boolean): Unit
 
 }
 
@@ -189,14 +189,14 @@ trait IOptimizablePeptideMatchFilter extends IPeptideMatchFilter with IOptimizab
    * Sorts peptide matches in the order corresponding to the filter parameter,
    * from the "best" peptide match to the "worst".
    */
-  def sortPeptideMatches(pepMatches: Seq[PeptideMatch]): Seq[PeptideMatch] = pepMatches.sorted( this )
+  def sortPeptideMatches(pepMatches: collection.Seq[PeptideMatch]): collection.Seq[PeptideMatch] = pepMatches.sorted( this )
 
 }
 
 
 trait IPeptideInstanceFilter extends IFilter {
 
-  def filterPeptideInstances(pepInstances: Seq[PeptideInstance])
+  def filterPeptideInstances(pepInstances: collection.Seq[PeptideInstance])
 
 }
 
@@ -206,20 +206,20 @@ object ProteinSetFiltering {
   /**
    * Resets the validation status of peptide matches.
    */
-  def resetProteinSetValidationStatus(protSets: Seq[ProteinSet]) = {
+  def resetProteinSetValidationStatus(protSets: collection.Seq[ProteinSet]) = {
     protSets.foreach(_.isValidated = true)
   }
 
-  def getProtSetValidationStatusMap(protSets: Seq[ProteinSet]): Map[Long, Boolean] = {
+  def getProtSetValidationStatusMap(protSets: collection.Seq[ProteinSet]): Map[Long, Boolean] = {
     Map() ++ protSets.map(ps => ps.id -> ps.isValidated)
   }
 
-  def restoreProtSetValidationStatus(protSets: Seq[ProteinSet], protSetValStatusMap: Map[Long, Boolean]) {
+  def restoreProtSetValidationStatus(protSets: collection.Seq[ProteinSet], protSetValStatusMap: Map[Long, Boolean]) {
     protSets.foreach { ps => ps.isValidated = protSetValStatusMap(ps.id) }
   }
   
   // TODO: call this method in a trait common to all validators (need API refactoring)
-  def updateValidatedProteinSetsCount(protSets: Seq[ProteinSet]): Unit = {
+  def updateValidatedProteinSetsCount(protSets: collection.Seq[ProteinSet]): Unit = {
 
     // Map protein sets by peptide instance
     val protSetsByPepInst = new HashMap[PeptideInstance, ArrayBuffer[ProteinSet]]
@@ -253,7 +253,7 @@ trait IProteinSetFilter extends IFilter {
    * @param traceability : specify if filter could saved information in ProteinSet properties
    *
    */
-  def filterProteinSets(protSets: Seq[ProteinSet], incrementalValidation: Boolean, traceability: Boolean): Unit
+  def filterProteinSets(protSets: collection.Seq[ProteinSet], incrementalValidation: Boolean, traceability: Boolean): Unit
 
 }
 
@@ -268,7 +268,7 @@ trait IOptimizableProteinSetFilter extends IProteinSetFilter with IOptimizableFi
    * Sorts protein sets in the order corresponding to the filter parameter,
    * from the best protein set to the worst.
    */
-  def sortProteinSets(protSets: Seq[ProteinSet]): Seq[ProteinSet]
+  def sortProteinSets(protSets: collection.Seq[ProteinSet]): collection.Seq[ProteinSet]
 
   /**
    * Validate each ProteinSet by setting their isValidated attribute.
@@ -284,7 +284,7 @@ trait IOptimizableProteinSetFilter extends IProteinSetFilter with IOptimizableFi
    *
    */
   def filterProteinSets(
-    protSets: Seq[ProteinSet],
+    protSets: collection.Seq[ProteinSet],
     incrementalValidation: Boolean,
     traceability: Boolean
   ): Unit = {

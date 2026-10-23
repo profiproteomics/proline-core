@@ -14,7 +14,7 @@ import fr.proline.core.om.model.msi.Peptide
 /*@deprecated("0.6.0","Use SQLPeptideWriter instead")
 class PeptideStorer extends LazyLogging {
 
-  def storePeptides(peptides: Seq[Peptide], msiDbCtx: MsiDbConnectionContext): Unit = {
+  def storePeptides(peptides: collection.Seq[Peptide], msiDbCtx: MsiDbConnectionContext): Unit = {
 
     DoJDBCWork.withEzDBC(msiDbCtx) { msiEzDBC =>
       logger.info(s"Storing ${peptides.length} peptides in MsiDb...")

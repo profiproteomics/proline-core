@@ -13,7 +13,7 @@ object CleanMaps {
   def apply(
     lcmsDbCtx: LcMsDbConnectionContext,
     lcmsMap: ProcessedMap,
-    scans: Seq[LcMsScan],
+    scans: collection.Seq[LcMsScan],
     clusteringParams: Option[ClusteringParams]
   ): ProcessedMap = {
     
@@ -28,7 +28,7 @@ object CleanMaps {
 class CleanMaps(
   val lcmsDbCtx: LcMsDbConnectionContext,
   lcmsMap: ProcessedMap,
-  scans: Seq[LcMsScan],
+  scans: collection.Seq[LcMsScan],
   clusteringParams: Option[ClusteringParams]
 ) extends ILcMsService {
   

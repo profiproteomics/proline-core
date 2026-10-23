@@ -16,12 +16,12 @@ class SQLInstrumentConfigProvider(val udsDbCtx: UdsDbConnectionContext) extends 
   
   import SQLInstrumentConfigProvider._
   
-  def getInstrumentConfigsAsOptions( instConfigIds: Seq[Long] ): Array[Option[InstrumentConfig]] = {
+  def getInstrumentConfigsAsOptions( instConfigIds: collection.Seq[Long] ): Array[Option[InstrumentConfig]] = {
     val instConfigById = Map() ++ this.getInstrumentConfigs(instConfigIds).map( ic => ic.id -> ic )
     instConfigIds.toArray.map( instConfigById.get(_) )
   }
   
-  def getInstrumentConfigs(instConfigIds: Seq[Long]): Array[InstrumentConfig] = {
+  def getInstrumentConfigs(instConfigIds: collection.Seq[Long]): Array[InstrumentConfig] = {
     if( instConfigIds.isEmpty ) return Array()
     
     DoJDBCReturningWork.withEzDBC(udsDbCtx) { udsEzDBC =>
@@ -35,7 +35,7 @@ class SQLInstrumentConfigProvider(val udsDbCtx: UdsDbConnectionContext) extends 
     }
   }
   
-  def getInstruments(instIds: Seq[Long]): Array[Instrument] = {
+  def getInstruments(instIds: collection.Seq[Long]): Array[Instrument] = {
     if( instIds.isEmpty ) return Array()
     
     DoJDBCReturningWork.withEzDBC(udsDbCtx) { udsEzDBC =>
@@ -43,7 +43,7 @@ class SQLInstrumentConfigProvider(val udsDbCtx: UdsDbConnectionContext) extends 
     }
   }
   
-  /*def getInstrumentConfigs( instConfigIds: Seq[Long] ): Array[InstrumentConfig] = {
+  /*def getInstrumentConfigs( instConfigIds: collection.Seq[Long] ): Array[InstrumentConfig] = {
     
     DoJDBCReturningWork.withEzDBC(udsDbCtx, { udsEzDBC =>
       
@@ -85,7 +85,7 @@ class SQLInstrumentConfigProvider(val udsDbCtx: UdsDbConnectionContext) extends 
 
 object SQLInstrumentConfigProvider {
   
-  def selectInstConfigRecords(udsEzDBC: EasyDBC, instConfigIds: Seq[Long]): (IValueContainer => InstrumentConfig) => Seq[InstrumentConfig] = {
+  def selectInstConfigRecords(udsEzDBC: EasyDBC, instConfigIds: collection.Seq[Long]): (IValueContainer => InstrumentConfig) => collection.Seq[InstrumentConfig] = {
     require( instConfigIds.nonEmpty, "instConfigIds is empty" )
     
     val instConfigQuery = new SelectQueryBuilder1(UdsDbInstrumentConfigTable).mkSelectQuery( (t,c) =>
@@ -95,7 +95,7 @@ object SQLInstrumentConfigProvider {
     udsEzDBC.select[InstrumentConfig](instConfigQuery)
   }
   
-  def selectInstrumentRecords(udsEzDBC: EasyDBC, instIds: Seq[Long]): (IValueContainer => Instrument) => Seq[Instrument] = {
+  def selectInstrumentRecords(udsEzDBC: EasyDBC, instIds: collection.Seq[Long]): (IValueContainer => Instrument) => collection.Seq[Instrument] = {
     require( instIds.nonEmpty, "instIds is empty" )
     
     val instQuery = new SelectQueryBuilder1(UdsDbInstrumentTable).mkSelectQuery( (t,c) =>
@@ -105,7 +105,7 @@ object SQLInstrumentConfigProvider {
     udsEzDBC.select[Instrument](instQuery)
   }
 
-  def selectFragRuleSetsRecords(udsEzDBC: EasyDBC, fragRuleSetsIds: Seq[Long]): (IValueContainer => FragmentationRuleSet) => Seq[FragmentationRuleSet] = {
+  def selectFragRuleSetsRecords(udsEzDBC: EasyDBC, fragRuleSetsIds: collection.Seq[Long]): (IValueContainer => FragmentationRuleSet) => collection.Seq[FragmentationRuleSet] = {
     require( fragRuleSetsIds.nonEmpty, "fragRuleSetsIds is empty" )
 
     val fragRuleSetQuery = new SelectQueryBuilder1(UdsDbFragmentationRuleSetTable).mkSelectQuery( (t,c) =>
@@ -115,7 +115,7 @@ object SQLInstrumentConfigProvider {
     udsEzDBC.select[FragmentationRuleSet](fragRuleSetQuery)
   }
 
-  def selectFragRuleSetsRecordsWithName(udsEzDBC: EasyDBC, name: String): (IValueContainer => FragmentationRuleSet) => Seq[FragmentationRuleSet] = {
+  def selectFragRuleSetsRecordsWithName(udsEzDBC: EasyDBC, name: String): (IValueContainer => FragmentationRuleSet) => collection.Seq[FragmentationRuleSet] = {
     require( name!=null, "name is empty" )
 
     val fragRuleSetQuery = new SelectQueryBuilder1(UdsDbFragmentationRuleSetTable).mkSelectQuery( (t,c) =>
@@ -125,7 +125,7 @@ object SQLInstrumentConfigProvider {
     udsEzDBC.select[FragmentationRuleSet](fragRuleSetQuery)
   }
 
-  def selectFragmentationSeriesRecords(udsEzDBC: EasyDBC, fragRuleSetsIds: Seq[Long]): (IValueContainer => FragmentIonType) => Seq[FragmentIonType] = {
+  def selectFragmentationSeriesRecords(udsEzDBC: EasyDBC, fragRuleSetsIds: collection.Seq[Long]): (IValueContainer => FragmentIonType) => collection.Seq[FragmentIonType] = {
     require( fragRuleSetsIds.nonEmpty, "fragmentationRuleSetsIds is empty" )
 
     val fragmentationSeriesQuery = new SelectQueryBuilder3(UdsDbFragmentationSeriesTable, UdsDbFragmentationRuleSetMapTable, UdsDbFragmentationRuleTable).mkSelectQuery( (t1,c1,t2,c2,t3,c3) =>

@@ -1,5 +1,7 @@
 package fr.proline.core.service.lcms.io
 
+import scala.collection.parallel.CollectionConverters._
+
 import java.io.File
 
 import com.typesafe.scalalogging.LazyLogging
@@ -24,7 +26,7 @@ import scala.collection.mutable.{ArrayBuffer, HashMap, LongMap}
 class FeaturesDetector (
   lcmsDbCtx: LcMsDbConnectionContext,
   mapSetName: String,
-  lcMsRuns: Seq[LcMsRun],
+  lcMsRuns: collection.Seq[LcMsRun],
   quantConfig: ILcMsQuantConfig,
   val peptideByRunIdAndScanNumber: Option[LongMap[LongMap[Peptide]]]
 ) extends AbstractMapSetDetector(lcmsDbCtx, mapSetName, lcMsRuns, quantConfig) with LazyLogging {
@@ -391,7 +393,7 @@ class FeaturesDetector (
     processedMap: ProcessedMap,
     mapSet: MapSet,
     peakelIdByMzDbPeakelId: LongMap[Long]
-  ): Seq[LcMsFeature] = {
+  ): collection.Seq[LcMsFeature] = {
 
     val procMapId = processedMap.id
     val rawMapId = processedMap.getRawMapIds.head
@@ -399,7 +401,7 @@ class FeaturesDetector (
     val nbMaps = mapSet.childMaps.length
 
     val mzDb = new MzDbReader(mzDbFile, true)
-    var mzDbFts = Seq.empty[MzDbFeature]
+    var mzDbFts: collection.Seq[MzDbFeature] = Seq.empty[MzDbFeature]
     val mftsWithMissingChild = new ArrayBuffer[LcMsFeature]
     val missingFtIdByMftId = new LongMap[Int]()
     val pfs = new ArrayBuffer[PutativeFeature]()

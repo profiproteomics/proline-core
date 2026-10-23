@@ -42,10 +42,10 @@ private[msi] object PgRsWriter extends AbstractSQLRsWriter() {
     List(t.ACCESSION,t.ID) -> "WHERE "~ t.RESULT_SET_ID ~" = ?"
   )
   
-  //def fetchExistingPeptidesIdByUniqueKey( pepSequences: Seq[String] ):  Map[String,Int] = null
+  //def fetchExistingPeptidesIdByUniqueKey( pepSequences: collection.Seq[String] ):  Map[String,Int] = null
 
   // TODO: check first peptideByUniqueKey ???
-  /*override def insertNewPeptides(peptides: Seq[Peptide], peptideByUniqueKey: HashMap[String,Peptide], msiDbCtx: DatabaseConnectionContext): Unit = {
+  /*override def insertNewPeptides(peptides: collection.Seq[Peptide], peptideByUniqueKey: HashMap[String,Peptide], msiDbCtx: DatabaseConnectionContext): Unit = {
 
     DoJDBCWork.withConnection(msiDbCtx) { msiCon =>
       
@@ -95,11 +95,11 @@ private[msi] object PgRsWriter extends AbstractSQLRsWriter() {
     
   }*/
 
-  //def fetchProteinIdentifiers( accessions: Seq[String] ): Array[Any] = null
+  //def fetchProteinIdentifiers( accessions: collection.Seq[String] ): Array[Any] = null
 
-  //def fetchExistingProteins( protCRCs: Seq[String] ): Array[Protein] = null
+  //def fetchExistingProteins( protCRCs: collection.Seq[String] ): Array[Protein] = null
 
-  //def storeNewProteins( proteins: Seq[Protein] ): Array[Protein] = null
+  //def storeNewProteins( proteins: collection.Seq[Protein] ): Array[Protein] = null
   override  def insertSpecifiedRsReadablePtmStrings(rs: ResultSet, readablePtmStringByPepId: Map[Long, PeptideReadablePtmString], msiDbCtx: MsiDbConnectionContext): Int = {
 
     DoJDBCReturningWork.withConnection(msiDbCtx) { msiCon =>
@@ -294,7 +294,7 @@ private[msi] object PgRsWriter extends AbstractSQLRsWriter() {
 
   private def _formatPeptideMatchKey(msQueryId: Long, peptideMatchRank: Int, peptideId: Long): String = msQueryId + "_" + peptideMatchRank + "%" + peptideId
 
-  private def _linkPeptideMatchesToChildren(peptideMatches: Seq[PeptideMatch], bulkCopyManager: CopyManager): Unit = {
+  private def _linkPeptideMatchesToChildren(peptideMatches: collection.Seq[PeptideMatch], bulkCopyManager: CopyManager): Unit = {
 
     val pgBulkLoader = bulkCopyManager.copyIn(
       s"COPY ${MsiDbPeptideMatchRelationTable.name} ($pepMatchRelTableCols) FROM STDIN"

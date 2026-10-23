@@ -30,7 +30,7 @@ object MqPeptidesClusteringMethod extends EnhancedEnum {
 }
 
 case class MqPeptidesClustererConfig(
-  ptmPatternPtmDefIds: Seq[Long] = Seq() // only for PTM_PATTERN method
+  ptmPatternPtmDefIds: collection.Seq[Long] = Seq() // only for PTM_PATTERN method
 )
 
 object OxidizedPeptideFilteringMethod extends EnhancedEnum {

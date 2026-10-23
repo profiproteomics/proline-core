@@ -84,7 +84,7 @@ class V0_6__core_0_4_0_LCMS_data_migration extends JdbcMigration with LazyLoggin
       
       val scanSeqIdByRawMapId = ezDBC.select("SELECT id, scan_sequence_id FROM raw_map") { record =>
         record.getLong("id") -> record.getLong("scan_sequence_id")
-      } toMap
+      }.toMap
       
       val scanSeqIds = scanSeqIdByRawMapId.values.toArray.distinct
       val scanSequences = new SQLScanSequenceProvider(lcMsDbCtx).getScanSequences( scanSeqIds )

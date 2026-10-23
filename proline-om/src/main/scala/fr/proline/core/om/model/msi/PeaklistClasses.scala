@@ -24,7 +24,7 @@ case class Peaklist(
 
 case class PeaklistProperties (
   @BeanProperty var spectrumDataCompressionLevel: Option[Int] = None,
-  @BeanProperty var putativePrecursorCharges: Option[Seq[Int]] = None,
+  @BeanProperty var putativePrecursorCharges: Option[collection.Seq[Int]] = None,
   @BeanProperty var polarity: Option[Char] = None // +/-
 )
 

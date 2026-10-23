@@ -10,7 +10,7 @@ class LandmarkRangeSmoother extends IAlnSmoother with LazyLogging {
 
   import scala.collection.mutable.ArrayBuffer
   
-  def smoothLandmarks( landmarks: Seq[Landmark], smoothingParams: Option[AlnSmoothingParams] ): Seq[Landmark] = {
+  def smoothLandmarks( landmarks: collection.Seq[Landmark], smoothingParams: Option[AlnSmoothingParams] ): collection.Seq[Landmark] = {
 
     require(smoothingParams.isDefined, "Landmarks range smoother requires window size and window overlaps parameters")
 

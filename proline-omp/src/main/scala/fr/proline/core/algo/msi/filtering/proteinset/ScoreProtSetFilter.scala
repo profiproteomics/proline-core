@@ -29,7 +29,7 @@ class ScoreProtSetFilter(
     protSet.peptideSet.score >= scoreThreshold
   }
   
-  def sortProteinSets( protSets: Seq[ProteinSet] ): Seq[ProteinSet] = {
+  def sortProteinSets( protSets: collection.Seq[ProteinSet] ): collection.Seq[ProteinSet] = {
     protSets.sortWith( _.peptideSet.score > _.peptideSet.score )
   }
 

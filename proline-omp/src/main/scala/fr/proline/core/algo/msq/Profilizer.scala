@@ -27,7 +27,7 @@ class Profilizer( expDesign: ExperimentalDesign, groupSetupNumber: Int = 1, mast
   /**
    * Computes MasterQuantPeptide profiles.
    */
-  def computeMasterQuantPeptideProfiles( masterQuantPeptides: Seq[MasterQuantPeptide], config: PostProcessingConfig ) {
+  def computeMasterQuantPeptideProfiles( masterQuantPeptides: collection.Seq[MasterQuantPeptide], config: PostProcessingConfig ) {
 
     logger.info("computing master quant peptide profiles...")
 
@@ -72,7 +72,7 @@ class Profilizer( expDesign: ExperimentalDesign, groupSetupNumber: Int = 1, mast
 
     //VDS: Changed behaviour: mqPeptideIon are used for normalisation etc. Values are then used for mqPeptides values.
     // NORMALIZATION WARNING : Peptide config normalization is currently done on all Peptide IONS .... To be changed
-    val mqPepIonsAfterAllFilters = masterQuantPeptides.flatMap(_.masterQuantPeptideIons).asInstanceOf[Seq[MasterQuantComponent[QuantComponent]]]
+    val mqPepIonsAfterAllFilters = masterQuantPeptides.flatMap(_.masterQuantPeptideIons).asInstanceOf[collection.Seq[MasterQuantComponent[QuantComponent]]]
 
     // --- Compute the PSM count matrix ---
     val psmCountMatrix = mqPepIonsAfterAllFilters.map( _.getPepMatchesCountsForQuantChannels(expDesignSetup.qcIds) ).toArray
@@ -214,7 +214,7 @@ class Profilizer( expDesign: ExperimentalDesign, groupSetupNumber: Int = 1, mast
     ()
   }
   
-  def computeMasterQuantProtSetProfiles( masterQuantProtSets: Seq[MasterQuantProteinSet], config: PostProcessingConfig) {
+  def computeMasterQuantProtSetProfiles( masterQuantProtSets: collection.Seq[MasterQuantProteinSet], config: PostProcessingConfig) {
 
     logger.info("computing master quant protein set profiles...")
     
@@ -267,10 +267,10 @@ class Profilizer( expDesign: ExperimentalDesign, groupSetupNumber: Int = 1, mast
       val protSetSelLvlMap: mutable.HashMap[Long, Int] = mqProtSet.properties.get.getSelectionLevelByMqPeptideId().getOrElse({
         // Note: this default map construction is kept for backward compatibility,
         // it should be now computed during the quantitation phase
-        val defaultSelLvlMap: mutable.HashMap[Long, Int] = datasetSelLvlMap.map{case (k ,v) =>
+        val defaultSelLvlMap: mutable.HashMap[Long, Int] = mutable.HashMap.from(datasetSelLvlMap.iterator.map{case (k ,v) =>
           val newSelectionLevel = if (SelectionLevel.isSelected(v)) SelectionLevel.SELECTED_AUTO else SelectionLevel.DESELECTED_AUTO
           k -> newSelectionLevel 
-          }(collection.breakOut)
+          })
         defaultSelLvlMap
       })
 
@@ -385,9 +385,9 @@ class Profilizer( expDesign: ExperimentalDesign, groupSetupNumber: Int = 1, mast
 
       val clusteredMqPeps = {
         if (config.isMqPeptideAbundanceSummarizerBasedOn(QuantComponentItem.QUANT_PEPTIDES)) {
-          mqPepsCluster.mqPeptides.asInstanceOf[Seq[MasterQuantComponent[QuantComponent]]]
+          mqPepsCluster.mqPeptides.asInstanceOf[collection.Seq[MasterQuantComponent[QuantComponent]]]
         } else {
-          mqPepsCluster.mqPeptides.flatMap(_.masterQuantPeptideIons).asInstanceOf[Seq[MasterQuantComponent[QuantComponent]]]
+          mqPepsCluster.mqPeptides.flatMap(_.masterQuantPeptideIons).asInstanceOf[collection.Seq[MasterQuantComponent[QuantComponent]]]
         }
       }
          
@@ -776,7 +776,7 @@ class Profilizer( expDesign: ExperimentalDesign, groupSetupNumber: Int = 1, mast
     psmCountMatrix: Array[Array[Int]],
     absoluteNoiseModelOpt: Option[AbsoluteErrorModel],
     config: ProfilizerStatConfig
-  ): Seq[AverageAbundanceRatio] = {
+  ): collection.Seq[AverageAbundanceRatio] = {
     
     logger.debug(s"computing ratios on a matrix containing ${filledMatrix.length} values...")
 

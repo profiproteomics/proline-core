@@ -30,7 +30,7 @@ class LabelFreeEntitiesSummarizer(
   private class MQPepsComputer(
     masterQuantChannel: MasterQuantChannel,
     quantMergedRsm : ResultSummary,
-    resultSummaries: Seq[ResultSummary]
+    resultSummaries: collection.Seq[ResultSummary]
   ) extends LazyLogging {
     
     // Define some values
@@ -225,7 +225,7 @@ class LabelFreeEntitiesSummarizer(
     
     private def _buildMasterQuantPeptideIon(
       masterFt: Feature,
-      qPepIons: Seq[QuantPeptideIon],
+      qPepIons: collection.Seq[QuantPeptideIon],
       masterPepInstAsOpt: Option[PeptideInstance]
     ): MasterQuantPeptideIon = {
       require( qPepIons != null && qPepIons.length > 0, "qPepIons must not be empty")
@@ -298,7 +298,7 @@ class LabelFreeEntitiesSummarizer(
   def computeMasterQuantPeptides(
     masterQuantChannel: MasterQuantChannel,
     quantMergedRSM: ResultSummary,
-    resultSummaries: Seq[ResultSummary]
+    resultSummaries: collection.Seq[ResultSummary]
   ): Array[MasterQuantPeptide] = {
     val mqPepsComputer = new MQPepsComputer(masterQuantChannel,quantMergedRSM,resultSummaries)
     mqPepsComputer.computeMasterQuantPeptides()

@@ -10,8 +10,8 @@ object FeatureMapper {
   
 
   def computePairwiseFtMapping(
-    map1Features: Seq[Feature],
-    map2Features: Seq[Feature],
+    map1Features: collection.Seq[Feature],
+    map2Features: collection.Seq[Feature],
     methodParams: FeatureMappingParams,
     isChargeTolerant: Boolean = false
   ): LongMap[ArrayBuffer[Feature]] = {
@@ -24,8 +24,8 @@ object FeatureMapper {
     val timeTol = methodParams.timeTol
     
     // Group features by charge
-    var map1FtsByCharge = LongMap.empty[Seq[Feature]]
-    var map2FtsByCharge = LongMap.empty[Seq[Feature]]
+    var map1FtsByCharge = LongMap.empty[collection.Seq[Feature]]
+    var map2FtsByCharge = LongMap.empty[collection.Seq[Feature]]
     var chargeStates = Array.empty[Long]
     
     if (isChargeTolerant == false) {

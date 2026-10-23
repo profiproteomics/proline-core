@@ -19,7 +19,7 @@ abstract class AbstractMascotEValueFilter extends IOptimizablePeptideMatchFilter
   }
   
   // TODO: maybe we can move this method in IOptimizablePeptideMatchFilter
-  def filterPeptideMatches( pepMatches: Seq[PeptideMatch], incrementalValidation: Boolean, traceability: Boolean ): Unit = {
+  def filterPeptideMatches( pepMatches: collection.Seq[PeptideMatch], incrementalValidation: Boolean, traceability: Boolean ): Unit = {
   
     // Reset validation status if validation is not incremental
     if( !incrementalValidation ) PeptideMatchFiltering.resetPepMatchValidationStatus(pepMatches)

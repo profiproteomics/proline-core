@@ -91,7 +91,7 @@ object PeakelSummarizer {
     computedAAHM
   }
   
-  private def interpolateFirstElutionTimeAtHalfMaximum( intensityTimePairs: Seq[(Float, Float)], halfApexIntensity: Float): Float = {
+  private def interpolateFirstElutionTimeAtHalfMaximum( intensityTimePairs: collection.Seq[(Float, Float)], halfApexIntensity: Float): Float = {
     
     val firstPeakIndex2 = intensityTimePairs.indexWhere(_._1 >= halfApexIntensity)
     val firstPeakIndex1 = if (firstPeakIndex2 > 0) firstPeakIndex2 - 1 else 0
@@ -120,7 +120,7 @@ object PeakelSummarizer {
     top3Intensities.sum / top3Intensities.length
   }
   
-  private def retrieveTop3Intensities( peakel: Peakel ): Seq[Float] = {
+  private def retrieveTop3Intensities( peakel: Peakel ): collection.Seq[Float] = {
     val apexIndex = peakel.apexIndex
     val intensityValues = peakel.dataMatrix.intensityValues
     val intensityBuffer = new ArrayBuffer[Float](3)

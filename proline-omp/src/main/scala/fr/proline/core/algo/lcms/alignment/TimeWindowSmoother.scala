@@ -9,7 +9,7 @@ class TimeWindowSmoother extends IAlnSmoother {
 
   import scala.collection.mutable.ArrayBuffer
   
-  def smoothLandmarks( landmarks: Seq[Landmark], smoothingParams: Option[AlnSmoothingParams]): Seq[Landmark] = {
+  def smoothLandmarks( landmarks: collection.Seq[Landmark], smoothingParams: Option[AlnSmoothingParams]): collection.Seq[Landmark] = {
 
     require(smoothingParams.isDefined, "Time range smoother requires window size, window overlaps and minWindowLandmarks parameters")
     require(smoothingParams.get.minWindowLandmarks.isDefined, "Time range smoother requires minWindowLandmarks parameter")

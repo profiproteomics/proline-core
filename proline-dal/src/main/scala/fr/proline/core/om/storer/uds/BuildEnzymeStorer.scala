@@ -7,7 +7,7 @@ import fr.proline.core.om.storer.uds.impl.JPAEnzymeStorer
 import fr.proline.repository.ProlineDatabaseType
 
 trait IEnzymeStorer {
-  def storeEnzymes( enzymes: Seq[Enzyme], execCtx: IExecutionContext ): Int
+  def storeEnzymes( enzymes: collection.Seq[Enzyme], execCtx: IExecutionContext ): Int
 }
 
 object BuildEnzymeStorer {

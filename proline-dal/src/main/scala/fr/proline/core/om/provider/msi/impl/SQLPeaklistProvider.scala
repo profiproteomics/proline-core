@@ -16,7 +16,7 @@ import fr.proline.core.om.model.msi.Peaklist
  */
 class SQLPeaklistProvider(val msiDbCtx: MsiDbConnectionContext) {
   
-  def getPeaklists(peaklistIds: Seq[Long]): Array[Peaklist] = {
+  def getPeaklists(peaklistIds: collection.Seq[Long]): Array[Peaklist] = {
     if( peaklistIds.isEmpty ) return Array()
     
     DoJDBCReturningWork.withEzDBC(msiDbCtx) { msiEzDBC =>
@@ -33,7 +33,7 @@ class SQLPeaklistProvider(val msiDbCtx: MsiDbConnectionContext) {
 
 object SQLPeaklistProvider {
 
-  def selectPeaklistRecords(msiEzDBC: EasyDBC, peaklistIds: Seq[Long]): (IValueContainer => Peaklist) => Seq[Peaklist] = {
+  def selectPeaklistRecords(msiEzDBC: EasyDBC, peaklistIds: collection.Seq[Long]): (IValueContainer => Peaklist) => collection.Seq[Peaklist] = {
     
     val pklQuery = new SelectQueryBuilder1(MsiDbPeaklistTable).mkSelectQuery( (t,c) =>
       List(t.*) -> "WHERE "~ t.ID ~" IN("~ peaklistIds.mkString(",") ~")"

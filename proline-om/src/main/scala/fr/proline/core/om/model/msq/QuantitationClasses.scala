@@ -89,11 +89,11 @@ trait MasterQuantComponent[A <: QuantComponent] extends Item {
   }
   
   
-  def setAbundancesForQuantChannels(abundances: Seq[Float], quantChannelIds: Seq[Long])
+  def setAbundancesForQuantChannels(abundances: collection.Seq[Float], quantChannelIds: collection.Seq[Long])
 
   protected def updateOrCreateComponentForQuantChannels(
-    abundances: Seq[Float],
-    quantChannelIds: Seq[Long],
+    abundances: collection.Seq[Float],
+    quantChannelIds: collection.Seq[Long],
     buildQuantComponent: (Float,Long) => A
   ) {
     
@@ -109,9 +109,9 @@ trait MasterQuantComponent[A <: QuantComponent] extends Item {
   }
 
   protected def updateOrCreateComponentForQuantChannels(
-     abundances: Seq[Float],
-     psmCounts: Seq[Int],
-     quantChannelIds: Seq[Long],
+     abundances: collection.Seq[Float],
+     psmCounts: collection.Seq[Int],
+     quantChannelIds: collection.Seq[Long],
      buildQuantComponent: (Float,Int, Long) => A
    ) {
 
@@ -197,7 +197,7 @@ case class MasterQuantReporterIon(
     this.properties.getQuantReporterIons.map { repIon => repIon.getQuantChannelId -> repIon } toMap
   }*/
   
-  def setAbundancesForQuantChannels(abundances: Seq[Float], quantChannelIds: Seq[Long]) {
+  def setAbundancesForQuantChannels(abundances: collection.Seq[Float], quantChannelIds: collection.Seq[Long]) {
     this.updateOrCreateComponentForQuantChannels(
       abundances,
       quantChannelIds,
@@ -365,7 +365,7 @@ case class MasterQuantPeptideIon(
     quantPeptideIonMap.values.count( qPepIon => isZeroOrNaN(qPepIon.rawAbundance) == false )
   }
   
-  def setAbundancesForQuantChannels( abundances: Seq[Float], quantChannelIds: Seq[Long] ) {
+  def setAbundancesForQuantChannels( abundances: collection.Seq[Float], quantChannelIds: collection.Seq[Long] ) {
     this.updateOrCreateComponentForQuantChannels(
       abundances,
       quantChannelIds,
@@ -384,7 +384,7 @@ case class MasterQuantPeptideIon(
     )
   }
 
-  def setAbundancesAndPsmCountForQuantChannels( abundances: Seq[Float], psmCounts: Seq[Int], quantChannelIds: Seq[Long] ) {
+  def setAbundancesAndPsmCountForQuantChannels( abundances: collection.Seq[Float], psmCounts: collection.Seq[Int], quantChannelIds: collection.Seq[Long] ) {
     assert(abundances.size.equals(quantChannelIds.size) && psmCounts.size.equals(quantChannelIds.size))
 
     this.updateOrCreateComponentForQuantChannels(
@@ -506,7 +506,7 @@ case class MasterQuantPeptide(
     this.getQuantComponentAbundance(quantChannelId)
   }
   
-  def setAbundancesForQuantChannels( abundances: Seq[Float], quantChannelIds: Seq[Long] ) {
+  def setAbundancesForQuantChannels( abundances: collection.Seq[Float], quantChannelIds: collection.Seq[Long] ) {
     this.updateOrCreateComponentForQuantChannels(
       abundances,
       quantChannelIds,
@@ -521,7 +521,7 @@ case class MasterQuantPeptide(
     )
   }
 
-  def setAbundancesAndPsmCountForQuantChannels( abundances: Seq[Float], psmCounts: Seq[Int], quantChannelIds: Seq[Long] ) {
+  def setAbundancesAndPsmCountForQuantChannels( abundances: collection.Seq[Float], psmCounts: collection.Seq[Int], quantChannelIds: collection.Seq[Long] ) {
     assert(abundances.size.equals(quantChannelIds.size) && psmCounts.size.equals(quantChannelIds.size))
 
     this.updateOrCreateComponentForQuantChannels(
@@ -687,7 +687,7 @@ case class MasterQuantProteinSet(
   }
   
  /* // TODO: move to the MasterQuantProteinSetProfile class when peptideMatchesCount has been updated in the database
-  def getProfileQuantComponentMap(profile: MasterQuantProteinSetProfile, qcIds: Seq[Long]): LongMap[QuantComponent] = {
+  def getProfileQuantComponentMap(profile: MasterQuantProteinSetProfile, qcIds: collection.Seq[Long]): LongMap[QuantComponent] = {
     val rawAbundanceByQcId = qcIds.zip(profile.rawAbundances).toLongMap
     val abundanceByQcId = qcIds.zip(profile.abundances).toLongMap
     
@@ -709,7 +709,7 @@ case class MasterQuantProteinSet(
     quantCompMap
   }*/
   
-  def setAbundancesForQuantChannels( abundances: Seq[Float], quantChannelIds: Seq[Long] ) {
+  def setAbundancesForQuantChannels( abundances: collection.Seq[Float], quantChannelIds: collection.Seq[Long] ) {
     this.updateOrCreateComponentForQuantChannels(
       abundances,
       quantChannelIds,
@@ -726,7 +726,7 @@ case class MasterQuantProteinSet(
     )
   }
 
-  def setAbundancesAndCountsForQuantChannels(abundances: Seq[Float], psmCounts: Seq[Int],pepCounts: Seq[Int], quantChannelIds: Seq[Long] ) {
+  def setAbundancesAndCountsForQuantChannels(abundances: collection.Seq[Float], psmCounts: collection.Seq[Int],pepCounts: collection.Seq[Int], quantChannelIds: collection.Seq[Long] ) {
 
     assert(abundances.size.equals(quantChannelIds.size) && psmCounts.size.equals(quantChannelIds.size) && pepCounts.size.equals(quantChannelIds.size))
     val quantCompMap = this.getQuantComponentMap()

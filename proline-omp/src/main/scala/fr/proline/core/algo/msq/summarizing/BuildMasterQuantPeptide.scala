@@ -11,7 +11,7 @@ import scala.collection.mutable.LongMap
 object BuildMasterQuantPeptide {
 
   def apply(
-             mqPepIons: Seq[MasterQuantPeptideIon],
+             mqPepIons: collection.Seq[MasterQuantPeptideIon],
              masterPepInstAsOpt: Option[PeptideInstance],
              quantRsmId: Long
            ): MasterQuantPeptide = {
@@ -19,7 +19,7 @@ object BuildMasterQuantPeptide {
   }
 
   def apply(
-             mqPepIons: Seq[MasterQuantPeptideIon],
+             mqPepIons: collection.Seq[MasterQuantPeptideIon],
              masterPepInstAsOpt: Option[PeptideInstance],
              quantRsmId: Long,
              pepIonAbundanceSummarizingMethod: MqPepIonAbundanceSummarizingMethod.Value
@@ -82,7 +82,7 @@ object BuildMasterQuantPeptide {
       case MqPepIonAbundanceSummarizingMethod.SUM => {
 
         //Group PepIon by quant channel ids
-        val peptideIonsByQChId: Map[Long, Seq[QuantPeptideIon]] = filteredMQPepIons.flatMap(_.quantPeptideIonMap.values).groupBy(_.quantChannelId)
+        val peptideIonsByQChId: Map[Long, collection.Seq[QuantPeptideIon]] = filteredMQPepIons.flatMap(_.quantPeptideIonMap.values).groupBy(_.quantChannelId)
 
         for ((qcId, quantPepIons) <- peptideIonsByQChId) {
           val quantPepIonWRawAb = quantPepIons.map(_.rawAbundance).filter(!_.equals(Float.NaN))
@@ -120,7 +120,7 @@ object BuildMasterQuantPeptide {
 
   }
 
-  def getBestPeptideIon(filteredMQPepIons: Seq[MasterQuantPeptideIon]): MasterQuantPeptideIon = {
+  def getBestPeptideIon(filteredMQPepIons: collection.Seq[MasterQuantPeptideIon]): MasterQuantPeptideIon = {
     // Group master quant peptide ions by number of identified quant. channels
     val mqPepIonsByIdentCount = filteredMQPepIons.groupBy(_.countIdentifications)
     val maxIdentCount = mqPepIonsByIdentCount.keys.max

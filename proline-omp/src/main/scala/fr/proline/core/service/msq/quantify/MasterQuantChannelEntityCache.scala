@@ -81,7 +81,7 @@ class MasterQuantChannelEntityCache(
       val sqlQuery = new SelectQueryBuilder1(MsiDbResultSummaryTable).mkSelectQuery( (t,c) =>
         List(t.ID,t.RESULT_SET_ID) -> "WHERE "~ t.ID ~" IN ("~ quantChannelRsmIds.mkString(",") ~")"
       )
-      msiEzDBC.select(sqlQuery) { r => r.nextLong -> r.nextLong } toLongMap()
+      msiEzDBC.select(sqlQuery) { r => r.nextLong -> r.nextLong }.toLongMap()
     }
   }
 

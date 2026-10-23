@@ -32,7 +32,7 @@ class PgPeakelWriter(lcmsDbCtx: LcMsDbConnectionContext) extends IPeakelWriter w
   private val allPeakelTableCols = LcmsDbPeakelTable.columnsAsStrList.mkString(",")
   private val peakelTableColsWithoutPK = LcmsDbPeakelTable.columnsAsStrList.filter(_ != "id").mkString(",")
   
-  def insertPeakels(peakels: Seq[Peakel], rawMapId: Long) {
+  def insertPeakels(peakels: collection.Seq[Peakel], rawMapId: Long) {
     val newIdByTmpId = this.insertPeakelStream( peakels.foreach _, Some(rawMapId), peakels.length).head._2
     
     // Update peakel ids
@@ -145,8 +145,9 @@ class PgPeakelWriter(lcmsDbCtx: LcMsDbConnectionContext) extends IPeakelWriter w
       val sortedPeakelTuples = peakelTuples.sortBy(_._1)
       
       // Map new peakel ids by old one
-      val peakelIdByTmpIdByRawMapId = for ((rawMapId,peakelsCount) <- peakelsCountByRawMapId) yield {
-        (rawMapId, new LongMap[Long](peakelsCount) )
+      val peakelIdByTmpIdByRawMapId = new LongMap[LongMap[Long]](peakelsCountByRawMapId.size)
+      for ((rawMapId,peakelsCount) <- peakelsCountByRawMapId) {
+        peakelIdByTmpIdByRawMapId.put(rawMapId, new LongMap[Long](peakelsCount))
       }
       
       var peakelIdx = 0

@@ -28,7 +28,7 @@ class SQLMsiSearchProvider(
   
   protected lazy val ptmProvider = new SQLPTMProvider(msiDbCtx)
 
-  def getMSISearches(msiSearchIds: Seq[Long]): Array[MSISearch] = {
+  def getMSISearches(msiSearchIds: collection.Seq[Long]): Array[MSISearch] = {
     if( msiSearchIds.isEmpty ) return Array()
     
     DoJDBCReturningWork.withEzDBC(udsDbCtx) { udsEzDBC =>
@@ -62,14 +62,14 @@ class SQLMsiSearchProvider(
     }
   }
 
-  def getMSISearchesAsOptions(msiSearchIds: Seq[Long]): Array[Option[MSISearch]] = {
+  def getMSISearchesAsOptions(msiSearchIds: collection.Seq[Long]): Array[Option[MSISearch]] = {
     val msiSearches = this.getMSISearches(msiSearchIds)
     val msiSearchById = msiSearches.map { s => s.id -> s }.toMap
 
     msiSearchIds.map { msiSearchById.get(_) }.toArray
   }
 
-  def getSearchSettingsList(searchSettingsIds: Seq[Long]): Array[SearchSettings] = {
+  def getSearchSettingsList(searchSettingsIds: collection.Seq[Long]): Array[SearchSettings] = {
     if( searchSettingsIds.isEmpty ) return Array()
     
     DoJDBCReturningWork.withEzDBC(udsDbCtx) { udsEzDBC =>
@@ -96,7 +96,7 @@ class SQLMsiSearchProvider(
     }
   }
 
-  def getSeqDatabases(seqDbIds: Seq[Long]): Array[SeqDatabase] = {
+  def getSeqDatabases(seqDbIds: collection.Seq[Long]): Array[SeqDatabase] = {
     if( seqDbIds.isEmpty ) return Array()
     
     DoJDBCReturningWork.withEzDBC(msiDbCtx) { msiEzDBC =>
@@ -115,7 +115,7 @@ class SQLMsiSearchProvider(
     }
   }
 
-  def getEnzymesByName(enzymeNames: Seq[String]): Array[Enzyme] = {
+  def getEnzymesByName(enzymeNames: collection.Seq[String]): Array[Enzyme] = {
     if( enzymeNames.isEmpty ) return Array()
     
     DoJDBCReturningWork.withEzDBC(udsDbCtx) { udsEzDBC =>
@@ -133,7 +133,7 @@ class SQLMsiSearchProvider(
     }
   }
   
-  def getEnzymes(enzymeIds: Seq[Long]): Array[Enzyme] = {
+  def getEnzymes(enzymeIds: collection.Seq[Long]): Array[Enzyme] = {
     if( enzymeIds.isEmpty ) return Array()
     
     DoJDBCReturningWork.withEzDBC(udsDbCtx) { udsEzDBC =>
@@ -163,7 +163,7 @@ class SQLMsiSearchProvider(
 
 object SQLMsiSearchProvider {
   
-  def selectAndMapSearchSettingsRecords( msiEzDBC: EasyDBC, ssIds: Seq[Long] ): (IValueContainer => SearchSettings) => Seq[SearchSettings] = {
+  def selectAndMapSearchSettingsRecords( msiEzDBC: EasyDBC, ssIds: collection.Seq[Long] ): (IValueContainer => SearchSettings) => collection.Seq[SearchSettings] = {
     
     val ssIdsStr = ssIds.mkString(",")
 
@@ -174,7 +174,7 @@ object SQLMsiSearchProvider {
     msiEzDBC.select(ssQuery)
   }
   
-  def selectPMFSearchRecords( msiEzDBC: EasyDBC, ssIds: Seq[Long] ): (IValueContainer => Unit) => Unit = {
+  def selectPMFSearchRecords( msiEzDBC: EasyDBC, ssIds: collection.Seq[Long] ): (IValueContainer => Unit) => Unit = {
     
     val ssIdsStr = ssIds.mkString(",")
 
@@ -186,7 +186,7 @@ object SQLMsiSearchProvider {
     msiEzDBC.selectAndProcess(pmfSearchQuery)
   }
   
-  def selectMSMSSearchRecords( msiEzDBC: EasyDBC, ssIds: Seq[Long] ): (IValueContainer => Unit) => Unit = {
+  def selectMSMSSearchRecords( msiEzDBC: EasyDBC, ssIds: collection.Seq[Long] ): (IValueContainer => Unit) => Unit = {
     
     val ssIdsStr = ssIds.mkString(",")
 
@@ -198,7 +198,7 @@ object SQLMsiSearchProvider {
     msiEzDBC.selectAndProcess(msmsSearchQuery)
   }
   
-  def selectUsedEnzymeRecords( msiEzDBC: EasyDBC, ssIds: Seq[Long] ): (IValueContainer => Unit) => Unit = {
+  def selectUsedEnzymeRecords( msiEzDBC: EasyDBC, ssIds: collection.Seq[Long] ): (IValueContainer => Unit) => Unit = {
     
     val ssIdsStr = ssIds.mkString(",")
 
@@ -209,7 +209,7 @@ object SQLMsiSearchProvider {
     msiEzDBC.selectAndProcess(usedEnzQuery)
   }
   
-  def selectUsedPtmRecords( msiEzDBC: EasyDBC, ssIds: Seq[Long] ): (IValueContainer => Unit) => Unit = {
+  def selectUsedPtmRecords( msiEzDBC: EasyDBC, ssIds: collection.Seq[Long] ): (IValueContainer => Unit) => Unit = {
     
     val ssIdsStr = ssIds.mkString(",")
 
@@ -220,7 +220,7 @@ object SQLMsiSearchProvider {
     msiEzDBC.selectAndProcess(usedPtmQuery)
   }
   
-  def selectAndMapSearchedSeqDbRecords(msiEzDBC: EasyDBC, searchSettingsId: Long): (IValueContainer => SeqDatabase) => Seq[SeqDatabase] = {
+  def selectAndMapSearchedSeqDbRecords(msiEzDBC: EasyDBC, searchSettingsId: Long): (IValueContainer => SeqDatabase) => collection.Seq[SeqDatabase] = {
     
     val sqb2 = new SelectQueryBuilder2[MsiDbSeqDatabaseColumns.type,MsiDbSearchSettingsSeqDatabaseMapColumns.type ](MsiDbSeqDatabaseTable, MsiDbSearchSettingsSeqDatabaseMapTable)
     
@@ -233,7 +233,7 @@ object SQLMsiSearchProvider {
     msiEzDBC.select(sqlQuery)
   }
   
-  def selectAndMapEnzymeRecords(ezDBC: EasyDBC, enzymeIds: Seq[Long]): (IValueContainer => Enzyme) => Seq[Enzyme] = {
+  def selectAndMapEnzymeRecords(ezDBC: EasyDBC, enzymeIds: collection.Seq[Long]): (IValueContainer => Enzyme) => collection.Seq[Enzyme] = {
     
     val enzQuery = new SelectQueryBuilder1(UdsDbEnzymeTable).mkSelectQuery( (t,c) =>
       List(t.*) -> "WHERE "~ t.ID ~" IN("~ enzymeIds.mkString(",") ~")"
@@ -242,7 +242,7 @@ object SQLMsiSearchProvider {
     ezDBC.select(enzQuery)
   }
   
-  def selectAndMapAllEnzymeRecords(udsEzDBC: EasyDBC): (IValueContainer => Enzyme) => Seq[Enzyme] = {
+  def selectAndMapAllEnzymeRecords(udsEzDBC: EasyDBC): (IValueContainer => Enzyme) => collection.Seq[Enzyme] = {
     
     val enzQuery = new SelectQueryBuilder1(UdsDbEnzymeTable).mkSelectQuery( (t,c) =>
       List(t.*) -> ""
@@ -251,7 +251,7 @@ object SQLMsiSearchProvider {
     udsEzDBC.select(enzQuery)
   }
   
-  def selectAndMapEnzymeCleavageRecords(udsEzDBC: EasyDBC, enzymeId: Long): (IValueContainer => EnzymeCleavage) => Seq[EnzymeCleavage] = {
+  def selectAndMapEnzymeCleavageRecords(udsEzDBC: EasyDBC, enzymeId: Long): (IValueContainer => EnzymeCleavage) => collection.Seq[EnzymeCleavage] = {
     
     val enzQuery = new SelectQueryBuilder1(UdsDbEnzymeCleavageTable).mkSelectQuery( (t,c) =>
       List(t.*) -> "WHERE "~ t.ENZYME_ID ~" = "~ enzymeId

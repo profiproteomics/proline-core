@@ -64,7 +64,7 @@ case class AverageAbundanceRatio(
 object AbundanceRatiolizer {
   
   def updateRatioStates(
-    ratios: Seq[AverageAbundanceRatio],
+    ratios: collection.Seq[AverageAbundanceRatio],
     relativeVariationModel: RelativeErrorModel,
     absoluteNoiseModel: Option[AbsoluteErrorModel],
     config: ProfilizerStatConfig    

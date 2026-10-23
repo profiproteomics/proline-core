@@ -25,7 +25,7 @@ object OxidizedPeptideFilterer {
   
   import fr.proline.core.algo.msq.config.profilizer.OxidizedPeptideFilteringMethod._
   
-  def discardPeptides( masterQuantPeptides: Seq[MasterQuantPeptide], methodName: String ): Unit = {
+  def discardPeptides( masterQuantPeptides: collection.Seq[MasterQuantPeptide], methodName: String ): Unit = {
     val filteringMethod = OxidizedPeptideFilteringMethod.withName(methodName)
     
     filteringMethod match {
@@ -41,7 +41,7 @@ trait IOxidizedPeptideFilter extends IMasterQuantPeptideFiltering with StrictLog
   
   val pattern = """.*\[O\]""".r.pattern
   
-  def foreachOxidizedPeptide( masterQuantPeptides: Seq[MasterQuantPeptide])(callback: (MasterQuantPeptide,Peptide) => Unit ): Unit = {
+  def foreachOxidizedPeptide( masterQuantPeptides: collection.Seq[MasterQuantPeptide])(callback: (MasterQuantPeptide,Peptide) => Unit ): Unit = {
     
     this.foreachIdentifiedAndSelectedPeptide(masterQuantPeptides) { (mqPep,pepInst) =>
       
@@ -60,7 +60,7 @@ trait IOxidizedPeptideFilter extends IMasterQuantPeptideFiltering with StrictLog
 
 object OxidizedAndCounterpartFormsFilterer extends IOxidizedPeptideFilter {
   
-  def discardPeptides( masterQuantPeptides: Seq[MasterQuantPeptide] ): Unit = {
+  def discardPeptides( masterQuantPeptides: collection.Seq[MasterQuantPeptide] ): Unit = {
     
     val detectedOxSeqs = new ArrayBuffer[String]()
     
@@ -88,7 +88,7 @@ object OxidizedAndCounterpartFormsFilterer extends IOxidizedPeptideFilter {
 
 object OxidizedFormFilterer extends IOxidizedPeptideFilter {
   
-  def discardPeptides( masterQuantPeptides: Seq[MasterQuantPeptide] ): Unit = {
+  def discardPeptides( masterQuantPeptides: collection.Seq[MasterQuantPeptide] ): Unit = {
     this.foreachOxidizedPeptide(masterQuantPeptides) { (mqPep,peptide) =>
       // Discard the detected oxidized peptide
       this.discardPeptide(mqPep, OxidizedPeptideDiscardingReason.OXIDIZED_PEPTIDE)
@@ -99,7 +99,7 @@ object OxidizedFormFilterer extends IOxidizedPeptideFilter {
 
 object LowestAbundantOxidizedFormFilterer extends IOxidizedPeptideFilter {
   
-  def discardPeptides( masterQuantPeptides: Seq[MasterQuantPeptide] ): Unit = {
+  def discardPeptides( masterQuantPeptides: collection.Seq[MasterQuantPeptide] ): Unit = {
     
     val oxMqPepsBySeq = new HashMap[String,ArrayBuffer[MasterQuantPeptide]]()
     

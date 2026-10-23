@@ -121,7 +121,7 @@ object SetClusterer {
         }
       }
       
-      val samesetById = collection.immutable.LongMap( samesetByIdPairs: _* )
+      val samesetById = collection.immutable.LongMap.from( samesetByIdPairs )
       
       // Search for strict subsets
       for( sameset <- samesets ) {
@@ -202,7 +202,7 @@ object SetClusterer {
   @scala.annotation.tailrec
   private def getAllKeysHavingRelatedValues[K, V](
     valuesByKey: Map[K, Set[V]],
-    keysByValue: Map[V, Seq[K]],
+    keysByValue: Map[V, collection.Seq[K]],
     valuesToSearch: Set[V],
     searchedValues: collection.mutable.HashSet[V],
     foundKeys: collection.mutable.HashSet[K]

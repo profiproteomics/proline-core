@@ -18,7 +18,7 @@ trait IPTMProvider {
    *  @param ptmDefIds: Sequence of ids of PtmDefinitions to search for
    *  @return Array of Option[PtmDefinition] corresponding to found PtmDefinitions
    */
-  def getPtmDefinitionsAsOptions( ptmDefIds: Seq[Long] ): Array[Option[PtmDefinition]]
+  def getPtmDefinitionsAsOptions( ptmDefIds: collection.Seq[Long] ): Array[Option[PtmDefinition]]
   
   /**
    *  Get PtmDefinitions with specified Ids.
@@ -26,7 +26,7 @@ trait IPTMProvider {
    *  @param ptmDefIds: Sequence of ids of PtmDefinitions to search for
    *  @return Array of PtmDefinition corresponding to found PtmDefinitions
    */
-  def getPtmDefinitions( ptmDefIds: Seq[Long] ): Array[PtmDefinition]
+  def getPtmDefinitions( ptmDefIds: collection.Seq[Long] ): Array[PtmDefinition]
   
   /**
    *  Get PtmDefinition (wrapped in Option) with specified Id.
@@ -148,14 +148,14 @@ object PTMFakeProvider extends IPTMProvider {
   /**
    * Return an empty array
    */
-  def getPtmDefinitionsAsOptions(ptmDefIds: Seq[Long]): Array[Option[PtmDefinition]] = {
+  def getPtmDefinitionsAsOptions(ptmDefIds: collection.Seq[Long]): Array[Option[PtmDefinition]] = {
   	val retArray =  new Array[Option[PtmDefinition]](1)
   	retArray.update(0, Option.empty[PtmDefinition])	
   	
   	retArray
   }
   
-  def getPtmDefinitions(ptmDefIds: Seq[Long]): Array[PtmDefinition] = {
+  def getPtmDefinitions(ptmDefIds: collection.Seq[Long]): Array[PtmDefinition] = {
     this.getPtmDefinitionsAsOptions(ptmDefIds).filter( _ != None ).map( _.get )
   } 
       
@@ -179,7 +179,7 @@ object EmptyPTMProvider extends IPTMProvider {
 
   val psDbCtx = null
 
-  def getPtmDefinitionsAsOptions(ptmDefIds: Seq[Long]): Array[Option[PtmDefinition]] = {
+  def getPtmDefinitionsAsOptions(ptmDefIds: collection.Seq[Long]): Array[Option[PtmDefinition]] = {
   	val retArray =  new Array[Option[PtmDefinition]](ptmDefIds.length)
   	var index = 0
   	ptmDefIds foreach ( id => {
@@ -190,7 +190,7 @@ object EmptyPTMProvider extends IPTMProvider {
   	retArray
   }
   
-  def getPtmDefinitions(ptmDefIds: Seq[Long]): Array[PtmDefinition] = {
+  def getPtmDefinitions(ptmDefIds: collection.Seq[Long]): Array[PtmDefinition] = {
     Array.empty[PtmDefinition]
   }
  

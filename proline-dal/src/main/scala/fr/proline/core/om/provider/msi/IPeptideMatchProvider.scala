@@ -9,13 +9,13 @@ case class PeptideMatchFilter(
 
 trait IPeptideMatchProvider {
  
-  def getPeptideMatchesAsOptions( pepMatchIds: Seq[Long] ): Array[Option[PeptideMatch]]
+  def getPeptideMatchesAsOptions( pepMatchIds: collection.Seq[Long] ): Array[Option[PeptideMatch]]
   
-  def getPeptideMatches( pepMatchIds: Seq[Long] ): Array[PeptideMatch]
+  def getPeptideMatches( pepMatchIds: collection.Seq[Long] ): Array[PeptideMatch]
   
-  def getResultSetsPeptideMatches( resultSetIds: Seq[Long], pepMatchFilter: Option[PeptideMatchFilter] = None ): Array[PeptideMatch]
+  def getResultSetsPeptideMatches( resultSetIds: collection.Seq[Long], pepMatchFilter: Option[PeptideMatchFilter] = None ): Array[PeptideMatch]
   
-  def getResultSummariesPeptideMatches( rsmIds: Seq[Long] ): Array[PeptideMatch]
+  def getResultSummariesPeptideMatches( rsmIds: collection.Seq[Long] ): Array[PeptideMatch]
   
   
   def getPeptideMatch( pepMatchId: Long ): Option[PeptideMatch] = {

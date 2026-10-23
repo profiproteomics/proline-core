@@ -25,7 +25,7 @@ object PtmDefinitionBuilder {
   def buildPtmDefinition(
     ptmRecord: IValueContainer,
     ptmSpecifRecord: IValueContainer,
-    ptmEvidenceRecords: Seq[IValueContainer],
+    ptmEvidenceRecords: collection.Seq[IValueContainer],
     ptmClassification: String
   ): PtmDefinition = {
     
@@ -67,7 +67,7 @@ object PtmDefinitionBuilder {
   }
   
   def buildLocatedPtmsGroupedByPepId(
-    pepPtmRecordsByPepId: LongMap[_ <: Seq[IValueContainer]],
+    pepPtmRecordsByPepId: LongMap[_ <: collection.Seq[IValueContainer]],
     ptmDefinitionById: LongMap[PtmDefinition]
   ): LongMap[Array[LocatedPtm]] = {
 

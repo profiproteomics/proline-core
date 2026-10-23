@@ -20,7 +20,7 @@ import fr.proline.core.om.storer.lcms.IPeakelWriter
 class SQLPeakelWriter(lcmsDbCtx: LcMsDbConnectionContext) extends IPeakelWriter with StrictLogging {
 
   // TODO: copy/pasted from PgPeakelWriter => put in abstract class
-  def insertPeakels(peakels: Seq[Peakel], rawMapId: Long) {
+  def insertPeakels(peakels: collection.Seq[Peakel], rawMapId: Long) {
     val newIdByTmpId = this.insertPeakelStream( peakels.foreach _, Some(rawMapId), peakels.length).head._2
     
     // Update peakel ids

@@ -33,7 +33,7 @@ class SQLPeptideProvider(
   }
     
   /** Returns a map of peptide PTMs grouped by the peptide id */
-  def getPeptidePtmRecordsByPepId(peptideIds: Seq[Long]): LongMap[Seq[AnyMap]] = {
+  def getPeptidePtmRecordsByPepId(peptideIds: collection.Seq[Long]): LongMap[collection.Seq[AnyMap]] = {
     if( peptideIds.isEmpty ) return LongMap()
 
     DoJDBCReturningWork.withEzDBC(msiDbCtx) { psEzDBC =>
@@ -55,19 +55,19 @@ class SQLPeptideProvider(
         
       }
 
-      pepPtmRecords.toSeq.groupByLong(r => r.getLong(MsiDbPeptidePtmColumns.PEPTIDE_ID) )
+      (pepPtmRecords: collection.Seq[AnyMap]).groupByLong(r => r.getLong(MsiDbPeptidePtmColumns.PEPTIDE_ID) )
     }
 
   }
 
-  def getLocatedPtmsByPepId(peptideIds: Seq[Long]): LongMap[Array[LocatedPtm]] = {
+  def getLocatedPtmsByPepId(peptideIds: collection.Seq[Long]): LongMap[Array[LocatedPtm]] = {
     PtmDefinitionBuilder.buildLocatedPtmsGroupedByPepId(
       getPeptidePtmRecordsByPepId(peptideIds),
       ptmDefinitionById
     )
   }
 
-  def getPeptides(peptideIds: Seq[Long]): Array[Peptide] = {
+  def getPeptides(peptideIds: collection.Seq[Long]): Array[Peptide] = {
     if (peptideIds.isEmpty) return Array.empty[Peptide]
 
     val uncachedPepIds = new ArrayBuffer[Long](peptideIds.length)
@@ -117,7 +117,7 @@ class SQLPeptideProvider(
     cachedPeps.toArray
   }
 
-  def getPeptidesAsOptions(peptideIds: Seq[Long]): Array[Option[Peptide]] = {
+  def getPeptidesAsOptions(peptideIds: collection.Seq[Long]): Array[Option[Peptide]] = {
     if (peptideIds.isEmpty) return Array()
 
     val peptides = this.getPeptides(peptideIds)
@@ -131,7 +131,7 @@ class SQLPeptideProvider(
     optPeptidesBuffer.toArray
   }
 
-  def getPeptidesForSequences(peptideSeqs: Seq[String]): Array[Peptide] = {
+  def getPeptidesForSequences(peptideSeqs: collection.Seq[String]): Array[Peptide] = {
     if (peptideSeqs.isEmpty) return Array()
 
     DoJDBCReturningWork.withEzDBC(msiDbCtx) { psEzDBC =>
@@ -178,7 +178,7 @@ class SQLPeptideProvider(
   }
 
   private def _buildPeptides(
-    pepRecords: Seq[IValueContainer],
+    pepRecords: collection.Seq[IValueContainer],
     locatedPtmsByPepId: LongMap[Array[LocatedPtm]]
   ): Array[Peptide] = {
 
@@ -220,7 +220,7 @@ class SQLPeptideProvider(
 
       val tmpPep = new Peptide(sequence = peptideSeq, ptms = pepPtms)
 
-      val resultPepIds: Seq[Long] = if (StringUtils.isEmpty(tmpPep.ptmString)) {
+      val resultPepIds: collection.Seq[Long] = if (StringUtils.isEmpty(tmpPep.ptmString)) {
         val pepIdQuery = new SelectQueryBuilder1(MsiDbPeptideTable).mkSelectQuery((t, c) =>
           List(t.ID) -> "WHERE " ~ t.SEQUENCE ~ " = ? AND " ~ t.PTM_STRING ~ " IS NULL"
         )
@@ -241,7 +241,7 @@ class SQLPeptideProvider(
     }
   }
 
-  override def getPeptidesAsOptionsBySeqAndPtms(peptideSeqsAndPtms: Seq[(String, Array[LocatedPtm])]): Array[Option[Peptide]] = {
+  override def getPeptidesAsOptionsBySeqAndPtms(peptideSeqsAndPtms: collection.Seq[(String, Array[LocatedPtm])]): Array[Option[Peptide]] = {
     if (peptideSeqsAndPtms.isEmpty) return Array()
     
     DoJDBCReturningWork.withEzDBC(msiDbCtx) { psEzDBC =>

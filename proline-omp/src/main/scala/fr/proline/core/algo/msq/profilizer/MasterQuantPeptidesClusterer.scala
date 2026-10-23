@@ -17,13 +17,13 @@ import fr.proline.core.om.model.msq.MasterQuantProteinSet
 //}
 //
 //case class MqPeptidesClustererConfig(
-//  ptmPatternPtmDefIds: Seq[Long] = Seq() // only for PTM_PATTERN method
+//  ptmPatternPtmDefIds: collection.Seq[Long] = Seq() // only for PTM_PATTERN method
 //)
 
 case class MasterQuantPeptidesCluster(
   name: String,  // depends on the clustering method used. ex :  ptm pettern = modified@loc ou unmodified  
   mqProteinSet: MasterQuantProteinSet,
-  mqPeptides: Seq[MasterQuantPeptide]
+  mqPeptides: collection.Seq[MasterQuantPeptide]
 )
 
 object MasterQuantPeptidesClusterer {
@@ -52,7 +52,7 @@ object MasterQuantPeptidesClusterer {
     methodName: String,
     clustererConfig: Option[MqPeptidesClustererConfig],
     groupSetupNumber: Int,
-    masterQuantProtSets: Seq[MasterQuantProteinSet]
+    masterQuantProtSets: collection.Seq[MasterQuantProteinSet]
   ): Array[MasterQuantPeptidesCluster] = {
     this.apply(methodName, clustererConfig, groupSetupNumber).computeMqPeptidesClusters(masterQuantProtSets)
   }
@@ -63,7 +63,7 @@ trait IMqPeptidesClusterer {
   def clustererConfig: MqPeptidesClustererConfig
 
   def computeMqPeptidesClusters(
-    masterQuantProtSets: Seq[MasterQuantProteinSet]
+    masterQuantProtSets: collection.Seq[MasterQuantProteinSet]
   ): Array[MasterQuantPeptidesCluster] = {
 
     val clustersBuffer = new ArrayBuffer[MasterQuantPeptidesCluster](masterQuantProtSets.length)
@@ -233,7 +233,7 @@ class PtmPatternBasedClusterer(val clustererConfig: MqPeptidesClustererConfig) e
     ()
   }
   
-  private def _buildPtmPattern(peptide: Peptide, proteinStartLocations: Seq[Int] ): String = {
+  private def _buildPtmPattern(peptide: Peptide, proteinStartLocations: collection.Seq[Int] ): String = {
     
     val ptms = peptide.ptms
     
@@ -297,6 +297,6 @@ class QuantProfileBasedClusterer(groupSetupNumber: Int) extends IMqPeptidesClust
     ()
   }
 
-  private def _stringifyProfile(slopes: Seq[Int]): String = { slopes.mkString(";") }
+  private def _stringifyProfile(slopes: collection.Seq[Int]): String = { slopes.mkString(";") }
 
 }

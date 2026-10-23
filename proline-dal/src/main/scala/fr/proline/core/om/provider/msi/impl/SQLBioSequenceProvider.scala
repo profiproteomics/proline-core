@@ -21,7 +21,7 @@ class SQLBioSequenceProvider(val msiDbCtx: MsiDbConnectionContext) {
   private val bioSeqQB = new SelectQueryBuilder1(MsiDbBioSequenceTable)
   
   // TODO: return a IBioSequence (instantiate the appropriate sequence considering the alphabet)
-  def getBioSequences( bioSeqIds: Seq[Long], loadSequence: Boolean = true): Array[BioSequence] = {
+  def getBioSequences( bioSeqIds: collection.Seq[Long], loadSequence: Boolean = true): Array[BioSequence] = {
     if (bioSeqIds.isEmpty) return Array()
     
     DoJDBCReturningWork.withEzDBC(msiDbCtx, false){ msiEzDBC =>

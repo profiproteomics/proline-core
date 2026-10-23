@@ -18,7 +18,7 @@ import fr.proline.core.om.storer.lcms.IFeatureWriter
 
 class SQLFeatureWriter(lcmsDbCtx: LcMsDbConnectionContext) extends IFeatureWriter with StrictLogging {
 
-  def insertFeatures(features: Seq[Feature], rawMapId: Long, linkToPeakels: Boolean): Seq[Feature] = {
+  def insertFeatures(features: collection.Seq[Feature], rawMapId: Long, linkToPeakels: Boolean): collection.Seq[Feature] = {
     
     val flattenedFeatures = new ArrayBuffer[Feature](features.length)
     
@@ -118,7 +118,7 @@ class SQLFeatureWriter(lcmsDbCtx: LcMsDbConnectionContext) extends IFeatureWrite
     stmt.generatedLong
   }
   
-  def linkFeaturesToPeakels(features: Seq[Feature], rawMapId: Long): Unit = {
+  def linkFeaturesToPeakels(features: collection.Seq[Feature], rawMapId: Long): Unit = {
     
     DoJDBCWork.withEzDBC(lcmsDbCtx) { ezDBC =>
       
@@ -193,7 +193,7 @@ class SQLFeatureWriter(lcmsDbCtx: LcMsDbConnectionContext) extends IFeatureWrite
     ()
   }
   
-  def insertFeatureClusters( features: Seq[Feature] ): Unit = {
+  def insertFeatureClusters( features: collection.Seq[Feature] ): Unit = {
     
     DoJDBCWork.withEzDBC(lcmsDbCtx) { ezDBC =>
     

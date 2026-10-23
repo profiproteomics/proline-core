@@ -76,7 +76,7 @@ class DbUnitResultFile(
 
 object DbUnitDatasetParser {
   
-  def parseAndFixDataset( datasetInputStream: InputStream ): Map[String,Seq[StringMap]] = {
+  def parseAndFixDataset( datasetInputStream: InputStream ): Map[String,collection.Seq[StringMap]] = {
     
     val dataset = parseDbUnitDataset( datasetInputStream, lowerCase = true ).toMap
     
@@ -86,13 +86,13 @@ object DbUnitDatasetParser {
     dataset
   }
   
-  def castRecords( rawRecords: Array[Map[String, String]], colNames: Seq[String] ): Array[Map[String, Any]] = {
+  def castRecords( rawRecords: Array[Map[String, String]], colNames: collection.Seq[String] ): Array[Map[String, Any]] = {
     rawRecords.map { rawRecord =>
       for( (k,v) <- rawRecord ) yield ( k -> parseString(v) )
     }
   }
   
-  def castRecords( rawRecords: Array[StringMap], colNames: Seq[String] ): Array[AnyMap] = {
+  def castRecords( rawRecords: Array[StringMap], colNames: collection.Seq[String] ): Array[AnyMap] = {
     rawRecords.map { rawRecord =>
       val record = new AnyMap()
       
@@ -107,23 +107,24 @@ object DbUnitDatasetParser {
     }
   }
   
-  def reverseRecordsId(recordsByTableName: Map[String, Seq[StringMap]]) {
+  def reverseRecordsId(recordsByTableName: Map[String, collection.Seq[StringMap]]) {
     for ((tableName, records) <- recordsByTableName) {
       for (record <- records) {
-        for ((k, v) <- record) {
+        // iterate over a snapshot of the entries because the record is updated in the loop
+        for ((k, v) <- record.toList) {
           if (k == "id" || k.endsWith("_id")) record(k) = ("-" + v)
         }
       }
     }
   }
   
-  /*def reverseRecordsId( recordsByTableName: Map[String,Seq[StringMap]] ) {
+  /*def reverseRecordsId( recordsByTableName: Map[String,collection.Seq[StringMap]] ) {
     for( (tableName,records) <- recordsByTableName ) {
       tableName -> reverseRecordsId(records)
     }
   }
   
-  def reverseRecordsId( records: Seq[StringMap] ) {
+  def reverseRecordsId( records: collection.Seq[StringMap] ) {
     records.map { record =>
       for( (k,v) <- record ) {
         if( k == "id" || k.endsWith("_id") ) record(k) = ("-" + v)
@@ -152,25 +153,25 @@ object DbUnitDatasetParser {
     tableInsertQueryByName.toMap
   }
   
-  /*def selectRecords[T]( records: Seq[IValueContainer] ): ( (IValueContainer => Unit) => Unit ) = {
+  /*def selectRecords[T]( records: collection.Seq[IValueContainer] ): ( (IValueContainer => Unit) => Unit ) = {
     nullMapper => records.foreach _
   }
   
-  def selectAndMapRecords[T]( records: Seq[IValueContainer] ): ( (IValueContainer => T) => Seq[T] ) = {
+  def selectAndMapRecords[T]( records: collection.Seq[IValueContainer] ): ( (IValueContainer => T) => collection.Seq[T] ) = {
     mapper: (IValueContainer => T) => records.map( mapper(_) )
   }
   
-  def mkRecordSelector( records: Seq[IValueContainer] ): Array[Long] => ( (IValueContainer => Unit) => Unit ) = {
+  def mkRecordSelector( records: collection.Seq[IValueContainer] ): Array[Long] => ( (IValueContainer => Unit) => Unit ) = {
     recordIds => { records.foreach }
   }
   
-  def mkRecordMapper[T]( records: Seq[IValueContainer] ): Array[Long] => ( (IValueContainer => T) => Seq[T] ) = {
+  def mkRecordMapper[T]( records: collection.Seq[IValueContainer] ): Array[Long] => ( (IValueContainer => T) => collection.Seq[T] ) = {
     recordIds: Array[Long] => selectAndMapRecords(records)
   }*/
   
 }
 
-class MsiDbPsDatasetParser( psRecordByTableName: Map[String, Seq[StringMap]] ) extends IPTMProvider with IPeptideProvider {
+class MsiDbPsDatasetParser( psRecordByTableName: Map[String, collection.Seq[StringMap]] ) extends IPTMProvider with IPeptideProvider {
 
   // Inspired by the code of the SQLPTMProvider
   // TODO: try to reduce code redundancy ???
@@ -243,12 +244,12 @@ class MsiDbPsDatasetParser( psRecordByTableName: Map[String, Seq[StringMap]] ) e
     this.ptmDefinitionById.values.map { p => p.names.shortName -> p.id }.toMap
   }
 
-  def getPtmDefinitionsAsOptions(ptmDefIds: Seq[Long]): Array[Option[PtmDefinition]] = {
+  def getPtmDefinitionsAsOptions(ptmDefIds: collection.Seq[Long]): Array[Option[PtmDefinition]] = {
     val ptmDefById = this.ptmDefinitionById
     ptmDefIds.map { ptmDefById.get(_) }.toArray
   }
 
-  def getPtmDefinitions(ptmDefIds: Seq[Long]): Array[PtmDefinition] = {
+  def getPtmDefinitions(ptmDefIds: collection.Seq[Long]): Array[PtmDefinition] = {
     this.getPtmDefinitionsAsOptions(ptmDefIds).filter(_.isDefined).map(_.get)
   }
 
@@ -307,11 +308,11 @@ class MsiDbPsDatasetParser( psRecordByTableName: Map[String, Seq[StringMap]] ) e
   
   val peptideById = peptides.map( p => p.id -> p).toMap
   
-  def getPeptidesAsOptions( peptideIds: Seq[Long] ): Array[Option[Peptide]] = {
+  def getPeptidesAsOptions( peptideIds: collection.Seq[Long] ): Array[Option[Peptide]] = {
     peptideIds.toArray.map(peptideById.get(_))
   }
   
-  def getPeptides( peptideIds: Seq[Long] ): Array[Peptide] = {
+  def getPeptides( peptideIds: collection.Seq[Long] ): Array[Peptide] = {
     getPeptidesAsOptions(peptideIds).withFilter( _.isDefined ).map( _.get )
   }
   

@@ -26,10 +26,10 @@ class SQLRawMapProvider(
   protected val peakelFittingModelById = lcmsDbHelper.getPeakelFittingModelById()
 
   /** Returns a list of LC-MS maps corresponding to a given list of raw map ids */
-  def getLcMsMaps(mapIds: Seq[Long], loadPeakels: Boolean): Seq[ILcMsMap] = this.getRawMaps(mapIds)
+  def getLcMsMaps(mapIds: collection.Seq[Long], loadPeakels: Boolean): collection.Seq[ILcMsMap] = this.getRawMaps(mapIds)
 
   /** Returns a list of run maps corresponding to a given list of raw map ids */
-  def getRawMaps(rawMapIds: Seq[Long], loadPeakels: Boolean = false ): Array[RawMap] = {
+  def getRawMaps(rawMapIds: collection.Seq[Long], loadPeakels: Boolean = false ): Array[RawMap] = {
     if( rawMapIds.isEmpty ) return Array()
 
     // Load features and group them by map id
@@ -88,7 +88,7 @@ class SQLRawMapProvider(
   }
 
   /** Returns a list of features corresponding to a given list of run map ids */
-  def getFeatures(mapIds: Seq[Long], loadPeakels: Boolean = false): Array[Feature] = {
+  def getFeatures(mapIds: collection.Seq[Long], loadPeakels: Boolean = false): Array[Feature] = {
     if( mapIds.isEmpty ) return Array()
 
     DoJDBCReturningWork.withEzDBC(lcmsDbCtx) { ezDBC =>

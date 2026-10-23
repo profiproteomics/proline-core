@@ -11,7 +11,7 @@ import fr.proline.repository.ProlineDatabaseType
  *
  */
 trait IPtmDefinitionStorer {
-  def storePtmDefinitions( ptmDefs: Seq[PtmDefinition], execCtx: IExecutionContext ): Int
+  def storePtmDefinitions( ptmDefs: collection.Seq[PtmDefinition], execCtx: IExecutionContext ): Int
 }
 
 /**

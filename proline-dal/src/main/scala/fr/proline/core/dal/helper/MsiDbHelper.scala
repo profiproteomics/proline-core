@@ -31,7 +31,7 @@ class MsiDbHelper(msiDbCtx: DatabaseConnectionContext) {
     decoyRsIds.headOption.flatten
   }
 
-  def getDecoyRsIds(targetResultSetIds: Seq[Long]): Array[Long] = {
+  def getDecoyRsIds(targetResultSetIds: collection.Seq[Long]): Array[Long] = {
     if ( targetResultSetIds == null || targetResultSetIds.isEmpty )
       return Array.empty[Long]
 
@@ -44,7 +44,7 @@ class MsiDbHelper(msiDbCtx: DatabaseConnectionContext) {
     }
   }
   
-  def getDecoyRsIdByTargetRsId(targetResultSetIds: Seq[Long]): LongMap[Long] = {
+  def getDecoyRsIdByTargetRsId(targetResultSetIds: collection.Seq[Long]): LongMap[Long] = {
     if ( targetResultSetIds == null || targetResultSetIds.isEmpty )
       return LongMap.empty[Long]
 
@@ -63,7 +63,7 @@ class MsiDbHelper(msiDbCtx: DatabaseConnectionContext) {
     }
   }
 
-  def getDecoyRsmIds(targetResultSummaryIds: Seq[Long]): Array[Long] = {
+  def getDecoyRsmIds(targetResultSummaryIds: collection.Seq[Long]): Array[Long] = {
     if ( targetResultSummaryIds == null || targetResultSummaryIds.isEmpty )
       return Array.empty[Long]
 
@@ -183,7 +183,7 @@ class MsiDbHelper(msiDbCtx: DatabaseConnectionContext) {
     this._appendChildrenIds(firstChildrenIds, childRsmIds, parentIdsToChildIds)
   }
 
-  def getResultSetsMsiSearchIds(rsIds: Seq[Long], hierarchicalQuery: Boolean = true ): Array[Long] = {
+  def getResultSetsMsiSearchIds(rsIds: collection.Seq[Long], hierarchicalQuery: Boolean = true ): Array[Long] = {
 
     if ( rsIds == null || rsIds.isEmpty )
       return Array.empty[Long]
@@ -207,7 +207,7 @@ class MsiDbHelper(msiDbCtx: DatabaseConnectionContext) {
   }
 
   @tailrec
-  private def _getChildMsiSearchIds(rsIds: Seq[Long], childMsiSearchIds: ArrayBuffer[Long]): Unit = {
+  private def _getChildMsiSearchIds(rsIds: collection.Seq[Long], childMsiSearchIds: ArrayBuffer[Long]): Unit = {
     if( rsIds.isEmpty ) return ()
 
     val childRsIds = new ArrayBuffer[Long]()
@@ -227,7 +227,7 @@ class MsiDbHelper(msiDbCtx: DatabaseConnectionContext) {
     _getChildMsiSearchIds(childRsIds.distinct, childMsiSearchIds)
   }
 
-  def getMsiSearchIdsByParentResultSetId(rsIds: Seq[Long]): LongMap[Set[Long]] = {
+  def getMsiSearchIdsByParentResultSetId(rsIds: collection.Seq[Long]): LongMap[Set[Long]] = {
     if (rsIds == null || rsIds.isEmpty)
       return LongMap.empty[Set[Long]]
     
@@ -250,7 +250,7 @@ class MsiDbHelper(msiDbCtx: DatabaseConnectionContext) {
   }
   
   @tailrec
-  private def _getMsiSearchIdsByParentResultSetId(rsIds: Seq[Long], msiSearchIdsByParentResultSetId: LongMap[HashSet[Long]]) {
+  private def _getMsiSearchIdsByParentResultSetId(rsIds: collection.Seq[Long], msiSearchIdsByParentResultSetId: LongMap[HashSet[Long]]) {
     if( rsIds.isEmpty ) return
     
     val childRsIds = new ArrayBuffer[Long]()
@@ -273,7 +273,7 @@ class MsiDbHelper(msiDbCtx: DatabaseConnectionContext) {
     _getMsiSearchIdsByParentResultSetId( childRsIds.distinct, msiSearchIdsByParentResultSetId )
   }
 
-  def getResultSetIdByResultSummaryId(rsmIds: Seq[Long]): LongMap[Long] = {
+  def getResultSetIdByResultSummaryId(rsmIds: collection.Seq[Long]): LongMap[Long] = {
     if (rsmIds == null || rsmIds.isEmpty)
       return LongMap.empty[Long]
 
@@ -288,7 +288,7 @@ class MsiDbHelper(msiDbCtx: DatabaseConnectionContext) {
     }
   }
 
-  def getMsiSearchesPtmSpecificityIds(msiSearchIds: Seq[Long]): Array[Long] = {
+  def getMsiSearchesPtmSpecificityIds(msiSearchIds: collection.Seq[Long]): Array[Long] = {
     if (msiSearchIds == null || msiSearchIds.isEmpty)
       return Array.empty[Long]
     
@@ -317,7 +317,7 @@ class MsiDbHelper(msiDbCtx: DatabaseConnectionContext) {
   private case class ScoringRecord(id: Long, search_engine: String, name: String)
 
   /** Load and return scorings as records */
-  private def _getScorings(): Seq[ScoringRecord] = {
+  private def _getScorings(): collection.Seq[ScoringRecord] = {
     DoJDBCReturningWork.withEzDBC(msiDbCtx) { ezDBC =>
       ezDBC.select("SELECT id, search_engine, name FROM scoring") { r =>
         ScoringRecord(r.nextLong, r.nextString, r.nextString)
@@ -325,7 +325,7 @@ class MsiDbHelper(msiDbCtx: DatabaseConnectionContext) {
     }
   }
 
-  def getScoringsByResultSummaryIds(rsmIds: Seq[Long]): Seq[String] = {
+  def getScoringsByResultSummaryIds(rsmIds: collection.Seq[Long]): collection.Seq[String] = {
     if (rsmIds == null || rsmIds.isEmpty)
       return Seq.empty[String]
 
@@ -337,7 +337,7 @@ class MsiDbHelper(msiDbCtx: DatabaseConnectionContext) {
     }
   }
 
-  def getSeqLengthByBioSeqId(bioSeqIds: Seq[Long]): LongMap[Int] = {
+  def getSeqLengthByBioSeqId(bioSeqIds: collection.Seq[Long]): LongMap[Int] = {
     if( bioSeqIds == null || bioSeqIds.isEmpty )
       return LongMap.empty[Int]
 
@@ -360,7 +360,7 @@ class MsiDbHelper(msiDbCtx: DatabaseConnectionContext) {
   }
 
   // TODO: add number field to the table
-  def getSpectrumNumberById(pklIds: Seq[Long]): LongMap[Int] = {
+  def getSpectrumNumberById(pklIds: collection.Seq[Long]): LongMap[Int] = {
 
     if (pklIds == null || pklIds.isEmpty) {
       LongMap.empty[Int]
@@ -381,7 +381,7 @@ class MsiDbHelper(msiDbCtx: DatabaseConnectionContext) {
 
   }
 
-  def getSpectrumIndexByIdByPL(pklIds: Seq[Long]): mutable.LongMap[mutable.LongMap[Int]] = {
+  def getSpectrumIndexByIdByPL(pklIds: collection.Seq[Long]): mutable.LongMap[mutable.LongMap[Int]] = {
 
     if (pklIds == null || pklIds.isEmpty) {
       mutable.LongMap.empty[mutable.LongMap[Int]]
@@ -404,7 +404,7 @@ class MsiDbHelper(msiDbCtx: DatabaseConnectionContext) {
 
   }
 
-  def getReadablePtmForResultSets( rsIds: Seq[Long]): mutable.Map[Long,PeptideReadablePtmString] ={
+  def getReadablePtmForResultSets( rsIds: collection.Seq[Long]): mutable.Map[Long,PeptideReadablePtmString] ={
     val pepReadablePtmStringByPepId = mutable.Map.empty[Long,PeptideReadablePtmString]
 
     val getReadablePtmQuery = "SELECT peptide_id, readable_ptm_string FROM peptide_readable_ptm_string WHERE peptide_readable_ptm_string.result_set_id IN  (" + rsIds.mkString(",") + ") "

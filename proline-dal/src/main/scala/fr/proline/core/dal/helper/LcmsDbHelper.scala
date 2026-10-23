@@ -107,7 +107,7 @@ class LcmsDbHelper( lcmsDbCtx: DatabaseConnectionContext ) {
     }// end DoJDBCReturningWork
   }
 
-  def getScanInitialIdById( scanSeqIds: Seq[Long] ): Map[Long,Int] = {
+  def getScanInitialIdById( scanSeqIds: collection.Seq[Long] ): Map[Long,Int] = {
     require( scanSeqIds != null, "scanSeqIds is null" )
     if( scanSeqIds.isEmpty ) return Map()
     
@@ -130,7 +130,7 @@ class LcmsDbHelper( lcmsDbCtx: DatabaseConnectionContext ) {
     }// end DoJDBCReturningWork
   }
 
-  def getMs2EventIdsByFtId( rawMapIds: Seq[Long] ): Map[Long,Array[Long]] = {
+  def getMs2EventIdsByFtId( rawMapIds: collection.Seq[Long] ): Map[Long,Array[Long]] = {
     require( rawMapIds != null, "rawMapIds is null" )
     if( rawMapIds.isEmpty ) return Map()
     

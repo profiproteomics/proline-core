@@ -30,7 +30,7 @@ class SQLResultSummaryProvider(
 
   val RSMCols = MsiDbResultSummaryTable.columns
 
-  def getResultSummaries(rsmIds: Seq[Long], loadResultSet: Boolean, loadProteinMatches: Option[Boolean] = None): Array[ResultSummary] = {
+  def getResultSummaries(rsmIds: collection.Seq[Long], loadResultSet: Boolean, loadProteinMatches: Option[Boolean] = None): Array[ResultSummary] = {
     if (rsmIds.isEmpty) return Array()
 
     import fr.profi.util.primitives._
@@ -145,7 +145,7 @@ class SQLResultSummaryProvider(
 
   }
 
-  def getResultSummariesAsOptions(rsmIds: Seq[Long], loadResultSet: Boolean, loadProteinMatches: Option[Boolean] = None): Array[Option[ResultSummary]] = {
+  def getResultSummariesAsOptions(rsmIds: collection.Seq[Long], loadResultSet: Boolean, loadProteinMatches: Option[Boolean] = None): Array[Option[ResultSummary]] = {
     if (rsmIds.isEmpty) return Array()
     
     val rsms = this.getResultSummaries(rsmIds, loadResultSet, loadProteinMatches)
@@ -153,7 +153,7 @@ class SQLResultSummaryProvider(
     rsmIds.toArray.map(rsmById.get(_))
   }
 
-  /*def getResultSetsResultSummaries(rsIds: Seq[Long], loadResultSet: Boolean): Array[ResultSummary] = {
+  /*def getResultSetsResultSummaries(rsIds: collection.Seq[Long], loadResultSet: Boolean): Array[ResultSummary] = {
     if (rsIds.isEmpty) return Array()
     
     throw new Exception("NYI")

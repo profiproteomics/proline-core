@@ -19,11 +19,11 @@ object PeptideSetBuilder {
   protected val ProtMatchMappingCols = MsiDbPeptideSetProteinMatchMapTable.columns
   
   def buildPeptideSets(
-    pepSetRecords: Seq[IValueContainer],
-    pepSetRelationRecords: Seq[IValueContainer],
-    pepSetItemRecords: Seq[IValueContainer],
-    pepInstances: Seq[PeptideInstance],
-    pepSetProtMatchMapRecords: Seq[IValueContainer],
+    pepSetRecords: collection.Seq[IValueContainer],
+    pepSetRelationRecords: collection.Seq[IValueContainer],
+    pepSetItemRecords: collection.Seq[IValueContainer],
+    pepInstances: collection.Seq[PeptideInstance],
+    pepSetProtMatchMapRecords: collection.Seq[IValueContainer],
     scoreTypeById: LongMap[String]
   ): Array[PeptideSet] = {
     

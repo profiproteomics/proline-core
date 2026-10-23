@@ -31,7 +31,7 @@ class SQLMasterQuantPeptideIonProvider(
   private val MQComponentTable = MsiDbMasterQuantComponentTable
   private val ObjectTreeTable = MsiDbObjectTreeTable
   
-  def getMasterQuantPeptideIons( mqPepIonIds: Seq[Long] ): Array[MasterQuantPeptideIon] = {    
+  def getMasterQuantPeptideIons( mqPepIonIds: collection.Seq[Long] ): Array[MasterQuantPeptideIon] = {    
     require( mqPepIonIds != null, "mqPepIonIds is null")
     if( mqPepIonIds.isEmpty ) return Array()
     
@@ -50,7 +50,7 @@ class SQLMasterQuantPeptideIonProvider(
     this.loadMasterQuantPeptideIons(mqPepIonQuery, mqRepIons)
   }
   
-  def getMasterQuantPeptidesMQPeptideIons( mqPepIds: Seq[Long] ): Array[MasterQuantPeptideIon] = {    
+  def getMasterQuantPeptidesMQPeptideIons( mqPepIds: collection.Seq[Long] ): Array[MasterQuantPeptideIon] = {    
     require( mqPepIds != null, "mqPepIds is null")
     if( mqPepIds.isEmpty ) return Array()
     
@@ -72,7 +72,7 @@ class SQLMasterQuantPeptideIonProvider(
     mqPepIons
   }
 
-  def getLcMsMasterFeaturesMQPeptideIons( lcMsMasterFeatureIds: Seq[Long] ): Array[MasterQuantPeptideIon] = {
+  def getLcMsMasterFeaturesMQPeptideIons( lcMsMasterFeatureIds: collection.Seq[Long] ): Array[MasterQuantPeptideIon] = {
     require( lcMsMasterFeatureIds != null, "lcMsMasterFeatureIds is null")
     if( lcMsMasterFeatureIds.isEmpty ) return Array()
 
@@ -94,7 +94,7 @@ class SQLMasterQuantPeptideIonProvider(
     mqPepIons
   }
 
-  def getQuantResultSummariesMQPeptideIons(quantRsmIds: Seq[Long]): Array[MasterQuantPeptideIon] = {
+  def getQuantResultSummariesMQPeptideIons(quantRsmIds: collection.Seq[Long]): Array[MasterQuantPeptideIon] = {
     require( quantRsmIds != null, "quantRsmIds is null")
     if( quantRsmIds.isEmpty ) return Array()
     

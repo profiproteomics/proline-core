@@ -19,8 +19,8 @@ object EnzymeBuilder {
   protected val enzCleavageCols = UdsDbEnzymeCleavageColumns
   
   def buildEnzymes(
-    eachEnzymeRecord: (IValueContainer => Enzyme) => Seq[Enzyme],
-    eachEnzymeCleavageRecordSelector: Long => ( (IValueContainer => EnzymeCleavage) => Seq[EnzymeCleavage] )
+    eachEnzymeRecord: (IValueContainer => Enzyme) => collection.Seq[Enzyme],
+    eachEnzymeCleavageRecordSelector: Long => ( (IValueContainer => EnzymeCleavage) => collection.Seq[EnzymeCleavage] )
   ): Array[Enzyme] = {
     
     eachEnzymeRecord { r =>
@@ -29,7 +29,7 @@ object EnzymeBuilder {
   }
   
   def buildEnzymes(
-    eachEnzymeRecord: (IValueContainer => Enzyme) => Seq[Enzyme],
+    eachEnzymeRecord: (IValueContainer => Enzyme) => collection.Seq[Enzyme],
     enzymeCleavagesByEnzymeId: Map[Long,Array[EnzymeCleavage]]
   ): Array[Enzyme] = {
     
@@ -40,7 +40,7 @@ object EnzymeBuilder {
   
   def buildEnzyme(
     enzymeRecord: IValueContainer,
-    eachEnzymeCleavageRecordSelector: Long => ( (IValueContainer => EnzymeCleavage) => Seq[EnzymeCleavage] )
+    eachEnzymeCleavageRecordSelector: Long => ( (IValueContainer => EnzymeCleavage) => collection.Seq[EnzymeCleavage] )
   ): Enzyme = {
     this.buildEnzyme(
       enzymeRecord,
@@ -67,7 +67,7 @@ object EnzymeBuilder {
   
   }
 
-  def buildEnzymeCleavages( eachRecord: (IValueContainer => EnzymeCleavage) => Seq[EnzymeCleavage] ): Array[EnzymeCleavage] = {    
+  def buildEnzymeCleavages( eachRecord: (IValueContainer => EnzymeCleavage) => collection.Seq[EnzymeCleavage] ): Array[EnzymeCleavage] = {    
     eachRecord( buildEnzymeCleavage ).toArray
   }
   

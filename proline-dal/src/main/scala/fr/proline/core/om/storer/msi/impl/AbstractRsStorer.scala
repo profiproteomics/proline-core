@@ -38,7 +38,7 @@ abstract class AbstractRsStorer(val pklWriter: Option[IPeaklistWriter] = None) e
    *
    * TODO: move to ResultFileStorer ???
    */
-  final def storeResultSet(resultSet: ResultSet, msQueries: Seq[MsQuery], storerContext: StorerContext): Long = {
+  final def storeResultSet(resultSet: ResultSet, msQueries: collection.Seq[MsQuery], storerContext: StorerContext): Long = {
 
     require(resultSet.isSearchResult, "only search results can be saved using this method")
     require(msQueries != null, "msQueries must not be null")
@@ -59,7 +59,7 @@ abstract class AbstractRsStorer(val pklWriter: Option[IPeaklistWriter] = None) e
    */
   final private def _storeResultSet(
     resultSet: ResultSet,
-    msQueriesOpt: Option[Seq[MsQuery]],
+    msQueriesOpt: Option[collection.Seq[MsQuery]],
     resultFileOpt: Option[IResultFile],
     storerContext: StorerContext): Long = {
 

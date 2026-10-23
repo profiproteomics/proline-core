@@ -16,7 +16,7 @@ class ORMPTMProvider(val msiDbCtx: MsiDbConnectionContext) extends IPTMProvider 
 
   val converter = new PeptidesOMConverterUtil(true)
 
-  def getPtmDefinitionsAsOptions(ptmDefIds: Seq[Long]): Array[Option[PtmDefinition]] = {
+  def getPtmDefinitionsAsOptions(ptmDefIds: collection.Seq[Long]): Array[Option[PtmDefinition]] = {
 
     var foundPtmDefBuilder = Array.newBuilder[Option[PtmDefinition]]
 
@@ -46,7 +46,7 @@ class ORMPTMProvider(val msiDbCtx: MsiDbConnectionContext) extends IPTMProvider 
     foundPtmDefBuilder.result
   }
 
-  def getPtmDefinitions(ptmDefIds: Seq[Long]): Array[PtmDefinition] = {
+  def getPtmDefinitions(ptmDefIds: collection.Seq[Long]): Array[PtmDefinition] = {
     this.getPtmDefinitionsAsOptions(ptmDefIds).filter(_.isDefined).map(_.get)
   }
 

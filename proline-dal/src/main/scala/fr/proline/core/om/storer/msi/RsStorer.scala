@@ -61,7 +61,7 @@ trait IRsStorer extends LazyLogging {
    * @exception Exception if an error occur while saving data
    */
   // TODO: retrieve msQueries from IResultFile and remove msQueries param ???
-  def storeResultSet(resultSet: ResultSet, msQueries: Seq[MsQuery], context: StorerContext): Long
+  def storeResultSet(resultSet: ResultSet, msQueries: collection.Seq[MsQuery], context: StorerContext): Long
   
   /*
   /**
@@ -114,7 +114,7 @@ trait IRsStorer extends LazyLogging {
    * @return StorerContext with updated references
    *
    */
-  def storeMsQueries(msiSearchID: Long, msQueries: Seq[MsQuery], context: StorerContext): StorerContext
+  def storeMsQueries(msiSearchID: Long, msQueries: collection.Seq[MsQuery], context: StorerContext): StorerContext
 
 }
 

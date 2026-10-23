@@ -29,7 +29,7 @@ abstract class AbstractSQLLcMsMapProvider extends ILcMsMapProvider {
   private def _boolToStr(ezDBC: EasyDBC, bool: Boolean) = ezDBC.dialect.booleanFormatter.formatBoolean(bool)
   
   /** Returns a map of overlapping feature ids keyed by feature id */
-  def getOverlappingFtIdsByFtId( rawMapIds: Seq[Long] ): Map[Long,Array[Long]] = {
+  def getOverlappingFtIdsByFtId( rawMapIds: collection.Seq[Long] ): Map[Long,Array[Long]] = {
     require( rawMapIds != null, "rawMapIds is null" )
     if( rawMapIds.isEmpty ) return Map()
     
@@ -59,7 +59,7 @@ abstract class AbstractSQLLcMsMapProvider extends ILcMsMapProvider {
   
   /** Returns a map of overlapping feature keyed by its id */
   def getOverlappingFeatureById(
-    mapIds: Seq[Long],
+    mapIds: collection.Seq[Long],
     scanInitialIdById: Map[Long,Int],
     ms2EventIdsByFtId: Map[Long,Array[Long]]
   ): Map[Long,Feature] = {
@@ -88,7 +88,7 @@ abstract class AbstractSQLLcMsMapProvider extends ILcMsMapProvider {
     }
   }
   
-  protected def eachFeatureRecord(mapIds: Seq[Long], onEachFt: ResultSetRow => Unit): Unit = {
+  protected def eachFeatureRecord(mapIds: collection.Seq[Long], onEachFt: ResultSetRow => Unit): Unit = {
     
     DoJDBCReturningWork.withEzDBC(lcmsDbCtx) { ezDBC =>
     

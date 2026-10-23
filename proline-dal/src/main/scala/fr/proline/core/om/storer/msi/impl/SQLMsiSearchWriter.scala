@@ -48,7 +48,7 @@ abstract class AbstractSQLMsiSearchWriter extends IMsiSearchWriter with LazyLogg
     msiSearch.id
   }
 
-  def insertMsQueries(msiSearchId: Long, msQueries: Seq[MsQuery], context: StorerContext): StorerContext = {
+  def insertMsQueries(msiSearchId: Long, msQueries: collection.Seq[MsQuery], context: StorerContext): StorerContext = {
     
     val msQueryInsertQuery = MsiDbMsQueryTable.mkInsertQuery( (col,colsList) => colsList.filter(_ != col.ID) )
     

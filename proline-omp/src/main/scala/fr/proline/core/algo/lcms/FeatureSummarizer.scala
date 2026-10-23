@@ -1,5 +1,7 @@
 package fr.proline.core.algo.lcms
 
+import scala.collection.parallel.CollectionConverters._
+
 import scala.collection.mutable.HashMap
 import scala.collection.mutable.ArrayBuffer
 import org.apache.commons.math3.analysis.polynomials.PolynomialFunction
@@ -65,7 +67,7 @@ class FeatureSummarizer(
   import FeatureSummarizingMethod._
   
   /** Features with an index corresponding to a replicate number **/
-  def computeFeaturesIntensities( indexedFeatures: Seq[(Feature,Int)] ): Array[Float] = {
+  def computeFeaturesIntensities( indexedFeatures: collection.Seq[(Feature,Int)] ): Array[Float] = {
     if(indexedFeatures.isEmpty) return Array()
     
     val peakelsByFeature = indexedFeatures.view.map { case (feature, index) =>
@@ -114,7 +116,7 @@ class FeatureSummarizer(
   }
   
   private def sumAllPeakelIntensities(
-    indexedFeatures: Seq[(Feature,Int)],
+    indexedFeatures: collection.Seq[(Feature,Int)],
     peakelIntensitiesByFeature: Map[Feature, Array[Float]]
   ): Array[Float] = {
     indexedFeatures.map { case (feature, index) =>
@@ -123,7 +125,7 @@ class FeatureSummarizer(
   }
   
   private def sumFirstPeakelIntensities(
-    indexedFeatures: Seq[(Feature,Int)],
+    indexedFeatures: collection.Seq[(Feature,Int)],
     peakelIntensitiesByFeature: Map[Feature, Array[Float]],
     maxPeakelsCount: Int
   ): Array[Float] = {
@@ -142,7 +144,7 @@ class FeatureSummarizer(
   }
   
   private def retrieveHighestPeakelIntensities(
-    indexedFeatures: Seq[(Feature,Int)],
+    indexedFeatures: collection.Seq[(Feature,Int)],
     peakelIntensitiesByFeature: Map[Feature, Array[Float]]
   ): Array[Float] = {
     indexedFeatures.map { case (feature, index) =>
@@ -151,7 +153,7 @@ class FeatureSummarizer(
   }
   
   private def retrieveHighestTheoIsotopeIntensities(
-    indexedFeatures: Seq[(Feature,Int)],
+    indexedFeatures: collection.Seq[(Feature,Int)],
     peakelIntensitiesByFeature: Map[Feature, Array[Float]]
   ): Array[Float] = {
     indexedFeatures.map { case (feature, index) =>
@@ -165,7 +167,7 @@ class FeatureSummarizer(
   }
   
   /*private def fitPeakelIntensitiesWithIsotopePattern(
-    indexedFeatures: Seq[(Feature,Int)],
+    indexedFeatures: collection.Seq[(Feature,Int)],
     peakelIntensitiesByFeature: Map[Feature, Array[Float]]
   ): Array[Float] = {
     
@@ -192,7 +194,7 @@ class FeatureSummarizer(
   }*/
   
   private def fitPeakelIntensitiesWithIsotopePattern(
-    indexedFeatures: Seq[(Feature,Int)],
+    indexedFeatures: collection.Seq[(Feature,Int)],
     peakelIntensitiesByFeature: Map[Feature, Array[Float]]
   ): Array[Float] = {
     
@@ -292,7 +294,7 @@ class FeatureSummarizer(
     }.toArray
   }
   
-  private def computeWeightedAverageDistance( observedIntensities: Seq[Float], theoIntensities: Seq[Float] ): Float = {
+  private def computeWeightedAverageDistance( observedIntensities: collection.Seq[Float], theoIntensities: collection.Seq[Float] ): Float = {
     
     var coeffSum = 0f
     val distance = observedIntensities.zip(theoIntensities).foldLeft(0f) { case (d,(obsAb,theoAb)) =>
@@ -303,7 +305,7 @@ class FeatureSummarizer(
     distance / coeffSum
   }
   
-  private def computeWeightedAverageRatio( observedIntensities: Seq[Float], theoIntensities: Seq[Float] ): Float = {
+  private def computeWeightedAverageRatio( observedIntensities: collection.Seq[Float], theoIntensities: collection.Seq[Float] ): Float = {
     
     var coeffSum = 0f
     val obsOverMedianWeightedRatios = observedIntensities.zip(theoIntensities).map { case (obsAb,theoAb) =>
@@ -315,7 +317,7 @@ class FeatureSummarizer(
   }
   
   private def retrieveLowestVarianceIsotopeIntensities(
-    indexedFeatures: Seq[(Feature,Int)],
+    indexedFeatures: collection.Seq[(Feature,Int)],
     peakelIntensitiesByFeature: Map[Feature, Array[Float]]
   ): Array[Float] = {
     
@@ -328,7 +330,7 @@ class FeatureSummarizer(
   }
   
   private def retrieveLowestVarianceIsotopeIndex(
-    indexedFeatures: Seq[(Feature,Int)],
+    indexedFeatures: collection.Seq[(Feature,Int)],
     peakelIntensitiesByFeature: Map[Feature, Array[Float]]
   ): Int = {
 
@@ -371,7 +373,7 @@ class FeatureSummarizer(
   private lazy val polyFunction = new PolynomialFunction.Parametric
   
   private def weightedLinearLeastSquaresRegression(
-    indexedFeatures: Seq[(Feature,Int)],
+    indexedFeatures: collection.Seq[(Feature,Int)],
     peakelIntensitiesByFeature: Map[Feature, Array[Float]],
     peakelsByFeature: Map[Feature, Array[Peakel]]
   ): Array[Float] = {

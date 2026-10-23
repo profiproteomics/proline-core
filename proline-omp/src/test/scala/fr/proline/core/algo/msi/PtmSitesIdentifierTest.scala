@@ -60,7 +60,7 @@ class PtmSitesIdentifierTest extends StrictLogging {
 
     val clusterizer = new PtmSiteExactClusterer(PtmSitesIdentifierTest.rsm,PtmSitesIdentifierTest.getRS(PtmSitesIdentifierTest.targetRSId).proteinMatches)
 
-    val clusters = sitesByProteinMatchIds.flatMap{ case(protMatchId, sites) => clusterizer.clusterize(protMatchId, sites, _getPeptideMatchesByPeptideIds, IdGenerator) }
+    val clusters = sitesByProteinMatchIds.toSeq.flatMap{ case(protMatchId, sites) => clusterizer.clusterize(protMatchId, sites, _getPeptideMatchesByPeptideIds, IdGenerator) }
 
     val ptmDataSet = new PtmDataSet(
       ptmIds = ptmIds,

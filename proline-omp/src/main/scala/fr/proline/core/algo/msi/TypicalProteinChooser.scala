@@ -16,7 +16,7 @@ import javax.persistence.EntityManager
  */
 class TypicalProteinChooser () extends LazyLogging {
 
-  private var modifiedProteinSets : Seq[fr.proline.core.orm.msi.ProteinSet] = null
+  private var modifiedProteinSets : collection.Seq[fr.proline.core.orm.msi.ProteinSet] = null
   
   
   /**
@@ -25,7 +25,7 @@ class TypicalProteinChooser () extends LazyLogging {
    * than protein that response to second rule in specified list.
    *   
    */
-	def changeTypical(rsmId: Long, priorityRulesToApply : Seq[TypicalProteinChooserRule], msiEM : EntityManager){
+	def changeTypical(rsmId: Long, priorityRulesToApply : collection.Seq[TypicalProteinChooserRule], msiEM : EntityManager){
    
 	logger.info(" Load data for Typical Protein Chooser multi rules")
     val ormProtSetRSM = msiEM.createQuery("FROM fr.proline.core.orm.msi.ProteinSet protSet WHERE resultSummary.id = :rsmId",
@@ -72,7 +72,7 @@ class TypicalProteinChooser () extends LazyLogging {
 
   }
     
-  def getChangedProteinSets: Seq[ProteinSet] = {modifiedProteinSets}
+  def getChangedProteinSets: collection.Seq[ProteinSet] = {modifiedProteinSets}
   
 }
 

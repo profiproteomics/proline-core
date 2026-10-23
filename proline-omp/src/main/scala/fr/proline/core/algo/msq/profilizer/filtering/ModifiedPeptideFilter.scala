@@ -20,7 +20,7 @@ object ModifiedPeptideDiscardingReason extends EnhancedEnum{
 object ModifiedPeptideFilter {
   import fr.proline.core.algo.msq.config.profilizer.ModifiedPeptideFilteringMethod._
 
-  def discardPeptides( masterQuantPeptides: Seq[MasterQuantPeptide], filteringMethod: ModifiedPeptideFilteringMethod.Value, filteringConfig: ModifiedPeptideFilterConfig): Unit = {
+  def discardPeptides( masterQuantPeptides: collection.Seq[MasterQuantPeptide], filteringMethod: ModifiedPeptideFilteringMethod.Value, filteringConfig: ModifiedPeptideFilterConfig): Unit = {
 
     val ptmPattern = { if (filteringConfig.ptmPattern.isDefined) {
       Some(filteringConfig.ptmPattern.get.r.pattern)
@@ -41,7 +41,7 @@ trait IModifiedPeptideFilter extends IMasterQuantPeptideFiltering with LazyLoggi
   val ptmsToConsider: Array[Long]
   val ptmPattern: Option[Pattern]
 
-  def foreachModifiedPeptides(masterQuantPeptides: Seq[MasterQuantPeptide])(callback: (MasterQuantPeptide,Peptide) => Unit): Unit = {
+  def foreachModifiedPeptides(masterQuantPeptides: collection.Seq[MasterQuantPeptide])(callback: (MasterQuantPeptide,Peptide) => Unit): Unit = {
     this.foreachIdentifiedAndSelectedPeptide(masterQuantPeptides) { (mqPep, pepInst) =>
       val peptide = pepInst.peptide
       var containsPtmToDiscard = false
@@ -68,7 +68,7 @@ trait IModifiedPeptideFilter extends IMasterQuantPeptideFiltering with LazyLoggi
 
 case class ModifiedAndCounterpartFormsFilterer(ptmsToConsider: Array[Long], ptmPattern: Option[Pattern]) extends IModifiedPeptideFilter {
 
-  override def discardPeptides(masterQuantPeptides: Seq[MasterQuantPeptide]): Unit = {
+  override def discardPeptides(masterQuantPeptides: collection.Seq[MasterQuantPeptide]): Unit = {
     val detectedModifiedSeqs = new ArrayBuffer[String]()
 
     this.foreachModifiedPeptides(masterQuantPeptides) { (mqPep,peptide) =>
@@ -93,7 +93,7 @@ case class ModifiedAndCounterpartFormsFilterer(ptmsToConsider: Array[Long], ptmP
 }
 
 case class ModifiedFormFilterer(ptmsToConsider: Array[Long], ptmPattern: Option[Pattern])  extends IModifiedPeptideFilter {
-  override def discardPeptides(masterQuantPeptides: Seq[MasterQuantPeptide]): Unit = {
+  override def discardPeptides(masterQuantPeptides: collection.Seq[MasterQuantPeptide]): Unit = {
     this.foreachModifiedPeptides(masterQuantPeptides) { (mqPep,peptide) =>
       // Discard the detected oxidized peptide
       this.discardPeptide(mqPep, ModifiedPeptideDiscardingReason.MODIFIED_PEPTIDE)
@@ -103,7 +103,7 @@ case class ModifiedFormFilterer(ptmsToConsider: Array[Long], ptmPattern: Option[
 
 case class LowestAbundantModifiedFormFilterer(ptmsToConsider: Array[Long], ptmPattern: Option[Pattern]) extends IModifiedPeptideFilter {
 
-  def discardPeptides( masterQuantPeptides: Seq[MasterQuantPeptide] ): Unit = {
+  def discardPeptides( masterQuantPeptides: collection.Seq[MasterQuantPeptide] ): Unit = {
 
     val oxMqPepsBySeq = new mutable.HashMap[String,ArrayBuffer[MasterQuantPeptide]]()
 

@@ -37,7 +37,7 @@ class SQLPeptideMatchProvider(
   // Retrieve score type map
   val scoreTypeById = msiDbHelper.getScoringTypeById()
 
-  def getPeptideMatches(pepMatchIds: Seq[Long]): Array[PeptideMatch] = {
+  def getPeptideMatches(pepMatchIds: collection.Seq[Long]): Array[PeptideMatch] = {
     if( pepMatchIds.isEmpty ) return Array()
     
     DoJDBCReturningWork.withEzDBC(msiDbCtx) { msiEzDBC =>
@@ -54,7 +54,7 @@ class SQLPeptideMatchProvider(
     }
   }
 
-  def getPeptideMatchesAsOptions(pepMatchIds: Seq[Long]): Array[Option[PeptideMatch]] = {
+  def getPeptideMatchesAsOptions(pepMatchIds: collection.Seq[Long]): Array[Option[PeptideMatch]] = {
     if( pepMatchIds.isEmpty ) return Array()
 
     val pepMatches = this.getPeptideMatches(pepMatchIds)
@@ -63,7 +63,7 @@ class SQLPeptideMatchProvider(
     pepMatchIds.map { pepMatchById.get(_) }.toArray
   }
 
-  def getPeptideMatchesByMsQueryIds(msQueriesIds: Seq[Long]): Array[PeptideMatch] = {
+  def getPeptideMatchesByMsQueryIds(msQueriesIds: collection.Seq[Long]): Array[PeptideMatch] = {
     if( msQueriesIds.isEmpty ) return Array()
 
     DoJDBCReturningWork.withEzDBC(msiDbCtx) { msiEzDBC =>
@@ -79,7 +79,7 @@ class SQLPeptideMatchProvider(
     }
   }
 
-  def getPeptideMatchesByPeptideIds(peptideIds: Seq[Long]): Array[PeptideMatch] = {
+  def getPeptideMatchesByPeptideIds(peptideIds: collection.Seq[Long]): Array[PeptideMatch] = {
     if( peptideIds.isEmpty ) return Array()
     
     DoJDBCReturningWork.withEzDBC(msiDbCtx) { msiEzDBC =>
@@ -96,7 +96,7 @@ class SQLPeptideMatchProvider(
     }
   }
 
-  def getResultSetsPeptideMatches(rsIds: Seq[Long], pepMatchFilter: Option[PeptideMatchFilter] = None): Array[PeptideMatch] = {
+  def getResultSetsPeptideMatches(rsIds: collection.Seq[Long], pepMatchFilter: Option[PeptideMatchFilter] = None): Array[PeptideMatch] = {
     if( rsIds.isEmpty ) return Array()
     
     DoJDBCReturningWork.withEzDBC(msiDbCtx) { msiEzDBC =>
@@ -115,7 +115,7 @@ class SQLPeptideMatchProvider(
 
   }
 
-  def getResultSummariesPeptideMatches(rsmIds: Seq[Long]): Array[PeptideMatch] = {
+  def getResultSummariesPeptideMatches(rsmIds: collection.Seq[Long]): Array[PeptideMatch] = {
     if( rsmIds.isEmpty ) return Array()
     
     DoJDBCReturningWork.withEzDBC(msiDbCtx) { msiEzDBC =>
@@ -148,7 +148,7 @@ class SQLPeptideMatchProvider(
     filters.result()
   }
 
-  private def _loadResulSetMsQueries( rsIds: Array[Long], pmRecords: Seq[IValueContainer] ): Array[MsQuery] = {
+  private def _loadResulSetMsQueries( rsIds: Array[Long], pmRecords: collection.Seq[IValueContainer] ): Array[MsQuery] = {
     
     // Load MS queries
     val msiSearchIds = msiDbHelper.getResultSetsMsiSearchIds(rsIds)
@@ -159,7 +159,7 @@ class SQLPeptideMatchProvider(
     
   }
   
-  private def _loadMsQueries( pmRecords: Seq[IValueContainer] ): Array[MsQuery] = {    
+  private def _loadMsQueries( pmRecords: collection.Seq[IValueContainer] ): Array[MsQuery] = {    
     val uniqMsQueriesIds = pmRecords.map( _.getLong(PepMatchCols.MS_QUERY_ID) ).distinct
     msQProvider.getMsQueries(uniqMsQueriesIds) 
   }

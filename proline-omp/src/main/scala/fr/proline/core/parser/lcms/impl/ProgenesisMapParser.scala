@@ -1,5 +1,7 @@
 package fr.proline.core.parser.lcms.impl
 
+import scala.collection.parallel.CollectionConverters._
+
 import java.util.Date
 
 import scala.collection.mutable.ArrayBuffer

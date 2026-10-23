@@ -15,8 +15,8 @@ object PeaklistBuilder {
   protected val peaklistCols = MsiDbPeaklistColumns
 
   def buildPeaklists(
-    eachPeaklistRecord: (IValueContainer => Peaklist) => Seq[Peaklist],
-    eachPklSoftRecordSelector: Array[Long] => ( (IValueContainer => PeaklistSoftware) => Seq[PeaklistSoftware] )
+    eachPeaklistRecord: (IValueContainer => Peaklist) => collection.Seq[Peaklist],
+    eachPklSoftRecordSelector: Array[Long] => ( (IValueContainer => PeaklistSoftware) => collection.Seq[PeaklistSoftware] )
   ): Array[Peaklist] = {
     
     val pklSoftIdByPklId = new HashMap[Long, Long]

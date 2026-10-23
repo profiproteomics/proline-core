@@ -30,7 +30,7 @@ class SpecificPeptidesPSFilter(
 
 
   // IProteinSetFilter  methods   
-  def filterProteinSets(protSets: Seq[ProteinSet], incrementalValidation: Boolean, traceability: Boolean): Unit = {   
+  def filterProteinSets(protSets: collection.Seq[ProteinSet], incrementalValidation: Boolean, traceability: Boolean): Unit = {   
 
     // Reset validation status if validation is not incremental
     if (!incrementalValidation) ProteinSetFiltering.resetProteinSetValidationStatus(protSets)

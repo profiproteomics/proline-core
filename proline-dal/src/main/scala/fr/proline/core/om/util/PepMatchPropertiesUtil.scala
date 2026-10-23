@@ -56,7 +56,7 @@ object PepMatchPropertiesUtil {
 
     val msiDbHelper = new MsiDbHelper(msiDbCtx)
     val allMsiSearchesIds = msiDbHelper.getResultSetsMsiSearchIds(Seq(resultSummary.getResultSetId))
-    val peakListIds: Seq[Long] = if (allMsiSearchesIds.isEmpty) Seq.empty[Long] else {
+    val peakListIds: collection.Seq[Long] = if (allMsiSearchesIds.isEmpty) Seq.empty[Long] else {
       val msiSearchProvider = new SQLMsiSearchProvider(udsDbCtx, msiDbCtx)
       val allMsiSearches = msiSearchProvider.getMSISearches(allMsiSearchesIds)
       allMsiSearches.map(msiSearch => msiSearch.peakList.id)

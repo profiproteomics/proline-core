@@ -55,7 +55,7 @@ class UdsDbHelper(udsDbCtx: DatabaseConnectionContext) {
 
   }
 
-  def getDatasetsFirstChildrenIds(dsIds: Seq[Long]): Array[Long] = {
+  def getDatasetsFirstChildrenIds(dsIds: collection.Seq[Long]): Array[Long] = {
 
     if ((dsIds == null) || dsIds.isEmpty) {
       Array.empty[Long]
@@ -104,7 +104,7 @@ class UdsDbHelper(udsDbCtx: DatabaseConnectionContext) {
       getDatasetsLeaveIds(nonLeafDSIds, leaveIds)
   }
 
-  def fillDatasetHierarchyIdMap(dsIds: Seq[Long], hierachyMap: HashMap[Long, Long]) {
+  def fillDatasetHierarchyIdMap(dsIds: collection.Seq[Long], hierachyMap: HashMap[Long, Long]) {
 
     val firstChildrenIds = if (dsIds.length == 0) Array.empty[Long]
     else this.getDatasetsFirstChildrenIds(dsIds)
@@ -141,7 +141,7 @@ class UdsDbHelper(udsDbCtx: DatabaseConnectionContext) {
 
   }
 
-  def getRSIdByIdentificationId(identIds: Seq[Long]): Map[Long, Long] = {
+  def getRSIdByIdentificationId(identIds: collection.Seq[Long]): Map[Long, Long] = {
 
     if ((identIds == null) || identIds.isEmpty) {
       Map.empty[Long, Long]

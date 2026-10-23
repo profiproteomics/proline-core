@@ -609,7 +609,7 @@ case class ProcessedMap(
 
   var mapSetId: Long,
   //@transient val rawMaps: Array[RawMap], // Many values only for a master map
-  @transient var rawMapReferences: Seq[IEntityReference[RawMap]],
+  @transient var rawMapReferences: collection.Seq[IEntityReference[RawMap]],
 
   // Immutable optional fields
   val description: String = "",
@@ -629,10 +629,10 @@ case class ProcessedMap(
   require( modificationTimestamp != null, "modificationTimestamp is null" )
   if( !isMaster ) require( (rawMapReferences != null) &&  (rawMapReferences.length == 1), "invalid rawMapReferences count" )
 
-  def getRawMapIds(): Seq[Long] = rawMapReferences.map(_.id)
+  def getRawMapIds(): collection.Seq[Long] = rawMapReferences.map(_.id)
 
   // TODO: note this is a way to generalize to MSI OM
-  def getRawMaps(): Seq[Option[RawMap]] = {
+  def getRawMaps(): collection.Seq[Option[RawMap]] = {
     rawMapReferences.map { rawMapReference =>
       rawMapReference match {
         case rawMap: RawMap => Some(rawMap)

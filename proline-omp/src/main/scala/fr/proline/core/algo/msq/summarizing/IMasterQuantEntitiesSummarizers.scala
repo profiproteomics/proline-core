@@ -16,7 +16,7 @@ trait IMQPeptideIonSummarizer {
   def computeMasterQuantPeptideIons(
     masterQuantChannel: MasterQuantChannel,
     quantMergedRSM: ResultSummary,
-    resultSummaries: Seq[ResultSummary]
+    resultSummaries: collection.Seq[ResultSummary]
   ): Array[MasterQuantPeptideIon]
   
 }
@@ -26,7 +26,7 @@ trait IMQPeptideSummarizer {
   def computeMasterQuantPeptides(
     masterQuantChannel: MasterQuantChannel,
     quantMergedRSM: ResultSummary,
-    resultSummaries: Seq[ResultSummary]
+    resultSummaries: collection.Seq[ResultSummary]
   ): Array[MasterQuantPeptide]
 }
 
@@ -34,9 +34,9 @@ trait IMQProteinSetSummarizer {
   
   def computeMasterQuantProteinSets(
     masterQuantChannel: MasterQuantChannel,
-    masterQuantPeptides: Seq[MasterQuantPeptide],
+    masterQuantPeptides: collection.Seq[MasterQuantPeptide],
     quantMergedRSM: ResultSummary,
-    resultSummaries: Seq[ResultSummary]
+    resultSummaries: collection.Seq[ResultSummary]
   ): Array[MasterQuantProteinSet] = {
     
     val qcCount = masterQuantChannel.quantChannels.length
@@ -142,7 +142,7 @@ trait IMqPepAndProtEntitiesSummarizer extends IMQPeptideSummarizer with IMQProte
   def computeMasterQuantPeptidesAndProteinSets(
     masterQuantChannel: MasterQuantChannel,
     quantMergedRSM: ResultSummary,
-    resultSummaries: Seq[ResultSummary]
+    resultSummaries: collection.Seq[ResultSummary]
   ): (Array[MasterQuantPeptide], Array[MasterQuantProteinSet]) = {
         
     // Compute master quant peptides

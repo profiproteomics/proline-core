@@ -40,7 +40,7 @@ class ResidueLabelingEntitiesSummarizer(
   def computeMasterQuantPeptides(
     masterQuantChannel: MasterQuantChannel,
     quantMergedRSM: ResultSummary,
-    resultSummaries: Seq[ResultSummary]
+    resultSummaries: collection.Seq[ResultSummary]
   ): Array[MasterQuantPeptide] = {
     
     require( resultSummaries.length == childMapsCount, "invalid number of result summaries")

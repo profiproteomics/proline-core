@@ -48,8 +48,8 @@ object ResultSetMerger {
 
 class ResultSetMerger(
   execCtx: IExecutionContext,
-  resultSetIds: Option[Seq[Long]],
-  resultSets: Option[Seq[ResultSet]],  
+  resultSetIds: Option[collection.Seq[Long]],
+  resultSets: Option[collection.Seq[ResultSet]],  
   aggregationMode: Option[AdditionMode.Value] = None,
   useJPA: Boolean = false
 ) extends IService with LazyLogging {
@@ -90,7 +90,7 @@ class ResultSetMerger(
   }
 
   private def _mergeFromResultSetIds(
-    resultSetIds: Seq[Long],
+    resultSetIds: collection.Seq[Long],
     aggregationMode: Option[AdditionMode.Value],
     storerContext: StorerContext
   ): Unit = {
@@ -108,7 +108,7 @@ class ResultSetMerger(
   }
 
   private def _mergeFromResultSets(
-    resultSets: Seq[ResultSet],
+    resultSets: collection.Seq[ResultSet],
     aggregationMode: Option[AdditionMode.Value],
     storerContext: StorerContext
   ): Unit = {
@@ -156,8 +156,8 @@ class ResultSetMerger(
   }
   
   private def _mergeAndStoreResultSets(
-    targetRsIds: Seq[Long],
-    decoyRsIds: Seq[Long],
+    targetRsIds: collection.Seq[Long],
+    decoyRsIds: collection.Seq[Long],
     resultSetProvider: Long => ResultSet,
     aggregationMode: Option[AdditionMode.Value],
     storerContext: StorerContext
@@ -271,7 +271,7 @@ class ResultSetMerger(
   }
 
 
-  private def _loadReadablePtmString( storerContext: StorerContext, rsIds: Seq[Long]): mutable.Map[Long,PeptideReadablePtmString] ={
+  private def _loadReadablePtmString( storerContext: StorerContext, rsIds: collection.Seq[Long]): mutable.Map[Long,PeptideReadablePtmString] ={
     val pepReadablePtmStringByPepId : mutable.Map[Long,PeptideReadablePtmString] = storerContext.getEntityCache(classOf[PeptideReadablePtmString])
     //clear previous data
     pepReadablePtmStringByPepId.clear()
@@ -284,7 +284,7 @@ class ResultSetMerger(
     storerContext: StorerContext,
     msiEzDBC: EasyDBC,
     resultSet: ResultSet,
-    childRsIds: Seq[Long]
+    childRsIds: collection.Seq[Long]
   ): Unit = {
     
     require( childRsIds.nonEmpty, "childRsIds is empty")

@@ -24,7 +24,7 @@ class SQLPeptideInstanceProvider(
     this(peptideCacheExecContext.getMSIDbConnectionContext, new SQLPeptideProvider(peptideCacheExecContext) )
   }
 
-  def getPeptideInstancesAsOptions(pepInstIds: Seq[Long]): Array[Option[PeptideInstance]] = {
+  def getPeptideInstancesAsOptions(pepInstIds: collection.Seq[Long]): Array[Option[PeptideInstance]] = {
     if( pepInstIds.isEmpty ) return Array()
     
     val pepInsts = this.getPeptideInstances(pepInstIds)
@@ -33,7 +33,7 @@ class SQLPeptideInstanceProvider(
     pepInstIds.map { pepInstById.get(_) }.toArray
   }
 
-  def getPeptideInstances(pepInstIds: Seq[Long]): Array[PeptideInstance] = {
+  def getPeptideInstances(pepInstIds: collection.Seq[Long]): Array[PeptideInstance] = {
     if( pepInstIds.isEmpty ) return Array()
     
     DoJDBCReturningWork.withEzDBC(msiDbCtx) { msiEzDBC =>
@@ -48,7 +48,7 @@ class SQLPeptideInstanceProvider(
     }
   }
   
-  def getPeptideInstancesByPeptideIds(pepIds: Seq[Long]): Array[PeptideInstance] = {
+  def getPeptideInstancesByPeptideIds(pepIds: collection.Seq[Long]): Array[PeptideInstance] = {
     if( pepIds.isEmpty ) return Array()
     
     DoJDBCReturningWork.withEzDBC(msiDbCtx) { msiEzDBC =>
@@ -66,7 +66,7 @@ class SQLPeptideInstanceProvider(
   
   private def _getPeptideInstances(
     msiEzDBC: EasyDBC,
-    pepInstIds: Seq[Long],
+    pepInstIds: collection.Seq[Long],
     pepInstRecords: Array[AnyMap]
   ): Array[PeptideInstance] = {
     
@@ -78,7 +78,7 @@ class SQLPeptideInstanceProvider(
     PeptideInstanceBuilder.buildPeptideInstances(pepInstRecords, pepInstPepMatchMapRecords, peptideProvider)
   }
 
-  def getResultSummariesPeptideInstances(rsmIds: Seq[Long]): Array[PeptideInstance] = {
+  def getResultSummariesPeptideInstances(rsmIds: collection.Seq[Long]): Array[PeptideInstance] = {
     if( rsmIds.isEmpty ) return Array()
     
     DoJDBCReturningWork.withEzDBC(msiDbCtx) { msiEzDBC =>

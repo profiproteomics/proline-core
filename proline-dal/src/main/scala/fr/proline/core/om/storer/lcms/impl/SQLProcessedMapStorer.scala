@@ -122,7 +122,7 @@ class SQLProcessedMapStorer(
     
   }
   
-  def storeFeatureClusters( features: Seq[Feature] ): Unit = {
+  def storeFeatureClusters( features: collection.Seq[Feature] ): Unit = {
     this.featureWriter.insertFeatureClusters(features)
   }
 }

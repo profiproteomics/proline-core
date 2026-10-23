@@ -87,7 +87,7 @@ case class ValidationResult(
 }
 
 @JsonInclude( Include.NON_NULL )
-case class ValidationResults( finalResult: ValidationResult, computedResults: Option[Seq[ValidationResult]] = None ) {
+case class ValidationResults( finalResult: ValidationResult, computedResults: Option[collection.Seq[ValidationResult]] = None ) {
   
   def getRocCurve(): Option[MsiRocCurve] = {
     this.computedResults.map { computedResults =>
@@ -329,13 +329,13 @@ trait IPeptideMatchValidator extends IValidatorConfig {
    * @param decoyPepMatches An optional list of decoy peptide matches to validate
    * @return An instance of the ValidationResults case class
    */
-  def validatePeptideMatches( pepMatches: Seq[PeptideMatch], decoyPepMatches: Option[Seq[PeptideMatch]] = None, tdAnalyzer: Option[ITargetDecoyAnalyzer]): ValidationResults
+  def validatePeptideMatches( pepMatches: collection.Seq[PeptideMatch], decoyPepMatches: Option[collection.Seq[PeptideMatch]] = None, tdAnalyzer: Option[ITargetDecoyAnalyzer]): ValidationResults
   
   def validatePeptideMatches( targetRs: ResultSet, tdAnalyzer: Option[ITargetDecoyAnalyzer]): ValidationResults = {
     
-    val targetPepMatches: Seq[PeptideMatch] = targetRs.peptideMatches
+    val targetPepMatches: collection.Seq[PeptideMatch] = targetRs.peptideMatches
     val decoyRs = if( targetRs.decoyResultSet == null ) None else targetRs.decoyResultSet
-    val decoyPepMatches: Option[Seq[PeptideMatch]] = decoyRs.map(_.peptideMatches)
+    val decoyPepMatches: Option[collection.Seq[PeptideMatch]] = decoyRs.map(_.peptideMatches)
     
     this.validatePeptideMatches( targetPepMatches, decoyPepMatches, tdAnalyzer )
   }
@@ -347,7 +347,7 @@ trait IPeptideInstanceValidator extends IValidatorConfig {
   val validationFilter: IPeptideInstanceFilter
   val expectedFdr: Option[Float]
 
-  def validatePeptideMatches(pepInstances: Seq[PeptideInstance], decoyPepInstances: Option[Seq[PeptideInstance]] = None, tdAnalyzer: Option[ITargetDecoyAnalyzer] = None): ValidationResults
+  def validatePeptideMatches(pepInstances: collection.Seq[PeptideInstance], decoyPepInstances: Option[collection.Seq[PeptideInstance]] = None, tdAnalyzer: Option[ITargetDecoyAnalyzer] = None): ValidationResults
 
 }
 

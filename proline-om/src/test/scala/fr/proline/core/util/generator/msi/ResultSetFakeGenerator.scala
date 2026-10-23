@@ -506,7 +506,7 @@ class ResultSetFakeGenerator(
    * @param protMatches the protein matches
    * @return the ResultSetFakeBuilder
    */
-  def addSharedPeptide(protMatches: Seq[ProteinMatch]): ResultSetFakeGenerator = {
+  def addSharedPeptide(protMatches: scala.collection.Seq[ProteinMatch]): ResultSetFakeGenerator = {
     
     // Generate a peptide sequence until we have a new one
     var currPepSeq = ""
@@ -585,7 +585,7 @@ class ResultSetFakeGenerator(
    * @param peptides the peptides
    * @return the ResultSetFakeBuilder
    */
-  def createNewProteinMatchFromPeptides(peptides: Seq[Peptide]): ResultSetFakeGenerator = {
+  def createNewProteinMatchFromPeptides(peptides: scala.collection.Seq[Peptide]): ResultSetFakeGenerator = {
     require(peptides!= null && peptides.length > 0,"at least one peptide must be provided")
 
     val protSeqBuilder = new StringBuilder    
@@ -635,7 +635,7 @@ class ResultSetFakeGenerator(
     ResultSetFakeGenerator.this
   }
 
-  private def _createProteinMatch(proteinSequence: String, peptides: Seq[Peptide], sequenceMatches: ArrayBuffer[SequenceMatch]) = {
+  private def _createProteinMatch(proteinSequence: String, peptides: scala.collection.Seq[Peptide], sequenceMatches: ArrayBuffer[SequenceMatch]) = {
     val currProt = new Protein(
       Protein.generateNewId,
       proteinSequence,

@@ -23,7 +23,7 @@ private[msi] object PgPeptideWriter extends IPeptideWriter with LazyLogging {
   private val pepTableName = MsiDbPeptideTable.name
   private val pepPtmTableName = MsiDbPeptidePtmTable.name
     
-  def insertPeptides(peptides: Seq[Peptide], context: StorerContext): Unit = {
+  def insertPeptides(peptides: collection.Seq[Peptide], context: StorerContext): Unit = {
     
     DoJDBCWork.withEzDBC(context.getMSIDbConnectionContext) { msiEzDBC =>
       
@@ -85,7 +85,7 @@ private[msi] object PgPeptideWriter extends IPeptideWriter with LazyLogging {
     ()
   }
   
-  private def _insertPeptidePtms(peptides: Seq[Peptide], msiEzDBC: EasyDBC): Unit = {
+  private def _insertPeptidePtms(peptides: collection.Seq[Peptide], msiEzDBC: EasyDBC): Unit = {
       
     val con = msiEzDBC.connection
 
@@ -121,7 +121,7 @@ private[msi] object PgPeptideWriter extends IPeptideWriter with LazyLogging {
 
     ()
   }
-  def updatePeptideMatchProperties(pepMatches: Seq[PeptideMatch], msiDbConCtxt : MsiDbConnectionContext): Unit = {
+  def updatePeptideMatchProperties(pepMatches: collection.Seq[PeptideMatch], msiDbConCtxt : MsiDbConnectionContext): Unit = {
     DoJDBCWork.withEzDBC(msiDbConCtxt) { msiEzDBC =>
       msiEzDBC.executeInBatch("UPDATE "+ MsiDbPeptideMatchTable.name + " SET " + MsiDbPeptideMatchTable.columns.SERIALIZED_PROPERTIES + " = ?  WHERE id = ? " ) { stmt =>
         for(pepMatch <- pepMatches) {

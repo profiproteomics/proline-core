@@ -17,8 +17,8 @@ object PeptideInstanceBuilder {
   protected val PepMatchMappingCols = MsiDbPeptideInstancePeptideMatchMapColumns
   
   def buildPeptideInstances(
-    pepInstRecords: Seq[IValueContainer],
-    pepInstPepMatchMapRecords: Seq[IValueContainer],
+    pepInstRecords: collection.Seq[IValueContainer],
+    pepInstPepMatchMapRecords: collection.Seq[IValueContainer],
     peptideProvider: IPeptideProvider
   ): Array[PeptideInstance] = {
     

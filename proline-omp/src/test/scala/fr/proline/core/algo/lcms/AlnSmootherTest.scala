@@ -17,7 +17,7 @@ class AlnSmootherTest extends JUnitSuite with Matchers with StrictLogging {
   val timeList = Array(1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20).map(_.toFloat)
   val deltaTimeList = timeList.map( math.sin(_).toFloat )
   
-  val landmarks: Seq[Landmark] = {
+  val landmarks: collection.Seq[Landmark] = {
     
     val reducedDeltaTimeList = deltaTimeList.map( _ * 0.9f )
     val increasedDeltaTimeList = deltaTimeList.map( _ * 1.1f )

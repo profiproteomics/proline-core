@@ -4,7 +4,6 @@ import fr.proline.core.algo.msq.config.profilizer.ProfilizerStatConfig
 import org.junit.Assert.assertEquals
 import org.junit.Test
 
-import scala.Array.canBuildFrom
 import scala.io.Source
 
 @Test

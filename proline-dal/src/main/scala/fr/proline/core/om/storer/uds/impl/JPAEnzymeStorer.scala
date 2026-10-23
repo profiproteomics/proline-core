@@ -10,14 +10,13 @@ import fr.proline.core.orm.uds.{
   EnzymeCleavage => UdsEnzymeCleavage
 }
 import scala.collection.mutable.ArrayBuffer
-import scala.collection.JavaConversions
 
 object JPAEnzymeStorer extends IEnzymeStorer with LazyLogging {
   
   /**
    * Instantiates the PtmDefinition writer and call the insertPtmDefinitions method.
    */
-  def storeEnzymes( enzymes: Seq[Enzyme], execCtx: IExecutionContext ): Int = {
+  def storeEnzymes( enzymes: collection.Seq[Enzyme], execCtx: IExecutionContext ): Int = {
     val writer = new JPAEnzymeWriter(execCtx)
     writer.insertEnzymes(enzymes)
   }
@@ -38,7 +37,7 @@ object JPAEnzymeStorer extends IEnzymeStorer with LazyLogging {
      * Transaction on UDS {{{EntityManager}}} should be opened by client code.
      *
      */
-    def insertEnzymes(enzymes: Seq[Enzyme]): Int = {
+    def insertEnzymes(enzymes: collection.Seq[Enzyme]): Int = {
       require(enzymes != null, "enzymes must not be null")
       
       var insertedEnzymes = 0

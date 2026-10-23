@@ -16,7 +16,7 @@ trait IProteinProvider {
    *  @param protIds: Sequence of ids of Protein to search for
    *  @return Array of Option[Protein] corresponding to found Protein
    */
-  def getProteinsAsOptions( protIds: Seq[Long] ): Array[Option[Protein]]
+  def getProteinsAsOptions( protIds: collection.Seq[Long] ): Array[Option[Protein]]
   
   /**
    * Get Protein (wrapped in Option) with specified Id.
@@ -53,7 +53,7 @@ trait IProteinProvider {
  */
 class ProteinEmptyFakeProvider extends IProteinProvider {
   
-   def getProteinsAsOptions( protIds: Seq[Long] ): Array[Option[Protein]] = {
+   def getProteinsAsOptions( protIds: collection.Seq[Long] ): Array[Option[Protein]] = {
    val retArray =  new Array[Option[Protein]](1)
 	retArray.update(0, Option.empty[Protein])	
 	return retArray    

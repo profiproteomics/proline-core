@@ -10,7 +10,7 @@ import fr.proline.core.algo.msi.TypicalProteinChooserRule
 class RsmTypicalProteinChooser(
   execCtx: IExecutionContext,
   resultSummaryId: Long,
-  rulesToApplyPrioritized: Seq[TypicalProteinChooserRule]
+  rulesToApplyPrioritized: collection.Seq[TypicalProteinChooserRule]
 ) extends IService with LazyLogging {
 
   require(execCtx.isJPA, " Invalid connexion type for this service ")

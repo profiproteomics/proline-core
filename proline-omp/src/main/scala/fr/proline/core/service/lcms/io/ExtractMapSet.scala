@@ -32,7 +32,7 @@ import scala.collection.mutable.{ArrayBuffer, HashMap, LongMap}
 class ExtractMapSet(
   val lcmsDbCtx: LcMsDbConnectionContext,
   val mapSetName: String,
-  val lcMsRuns: Seq[LcMsRun],
+  val lcMsRuns: collection.Seq[LcMsRun],
   val masterQcExpDesign: ExperimentalDesignSetup,
   val quantConfig: ILcMsQuantConfig,
   val peptideByRunIdAndScanNumber: Option[LongMap[LongMap[Peptide]]] = None, // sequence data may or may not be provided
@@ -258,7 +258,7 @@ class ExtractMapSet(
   }
 
   class LcMsMapDetectorEntityCache(
-    val lcMsRuns: Seq[LcMsRun],
+    val lcMsRuns: collection.Seq[LcMsRun],
     val mzDbFileByLcMsRunId: LongMap[File],
     val mapSetId: Long
   ) {
@@ -315,7 +315,7 @@ class ExtractMapSet(
     def getConflictedPeptides(peptideAndCharge: (Peptide, Int)): Option[ArrayBuffer[Peptide]] = {
       conflictingPeptidesMap.get(peptideAndCharge)
     }
-    def addConflictedPeptides(peptideAndCharge: (Peptide, Int), peptides: Seq[Peptide]) {
+    def addConflictedPeptides(peptideAndCharge: (Peptide, Int), peptides: collection.Seq[Peptide]) {
       conflictingPeptidesMap_lock.synchronized {
         conflictingPeptidesMap.getOrElseUpdate(peptideAndCharge, ArrayBuffer[Peptide]()) ++= peptides
       }

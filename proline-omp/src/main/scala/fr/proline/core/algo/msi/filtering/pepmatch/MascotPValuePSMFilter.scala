@@ -56,7 +56,7 @@ class MascotPValuePSMFilter(var pValue: Float = 0.05f, var useHomologyThreshold:
     throw new Exception("Not Yet Implemented")
   }
 
-  def filterPeptideMatches(pepMatches: Seq[PeptideMatch], incrementalValidation: Boolean, traceability: Boolean): Unit = {
+  def filterPeptideMatches(pepMatches: collection.Seq[PeptideMatch], incrementalValidation: Boolean, traceability: Boolean): Unit = {
 
     // Reset validation status if validation is not incremental
     if (!incrementalValidation) PeptideMatchFiltering.resetPepMatchValidationStatus(pepMatches)
@@ -104,7 +104,7 @@ class MascotPValuePSMFilter(var pValue: Float = 0.05f, var useHomologyThreshold:
 
   }
 
-  def filterPeptideMatchesDBO(pepMatches: Seq[PeptideMatch], incrementalValidation: Boolean, traceability: Boolean): Unit = {
+  def filterPeptideMatchesDBO(pepMatches: collection.Seq[PeptideMatch], incrementalValidation: Boolean, traceability: Boolean): Unit = {
 
     // Reset validation status if validation is not incremental
     if (!incrementalValidation) PeptideMatchFiltering.resetPepMatchValidationStatus(pepMatches)

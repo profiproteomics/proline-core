@@ -13,7 +13,7 @@ object PeaklistSoftwareBuilder {
   
   protected val pklSoftCols = MsiDbPeaklistSoftwareColumns
   
-  def buildPeaklistSoftwareList(eachRecord: (IValueContainer => PeaklistSoftware) => Seq[PeaklistSoftware]): Array[PeaklistSoftware] = {
+  def buildPeaklistSoftwareList(eachRecord: (IValueContainer => PeaklistSoftware) => collection.Seq[PeaklistSoftware]): Array[PeaklistSoftware] = {
     eachRecord( buildPeaklistSoftware ).toArray
   }
   

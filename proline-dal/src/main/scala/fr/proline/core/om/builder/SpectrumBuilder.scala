@@ -14,7 +14,7 @@ object SpectrumBuilder {
   
   protected val SpectrumCols = MsiDbSpectrumColumns
   
-  def buildSpectra(eachRecord: (IValueContainer => Spectrum) => Seq[Spectrum], setPeaks: Boolean = true): Array[Spectrum] = {
+  def buildSpectra(eachRecord: (IValueContainer => Spectrum) => collection.Seq[Spectrum], setPeaks: Boolean = true): Array[Spectrum] = {
     eachRecord( { r => buildSpectrum(r, setPeaks) } ).toArray
   }
   

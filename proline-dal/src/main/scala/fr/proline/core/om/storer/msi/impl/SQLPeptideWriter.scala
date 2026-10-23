@@ -12,7 +12,7 @@ import fr.proline.core.om.storer.msi.IPeptideWriter
 
 private[msi] object SQLPeptideWriter extends IPeptideWriter with LazyLogging {
 
-  def insertPeptides(peptides: Seq[Peptide], context: StorerContext): Unit = {
+  def insertPeptides(peptides: collection.Seq[Peptide], context: StorerContext): Unit = {
     require( peptides != null, "peptides is null")
     if(peptides.isEmpty) return ()
 
@@ -69,7 +69,7 @@ private[msi] object SQLPeptideWriter extends IPeptideWriter with LazyLogging {
 
   }
 
-  def updatePeptideMatchProperties(pepMatches: Seq[PeptideMatch], msiDbConCtxt: MsiDbConnectionContext): Unit = {
+  def updatePeptideMatchProperties(pepMatches: collection.Seq[PeptideMatch], msiDbConCtxt: MsiDbConnectionContext): Unit = {
     DoJDBCWork.withEzDBC(msiDbConCtxt) { msiEzDBC =>
       msiEzDBC.executeInBatch("UPDATE " + MsiDbPeptideMatchTable.name + " SET " + MsiDbPeptideMatchTable.columns.SERIALIZED_PROPERTIES + " = ?  WHERE id = ? ") { stmt =>
         for (pepMatch <- pepMatches) {

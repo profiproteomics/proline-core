@@ -18,7 +18,7 @@ class SQLScanSequenceProvider(val lcmsDbCtx: LcMsDbConnectionContext) extends IS
   val ScanSeqCols = LcmsDbScanSequenceTable.columns
   val ScanCols = LcmsDbScanTable.columns
   
-  def getScanSequences( scanSequenceIds: Seq[Long] ): Array[LcMsScanSequence] = {
+  def getScanSequences( scanSequenceIds: collection.Seq[Long] ): Array[LcMsScanSequence] = {
     if( scanSequenceIds.isEmpty ) return Array()
     
     val scans = this.getScans( scanSequenceIds )
@@ -61,7 +61,7 @@ class SQLScanSequenceProvider(val lcmsDbCtx: LcMsDbConnectionContext) extends IS
     )
   }
   
-  def getScans( scanSequenceIds: Seq[Long] ): Array[LcMsScan] = {
+  def getScans( scanSequenceIds: collection.Seq[Long] ): Array[LcMsScan] = {
     if( scanSequenceIds.isEmpty ) return Array()
     
     DoJDBCReturningWork.withEzDBC(lcmsDbCtx) { ezDBC => 

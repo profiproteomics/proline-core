@@ -19,8 +19,8 @@ object InstrumentConfigBuilder {
   protected val fragSerieCols = UdsDbFragmentationSeriesColumns
   
   def buildInstrumentConfigs(
-    eachInstConfigRecord: (IValueContainer => InstrumentConfig) => Seq[InstrumentConfig],
-    eachInstrumentRecordSelector: Array[Long] => ( (IValueContainer => Instrument) => Seq[Instrument] )
+    eachInstConfigRecord: (IValueContainer => InstrumentConfig) => collection.Seq[InstrumentConfig],
+    eachInstrumentRecordSelector: Array[Long] => ( (IValueContainer => Instrument) => collection.Seq[Instrument] )
   ): Array[InstrumentConfig] = {
     
     val instIdByInstConfigId = new HashMap[Long, Long]
@@ -52,8 +52,8 @@ object InstrumentConfigBuilder {
   }
 
   def buildFragmentationRuleSets(
-    eachFragmentationRuleSetRecord: (IValueContainer => FragmentationRuleSet) => Seq[FragmentationRuleSet],
-    eachFragmentationSeriesSelector: Array[Long] => ( (IValueContainer => FragmentIonType) => Seq[FragmentIonType] )
+    eachFragmentationRuleSetRecord: (IValueContainer => FragmentationRuleSet) => collection.Seq[FragmentationRuleSet],
+    eachFragmentationSeriesSelector: Array[Long] => ( (IValueContainer => FragmentIonType) => collection.Seq[FragmentIonType] )
 
    ) : Array[FragmentationRuleSet] = {
 
@@ -91,7 +91,7 @@ object InstrumentConfigBuilder {
     )
   }
 
-  def buildInstruments( eachRecord: (IValueContainer => Instrument) => Seq[Instrument] ): Array[Instrument] = {    
+  def buildInstruments( eachRecord: (IValueContainer => Instrument) => collection.Seq[Instrument] ): Array[Instrument] = {    
     eachRecord( buildInstrument ).toArray
   }
   

@@ -4,7 +4,7 @@ import fr.proline.core.om.model.msi.Spectrum
 
 trait ISpectrumProvider {
 
-  def getSpectra( spectrumIds: Seq[Long], loadPeaks: Boolean ): Array[Spectrum]
+  def getSpectra( spectrumIds: collection.Seq[Long], loadPeaks: Boolean ): Array[Spectrum]
   
   def getSpectrum( spectrumId: Long, loadPeaks: Boolean = true ): Spectrum = { getSpectra( Array(spectrumId), loadPeaks )(0) }
 
